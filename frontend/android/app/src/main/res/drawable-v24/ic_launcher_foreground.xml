@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NAMI ANIME App Icon Foreground — Bold N + Lightning Bolt (Amber on White) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer amber glow circle ring -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0"
+        android:strokeColor="#FBBF24"
+        android:strokeWidth="2.5"
+        android:strokeAlpha="0.5"/>
+
+    <!-- Inner amber thin ring -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,54m-36,0a36,36 0,1 1,72 0a36,36 0,1 1,-72 0"
+        android:strokeColor="#FBBF24"
+        android:strokeWidth="1"
+        android:strokeAlpha="0.3"/>
+
+    <!-- Bold "N" letter — WHITE fill -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+          M28,72 L28,36 L36,36 L54,60 L54,36 L62,36 L62,72 L54,72 L36,48 L36,72 Z
+        "/>
+
+    <!-- Lightning bolt overlay on the N — AMBER (#FBBF24) -->
+    <path
+        android:pathData="M56,36 L46,54 L52,54 L44,72 L62,50 L56,50 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="44"
+                android:startY="36"
+                android:endX="62"
+                android:endY="72"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFDE7"/>
+                <item android:offset="0.5" android:color="#FBBF24"/>
+                <item android:offset="1.0" android:color="#F59E0B"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Amber dot accent top-right -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M70,30 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0"/>
+
+</vector>

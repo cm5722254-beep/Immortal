@@ -1,0 +1,70 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: |
+          npm install --legacy-peer-deps
+
+      - name: Build Web Production Bundle
+        working-directory: frontend
+        run: |
+          npm run build
+
+      - name: Sync Capacitor iOS
+        working-directory: frontend
+        run: |
+          npx cap sync ios
+
+      - name: Build iOS App Archive (Unsigned)
+        working-directory: frontend/ios/App
+        run: |
+          xcodebuild -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/App.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean archive
+
+      - name: Package IPA File
+        working-directory: frontend/ios/App
+        run: |
+          mkdir -p build/Payload
+          cp -r build/App.xcarchive/Products/Applications/App.app build/Payload/
+          cd build
+          zip -r MerDonghua-v1.0.ipa Payload
+          ls -lh MerDonghua-v1.0.ipa
+
+      - name: Send iOS IPA to Telegram
+        run: |
+          curl -F "chat_id=8399608471" \
+               -F "document=@frontend/ios/App/build/MerDonghua-v1.0.ipa" \
+               -F "caption=🍏 <b>Mer Donghua iOS App v1.0 (IPA)</b>%0A%0A✨ <b>សម្រាប់ដំឡើងលើ iPhone & iPad</b>%0A📥 មុខងារ Download Offline & Full HD Stream!" \
+               -F "parse_mode=HTML" \
+               https://api.telegram.org/bot8898099403:AAE9iEiaRxfX3Bn6BhjJvZtvrZQal1v-glc/sendDocument
+
+      - name: Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MerDonghua-iOS-IPA
+          path: frontend/ios/App/build/MerDonghua-v1.0.ipa

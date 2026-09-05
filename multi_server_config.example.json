@@ -1,0 +1,30 @@
+{
+  "_comment": "Copy this file to multi_server_config.json and fill in your real credentials. NEVER commit multi_server_config.json to git!",
+  "server_1": {
+    "name": "Cloudflare R2 (Primary)",
+    "bucket_name": "your-primary-bucket",
+    "endpoint": "https://YOUR_ACCOUNT_ID_1.r2.cloudflarestorage.com",
+    "access_key": "YOUR_SERVER1_ACCESS_KEY",
+    "secret_key": "YOUR_SERVER1_SECRET_KEY",
+    "public_domain": "https://pub-XXXXXXXXXXXX.r2.dev",
+    "enabled": true
+  },
+  "server_2": {
+    "name": "Server 2 (Backup / Mirror 1)",
+    "bucket_name": "your-backup-bucket-1",
+    "endpoint": "https://YOUR_ACCOUNT_ID_2.r2.cloudflarestorage.com",
+    "access_key": "YOUR_SERVER2_ACCESS_KEY",
+    "secret_key": "YOUR_SERVER2_SECRET_KEY",
+    "public_domain": "https://pub-XXXXXXXXXXXX.r2.dev",
+    "enabled": true
+  },
+  "server_3": {
+    "name": "Server 3 (Backup / Mirror 2)",
+    "bucket_name": "your-backup-bucket-2",
+    "endpoint": "https://YOUR_ACCOUNT_ID_3.r2.cloudflarestorage.com",
+    "access_key": "YOUR_SERVER3_ACCESS_KEY",
+    "secret_key": "YOUR_SERVER3_SECRET_KEY",
+    "public_domain": "https://pub-XXXXXXXXXXXX.r2.dev",
+    "enabled": true
+  }
+}

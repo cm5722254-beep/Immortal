@@ -1,0 +1,29 @@
+[
+  {
+    "anime_title": "Renegade Immortal",
+    "alt_title": "仙逆 (Xian Ni)",
+    "episode_number": 156,
+    "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    "thumbnail_url": "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&h=900&fit=crop&q=80",
+    "type": "DONGHUA",
+    "studio": "Foch Film / Tencent Penguin"
+  },
+  {
+    "anime_title": "Perfect World",
+    "alt_title": "完美世界 (Wanmei Shijie)",
+    "episode_number": 180,
+    "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    "thumbnail_url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=900&fit=crop&q=80",
+    "type": "DONGHUA",
+    "studio": "Foch Film / Tencent Penguin"
+  },
+  {
+    "anime_title": "Soul Land II",
+    "alt_title": "斗罗大陆2绝世唐门",
+    "episode_number": 68,
+    "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    "thumbnail_url": "https://images.unsplash.com/photo-1563089145-599997674d42?w=600&h=900&fit=crop&q=80",
+    "type": "DONGHUA",
+    "studio": "Sparkly Key Animation"
+  }
+]

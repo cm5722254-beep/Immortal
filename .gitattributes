@@ -1,0 +1,61 @@
+# =============================================================================
+# Git Attributes — MER DONGHUA
+# =============================================================================
+
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Windows batch files — use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Shell scripts — LF
+*.sh text eol=lf
+
+# Source code — text, LF
+*.py text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.sql text eol=lf
+
+# Binary files — never process
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.mp4 binary
+*.mkv binary
+*.ts binary
+*.apk binary
+*.aab binary
+*.jar binary
+*.keystore binary
+*.jks binary
+*.p12 binary
+*.so binary
+*.dll binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.pdf binary
+
+# Large files — use Git LFS if needed
+# *.json filter=lfs diff=lfs merge=lfs -text
+# *.csv filter=lfs diff=lfs merge=lfs -text

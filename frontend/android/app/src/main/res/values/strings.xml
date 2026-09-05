@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NAMI ANIME</string>
+    <string name="title_activity_main">NAMI ANIME</string>
+    <string name="package_name">com.namianime.app</string>
+    <string name="custom_url_scheme">com.namianime.app</string>
+</resources>

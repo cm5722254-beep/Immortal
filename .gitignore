@@ -1,0 +1,166 @@
+# =============================================================================
+# MER DONGHUA — Comprehensive .gitignore
+# =============================================================================
+
+# =============================================================================
+# 🔴 SECRETS & CREDENTIALS — NEVER COMMIT THESE
+# =============================================================================
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Cloudflare R2 / S3 config with real credentials
+r2_config.json
+multi_server_config.json
+
+# Android Keystore (signing keys)
+*.keystore
+*.jks
+*.p12
+*.pfx
+
+# iOS certificates
+*.p8
+*.mobileprovision
+*.cer
+GoogleService-Info.plist
+google-services.json
+
+# License & token state
+license_state.json
+
+# =============================================================================
+# 💾 DATABASE & BACKUPS — DO NOT COMMIT
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+*_backup_*.json
+namianime_full_backup_*.json
+backend/backups/
+
+# =============================================================================
+# 📊 LARGE DATA FILES — Use Git LFS or external storage
+# =============================================================================
+ALL_MOVIES_AND_EPISODE_LINKS.csv
+ALL_MOVIES_AND_EPISODE_LINKS.json
+ALL_MOVIES_CATALOG.csv
+ALL_MOVIES_PNG_IMAGES.csv
+ALL_MOVIES_PNG_IMAGES.json
+FULL_MOVIE_EPISODE_LINKS_DOCUMENT.md
+FULL_MOVIE_PNG_IMAGES_DOCUMENT.md
+slugs.txt
+
+# iQIYI catalog cache
+tools/iqiyi_catalog_data.json
+
+# =============================================================================
+# 🐍 PYTHON
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+backend/venv/
+
+# =============================================================================
+# 📦 NODE / FRONTEND
+# =============================================================================
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnp
+.pnp.js
+
+# =============================================================================
+# 📱 MOBILE / ANDROID / iOS
+# =============================================================================
+*.apk
+*.aab
+*.idsig
+frontend/android/app/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/ios/App/Pods/
+frontend/ios/App/App.xcworkspace/
+frontend/ios/DerivedData/
+
+# =============================================================================
+# 🐳 DOCKER
+# =============================================================================
+# Keep docker-compose.yml but ignore override
+docker-compose.override.yml
+docker-compose.local.yml
+
+# =============================================================================
+# 📝 LOGS
+# =============================================================================
+*.log
+logs/
+*.log.*
+
+# =============================================================================
+# 🗂️ OS & EDITOR
+# =============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V8
+.Trashes
+
+# Linux
+*~
+
+# VSCode
+.vscode/settings.json
+.vscode/launch.json
+
+# JetBrains / PyCharm
+.idea/
+*.iml
+
+# =============================================================================
+# 🎬 MEDIA DOWNLOADS
+# =============================================================================
+downloaded_videos/
+*.mp4
+*.mkv
+*.ts
+*.m3u8
+
+# Build specs (PyInstaller)
+*.spec

@@ -1,0 +1,9 @@
+{
+  "_comment": "Copy this file to r2_config.json and fill in your real credentials. NEVER commit r2_config.json to git!",
+  "account_id": "YOUR_CLOUDFLARE_ACCOUNT_ID",
+  "access_key": "YOUR_R2_ACCESS_KEY_ID",
+  "secret_key": "YOUR_R2_SECRET_ACCESS_KEY",
+  "bucket_name": "your-bucket-name",
+  "public_domain": "https://pub-XXXXXXXXXXXX.r2.dev",
+  "auto_upload": true
+}

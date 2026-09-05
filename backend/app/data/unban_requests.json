@@ -1,0 +1,34 @@
+[
+  {
+    "id": "70ae4e85-af38-4401-9864-258d401d5c0d",
+    "username_or_email": "mazercheat@gmail.com",
+    "reason": "hello admin",
+    "contact": "0873642521",
+    "status": "PENDING",
+    "created_at": "2026-08-27T07:00:07.117715+00:00"
+  },
+  {
+    "id": "bda1fa49-c466-4b0c-9f11-2b08af46a748",
+    "username_or_email": "mazercheat@gmail.com",
+    "reason": "soory",
+    "contact": "78w31234w11",
+    "status": "PENDING",
+    "created_at": "2026-08-27T06:56:07.790246+00:00"
+  },
+  {
+    "id": "201bc559-c9a2-4780-878e-8944b73fb999",
+    "username_or_email": "MazerCheat",
+    "reason": "Testing unban appeal",
+    "contact": "012345678",
+    "status": "PENDING",
+    "created_at": "2026-08-27T06:22:39.692943+00:00"
+  },
+  {
+    "id": "7ec6f567-3358-47bd-b2f7-73a02ea951cf",
+    "username_or_email": "MazerCheat",
+    "reason": "Testing unban appeal",
+    "contact": "012345678",
+    "status": "PENDING",
+    "created_at": "2026-08-27T06:22:31.773217+00:00"
+  }
+]

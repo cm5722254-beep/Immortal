@@ -1,0 +1,93 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from typing import List, Optional
+from pydantic import BaseModel
+
+from app.core.database import get_db
+from app.models.episode import Episode
+from app.models.anime import Anime
+
+router = APIRouter(prefix="/notifications", tags=["Notifications"])
+
+
+class NotificationItem(BaseModel):
+    id: str
+    icon: str  # 'episode' | 'system' | 'vip'
+    title: str
+    subtitle: str
+    time: str
+    link: str
+    avatarUrl: Optional[str] = None
+    isUnread: bool = True
+
+
+@router.get("", response_model=List[NotificationItem])
+async def get_notifications(db: AsyncSession = Depends(get_db)):
+    notifications: List[NotificationItem] = []
+
+    # 1. System / VIP Announcement
+    notifications.append(
+        NotificationItem(
+            id="notif-system-vip",
+            icon="vip",
+            title="🔥 គម្រោង VIP 1 Month ($1.50) នឹងមកដល់ក្នុងពេលឆាប់ៗនេះ!",
+            subtitle="ទទួលបានការទស្សនាកម្រិត 4K Ultra HD ដោយគ្មាន Logo បាំងលើគ្រប់ឧបករណ៍ទាំងអស់",
+            time="10 នាទីមុន",
+            link="/vip",
+            avatarUrl="/video_mask_logo.png",
+            isUnread=True,
+        )
+    )
+
+    notifications.append(
+        NotificationItem(
+            id="notif-system-telegram",
+            icon="system",
+            title="💬 ចូលរួម Telegram Channel ផ្លូវការ @MerDonghuakhmer",
+            subtitle="ទទួលបានដំណឹងចេញភាគថ្មីៗ និងការ Support ផ្ទាល់ពី Developer ២៤/៧",
+            time="1 ម៉ោងមុន",
+            link="https://t.me/MerDonghuakhmer",
+            avatarUrl="/video_mask_logo.png",
+            isUnread=True,
+        )
+    )
+
+    # 2. Fetch Latest Episodes from Database
+    stmt = (
+        select(Episode)
+        .options(selectinload(Episode.anime))
+        .order_by(Episode.id.desc())
+        .limit(10)
+    )
+    result = await db.execute(stmt)
+    episodes = result.scalars().all()
+
+    for ep in episodes:
+        if not ep.anime:
+            continue
+        
+        anime_title = ep.anime.title
+        ep_num = ep.episode_number
+        ep_title = ep.title or f"Episode {ep_num}"
+        avatar = ep.thumbnail_url or ep.anime.poster_url or ep.anime.banner_url or ""
+        
+        # Clean unsplash URLs
+        if "unsplash.com" in avatar:
+            avatar = ep.anime.banner_url or ep.anime.poster_url or ""
+
+        notifications.append(
+            NotificationItem(
+                id=f"notif-ep-{ep.id}",
+                icon="episode",
+                title=f"{anime_title} — ភាគ {ep_num} ចេញផ្សាយហើយ!",
+                subtitle=f"ទស្សនា {ep_title} កម្រិត 1080p / 4K UHD គ្មាន Logo បាំងឡើយ",
+                time=f"ភាគ {ep_num}",
+                link=f"/watch/{ep.anime.slug}/{ep_num}",
+                avatarUrl=avatar,
+                isUnread=True,
+            )
+        )
+
+    return notifications

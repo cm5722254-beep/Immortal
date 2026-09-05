@@ -1,0 +1,8 @@
+{
+  "promo_enabled": true,
+  "promo_duration_days": 7,
+  "start_time": "2026-08-26T11:15:00.000000+00:00",
+  "end_time": "2026-09-02T11:15:00.000000+00:00",
+  "force_vip_lock": false,
+  "updated_at": "2026-08-26T11:15:00.000000+00:00"
+}

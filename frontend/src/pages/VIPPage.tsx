@@ -1,0 +1,335 @@
+import { useState } from 'react';
+import { 
+  Crown, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Zap, 
+  Film, 
+  Tv, 
+  Sparkles, 
+  QrCode, 
+  Check, 
+  Calendar,
+  MessageCircleQuestion
+} from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { AcledaPaymentModal } from '../components/payment/AcledaPaymentModal';
+
+
+interface Plan {
+  id: string;
+  name: string;
+  titleKhmer: string;
+  duration: string;
+  days: number;
+  priceUsd: number;
+  priceKhr: number;
+  badge?: string;
+  popular?: boolean;
+  features: string[];
+}
+
+export function VIPPage() {
+  const { user, isVip } = useAuthStore();
+  const [selectedPlan, setSelectedPlan] = useState<string>('1month');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const plans: Plan[] = [
+    {
+      id: '1month',
+      name: '1 Month Plan',
+      titleKhmer: 'គម្រោង ១ ខែ',
+      duration: '៣០ ថ្ងៃ',
+      days: 30,
+      priceUsd: 2.50,
+      priceKhr: 10000,
+      badge: 'សាកល្បង',
+      popular: false,
+      features: [
+        'ទស្សនា 4K UHD & 1080p Full HD',
+        'គ្មានផ្ទាំង Logo / Watermark បាំង',
+        'VIP Cloud Server ល្បឿនលឿន Bufferless',
+        'ទស្សនាបានទាំង Anime & Donghua ទាំងអស់',
+        'Sync ប្រវត្តិទស្សនាលើគ្រប់ឧបករណ៍',
+      ]
+    },
+    {
+      id: '3month',
+      name: '3 Months Plan',
+      titleKhmer: 'គម្រោង ៣ ខែ',
+      duration: '៩០ ថ្ងៃ',
+      days: 90,
+      priceUsd: 7.50,
+      priceKhr: 30000,
+      badge: 'ពេញនិយម',
+      popular: true,
+      features: [
+        'ទស្សនា 4K UHD & 1080p Full HD',
+        'គ្មានផ្ទាំង Logo / Watermark បាំង',
+        'VIP Cloud Server ល្បឿនលឿន Bufferless',
+        'ទស្សនាបានទាំង Anime & Donghua ទាំងអស់',
+        'Sync ប្រវត្តិទស្សនាលើគ្រប់ឧបករណ៍',
+        'សន្សំសំចៃពេលវេលា',
+      ]
+    },
+    {
+      id: '6month',
+      name: '6 Months Plan',
+      titleKhmer: 'គម្រោង ៦ ខែ',
+      duration: '១៨០ ថ្ងៃ',
+      days: 180,
+      priceUsd: 15.00,
+      priceKhr: 60000,
+      badge: 'តម្លៃពិសេស',
+      popular: false,
+      features: [
+        'ទស្សនា 4K UHD & 1080p Full HD',
+        'គ្មានផ្ទាំង Logo / Watermark បាំង',
+        'VIP Cloud Server ល្បឿនលឿន Bufferless',
+        'ទស្សនាបានទាំង Anime & Donghua ទាំងអស់',
+        'Sync ប្រវត្តិទស្សនាលើគ្រប់ឧបករណ៍',
+        'ទទួលបាន Badge VIP ពិសេស',
+      ]
+    },
+    {
+      id: '1year',
+      name: '1 Year Plan',
+      titleKhmer: 'គម្រោង ១ ឆ្នាំ',
+      duration: '៣៦៥ ថ្ងៃ',
+      days: 365,
+      priceUsd: 25.00,
+      priceKhr: 100000,
+      badge: 'ល្អបំផុត (Best Value)',
+      popular: false,
+      features: [
+        'ទស្សនា 4K UHD & 1080p Full HD',
+        'គ្មានផ្ទាំង Logo / Watermark បាំង',
+        'VIP Cloud Server ល្បឿនលឿន Bufferless',
+        'ទស្សនាបានទាំង Anime & Donghua ទាំងអស់',
+        'Sync ប្រវត្តិទស្សនាលើគ្រប់ឧបករណ៍',
+        'តម្លៃធូរថ្លៃបំផុតពេញ ១ ឆ្នាំ',
+      ]
+    },
+  ];
+
+  const handleOpenPayment = (planId: string = '1month') => {
+    setSelectedPlan(planId);
+    setIsModalOpen(true);
+  };
+
+  const formatExpiryDate = (dateStr?: string | null) => {
+    if (!dateStr) return 'មួយជីវិត (Lifetime)';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('km-KH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  return (
+    <main className="min-h-screen pt-24 pb-24 md:pb-16 px-4 md:px-8 max-w-7xl mx-auto animate-fade-in relative">
+      {/* Ambient background glow */}
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-64 right-10 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-96 left-10 w-72 h-72 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      {/* Header Banner */}
+      <div className="text-center max-w-2xl mx-auto mb-8">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold mb-4 shadow-[0_0_20px_rgba(245,158,11,0.2)] animate-pulse">
+          <Crown className="w-4 h-4 fill-amber-400 text-amber-400" /> សមាជិក VIP EXCLUSIVE MEMBER
+        </div>
+        <h1 className="font-display font-black text-3xl md:text-5xl text-white tracking-tight leading-tight">
+          ដំឡើងគណនី <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">VIP Member</span>
+        </h1>
+        <p className="text-gray-400 text-sm md:text-base mt-4 leading-relaxed max-w-xl mx-auto">
+          ទូទាត់រហ័សទាន់ចិត្តតាម <strong className="text-red-400">KHQR Code</strong> ដើម្បីរីករាយជាមួយការទស្សនារឿងកម្រិត <strong className="text-white">4K UHD</strong> គ្មាន Logo និង Server ល្បឿនលឿនបំផុត។
+        </p>
+
+        {/* Explicit KHQR All Banks Notice Banner */}
+        <div className="mt-5 p-3.5 rounded-2xl bg-gradient-to-r from-red-950/70 via-red-900/40 to-amber-950/70 border border-red-500/50 text-red-300 text-xs md:text-sm font-bold shadow-lg flex items-center justify-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-ping shrink-0" />
+          <span>📢 <strong>ស្កេនបានគ្រប់ធនាគារ៖</strong> អាចស្កេនទូទាត់បានតាមរយៈ <strong className="text-white underline decoration-red-400 decoration-2">ABA, Canadia, ACLEDA, Wing, Bakong</strong> និងគ្រប់ App ធនាគារទាំងអស់!</span>
+        </div>
+      </div>
+
+      {/* Active VIP Status Banner (If User is already VIP) */}
+      {isVip && (
+        <div className="mb-12 max-w-2xl mx-auto p-5 md:p-6 rounded-3xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-transparent border border-amber-500/50 backdrop-blur-xl shadow-[0_10px_35px_rgba(245,158,11,0.2)] flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-center md:text-left">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-black shrink-0 shadow-lg shadow-amber-500/30">
+              <Crown className="w-8 h-8 fill-black" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/40 mb-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> គណនីរបស់អ្នកជា VIP រួចរាល់ហើយ
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                គម្រោងបច្ចុប្បន្ន: <span className="text-amber-400 uppercase">{user?.vip_plan || '1 MONTH VIP'}</span>
+              </h3>
+              <p className="text-xs text-gray-300 flex items-center gap-1 mt-0.5 justify-center md:justify-start">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                ផុតកំណត់នៅថ្ងៃទី: <strong className="text-white">{formatExpiryDate(user?.vip_expires_at)}</strong>
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleOpenPayment('1month')}
+            className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 hover:text-white text-xs font-bold border border-amber-500/30 transition flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Zap className="w-3.5 h-3.5" /> ពន្យារពេលបន្ថែម (Extend Plan)
+          </button>
+        </div>
+      )}
+
+      {/* ── 4 VIP PLANS GRID (1 Month, 3 Months, 6 Months, 1 Year) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 items-stretch">
+        {plans.map((plan) => (
+          <div
+            key={plan.id}
+            className={`relative rounded-3xl p-6 flex flex-col justify-between transition-all duration-300 backdrop-blur-2xl ${
+              plan.popular
+                ? 'bg-gradient-to-b from-[#24170d]/95 via-[#180d12]/95 to-[#0e0408]/98 border-2 border-amber-500 shadow-[0_15px_50px_rgba(245,158,11,0.35)] scale-100 lg:scale-105 z-10'
+                : 'bg-gradient-to-b from-[#181818]/90 to-[#101010]/95 border border-white/10 hover:border-white/25 shadow-xl hover:-translate-y-1'
+            }`}
+          >
+            {/* Top Popular / Value Badge */}
+            {plan.badge && (
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                <span className={`text-[11px] font-black py-1 px-4 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-lg whitespace-nowrap ${
+                  plan.popular
+                    ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-black shadow-amber-500/40'
+                    : 'bg-white/10 text-gray-200 border border-white/20'
+                }`}>
+                  <Sparkles className="w-3 h-3" /> {plan.badge}
+                </span>
+              </div>
+            )}
+
+            <div>
+              {/* Plan Title & Duration */}
+              <div className="text-center pt-2 pb-4 border-b border-white/10">
+                <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">{plan.titleKhmer}</span>
+                <h2 className="text-xl font-black text-white mt-1">{plan.name}</h2>
+                <div className="mt-3 flex items-baseline justify-center gap-1">
+                  <span className="font-display font-black text-4xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500">
+                    ${plan.priceUsd.toFixed(2)}
+                  </span>
+                  <span className="text-xs text-gray-400 font-bold">/ {plan.duration}</span>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1 font-medium">
+                  ≈ {plan.priceKhr.toLocaleString()} រៀល
+                </p>
+              </div>
+
+              {/* Features */}
+              <div className="py-4 space-y-2.5">
+                <p className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">អត្ថប្រយោជន៍៖</p>
+                <ul className="space-y-2">
+                  {plan.features.map((feat, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs text-left">
+                      <div className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                      <span className="text-gray-300 leading-snug">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="pt-4 border-t border-white/10 space-y-2">
+              <button
+                onClick={() => handleOpenPayment(plan.id)}
+                className={`w-full py-3.5 px-4 rounded-2xl font-black text-xs md:text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer shadow-lg active:scale-95 ${
+                  plan.popular
+                    ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-600 hover:from-red-500 hover:to-rose-400 text-white shadow-red-600/40 hover:scale-[1.02]'
+                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/15 hover:border-amber-500/50'
+                }`}
+              >
+                <QrCode className="w-4 h-4 stroke-[2.5]" /> ទូទាត់តាម KHQR
+              </button>
+              <p className="text-[10px] text-center text-gray-400 font-medium">
+                ⚡ ស្កេនបានគ្រប់ App ធនាគារ
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Benefits Highlights Section */}
+      <div className="p-8 rounded-3xl mb-12 bg-gradient-to-r from-[#170a12]/80 via-[#10060d]/90 to-[#0c0307]/90 border border-white/10 shadow-2xl">
+        <h3 className="font-display font-black text-xl md:text-2xl text-white text-center mb-8">
+          ហេតុអ្វីត្រូវជ្រើសរើសសមាជិក VIP?
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-lg shadow-amber-500/10">
+              <Film className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-sm">4K Ultra HD & Zero Watermarks</h4>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">ទស្សនាវីដេអូច្បាស់ត្រជាក់ភ្នែក គ្មាន Logo ឬ Watermark ណាដែលបាំងលើអេក្រង់ឡើយ។</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 shadow-lg shadow-cyan-500/10">
+              <Zap className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-sm">High-Speed VIP Cloud Servers</h4>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">Server ល្បឿនលឿនពិសេស គ្មានការរអាក់រអួល ឬ Buffering ពេលទស្សនាក្នុងម៉ោងមមាញឹក។</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0 shadow-lg shadow-purple-500/10">
+              <Tv className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-sm">Full Screen Support on All Devices</h4>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">អាចពង្រីកមើល FULL SCREEN បានយ៉ាងងាយស្រួល ទាំងលើទូរស័ព្ទ កុំព្យូទ័រ និង Smart TV។</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Manual Admin Contact Support */}
+      <div className="p-8 rounded-3xl bg-[#0e0c1a] border border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+        <div className="space-y-2 text-center md:text-left">
+          <h3 className="font-display font-black text-xl text-white flex items-center justify-center md:justify-start gap-2">
+            <ShieldCheck className="w-5 h-5 text-amber-400" /> ជំនួយ និងការទូទាត់ដោយផ្ទាល់ជាមួយ Admin
+          </h3>
+          <p className="text-xs text-gray-300 max-w-xl leading-relaxed">
+            ប្រសិនបើលោកអ្នកជួបបញ្ហាក្នុងការស្កេនទូទាត់ ឬចង់បង់ប្រាក់តាមរយៈ ABA Bank / Wing ដោយផ្ទាល់ សូមទាក់ទងមក Admin តាមរយៈ Telegram។
+          </p>
+        </div>
+        <a
+          href={`https://t.me/MerDonghuakhmer?text=Hello Admin, I need assistance with VIP payment for username: ${user?.username || 'Guest'}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary py-3.5 px-8 text-sm shrink-0 flex items-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.4)]"
+        >
+          <MessageCircleQuestion className="w-4 h-4" /> ទាក់ទង Admin តាម Telegram
+        </a>
+      </div>
+
+      {/* KHQR Payment Modal */}
+      <AcledaPaymentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        planKey={selectedPlan}
+        onPaymentSuccess={() => {
+          // Success handled in modal
+        }}
+      />
+    </main>
+  );
+}

@@ -1,0 +1,49 @@
+{
+  "name": "ទស្សនារឿង — Anime & Donghua Streaming",
+  "short_name": "ទស្សនារឿង",
+  "description": "គេហទំព័រទស្សនារឿងចិន 3D Donghua និង Anime ជប៉ុនកម្រិតច្បាស់ 4K Ultra HD សំឡេង & អក្សរខ្មែរ ល្បឿនលឿនឥតគិតថ្លៃ។",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#f59e0b",
+  "orientation": "any",
+  "categories": ["entertainment", "video", "movies"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Donghua Catalog",
+      "short_name": "Donghua",
+      "description": "Browse all Donghua series",
+      "url": "/donghua",
+      "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Anime Catalog",
+      "short_name": "Anime",
+      "description": "Browse all Anime series",
+      "url": "/anime",
+      "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Explore & Search",
+      "short_name": "Explore",
+      "description": "Explore genres and popular rankings",
+      "url": "/explore",
+      "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
+    }
+  ]
+}
