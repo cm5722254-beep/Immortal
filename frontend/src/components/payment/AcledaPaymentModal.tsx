@@ -323,10 +323,16 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
               {/* QR Code Canvas */}
               <div className={`p-2 bg-white rounded-xl relative transition-all ${isExpired ? 'blur-sm grayscale opacity-30' : ''}`}>
                 <QRCodeSVG
-                  value={transaction.khqr_string || ''}
+                  value={transaction.khqr_string || '00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D'}
                   size={190}
                   level="H"
                   includeMargin={false}
+                  imageSettings={{
+                    src: '/canadia-qr-logo.png',
+                    height: 36,
+                    width: 36,
+                    excavate: true,
+                  }}
                 />
               </div>
 
@@ -348,14 +354,11 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
                 </div>
               )}
 
-              {/* Merchant Label underneath QR (Masked/Secure until payment confirmed) */}
+              {/* Real Canadia Bank Merchant Label */}
               <div className="text-center mt-2 space-y-0.5">
-                <p className="text-[11px] font-black text-gray-900 tracking-wider flex items-center justify-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 inline" /> KHQR Official Merchant
-                </p>
-                <p className="text-[10px] text-gray-500 font-mono">
-                  វិក្កយបត្រ: {transaction.bill_number}
-                </p>
+                <p className="text-[12px] font-black text-gray-950 tracking-wider uppercase">KAING BUNCHHAY</p>
+                <p className="text-[10px] text-gray-700 font-bold">013 000 063 2528 (Canadia Bank • KHR)</p>
+                <p className="text-[9px] text-gray-500 font-medium font-mono">{transaction.bill_number}</p>
               </div>
             </div>
 
@@ -414,7 +417,7 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
             {/* Official Security Footer */}
             <div className="pt-2.5 border-t border-white/10 flex items-center justify-center text-[11px] text-gray-400">
               <span className="flex items-center gap-1.5 text-gray-400 font-medium">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> គាំទ្រការទូទាត់តាមរយៈ Wing Bank & NBC Bakong
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> គាំទ្រការទូទាត់តាមរយៈ Canadia Bank, ABA, ACLEDA, Wing & NBC Bakong
               </span>
             </div>
           </div>

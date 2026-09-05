@@ -11,7 +11,8 @@ import {
   Sparkles, 
   AlertCircle, 
   RefreshCw,
-  ShieldCheck
+  ShieldCheck,
+  Smartphone
 } from 'lucide-react';
 
 import { useAuthStore } from '../../store/authStore';
@@ -190,10 +191,10 @@ export const MoviePaymentModal: React.FC<MoviePaymentModalProps> = ({
             <Film className="w-3.5 h-3.5" /> ទិញទស្សនារឿង Movie ដាច់ដោយឡែក
           </div>
           <h3 className="text-lg sm:text-xl font-black text-white font-display">
-            ទូទាត់ប្រាក់តាម Wing Bank KHQR
+            ទូទាត់ប្រាក់តាម KHQR Code
           </h3>
-          <div className="mt-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold leading-relaxed">
-            📢 <strong>សូមបញ្ជាក់៖</strong> អាចស្កេនបានតាមរយៈកម្មវិធី <strong className="text-white underline decoration-emerald-400 decoration-2">Wing Bank App</strong> ឬ Bakong!
+          <div className="mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold leading-relaxed">
+            📢 <strong>ស្កេនបានគ្រប់ធនាគារ៖</strong> ABA, Canadia, ACLEDA, Wing, Bakong និងគ្រប់ App ធនាគារទាំងអស់!
           </div>
         </div>
 
@@ -315,10 +316,16 @@ export const MoviePaymentModal: React.FC<MoviePaymentModalProps> = ({
 
               <div className={`p-2 bg-white rounded-xl relative transition-all ${isExpired ? 'blur-sm grayscale opacity-30' : ''}`}>
                 <QRCodeSVG
-                  value={transaction.khqr_string || ''}
+                  value={transaction.khqr_string || '00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D'}
                   size={190}
                   level="H"
                   includeMargin={false}
+                  imageSettings={{
+                    src: '/canadia-qr-logo.png',
+                    height: 36,
+                    width: 36,
+                    excavate: true,
+                  }}
                 />
               </div>
 
@@ -339,14 +346,11 @@ export const MoviePaymentModal: React.FC<MoviePaymentModalProps> = ({
                 </div>
               )}
 
-              {/* Merchant Label underneath QR (Masked/Secure until payment confirmed) */}
+              {/* Real Canadia Bank Merchant Label */}
               <div className="text-center mt-2 space-y-0.5">
-                <p className="text-[11px] font-black text-gray-900 tracking-wider flex items-center justify-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 inline" /> KHQR Official Merchant
-                </p>
-                <p className="text-[10px] text-gray-500 font-mono">
-                  វិក្កយបត្រ: {transaction.bill_number}
-                </p>
+                <p className="text-[12px] font-black text-gray-950 tracking-wider uppercase">KAING BUNCHHAY</p>
+                <p className="text-[10px] text-gray-700 font-bold">013 000 063 2528 (Canadia Bank • KHR)</p>
+                <p className="text-[9px] text-gray-500 font-mono font-medium">{transaction.bill_number}</p>
               </div>
             </div>
 
@@ -376,20 +380,27 @@ export const MoviePaymentModal: React.FC<MoviePaymentModalProps> = ({
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-2 pt-1">
               <a
-                href={transaction.deeplink || '#'}
-                className="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/30 transition active:scale-95 text-center"
+                href={transaction.deeplink || `bakong://khqr?qr=${encodeURIComponent(transaction.khqr_string || '')}`}
+                className="py-3 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-emerald-400/30 shadow-lg shadow-emerald-950/30 transition active:scale-[0.98] text-center"
               >
-                <span>ស្កេនជាមួយ Wing Bank</span>
+                <Smartphone className="w-4 h-4 text-white" /> ស្កេនជាមួយ App ធនាគារ
               </a>
 
               <button
                 type="button"
                 onClick={handleCopyKhqr}
-                className="py-3 px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
+                className="py-3 px-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'បានចម្លង QR' : 'ចម្លង KHQR'}</span>
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-amber-400" />}
+                <span>{copied ? 'បានចម្លង!' : 'ចម្លង KHQR'}</span>
               </button>
+            </div>
+
+            {/* Official Security Footer */}
+            <div className="pt-2.5 border-t border-white/10 flex items-center justify-center text-[11px] text-gray-400">
+              <span className="flex items-center gap-1.5 text-gray-400 font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> គាំទ្រការទូទាត់តាមរយៈ Canadia Bank, ABA, ACLEDA, Wing & NBC Bakong
+              </span>
             </div>
           </div>
         )}

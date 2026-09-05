@@ -76,32 +76,26 @@ export async function createKHQROrder(planKey: string): Promise<{
       plan_type: planKey,
       currency: 'KHR',
     });
-    if (res.data && res.data.khqr_string) {
-      if (res.data.amount !== plan.amount) {
-        const correctBill = res.data.bill_number || billNumber;
-        const correctQrString = generateOfficialBakongKHQR(plan.khr, correctBill);
-        const encodedQr = encodeURIComponent(correctQrString);
-        return {
-          data: {
-            ...res.data,
-            amount: plan.amount,
-            amount_khr: plan.khr,
-            plan_title: plan.title,
-            khqr_string: correctQrString,
-            deeplink: `bakong://khqr?qr=${encodedQr}`,
-          },
-          isDirectGateway: false,
-        };
-      }
-      return { data: res.data, isDirectGateway: false };
+    if (res.data) {
+      const encodedQr = encodeURIComponent(OFFICIAL_CANADIA_STATIC_KHQR);
+      return {
+        data: {
+          ...res.data,
+          amount: plan.amount,
+          amount_khr: plan.khr,
+          plan_title: plan.title,
+          khqr_string: OFFICIAL_CANADIA_STATIC_KHQR,
+          deeplink: `bakong://khqr?qr=${encodedQr}`,
+        },
+        isDirectGateway: false,
+      };
     }
   } catch (err: any) {
     console.warn('Backend /payment/create fallback to Direct Bakong KHQR...', err);
   }
 
-  // Generate Official Bakong Dynamic KHQR for Canadia Bank (KAING BUNCHHAY)
-  const qrString = generateOfficialBakongKHQR(plan.khr, billNumber);
-  const encodedQr = encodeURIComponent(qrString);
+  // Official Static KHQR for Canadia Bank (KAING BUNCHHAY - 013 000 063 2528 | KHR)
+  const encodedQr = encodeURIComponent(OFFICIAL_CANADIA_STATIC_KHQR);
 
   const fallbackTransaction: PaymentTransactionResponse = {
     transaction_id: `TXN_${billNumber}`,
@@ -113,7 +107,7 @@ export async function createKHQROrder(planKey: string): Promise<{
     currency: 'KHR',
     amount_khr: plan.khr,
     status: 'PENDING',
-    khqr_string: qrString,
+    khqr_string: OFFICIAL_CANADIA_STATIC_KHQR,
     deeplink: `bakong://khqr?qr=${encodedQr}`,
     expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
@@ -182,7 +176,7 @@ export async function sendPaymentAlertToTelegramGroup(data: {
 💵 <b>ទឹកប្រាក់:</b> <b>$${data.amountUsd.toFixed(2)}</b> (≈ ${data.amountKhr.toLocaleString()} ៛)
 🧾 <b>Bill Number:</b> <code>${data.billNumber}</code>
 🆔 <b>Transaction ID:</b> <code>${data.transactionId}</code>
-🏦 <b>ទូទាត់តាម:</b> Wing Bank / NBC Bakong KHQR
+🏦 <b>ទូទាត់តាម:</b> Canadia Bank / NBC Bakong KHQR (KAING BUNCHHAY)
 ⏳ <b>សុពលភាព:</b> ${data.durationDays} ថ្ងៃ
 📅 <b>កាលបរិច្ឆេទ:</b> ${dateStr} ម៉ោង ${timeStr}
 ━━━━━━━━━━━━━━━━━━━━━
@@ -236,9 +230,8 @@ export function createMovieKHQROrder(movieSlug: string, movieTitle: string): {
   const amount = 1.00;
   const khr = 4000;
 
-  // Generate Official Bakong KHQR in KHR (Tag 54 = 4000)
-  const qrString = generateOfficialBakongKHQR(khr, billNumber);
-  const encodedQr = encodeURIComponent(qrString);
+  // Use Official Canadia Bank static KHQR (KAING BUNCHHAY - 013 000 063 2528 | KHR)
+  const encodedQr = encodeURIComponent(OFFICIAL_CANADIA_STATIC_KHQR);
 
   const transaction: PaymentTransactionResponse = {
     transaction_id: `TXN_${billNumber}`,
@@ -250,7 +243,7 @@ export function createMovieKHQROrder(movieSlug: string, movieTitle: string): {
     currency: 'KHR',
     amount_khr: khr,
     status: 'PENDING',
-    khqr_string: qrString,
+    khqr_string: OFFICIAL_CANADIA_STATIC_KHQR,
     deeplink: `bakong://khqr?qr=${encodedQr}`,
     expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
@@ -278,7 +271,7 @@ export async function sendMoviePaymentAlertToTelegramGroup(data: {
 💵 <b>តម្លៃលក់:</b> <b>$1.00</b> (≈ 4,000 ៛)
 🧾 <b>Bill Number:</b> <code>${data.billNumber}</code>
 🆔 <b>Transaction ID:</b> <code>${data.transactionId}</code>
-🏦 <b>ទូទាត់តាម:</b> Wing Bank / NBC Bakong KHQR
+🏦 <b>ទូទាត់តាម:</b> Canadia Bank / NBC Bakong KHQR (KAING BUNCHHAY)
 ⏳ <b>សិទ្ធិទស្សនា:</b> មួយជីវិត (Lifetime Access)
 📅 <b>កាលបរិច្ឆេទ:</b> ${dateStr} ម៉ោង ${timeStr}
 ━━━━━━━━━━━━━━━━━━━━━

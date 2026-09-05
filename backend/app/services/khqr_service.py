@@ -28,19 +28,27 @@ def format_emv_tag(tag: str, value: str) -> str:
     return f"{tag}{length:02d}{val_str}"
 
 
+OFFICIAL_CANADIA_STATIC_KHQR = "00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D"
+
+
 def generate_khqr_string(
-    merchant_id: str,
-    merchant_name: str,
+    merchant_id: str = "0130000632528",
+    merchant_name: str = "KAING BUNCHHAY",
     merchant_city: str = "Phnom Penh",
-    amount: float = 2.50,
-    currency: str = "USD",
+    amount: float = 10000,
+    currency: str = "KHR",
     bill_number: str = "INV001",
-    store_label: str = "RIT_ANIME",
-    terminal_label: str = "WEB_GATEWAY"
+    store_label: str = "KAING BUNCHHAY",
+    terminal_label: str = "0130000632528",
+    use_official_static: bool = True
 ) -> str:
     """
-    Generates a valid Bakong / ACLEDA Dynamic KHQR Code string compliant with EMVCo & NBC KHQR Specs.
+    Generates official Canadia Bank KHQR for KAING BUNCHHAY.
+    By default returns the official verified static KHQR directly scanned from Canadia Bank app.
     """
+    if use_official_static:
+        return OFFICIAL_CANADIA_STATIC_KHQR
+
     # 00: Payload Format Indicator
     tag_00 = format_emv_tag("00", "01")
     
