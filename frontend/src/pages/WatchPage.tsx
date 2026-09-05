@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, List, Info, Users,
-  Play, Search, Lock, Crown, Send, Film, QrCode
+  Play, Search, Lock, Crown, Send, Film, QrCode, LayoutGrid
 } from 'lucide-react';
 import { VideoPlayer } from '../components/player/VideoPlayer';
 import { MoviePaymentModal } from '../components/payment/MoviePaymentModal';
@@ -32,6 +32,7 @@ export function WatchPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMoviePayModalOpen, setIsMoviePayModalOpen] = useState(false);
   const [movieUnlocked, setMovieUnlocked] = useState(false);
+  const [epViewMode, setEpViewMode] = useState<'grid' | 'list'>('grid');
 
   const wsRef = useRef<WebSocket | null>(null);
   const epNum = parseInt(episodeNumber || '1', 10);
@@ -462,15 +463,41 @@ export function WatchPage() {
 
           {/* Right Dedicated Episode Drawer */}
           <div className="lg:w-80 lg:max-h-[600px] flex flex-col rounded-2xl bg-[#111726] border border-[#1E283C] overflow-hidden shrink-0 shadow-lg">
-            {/* Header with Search */}
+            {/* Header with Search & View Toggle */}
             <div className="p-3.5 border-b border-[#1E283C] bg-[#161F33]/60 space-y-2.5">
               <div className="flex items-center justify-between">
                 <h3 className="font-display font-bold text-white text-xs sm:text-sm flex items-center gap-2">
                   <List className="w-4 h-4 text-[#E8452C]" /> បញ្ជីភាគទាំងអស់ ({episodes.length})
                 </h3>
-                <span className="text-[11px] text-gray-400 font-mono">
-                  កំពុងចាក់ភាគ {epNum}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setEpViewMode('grid')}
+                    className={`p-1.5 rounded-lg text-xs transition-colors ${
+                      epViewMode === 'grid'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                    title="Grid View (រៀបជាក្រឡា)"
+                    aria-label="Grid View"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setEpViewMode('list')}
+                    className={`p-1.5 rounded-lg text-xs transition-colors ${
+                      epViewMode === 'list'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                    title="List View (រៀបជាបញ្ជី)"
+                    aria-label="List View"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[11px] text-gray-400 font-mono ml-1">
+                    ភាគ {epNum}
+                  </span>
+                </div>
               </div>
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -484,54 +511,91 @@ export function WatchPage() {
               </div>
             </div>
 
-            {/* Episode List */}
+            {/* Episode List / Grid Display */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1 max-h-[420px]">
-              {filteredEpisodes.map((ep) => {
-                const isActive = ep.episode_number === epNum;
-                const isEpVip = ep.is_vip || (ep as any).is_vip_only || ep.is_free === false;
-                return (
-                  <div
-                    key={ep.id}
-                    className={`w-full flex items-center justify-between gap-2 p-2 rounded-xl transition-all ${
-                      isActive
-                        ? 'bg-amber-500/15 text-white border border-amber-500/40 shadow-sm'
-                        : 'hover:bg-white/5 text-gray-300'
-                    }`}
-                  >
-                    <button
-                      onClick={() => goToEp(ep.episode_number)}
-                      className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
+              {filteredEpisodes.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 text-xs">
+                  រកមិនឃើញភាគដែលស្វែងរកឡើយ
+                </div>
+              ) : epViewMode === 'grid' ? (
+                /* Compact Pill Grid (Instant 1-tap jump on Mobile & Desktop) */
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-1.5 p-1">
+                  {filteredEpisodes.map((ep) => {
+                    const isActive = ep.episode_number === epNum;
+                    const isEpVip = ep.is_vip || (ep as any).is_vip_only || ep.is_free === false;
+
+                    return (
+                      <button
+                        key={ep.id}
+                        onClick={() => goToEp(ep.episode_number)}
+                        className={`relative py-2.5 px-1 rounded-xl text-center font-bold text-xs transition-all duration-150 active:scale-95 flex flex-col items-center justify-center ${
                           isActive
-                            ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
+                            ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30 scale-[1.02] border border-amber-400'
                             : isEpVip
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            : 'bg-[#1E283C] text-gray-300'
+                            ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
+                            : 'bg-[#1E283C] hover:bg-[#2A3750] text-gray-200 border border-white/5'
                         }`}
+                        title={`ភាគ ${ep.episode_number}`}
                       >
-                        {isActive ? <Play className="w-3.5 h-3.5 fill-current" /> : isEpVip ? <Crown className="w-3.5 h-3.5 fill-amber-400" /> : ep.episode_number}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <p className={`text-xs font-bold truncate ${isActive ? 'text-amber-400' : 'text-gray-100'}`}>
-                            {ep.title || `Episode ${ep.episode_number}`}
-                          </p>
-                          {isEpVip && (
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                              VIP
-                            </span>
-                          )}
+                        {isEpVip && (
+                          <span className="absolute top-1 right-1">
+                            <Crown className={`w-2.5 h-2.5 ${isActive ? 'fill-black text-black' : 'fill-amber-400 text-amber-400'}`} />
+                          </span>
+                        )}
+                        <span className="leading-none">{ep.episode_number}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Detailed List View */
+                filteredEpisodes.map((ep) => {
+                  const isActive = ep.episode_number === epNum;
+                  const isEpVip = ep.is_vip || (ep as any).is_vip_only || ep.is_free === false;
+                  return (
+                    <div
+                      key={ep.id}
+                      className={`w-full flex items-center justify-between gap-2 p-2 rounded-xl transition-all ${
+                        isActive
+                          ? 'bg-amber-500/15 text-white border border-amber-500/40 shadow-sm'
+                          : 'hover:bg-white/5 text-gray-300'
+                      }`}
+                    >
+                      <button
+                        onClick={() => goToEp(ep.episode_number)}
+                        className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
+                            isActive
+                              ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
+                              : isEpVip
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                              : 'bg-[#1E283C] text-gray-300'
+                          }`}
+                        >
+                          {isActive ? <Play className="w-3.5 h-3.5 fill-current" /> : isEpVip ? <Crown className="w-3.5 h-3.5 fill-amber-400" /> : ep.episode_number}
                         </div>
-                        <p className="text-[10px] text-gray-400">
-                          {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)}m` : '24m'} · Full HD
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                );
-              })}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className={`text-xs font-bold truncate ${isActive ? 'text-amber-400' : 'text-gray-100'}`}>
+                              {ep.title || `Episode ${ep.episode_number}`}
+                            </p>
+                            {isEpVip && (
+                              <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                VIP
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-gray-400">
+                            {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)}m` : '24m'} · Full HD
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

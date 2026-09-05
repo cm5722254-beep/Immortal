@@ -328,7 +328,7 @@ export function DetailPage() {
                     return (
                       <button
                         onClick={() => setIsMoviePayModalOpen(true)}
-                        className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all"
+                        className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
                       >
                         <Film className="w-5 h-5 fill-black stroke-[2.5]" /> ទិញទស្សនារឿងនេះ ($1.00)
                       </button>
@@ -338,7 +338,7 @@ export function DetailPage() {
                   return (
                     <Link
                       to={`/watch/${anime.slug}/${firstEpNum}`}
-                      className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all"
+                      className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
                     >
                       <Play className="w-5 h-5 fill-black stroke-[2.5]" /> {
                         anime.type === 'MOVIE'
@@ -353,7 +353,7 @@ export function DetailPage() {
                 {latestEpNum > 1 && (
                   <Link
                     to={`/watch/${anime.slug}/${latestEpNum}`}
-                    className="py-3.5 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs md:text-sm border border-white/15 hover:border-amber-500/40 transition flex items-center gap-2"
+                    className="py-3.5 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs md:text-sm border border-white/15 hover:border-amber-500/40 transition flex items-center justify-center gap-2 w-full sm:w-auto"
                   >
                     <Sparkles className="w-4 h-4 text-amber-400" /> ភាគចុងក្រោយ (ភាគ {latestEpNum})
                   </Link>

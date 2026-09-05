@@ -109,7 +109,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col">
       <PromoCountdownBanner />
       <Navbar />
-      <div className="flex-1">
+      <div className="flex-1 pb-16 sm:pb-20 md:pb-0">
         {children}
       </div>
       <ContactDeveloperButton />

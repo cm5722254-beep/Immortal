@@ -49,11 +49,11 @@ function ContentSection({ title, icon: Icon, link, items, isLoading }: SectionPr
 
       {/* ── Netflix Row Container ── */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-          <SkeletonCard count={6} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
+          <SkeletonCard count={7} />
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
           {items.map((anime) => (
             <AnimeCard key={anime.id} anime={anime} />
           ))}
@@ -207,7 +207,7 @@ export function HomePage() {
                 <p className="text-gray-400 text-sm">មិនទាន់មានទិន្នន័យក្នុងជម្រើសនេះនៅឡើយទេ។</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
                 {filteredItems.map((anime) => (
                   <AnimeCard key={anime.id} anime={anime} />
                 ))}

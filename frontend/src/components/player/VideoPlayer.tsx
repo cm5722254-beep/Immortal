@@ -665,35 +665,35 @@ export function VideoPlayer({
           </div>
 
           {/* Control Buttons Row */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             {/* Play/Pause */}
-            <button onClick={togglePlay} className="text-white hover:text-brand-400 transition-colors p-1" aria-label={isPlaying ? 'Pause' : 'Play'}>
-              {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+            <button onClick={togglePlay} className="text-white hover:text-brand-400 transition-colors p-1.5 sm:p-1 active:scale-90" aria-label={isPlaying ? 'Pause' : 'Play'}>
+              {isPlaying ? <Pause className="w-5 h-5 sm:w-6 sm:h-6 fill-current" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />}
             </button>
 
             {/* Skip 10s */}
-            <button onClick={() => videoRef.current && (videoRef.current.currentTime -= 10)} className="btn-icon text-white hover:text-brand-400" aria-label="Skip back 10s">
+            <button onClick={() => videoRef.current && (videoRef.current.currentTime -= 10)} className="btn-icon text-white hover:text-brand-400 p-1.5 sm:p-2" aria-label="Skip back 10s">
               <SkipBack className="w-4 h-4" />
             </button>
-            <button onClick={() => videoRef.current && (videoRef.current.currentTime += 10)} className="btn-icon text-white hover:text-brand-400" aria-label="Skip forward 10s">
+            <button onClick={() => videoRef.current && (videoRef.current.currentTime += 10)} className="btn-icon text-white hover:text-brand-400 p-1.5 sm:p-2" aria-label="Skip forward 10s">
               <SkipForward className="w-4 h-4" />
             </button>
 
             {/* Volume */}
-            <div className="flex items-center gap-2 group/vol">
-              <button onClick={toggleMute} className="text-white hover:text-brand-400" aria-label="Toggle mute">
-                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            <div className="flex items-center gap-1 sm:gap-2 group/vol">
+              <button onClick={toggleMute} className="text-white hover:text-brand-400 p-1.5 sm:p-2" aria-label="Toggle mute">
+                {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
               <input
                 type="range" min="0" max="1" step="0.05" value={isMuted ? 0 : volume}
                 onChange={changeVolume}
-                className="w-0 group-hover/vol:w-20 transition-all duration-200 accent-brand-500 cursor-pointer h-1"
+                className="hidden sm:block w-0 group-hover/vol:w-20 transition-all duration-200 accent-brand-500 cursor-pointer h-1"
                 aria-label="Volume"
               />
             </div>
 
             {/* Time Stamp */}
-            <span className="text-white text-xs font-mono ml-1">
+            <span className="text-white text-[10px] sm:text-xs font-mono ml-0.5 sm:ml-1 shrink-0">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 

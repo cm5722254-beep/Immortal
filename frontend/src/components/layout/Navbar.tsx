@@ -147,14 +147,14 @@ export function Navbar() {
             <Logo size="md" showWordmark={true} />
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1.5">
+          {/* Navigation Links (Visible from Tablet md: upwards) */}
+          <nav className="hidden md:flex items-center gap-1 lg:gap-1.5">
             {NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 select-none ${
+                  `px-2.5 lg:px-3.5 py-1.5 rounded-xl text-xs lg:text-sm font-medium transition-all duration-200 flex items-center gap-1.5 select-none ${
                     isActive
                       ? 'text-white font-bold bg-white/[0.12] border border-white/[0.18] shadow-sm backdrop-blur-md'
                       : 'text-gray-300 hover:text-white hover:bg-white/[0.06]'
@@ -174,27 +174,27 @@ export function Navbar() {
           </nav>
         </div>
 
-        {/* ── Center: Dynamic Page Title (Mobile View) ── */}
-        <div className="flex-1 lg:hidden text-center truncate px-2">
-          <span className="font-display font-bold text-sm sm:text-base text-white tracking-wide">
+        {/* ── Center: Dynamic Page Title (Mobile View Only) ── */}
+        <div className="flex-1 md:hidden text-center truncate px-2">
+          <span className="font-display font-bold text-sm text-white tracking-wide">
             {pageTitle}
           </span>
         </div>
 
         {/* ── Right Actions ── */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Search Pill Bar (Desktop) */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Search Pill Bar (Desktop & Tablet) */}
           <form
             onSubmit={handleSearchSubmit}
-            className="hidden sm:flex items-center relative w-44 lg:w-56"
+            className="hidden sm:flex items-center relative w-36 md:w-44 lg:w-56"
           >
             <Search className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ស្វែងរករឿង, Anime, Donghua..."
-              className="w-full bg-[#101522]/90 border border-white/10 rounded-full pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#e8452c] focus:ring-1 focus:ring-[#e8452c]/30 transition-all backdrop-blur-md"
+              placeholder="ស្វែងរករឿង, Anime..."
+              className="w-full bg-[#101522]/90 border border-white/10 rounded-full pl-9 pr-3 py-1.5 text-sm sm:text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#e8452c] focus:ring-1 focus:ring-[#e8452c]/30 transition-all backdrop-blur-md"
             />
           </form>
 
@@ -210,11 +210,11 @@ export function Navbar() {
           {/* VIP Upgrade Button */}
           <Link
             to="/vip"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all group shrink-0"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all group shrink-0"
             title="គម្រោង VIP ($2.50)"
           >
             <Crown className="w-3.5 h-3.5 text-black fill-black shrink-0" />
-            <span className="whitespace-nowrap font-extrabold">VIP</span>
+            <span className="whitespace-nowrap font-extrabold text-[11px] sm:text-xs">VIP</span>
           </Link>
 
           {/* Notification Bell */}
@@ -230,9 +230,9 @@ export function Navbar() {
               )}
             </button>
 
-            {/* Notification Popover Dropdown */}
+            {/* Notification Popover Dropdown (Responsive width for mobile & desktop) */}
             {isNotifOpen && (
-              <div className="absolute right-0 top-12 w-80 sm:w-96 rounded-2xl bg-[#15060A]/95 border border-amber-500/25 shadow-2xl backdrop-blur-2xl p-3 z-50 animate-scale-in">
+              <div className="absolute right-0 top-12 w-[calc(100vw-24px)] sm:w-96 max-w-[380px] rounded-2xl bg-[#15060A]/95 border border-amber-500/25 shadow-2xl backdrop-blur-2xl p-3 z-50 animate-scale-in">
                 <div className="flex items-center justify-between pb-2 border-b border-amber-500/20 px-1">
                   <div className="flex items-center gap-2">
                     <span className="font-display font-bold text-sm text-white">សេចក្តីជូនដំណឹង</span>
@@ -325,13 +325,22 @@ export function Navbar() {
                 <ChevronDown className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               </button>
             ) : (
-              <Link
-                to="/login"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#111726] hover:bg-[#161F33] border border-[#1E283C] hover:border-amber-500 text-white transition-all whitespace-nowrap shrink-0 shadow-sm"
-              >
-                <UserIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="whitespace-nowrap">ចូលគណនី</span>
-              </Link>
+              <>
+                <Link
+                  to="/login"
+                  className="sm:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors shrink-0"
+                  aria-label="ចូលគណនី"
+                >
+                  <UserIcon className="w-5 h-5 text-amber-400" />
+                </Link>
+                <Link
+                  to="/login"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#111726] hover:bg-[#161F33] border border-[#1E283C] hover:border-amber-500 text-white transition-all whitespace-nowrap shrink-0 shadow-sm"
+                >
+                  <UserIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="whitespace-nowrap">ចូលគណនី</span>
+                </Link>
+              </>
             )}
 
             {/* User Dropdown Menu */}

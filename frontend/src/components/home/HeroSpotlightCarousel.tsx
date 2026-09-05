@@ -28,6 +28,10 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
   const total = items.length;
   const AUTOPLAY_TIME = 5000;
 
+  // Touch swipe support for mobile
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
   // Responsive Window Width for Dynamic 3D Radius
   const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
 
@@ -41,7 +45,7 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
   const RING_COUNT = Math.min(total, 8);
   const ringItems = items.slice(0, RING_COUNT);
   const theta = 360 / RING_COUNT;
-  const radius = windowWidth < 440 ? 145 : windowWidth < 768 ? 190 : 250;
+  const radius = windowWidth < 380 ? 115 : windowWidth < 480 ? 135 : windowWidth < 768 ? 185 : 250;
 
   // Auto-rotation timer
   useEffect(() => {
@@ -91,11 +95,33 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
     setActiveIndex((curr) => (curr + 1) % total);
   };
 
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > 45) {
+      handleNext();
+    } else if (distance < -45) {
+      handlePrev();
+    }
+  };
+
   return (
     <div
-      className="relative w-full overflow-hidden select-none bg-[#141414] min-h-[560px] sm:min-h-[620px] md:min-h-[680px] flex items-center"
+      className="relative w-full overflow-hidden select-none bg-[#141414] min-h-[520px] sm:min-h-[620px] md:min-h-[680px] flex items-center touch-pan-y"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
       {/* ── 1. Panoramic Ambient Backdrop ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -291,7 +317,7 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
       </div>
 
       {/* ── 3. Bottom Slide Indicators ── */}
-      <div className="absolute right-4 sm:right-8 lg:right-12 bottom-4 z-30 flex items-center gap-2">
+      <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-8 lg:right-12 sm:translate-x-0 bottom-3 sm:bottom-4 z-30 flex items-center gap-2">
         <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
           {items.map((_, idx) => (
             <button
