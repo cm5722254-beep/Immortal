@@ -323,7 +323,7 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
               {/* QR Code Canvas */}
               <div className={`p-2 bg-white rounded-xl relative transition-all ${isExpired ? 'blur-sm grayscale opacity-30' : ''}`}>
                 <QRCodeSVG
-                  value={transaction.khqr_string || '00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D'}
+                  value="00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D"
                   size={190}
                   level="H"
                   includeMargin={false}
