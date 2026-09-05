@@ -33,26 +33,28 @@ function formatEmvTag(tag: string, value: string): string {
   return `${tag}${lengthStr}${value}`;
 }
 
-export function generateOfficialBakongKHQR(amount: number, billNumber: string): string {
+export const OFFICIAL_CANADIA_STATIC_KHQR = '00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D';
+
+export function generateOfficialBakongKHQR(amountKhr: number, billNumber: string): string {
   const tag00 = formatEmvTag('00', '01');
   const tag01 = formatEmvTag('01', '12'); // Dynamic KHQR
 
-  // Tag 29: Canadia Bank / Bakong Info for KAING BUNCHHAY (0130000632528)
+  // Tag 29: Canadia Bank / Bakong Info for KAING BUNCHHAY (0130000632528 | KHR)
   const sub00 = formatEmvTag('00', 'cadikhppxxx@cadi');
   const sub01 = formatEmvTag('01', '0130000632528');
   const sub02 = formatEmvTag('02', 'Canadia Bank');
   const tag29 = formatEmvTag('29', `${sub00}${sub01}${sub02}`);
 
   const tag52 = formatEmvTag('52', '0000');
-  const tag53 = formatEmvTag('53', '840'); // USD
-  const tag54 = formatEmvTag('54', amount.toFixed(2));
+  const tag53 = formatEmvTag('53', '116'); // 116 = KHR (Cambodian Riel - Canadia Bank Account)
+  const tag54 = formatEmvTag('54', Math.round(amountKhr).toString());
   const tag58 = formatEmvTag('58', 'KH');
   const tag59 = formatEmvTag('59', 'KAING BUNCHHAY');
   const tag60 = formatEmvTag('60', 'Phnom Penh');
 
   const add01 = formatEmvTag('01', billNumber.slice(0, 25));
   const add02 = formatEmvTag('02', '0130000632528');
-  const add03 = formatEmvTag('03', 'MerDonghua VIP');
+  const add03 = formatEmvTag('03', 'MerDonghua');
   const tag62 = formatEmvTag('62', `${add01}${add02}${add03}`);
 
   const raw = `${tag00}${tag01}${tag29}${tag52}${tag53}${tag54}${tag58}${tag59}${tag60}${tag62}6304`;
@@ -72,13 +74,12 @@ export async function createKHQROrder(planKey: string): Promise<{
   try {
     const res = await api.post<PaymentTransactionResponse>('/payment/create', {
       plan_type: planKey,
-      currency: 'USD',
+      currency: 'KHR',
     });
     if (res.data && res.data.khqr_string) {
-      // Ensure transaction amount & KHQR QR string strictly matches our current plan price ($2.50)
       if (res.data.amount !== plan.amount) {
         const correctBill = res.data.bill_number || billNumber;
-        const correctQrString = generateOfficialBakongKHQR(plan.amount, correctBill);
+        const correctQrString = generateOfficialBakongKHQR(plan.khr, correctBill);
         const encodedQr = encodeURIComponent(correctQrString);
         return {
           data: {
@@ -87,7 +88,7 @@ export async function createKHQROrder(planKey: string): Promise<{
             amount_khr: plan.khr,
             plan_title: plan.title,
             khqr_string: correctQrString,
-            deeplink: `acledamobile://khqr?qr=${encodedQr}`,
+            deeplink: `bakong://khqr?qr=${encodedQr}`,
           },
           isDirectGateway: false,
         };
@@ -98,8 +99,8 @@ export async function createKHQROrder(planKey: string): Promise<{
     console.warn('Backend /payment/create fallback to Direct Bakong KHQR...', err);
   }
 
-  // Generate Official Bakong KHQR for MerDonghua Anime (merdonghua_anime@bkrt)
-  const qrString = generateOfficialBakongKHQR(plan.amount, billNumber);
+  // Generate Official Bakong Dynamic KHQR for Canadia Bank (KAING BUNCHHAY)
+  const qrString = generateOfficialBakongKHQR(plan.khr, billNumber);
   const encodedQr = encodeURIComponent(qrString);
 
   const fallbackTransaction: PaymentTransactionResponse = {
@@ -109,11 +110,11 @@ export async function createKHQROrder(planKey: string): Promise<{
     plan_title: plan.title,
     duration_days: plan.days,
     amount: plan.amount,
-    currency: 'USD',
+    currency: 'KHR',
     amount_khr: plan.khr,
     status: 'PENDING',
     khqr_string: qrString,
-    deeplink: `acledamobile://khqr?qr=${encodedQr}`,
+    deeplink: `bakong://khqr?qr=${encodedQr}`,
     expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
   };
@@ -235,8 +236,8 @@ export function createMovieKHQROrder(movieSlug: string, movieTitle: string): {
   const amount = 1.00;
   const khr = 4000;
 
-  // Generate Official Bakong KHQR with $1.00 (Tag 54 = 1.00)
-  const qrString = generateOfficialBakongKHQR(amount, billNumber);
+  // Generate Official Bakong KHQR in KHR (Tag 54 = 4000)
+  const qrString = generateOfficialBakongKHQR(khr, billNumber);
   const encodedQr = encodeURIComponent(qrString);
 
   const transaction: PaymentTransactionResponse = {
@@ -246,11 +247,11 @@ export function createMovieKHQROrder(movieSlug: string, movieTitle: string): {
     plan_title: `🍿 រឿងភាពយន្ត Movie: ${movieTitle}`,
     duration_days: 0, // Lifetime access to this movie
     amount: amount,
-    currency: 'USD',
+    currency: 'KHR',
     amount_khr: khr,
     status: 'PENDING',
     khqr_string: qrString,
-    deeplink: `acledamobile://khqr?qr=${encodedQr}`,
+    deeplink: `bakong://khqr?qr=${encodedQr}`,
     expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
   };

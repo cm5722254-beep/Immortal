@@ -60,7 +60,7 @@ class AcledaPaymentService:
         db: AsyncSession,
         user_id: Optional[int],
         plan_type: str,
-        currency: str = "USD"
+        currency: str = "KHR"
     ) -> PaymentTransaction:
         """
         Creates a new payment transaction and generates the KHQR string and deep links.

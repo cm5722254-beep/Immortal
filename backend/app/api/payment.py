@@ -58,7 +58,7 @@ async def create_payment(
         db=db,
         user_id=user_id,
         plan_type=data.plan_type,
-        currency=data.currency or "USD",
+        currency=data.currency or "KHR",
     )
     return transaction
 
