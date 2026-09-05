@@ -271,6 +271,10 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
                 <span className="font-bold text-white">${transaction?.amount.toFixed(2)} USD</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-gray-400">គណនីទទួល (Receiver):</span>
+                <span className="font-bold text-emerald-400">KAING BUNCHHAY (013 000 063 2528)</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-400">លេខកូដប្រតិបត្តិការ:</span>
                 <span className="font-mono text-gray-300 text-[11px]">{transaction?.transaction_id}</span>
               </div>
@@ -344,11 +348,14 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
                 </div>
               )}
 
-              {/* Merchant Label underneath QR */}
+              {/* Merchant Label underneath QR (Masked/Secure until payment confirmed) */}
               <div className="text-center mt-2 space-y-0.5">
-                <p className="text-[12px] font-black text-gray-950 tracking-wider uppercase">NAMI ANIME</p>
-                <p className="text-[10px] text-gray-600 font-bold">013 000 063 2528 (KHR)</p>
-                <p className="text-[9px] text-gray-500 font-medium font-mono">{transaction.bill_number}</p>
+                <p className="text-[11px] font-black text-gray-900 tracking-wider flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 inline" /> KHQR Official Merchant
+                </p>
+                <p className="text-[10px] text-gray-500 font-mono">
+                  វិក្កយបត្រ: {transaction.bill_number}
+                </p>
               </div>
             </div>
 
@@ -384,7 +391,7 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
                   href={`bakong://khqr?qr=${encodeURIComponent(transaction.khqr_string || '')}`}
                   className="py-3 px-3 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white flex items-center justify-center gap-1.5 border border-emerald-400/30 shadow-lg shadow-emerald-950/30 transition active:scale-[0.98]"
                 >
-                  <Smartphone className="w-4 h-4 text-white" /> ស្កេនជាមួយ Wing Bank
+                  <Smartphone className="w-4 h-4 text-white" /> ស្កេនជាមួយ App ធនាគារ
                 </a>
                 <button
                   type="button"

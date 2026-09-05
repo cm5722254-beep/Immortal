@@ -10,7 +10,8 @@ import {
   Check, 
   Sparkles, 
   AlertCircle, 
-  RefreshCw 
+  RefreshCw,
+  ShieldCheck
 } from 'lucide-react';
 
 import { useAuthStore } from '../../store/authStore';
@@ -252,6 +253,10 @@ export const MoviePaymentModal: React.FC<MoviePaymentModalProps> = ({
                 <span className="font-bold text-white">$1.00 USD (≈ 4,000 ៛)</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-gray-400">គណនីទទួល (Receiver):</span>
+                <span className="font-bold text-emerald-400">KAING BUNCHHAY (013 000 063 2528)</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-400">សិទ្ធិ:</span>
                 <span className="font-bold text-emerald-400">ទស្សនាបានរហូត (Lifetime)</span>
               </div>
@@ -334,10 +339,14 @@ export const MoviePaymentModal: React.FC<MoviePaymentModalProps> = ({
                 </div>
               )}
 
+              {/* Merchant Label underneath QR (Masked/Secure until payment confirmed) */}
               <div className="text-center mt-2 space-y-0.5">
-                <p className="text-[12px] font-black text-gray-950 tracking-wider uppercase">NAMI ANIME</p>
-                <p className="text-[10px] text-gray-600 font-bold">013 000 063 2528 (KHR)</p>
-                <p className="text-[9px] text-gray-500 font-medium font-mono">{transaction.bill_number}</p>
+                <p className="text-[11px] font-black text-gray-900 tracking-wider flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 inline" /> KHQR Official Merchant
+                </p>
+                <p className="text-[10px] text-gray-500 font-mono">
+                  វិក្កយបត្រ: {transaction.bill_number}
+                </p>
               </div>
             </div>
 
