@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 import { useAuthStore } from '../../store/authStore';
-import { createKHQROrder, checkKHQRStatus, sendPaymentAlertToTelegramGroup } from '../../services/paymentService';
+import { createKHQROrder, checkKHQRStatus, sendPaymentAlertToTelegramGroup, CANADIA_AUTOFILL_KHQR_MAP } from '../../services/paymentService';
 import type { PaymentTransactionResponse } from '../../types';
 
 interface AcledaPaymentModalProps {
@@ -172,9 +172,10 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
     }
   };
 
+  const activeKhqr: string = CANADIA_AUTOFILL_KHQR_MAP[planKey] || transaction?.khqr_string || CANADIA_AUTOFILL_KHQR_MAP['1month'] || '';
+
   const handleCopyKhqr = () => {
-    if (!transaction?.khqr_string) return;
-    navigator.clipboard.writeText(transaction.khqr_string);
+    navigator.clipboard.writeText(activeKhqr);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -323,7 +324,7 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
               {/* QR Code Canvas */}
               <div className={`p-2 bg-white rounded-xl relative transition-all ${isExpired ? 'blur-sm grayscale opacity-30' : ''}`}>
                 <QRCodeSVG
-                  value="00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D"
+                  value={activeKhqr}
                   size={190}
                   level="H"
                   includeMargin={false}
@@ -391,7 +392,7 @@ export const AcledaPaymentModal: React.FC<AcledaPaymentModalProps> = ({
               {/* Universal Bakong Deeplink */}
               <div className="grid grid-cols-2 gap-2">
                 <a
-                  href={`bakong://khqr?qr=${encodeURIComponent(transaction.khqr_string || '')}`}
+                  href={`bakong://khqr?qr=${encodeURIComponent(activeKhqr)}`}
                   className="py-3 px-3 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white flex items-center justify-center gap-1.5 border border-emerald-400/30 shadow-lg shadow-emerald-950/30 transition active:scale-[0.98]"
                 >
                   <Smartphone className="w-4 h-4 text-white" /> ស្កេនជាមួយ App ធនាគារ

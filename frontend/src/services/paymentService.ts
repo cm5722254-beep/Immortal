@@ -35,6 +35,15 @@ function formatEmvTag(tag: string, value: string): string {
 
 export const OFFICIAL_CANADIA_STATIC_KHQR = '00020101021129530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165802KH5914KAING BUNCHHAY6010Phnom Penh6304745D';
 
+// Official Canadia Bank KHQR with auto-filled amounts (Tag 54) for KAING BUNCHHAY (013 000 063 2528 | KHR)
+export const CANADIA_AUTOFILL_KHQR_MAP: Record<string, string> = {
+  '1month': '00020101021229530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165405100005802KH5914KAING BUNCHHAY6010Phnom Penh63045722',
+  '3month': '00020101021229530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165405300005802KH5914KAING BUNCHHAY6010Phnom Penh6304DCC7',
+  '6month': '00020101021229530016cadikhppxxx@cadi011301300006325280212Canadia Bank5204000053031165405600005802KH5914KAING BUNCHHAY6010Phnom Penh630416CE',
+  '1year':  '00020101021229530016cadikhppxxx@cadi011301300006325280212Canadia Bank52040000530311654061000005802KH5914KAING BUNCHHAY6010Phnom Penh6304DB3E',
+  'movie':  '00020101021229530016cadikhppxxx@cadi011301300006325280212Canadia Bank520400005303116540440005802KH5914KAING BUNCHHAY6010Phnom Penh63040BC2',
+};
+
 export function generateOfficialBakongKHQR(amountKhr: number, billNumber: string): string {
   const tag00 = formatEmvTag('00', '01');
   const tag01 = formatEmvTag('01', '12'); // Dynamic KHQR
@@ -70,6 +79,9 @@ export async function createKHQROrder(planKey: string): Promise<{
   const timestamp = Date.now();
   const billNumber = `MD${timestamp.toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
 
+  const qrString = CANADIA_AUTOFILL_KHQR_MAP[planKey] || CANADIA_AUTOFILL_KHQR_MAP['1month'];
+  const encodedQr = encodeURIComponent(qrString);
+
   // Try standard backend API first
   try {
     const res = await api.post<PaymentTransactionResponse>('/payment/create', {
@@ -77,14 +89,13 @@ export async function createKHQROrder(planKey: string): Promise<{
       currency: 'KHR',
     });
     if (res.data) {
-      const encodedQr = encodeURIComponent(OFFICIAL_CANADIA_STATIC_KHQR);
       return {
         data: {
           ...res.data,
           amount: plan.amount,
           amount_khr: plan.khr,
           plan_title: plan.title,
-          khqr_string: OFFICIAL_CANADIA_STATIC_KHQR,
+          khqr_string: qrString,
           deeplink: `bakong://khqr?qr=${encodedQr}`,
         },
         isDirectGateway: false,
@@ -93,9 +104,6 @@ export async function createKHQROrder(planKey: string): Promise<{
   } catch (err: any) {
     console.warn('Backend /payment/create fallback to Direct Bakong KHQR...', err);
   }
-
-  // Official Static KHQR for Canadia Bank (KAING BUNCHHAY - 013 000 063 2528 | KHR)
-  const encodedQr = encodeURIComponent(OFFICIAL_CANADIA_STATIC_KHQR);
 
   const fallbackTransaction: PaymentTransactionResponse = {
     transaction_id: `TXN_${billNumber}`,
@@ -107,7 +115,7 @@ export async function createKHQROrder(planKey: string): Promise<{
     currency: 'KHR',
     amount_khr: plan.khr,
     status: 'PENDING',
-    khqr_string: OFFICIAL_CANADIA_STATIC_KHQR,
+    khqr_string: qrString,
     deeplink: `bakong://khqr?qr=${encodedQr}`,
     expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
@@ -230,8 +238,9 @@ export function createMovieKHQROrder(movieSlug: string, movieTitle: string): {
   const amount = 1.00;
   const khr = 4000;
 
-  // Use Official Canadia Bank static KHQR (KAING BUNCHHAY - 013 000 063 2528 | KHR)
-  const encodedQr = encodeURIComponent(OFFICIAL_CANADIA_STATIC_KHQR);
+  // Use Official Canadia Bank auto-filled KHQR 4000 KHR (KAING BUNCHHAY - 013 000 063 2528 | KHR)
+  const qrString = CANADIA_AUTOFILL_KHQR_MAP['movie'];
+  const encodedQr = encodeURIComponent(qrString);
 
   const transaction: PaymentTransactionResponse = {
     transaction_id: `TXN_${billNumber}`,
@@ -243,7 +252,7 @@ export function createMovieKHQROrder(movieSlug: string, movieTitle: string): {
     currency: 'KHR',
     amount_khr: khr,
     status: 'PENDING',
-    khqr_string: OFFICIAL_CANADIA_STATIC_KHQR,
+    khqr_string: qrString,
     deeplink: `bakong://khqr?qr=${encodedQr}`,
     expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
