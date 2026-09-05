@@ -91,8 +91,13 @@ def get_authorized_origins() -> list[str]:
     Return the list of domains authorized to use this API.
     Only these origins can make cross-origin requests.
     """
-    raw = os.getenv("AUTHORIZED_DOMAINS", "http://localhost:5173,http://localhost:3000")
+    raw = os.getenv("AUTHORIZED_DOMAINS", "")
     origins = [d.strip() for d in raw.split(",") if d.strip()]
+
+    # Also automatically include FRONTEND_URL if configured
+    frontend_url = os.getenv("FRONTEND_URL", "").strip()
+    if frontend_url and frontend_url not in origins:
+        origins.append(frontend_url)
 
     # Always allow localhost for development
     dev_origins = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
