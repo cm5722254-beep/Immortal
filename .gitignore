@@ -159,7 +159,9 @@ $RECYCLE.BIN/
 downloaded_videos/
 *.mp4
 *.mkv
-*.ts
+# *.ts files = MPEG-TS video streams (NOT TypeScript!)
+# Use full path pattern to avoid blocking .ts source files
+downloaded_videos/*.ts
 *.m3u8
 
 # Build specs (PyInstaller)
