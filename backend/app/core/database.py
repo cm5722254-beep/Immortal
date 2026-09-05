@@ -59,6 +59,7 @@ async def init_db():
                 ("vip_plan", "VARCHAR(50) DEFAULT NULL"),
                 ("vip_started_at", "TIMESTAMP DEFAULT NULL"),
                 ("vip_expires_at", "TIMESTAMP DEFAULT NULL"),
+                ("unlocked_movies", "TEXT DEFAULT '[]'"),
             ]
             for col_name, col_type in vip_columns:
                 try:

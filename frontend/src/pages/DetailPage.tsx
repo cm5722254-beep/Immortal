@@ -320,7 +320,8 @@ export function DetailPage() {
                 {/* Watch / Buy Primary CTA */}
                 {(() => {
                   const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
-                  const hasMovieAccess = isAdministrator || movieUnlocked || (anime.slug ? isMoviePurchased(anime.slug) : false);
+                  const userUnlockedMovies = user?.unlocked_movies || [];
+                  const hasMovieAccess = isAdministrator || movieUnlocked || (anime.slug ? (isMoviePurchased(anime.slug) || userUnlockedMovies.includes(anime.slug)) : false);
 
                   if (anime.type === 'MOVIE' && !hasMovieAccess) {
                     return (

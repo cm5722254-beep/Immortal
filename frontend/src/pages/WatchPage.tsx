@@ -47,7 +47,8 @@ export function WatchPage() {
   // 🍿 Movie Pay-Per-View check ($1.00)
   const isMovie = anime?.type === 'MOVIE';
   const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
-  const hasPurchasedMovie = movieUnlocked || (slug ? isMoviePurchased(slug) : false);
+  const userUnlockedMovies = user?.unlocked_movies || [];
+  const hasPurchasedMovie = movieUnlocked || (slug ? (isMoviePurchased(slug) || userUnlockedMovies.includes(slug)) : false);
   const isMovieLocked = isMovie && !isAdministrator && !hasPurchasedMovie;
 
   // Fetch anime & episodes

@@ -13,7 +13,7 @@ from app.models.episode import Episode
 from app.models.comment import Comment
 from app.models.banner import Banner
 from app.schemas.common import AdminStats, BannerCreate, BannerRead
-from app.schemas.user import UserRead, UserAdminUpdate, VIPGrantRequest
+from app.schemas.user import UserRead, UserAdminUpdate, VIPGrantRequest, MovieUnlockRequest
 from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -128,6 +128,41 @@ async def admin_set_user_vip(
             user.vip_started_at = now
         user.vip_expires_at = base_time + timedelta(days=days)
 
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return UserRead.model_validate(user)
+
+
+@router.post("/users/{user_id}/movies", response_model=UserRead)
+async def admin_manage_user_movie(
+    user_id: int,
+    data: MovieUnlockRequest,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    import json
+    try:
+        current_list = json.loads(user.unlocked_movies or "[]")
+        if not isinstance(current_list, list):
+            current_list = []
+    except Exception:
+        current_list = []
+
+    slug = data.movie_slug.strip()
+    if data.action == "unlock":
+        if slug and slug not in current_list:
+            current_list.append(slug)
+    elif data.action == "lock":
+        if slug in current_list:
+            current_list.remove(slug)
+
+    user.unlocked_movies = json.dumps(current_list)
     db.add(user)
     await db.commit()
     await db.refresh(user)

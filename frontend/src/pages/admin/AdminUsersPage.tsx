@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Shield, UserCheck, UserX, Trash2, X, Search, Crown, Check, Send, Mail, Globe, Smartphone } from 'lucide-react';
+import { Shield, UserCheck, UserX, Trash2, X, Search, Crown, Check, Send, Mail, Globe, Smartphone, Film } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
 import { useAuthStore } from '../../store/authStore';
@@ -60,6 +60,8 @@ export function AdminUsersPage() {
   const [editRole, setEditRole] = useState<'USER' | 'ADMIN' | 'STAFF' | 'OWNER'>('USER');
   const [editActive, setEditActive] = useState(true);
   const [vipModalUser, setVipModalUser] = useState<User | null>(null);
+  const [movieModalUser, setMovieModalUser] = useState<User | null>(null);
+  const [availableMovies, setAvailableMovies] = useState<any[]>([]);
   const [unbanRequests, setUnbanRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'users' | 'appeals'>('users');
   const [saving, setSaving] = useState(false);
@@ -93,10 +95,42 @@ export function AdminUsersPage() {
     } catch {}
   };
 
+  const fetchMovies = async () => {
+    try {
+      const res = await api.get('/anime?type=MOVIE&per_page=100');
+      const items = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+      setAvailableMovies(items);
+    } catch (e) {
+      console.error('Error fetching movies for admin:', e);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchUnbanRequests();
+    fetchMovies();
   }, [page, filterVip]);
+
+  const handleToggleMovieAccess = async (u: User, movieSlug: string, action: 'unlock' | 'lock') => {
+    setSaving(true);
+    setError('');
+    try {
+      const res = await api.post(`/admin/users/${u.id}/movies`, {
+        movie_slug: movieSlug,
+        action,
+      });
+      const updatedUser: User = res.data;
+      setMovieModalUser(updatedUser);
+      setUsers((prev) => prev.map((item) => (item.id === updatedUser.id ? updatedUser : item)));
+      const actionText = action === 'unlock' ? 'បានបើកសិទ្ធិទស្សនា' : 'បានដកសិទ្ធិទស្សនា';
+      setSuccessMsg(`${actionText}រឿង "${movieSlug}" ជូន ${u.username} ដោយជោគជ័យ!`);
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Failed to update movie access');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const openEdit = (u: User) => {
     setEditUser(u);
@@ -543,18 +577,28 @@ export function AdminUsersPage() {
 
                     {/* Bottom Row: Actions */}
                     <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                      {!isUserOwner ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {!isUserOwner ? (
+                          <button
+                            onClick={() => setVipModalUser(u)}
+                            className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+                          >
+                            <Crown className="w-3.5 h-3.5 fill-amber-400" /> Set VIP
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
+                            <Shield className="w-3 h-3 fill-amber-400/30" /> ការពារដាច់ខាត
+                          </span>
+                        )}
+
                         <button
-                          onClick={() => setVipModalUser(u)}
-                          className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+                          onClick={() => setMovieModalUser(u)}
+                          className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+                          title="គ្រប់គ្រងសិទ្ធិទស្សនាភាពយន្ត (Movie Access)"
                         >
-                          <Crown className="w-3.5 h-3.5 fill-amber-400" /> Set VIP
+                          <Film className="w-3.5 h-3.5" /> Movie {u.unlocked_movies?.length ? `(${u.unlocked_movies.length})` : ''}
                         </button>
-                      ) : (
-                        <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
-                          <Shield className="w-3 h-3 fill-amber-400/30" /> ការពារដាច់ខាត
-                        </span>
-                      )}
+                      </div>
 
                       <div className="flex items-center gap-1">
                         <button
@@ -758,12 +802,21 @@ export function AdminUsersPage() {
                             {!isUserOwner && (
                               <button
                                 onClick={() => setVipModalUser(u)}
-                                className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1 shadow-sm transition-all"
+                                className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
                                 title="Set VIP Membership Plan"
                               >
                                 <Crown className="w-3.5 h-3.5 fill-amber-400" /> Set VIP
                               </button>
                             )}
+
+                            {/* Manage Movie Access Button */}
+                            <button
+                              onClick={() => setMovieModalUser(u)}
+                              className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                              title="គ្រប់គ្រងសិទ្ធិទស្សនា Movie (Movie Access)"
+                            >
+                              <Film className="w-3.5 h-3.5" /> Movie {u.unlocked_movies?.length ? `(${u.unlocked_movies.length})` : ''}
+                            </button>
 
                             {/* Edit Role & Status */}
                             <button onClick={() => openEdit(u)} className="btn-icon text-gray-400 hover:text-brand-400" title="Edit Role & Permissions">
@@ -927,6 +980,18 @@ export function AdminUsersPage() {
           </div>
         )}
 
+        {/* Movie Access Modal */}
+        {movieModalUser && (
+          <MovieAccessModal
+            user={movieModalUser}
+            movies={availableMovies}
+            saving={saving}
+            error={error}
+            onClose={() => setMovieModalUser(null)}
+            onToggleAccess={handleToggleMovieAccess}
+          />
+        )}
+
         {/* Edit Role & Status Modal */}
         {editUser && <EditRoleModal
           editUser={editUser}
@@ -942,6 +1007,143 @@ export function AdminUsersPage() {
         />}
       </div>
     </AdminLayout>
+  );
+}
+
+// ── Movie Access Modal Component ──────────────────────────────────
+function MovieAccessModal({
+  user,
+  movies,
+  saving,
+  error,
+  onClose,
+  onToggleAccess,
+}: {
+  user: User;
+  movies: any[];
+  saving: boolean;
+  error: string;
+  onClose: () => void;
+  onToggleAccess: (u: User, movieSlug: string, action: 'unlock' | 'lock') => void;
+}) {
+  const [selectedSlug, setSelectedSlug] = useState('');
+  const unlockedList = user.unlocked_movies || [];
+
+  const handleUnlock = () => {
+    if (!selectedSlug) return;
+    onToggleAccess(user, selectedSlug, 'unlock');
+    setSelectedSlug('');
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in cursor-pointer"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#141414] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in overflow-hidden cursor-default"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-rose-950/40 via-red-900/20 to-transparent">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+              <Film className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-display font-black text-base text-white">សិទ្ធិទស្សនាភាពយន្ត (Movie Access)</h2>
+              <p className="text-xs text-gray-400">សម្រាប់គណនី: <strong className="text-amber-400">{user.username}</strong></p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+          {/* Currently Unlocked Movies List */}
+          <div>
+            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block mb-2">
+              ភាពយន្តដែលបានបើកសិទ្ធិរួច ({unlockedList.length})៖
+            </label>
+            {unlockedList.length === 0 ? (
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center text-gray-500 text-xs">
+                មិនទាន់មានភាពយន្តណាមួយត្រូវបាន Unlock ជូន User នេះនៅឡើយទេ។
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {unlockedList.map((slug) => {
+                  const matchedMovie = movies.find((m) => m.slug === slug);
+                  const title = matchedMovie?.title || slug;
+
+                  return (
+                    <div
+                      key={slug}
+                      className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                          <Film className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">{title}</p>
+                          <p className="text-[10px] text-gray-500 font-mono truncate">{slug}</p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => onToggleAccess(user, slug, 'lock')}
+                        disabled={saving}
+                        className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/20 transition flex items-center gap-1 shrink-0 cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" /> ដកសិទ្ធិ
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Unlock New Movie Selector */}
+          <div className="pt-3 border-t border-white/10 space-y-3">
+            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">
+              ជ្រើសរើស Movie ដើម្បីបើកសិទ្ធិ (Unlock New Movie)៖
+            </label>
+
+            <div className="space-y-2">
+              <select
+                value={selectedSlug}
+                onChange={(e) => setSelectedSlug(e.target.value)}
+                className="input text-xs sm:text-sm font-semibold w-full"
+              >
+                <option value="">-- សូមជ្រើសរើសភាពយន្ត (Select Movie) --</option>
+                {movies.map((m) => (
+                  <option key={m.id || m.slug} value={m.slug} disabled={unlockedList.includes(m.slug)}>
+                    {m.title} {unlockedList.includes(m.slug) ? '✓ (បានបើករួច)' : ''}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={handleUnlock}
+                disabled={!selectedSlug || saving}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <Check className="w-4 h-4 stroke-[3]" /> {saving ? 'កំពុងដំណើរការ...' : '🔓 បើកសិទ្ធិទស្សនា (Unlock Movie)'}
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+        </div>
+
+        <div className="p-4 border-t border-white/10 bg-white/[0.02] flex justify-end">
+          <button onClick={onClose} className="btn-ghost py-2 px-5 text-xs font-bold cursor-pointer">
+            បិទ (Close)
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

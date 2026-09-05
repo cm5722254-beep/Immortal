@@ -17,6 +17,7 @@ export interface User {
   vip_started_at?: string | null;
   vip_expires_at?: string | null;
   is_vip_active: boolean;
+  unlocked_movies?: string[];
   phone_number?: string | null;
   telegram_username?: string | null;
   telegram_id?: string | null;

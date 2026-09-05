@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SAEnum, func
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SAEnum, func, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 import enum
@@ -30,6 +30,9 @@ class User(Base):
     vip_plan = Column(String(50), nullable=True)  # "1month", "3month", "6month", "1year", "lifetime"
     vip_started_at = Column(DateTime(timezone=True), nullable=True)
     vip_expires_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Movie Access Fields (JSON-encoded list of movie slugs)
+    unlocked_movies = Column(Text, default="[]", nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

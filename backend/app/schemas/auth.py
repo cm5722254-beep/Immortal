@@ -55,6 +55,7 @@ class UserRead(BaseModel):
     vip_started_at: Optional[datetime] = None
     vip_expires_at: Optional[datetime] = None
     is_vip_active: bool = False
+    unlocked_movies: Optional[list[str]] = []
     created_at: datetime
     # Telegram Mini App fields
     telegram_id: Optional[str] = None
@@ -66,6 +67,20 @@ class UserRead(BaseModel):
     # Session tracking
     login_source: Optional[str] = None
     last_login_at: Optional[datetime] = None
+
+    @field_validator("unlocked_movies", mode="before")
+    @classmethod
+    def parse_unlocked_movies(cls, v):
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            import json
+            try:
+                data = json.loads(v)
+                return data if isinstance(data, list) else []
+            except Exception:
+                return []
+        return []
 
     class Config:
         from_attributes = True
