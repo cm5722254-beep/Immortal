@@ -4,6 +4,12 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+# ============================================================
+# 🔒 LICENSE & ENVIRONMENT VALIDATION — runs before anything
+# ============================================================
+from app.core.license_guard import validate_license, get_authorized_origins
+validate_license()  # ❌ Process exits here if license invalid
+
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -89,13 +95,19 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS
+# ============================================================
+# 🔒 STRICT DOMAIN LOCK — only authorized origins allowed
+# Configure via AUTHORIZED_DOMAINS env variable
+# ============================================================
+_AUTHORIZED_ORIGINS = get_authorized_origins()
+print(f"[SECURITY] Authorized origins: {_AUTHORIZED_ORIGINS}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:5173", "http://localhost:3000", "*"],
+    allow_origins=_AUTHORIZED_ORIGINS,   # ← No wildcard "*" !
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 # GZIP compression for high performance response transfers
