@@ -45,7 +45,7 @@ export function Footer() {
                   <Play className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://t.me/MerDonghuakhmer"
+                  href="https://t.me/Huang404"
                   target="_blank"
                   rel="noreferrer"
                   className="w-8 h-8 rounded-xl bg-[#161F33] hover:bg-amber-500 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
@@ -117,7 +117,7 @@ export function Footer() {
                   <span>⚠️ Keys & Shortcuts ហាមឃាត់ (Security Policy)</span>
                 </button>
                 <p className="text-[11px] text-amber-300/90 font-mono text-center">
-                  DMCA Contact: <a href="https://t.me/MerDonghuakhmer" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">@MerDonghuakhmer</a>
+                  DMCA Contact: <a href="https://t.me/Huang404" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">@Huang404</a>
                 </p>
               </div>
             </div>

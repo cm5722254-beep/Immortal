@@ -3,11 +3,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Play, Bookmark, Share2, MessageSquare, ArrowLeft,
   Star, Check, Sparkles, Crown, Clock, Film,
-  Search, ArrowDownUp, Flame, Info, Tv
+  Search, ArrowDownUp, Flame, Info, Tv, Send
 } from 'lucide-react';
 import { SkeletonDetail } from '../components/common/SkeletonLoader';
 import { StreamingAvailabilityHub } from '../components/common/StreamingAvailabilityHub';
-import { MoviePaymentModal } from '../components/payment/MoviePaymentModal';
 import { isMoviePurchased } from '../services/paymentService';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
@@ -27,8 +26,7 @@ export function DetailPage() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const [isMoviePayModalOpen, setIsMoviePayModalOpen] = useState(false);
-  const [movieUnlocked, setMovieUnlocked] = useState(false);
+  const [movieUnlocked] = useState(false);
 
   // Episode controls
   const [epSortOrder, setEpSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -326,12 +324,14 @@ export function DetailPage() {
 
                   if (anime.type === 'MOVIE' && !hasMovieAccess) {
                     return (
-                      <button
-                        onClick={() => setIsMoviePayModalOpen(true)}
+                      <a
+                        href={`https://t.me/Huang404?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
                       >
-                        <Film className="w-5 h-5 fill-black stroke-[2.5]" /> ទិញទស្សនារឿងនេះ ($1.00)
-                      </button>
+                        <Send className="w-5 h-5 stroke-[2.5]" /> ទិញទស្សនា Movie ($1.00) តាម Telegram
+                      </a>
                     );
                   }
 
@@ -643,20 +643,6 @@ export function DetailPage() {
             )}
           </div>
         </div>
-      )}
-
-      {anime && (
-        <MoviePaymentModal
-          isOpen={isMoviePayModalOpen}
-          onClose={() => setIsMoviePayModalOpen(false)}
-          movieSlug={anime.slug}
-          movieTitle={anime.title}
-          posterUrl={anime.poster_url}
-          onPaymentSuccess={() => {
-            setMovieUnlocked(true);
-            setIsMoviePayModalOpen(false);
-          }}
-        />
       )}
     </main>
   );

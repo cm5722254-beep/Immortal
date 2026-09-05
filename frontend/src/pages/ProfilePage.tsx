@@ -121,7 +121,7 @@ export function ProfilePage() {
                 <Send className="w-4 h-4 text-[#24A1DE]" /> Telegram Channel
               </span>
               <a
-                href="https://t.me/MerDonghuakhmer"
+                href="https://t.me/Huang404"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-[#24A1DE] font-bold hover:underline"
@@ -216,7 +216,7 @@ export function ProfilePage() {
 
           {/* Customer Support */}
           <a
-            href="https://t.me/MerDonghuakhmer"
+            href="https://t.me/Huang404"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
@@ -228,7 +228,7 @@ export function ProfilePage() {
               <span className="font-display font-bold text-sm text-white">Customer Support</span>
             </div>
             <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
-              <span className="text-emerald-400">@MerDonghuakhmer</span>
+              <span className="text-emerald-400">@Huang404</span>
               <ExternalLink className="w-4 h-4 text-gray-500" />
             </div>
           </a>

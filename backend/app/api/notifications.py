@@ -45,10 +45,10 @@ async def get_notifications(db: AsyncSession = Depends(get_db)):
         NotificationItem(
             id="notif-system-telegram",
             icon="system",
-            title="💬 ចូលរួម Telegram Channel ផ្លូវការ @MerDonghuakhmer",
-            subtitle="ទទួលបានដំណឹងចេញភាគថ្មីៗ និងការ Support ផ្ទាល់ពី Developer ២៤/៧",
+            title="💬 ចូលរួម Telegram Channel ផ្លូវការ @Huang404",
+            subtitle="ទទួលបានដំណឹងចេញភាគថ្មីៗ និងការ Support ផ្ទាល់ពី Admin ២៤/៧",
             time="1 ម៉ោងមុន",
-            link="https://t.me/MerDonghuakhmer",
+            link="https://t.me/Huang404",
             avatarUrl="/video_mask_logo.png",
             isUnread=True,
         )
