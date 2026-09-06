@@ -110,16 +110,24 @@ def scan_website_target(target: str, api_base: str = API_DEFAULT) -> Dict[str, A
             anime_info = a
             break
 
-    # 2. Try online API
+    # 2. Try online API (Localhost first, then Render)
     slug_for_api = anime_info.get("slug", slug_or_query) if anime_info else slug_or_query
     encoded_slug = urllib.parse.quote(slug_for_api)
-    api_url = f"{api_base.rstrip('/')}/anime/{encoded_slug}/episodes"
-    try:
-        req = urllib.request.Request(api_url, headers={"User-Agent": UA, "Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=12) as r:
-            episodes = json.loads(r.read().decode("utf-8"))
-    except Exception:
-        pass
+    api_candidates = [api_base]
+    if "localhost:8000" not in api_base:
+        api_candidates.insert(0, "http://localhost:8000/api")
+
+    for cand in api_candidates:
+        api_url = f"{cand.rstrip('/')}/anime/{encoded_slug}/episodes"
+        try:
+            req = urllib.request.Request(api_url, headers={"User-Agent": UA, "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=5) as r:
+                episodes = json.loads(r.read().decode("utf-8"))
+                if episodes:
+                    api_base = cand
+                    break
+        except Exception:
+            continue
 
     # If API didn't return episodes, fallback to local episodes
     if not episodes and anime_info:
