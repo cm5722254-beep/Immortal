@@ -473,6 +473,39 @@ export const useAuthStore = create<AuthState>((set) => ({
     const token = localStorage.getItem('access_token');
     if (!token) return;
     set({ isLoading: true });
+
+    // If token is a Google credential (or refresh_token not yet issued), try exchanging with /auth/google
+    if (!localStorage.getItem('refresh_token')) {
+      try {
+        const syncRes = await api.post('/auth/google', { credential: token });
+        const { access_token, refresh_token, user } = syncRes.data;
+        if (access_token) localStorage.setItem('access_token', access_token);
+        if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
+        if (user) {
+          const isOwnerEmail = user.email?.toLowerCase() === 'cm5722254@gmail.com';
+          const cleanUser = {
+            ...user,
+            role: isOwnerEmail ? 'OWNER' : user.role,
+          };
+          localStorage.setItem('nami_cached_user', JSON.stringify(cleanUser));
+          const roles = checkRoles(cleanUser);
+          set({
+            user: cleanUser,
+            isAuthenticated: true,
+            isOwner: roles.isOwnerUser,
+            isAdmin: roles.isAdminUser,
+            isStaff: roles.isStaffUser,
+            canManageContent: roles.canManage,
+            isVip: roles.isVipUser,
+            isLoading: false,
+          });
+          return;
+        }
+      } catch (e) {
+        console.warn('Background token exchange error:', e);
+      }
+    }
+
     try {
       const res = await api.get('/users/me');
       const userData = res.data;

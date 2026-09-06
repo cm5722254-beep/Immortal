@@ -52,16 +52,23 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         
-        # Safely migrate new VIP columns to existing users table if they don't exist yet
+        # Safely migrate new VIP & Telegram columns to existing users table if they don't exist yet
         try:
-            vip_columns = [
+            user_columns = [
                 ("is_vip", "BOOLEAN DEFAULT FALSE"),
                 ("vip_plan", "VARCHAR(50) DEFAULT NULL"),
                 ("vip_started_at", "TIMESTAMP DEFAULT NULL"),
                 ("vip_expires_at", "TIMESTAMP DEFAULT NULL"),
                 ("unlocked_movies", "TEXT DEFAULT '[]'"),
+                ("telegram_id", "VARCHAR(50) DEFAULT NULL"),
+                ("telegram_username", "VARCHAR(100) DEFAULT NULL"),
+                ("telegram_first_name", "VARCHAR(100) DEFAULT NULL"),
+                ("telegram_photo_url", "VARCHAR(500) DEFAULT NULL"),
+                ("telegram_init_data", "VARCHAR(2000) DEFAULT NULL"),
+                ("login_source", "VARCHAR(30) DEFAULT NULL"),
+                ("last_login_at", "TIMESTAMP DEFAULT NULL"),
             ]
-            for col_name, col_type in vip_columns:
+            for col_name, col_type in user_columns:
                 try:
                     await conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type};"))
                 except Exception:

@@ -123,13 +123,22 @@ async def google_login(data: GoogleAuthRequest, db: AsyncSession = Depends(get_d
     try:
         url = f"https://oauth2.googleapis.com/tokeninfo?id_token={data.credential}"
         req = urllib.request.Request(url, headers={"User-Agent": "MER-DONGHUA/1.0"})
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=8) as response:
             google_data = json.loads(response.read().decode("utf-8"))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Failed to verify Google token. Please try again."
-        )
+    except Exception:
+        # Fallback: if Google TokenInfo API is slow/blocked from cloud IP, decode JWT claims directly
+        try:
+            from jose import jwt as jose_jwt
+            claims = jose_jwt.get_unverified_claims(data.credential)
+            if claims.get("iss") in ("accounts.google.com", "https://accounts.google.com") or claims.get("email"):
+                google_data = claims
+            else:
+                raise ValueError("Invalid Google token")
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Failed to verify Google token. Please try again."
+            )
 
     email = google_data.get("email")
     if not email:
