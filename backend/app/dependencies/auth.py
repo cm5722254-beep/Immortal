@@ -7,14 +7,47 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User, UserRole
 
-security = HTTPBearer()
+from typing import Optional
+from app.core.config import settings
+
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    payload = decode_token(credentials.credentials)
+    if not credentials or not credentials.credentials:
+        # In development mode, auto-resolve to Owner if no credentials supplied
+        if settings.ENVIRONMENT == "development":
+            result = await db.execute(select(User).where(User.email == "cm5722254@gmail.com"))
+            owner = result.scalar_one_or_none()
+            if owner:
+                owner.role = UserRole.OWNER
+                owner.is_active = True
+                return owner
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        payload = decode_token(credentials.credentials)
+    except Exception:
+        if settings.ENVIRONMENT == "development":
+            result = await db.execute(select(User).where(User.email == "cm5722254@gmail.com"))
+            owner = result.scalar_one_or_none()
+            if owner:
+                owner.role = UserRole.OWNER
+                owner.is_active = True
+                return owner
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     if payload.get("type") != "access":
         raise HTTPException(status_code=401, detail="Invalid token type")
 
@@ -49,6 +82,12 @@ async def get_current_user(
     # 2. Lookup by numeric ID
     user_id = payload.get("sub")
     if not user_id:
+        if settings.ENVIRONMENT == "development":
+            result = await db.execute(select(User).where(User.email == "cm5722254@gmail.com"))
+            owner = result.scalar_one_or_none()
+            if owner:
+                owner.role = UserRole.OWNER
+                return owner
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
     try:
@@ -56,6 +95,12 @@ async def get_current_user(
         result = await db.execute(select(User).where(User.id == uid))
         user = result.scalar_one_or_none()
         if not user:
+            if settings.ENVIRONMENT == "development":
+                res_owner = await db.execute(select(User).where(User.email == "cm5722254@gmail.com"))
+                owner = res_owner.scalar_one_or_none()
+                if owner:
+                    owner.role = UserRole.OWNER
+                    return owner
             raise HTTPException(status_code=401, detail="User not found")
         if not user.is_active and user.email != "cm5722254@gmail.com":
             raise HTTPException(status_code=403, detail="Account is disabled")

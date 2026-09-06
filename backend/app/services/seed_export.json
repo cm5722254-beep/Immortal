@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "exported_at": "2026-09-06T03:53:46.297582+00:00",
+  "exported_at": "2026-09-06T05:31:21.186685+00:00",
   "counts": {
     "genres": 16,
     "users": 33,
@@ -741,12 +741,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 61,
+      "view_count": 64,
       "average_rating": 4.9,
       "rating_count": 0,
       "episode_count": 70,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:48:09.213343+00:00"
+      "updated_at": "2026-09-06T04:59:15.823885+00:00"
     },
     {
       "id": 2,
@@ -768,12 +768,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 82,
+      "view_count": 87,
       "average_rating": 4.8,
       "rating_count": 0,
       "episode_count": 12,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T02:43:12.280203+00:00"
+      "updated_at": "2026-09-06T04:57:41.505852+00:00"
     },
     {
       "id": 3,
@@ -795,12 +795,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 9,
+      "view_count": 10,
       "average_rating": 4.9,
       "rating_count": 0,
       "episode_count": 187,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:21.387531+00:00"
+      "updated_at": "2026-09-06T05:05:08.306023+00:00"
     },
     {
       "id": 4,
@@ -822,12 +822,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 25,
+      "view_count": 26,
       "average_rating": 5.0,
       "rating_count": 0,
       "episode_count": 32,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:21.575171+00:00"
+      "updated_at": "2026-09-06T05:04:50.226018+00:00"
     },
     {
       "id": 5,
@@ -984,12 +984,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 22,
+      "view_count": 24,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 4,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T02:33:45.998715+00:00"
+      "updated_at": "2026-09-06T04:38:43.892395+00:00"
     },
     {
       "id": 11,
@@ -1092,12 +1092,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 31,
+      "view_count": 34,
       "average_rating": 5.0,
       "rating_count": 0,
       "episode_count": 84,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:12:53.879507+00:00"
+      "updated_at": "2026-09-06T04:59:33.091035+00:00"
     },
     {
       "id": 15,
@@ -1119,12 +1119,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 12,
+      "view_count": 13,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 52,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:23.642444+00:00"
+      "updated_at": "2026-09-06T05:04:32.324099+00:00"
     },
     {
       "id": 16,
@@ -1200,12 +1200,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 0,
+      "view_count": 1,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 15,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:24.204431+00:00"
+      "updated_at": "2026-09-06T04:36:26.031731+00:00"
     },
     {
       "id": 19,
@@ -1254,12 +1254,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 75,
+      "view_count": 77,
       "average_rating": 4.0,
       "rating_count": 0,
       "episode_count": 37,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T03:15:17.130477+00:00"
+      "updated_at": "2026-09-06T05:04:02.571136+00:00"
     },
     {
       "id": 21,
@@ -1956,12 +1956,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 4,
+      "view_count": 5,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 0,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:29.456690+00:00"
+      "updated_at": "2026-09-06T05:05:25.694623+00:00"
     },
     {
       "id": 47,
@@ -2523,12 +2523,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 17,
+      "view_count": 19,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:33.425231+00:00"
+      "updated_at": "2026-09-06T05:29:43.571512+00:00"
     },
     {
       "id": 68,
@@ -2577,12 +2577,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 5,
+      "view_count": 6,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:33.804307+00:00"
+      "updated_at": "2026-09-06T05:05:33.182026+00:00"
     }
   ],
   "anime_genres": [

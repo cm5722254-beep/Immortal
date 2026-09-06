@@ -70,9 +70,8 @@ async def init_db():
             ]
             for col_name, col_type in user_columns:
                 try:
-                    await conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type};"))
+                    await conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
                 except Exception:
-                    # Column already exists or table is up to date
                     pass
         except Exception as e:
             print(f"[DB INFO] Safe column check: {e}")
