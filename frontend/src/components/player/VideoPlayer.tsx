@@ -544,7 +544,7 @@ export function VideoPlayer({
           className="absolute bottom-20 left-6 z-30 btn bg-black/80 hover:bg-brand-600 border border-brand-500/50 text-white text-xs px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 animate-slide-up shadow-xl"
         >
           <FastForward className="w-4 h-4 text-brand-400" />
-          Skip Opening (85s)
+          រំលងផ្ដើមរឿង (85s)
         </button>
       )}
 
@@ -552,7 +552,7 @@ export function VideoPlayer({
       {error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 text-center px-4 z-30 pointer-events-auto">
           <AlertCircle className="w-12 h-12 text-red-400 mb-3" />
-          <p className="text-white font-semibold text-lg mb-1">Playback Issue</p>
+          <p className="text-white font-semibold text-lg mb-1">បញ្ហាក្នុងការចាក់វីដេអូ</p>
           <p className="text-gray-400 text-xs max-w-sm mb-4">{error}</p>
           <div className="flex items-center gap-3">
             <button
@@ -562,7 +562,7 @@ export function VideoPlayer({
               }}
               className="btn-primary text-xs py-2 px-4"
             >
-              Retry via Stream Proxy
+              ព្យាយាមចាក់ឡើងវិញ
             </button>
             {src && (
               <a
@@ -572,7 +572,7 @@ export function VideoPlayer({
                 onClick={(e) => e.stopPropagation()}
                 className="btn-secondary text-xs py-2 px-4"
               >
-                Open Source Link
+                បើកតំណវីដេអូដើម
               </a>
             )}
           </div>
@@ -594,14 +594,14 @@ export function VideoPlayer({
         >
           <p className="text-white font-bold flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-            Next episode in {autoNextCountdown}s
+            ភាគបន្ទាប់ក្នុង {autoNextCountdown} វិនាទី
           </p>
           <div className="flex gap-2 mt-3">
             <button onClick={() => setAutoNextCountdown(null)} className="btn-secondary text-xs py-1.5 px-3">
-              Stay
+              នៅទីនេះ
             </button>
             <button onClick={() => { setAutoNextCountdown(null); onNextEpisode?.(); }} className="btn-primary text-xs py-1.5 px-3">
-              Play Now
+              ចាក់ភ្លាម
             </button>
           </div>
         </div>
@@ -712,7 +712,7 @@ export function VideoPlayer({
               </button>
               {showSettings && (
                 <div className="absolute bottom-full right-0 mb-3 glass-dark border border-dark-border rounded-2xl p-3 min-w-[180px] z-50 animate-scale-in shadow-2xl">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 px-2 mb-1.5">Speed</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 px-2 mb-1.5">ល្បឿនចាក់ (Speed)</p>
                   <div className="grid grid-cols-3 gap-1 mb-3">
                     {SPEEDS.map((s) => (
                       <button
@@ -728,7 +728,7 @@ export function VideoPlayer({
                     ))}
                   </div>
 
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 px-2 mb-1.5">Quality</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 px-2 mb-1.5">កម្រិតច្បាស់ (Quality)</p>
                   <div className="space-y-1">
                     {QUALITIES.map((q) => (
                       <button

@@ -173,20 +173,20 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
 
             {/* Netflix Metadata Row */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-white/90 drop-shadow">
-              <span className="text-[#46d369] font-black">98% Match</span>
+              <span className="text-[#46d369] font-black">ត្រូវចិត្ត 98%</span>
               <span className="text-yellow-400 font-bold">★ {rating}</span>
               <span className="text-gray-400">•</span>
               <span>{current.year || 2024}</span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">13+</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">4K ULTRA HD</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">5.1 AUDIO</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">កម្រិត 4K UHD</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">សំឡេង 5.1 CH</span>
               <span className="text-gray-400">•</span>
               <span className="text-gray-300 font-medium">{current.episode_count ? `${current.episode_count} ភាគ` : 'ភាគថ្មីៗ'}</span>
             </div>
 
             {/* Description */}
             <p className="text-gray-200 text-xs sm:text-sm leading-relaxed line-clamp-3 max-w-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mx-auto lg:mx-0">
-              {current.description || `ទស្សនារឿង ${current.title} កម្រិត 4K UHD Ultra HD លើ NAMI ANIME គ្មានការរំខានដោយពាណិជ្ជកម្ម។`}
+              {current.description || `ទស្សនារឿង ${current.title} កម្រិត 4K UHD Ultra HD លើ ទស្សនារឿង គ្មានការរំខានដោយពាណិជ្ជកម្ម។`}
             </p>
 
             {/* Netflix Action Buttons */}

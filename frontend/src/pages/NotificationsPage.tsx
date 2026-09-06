@@ -72,10 +72,10 @@ export function NotificationsPage() {
           </button>
           <div>
             <h1 className="font-display font-black text-2xl sm:text-3xl text-white flex items-center gap-2">
-              Notifications
+              ការជូនដំណឹង
               {unreadCount > 0 && (
                 <span className="bg-[#FF3B30] text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-md shadow-red-500/30">
-                  {unreadCount} New
+                  {unreadCount} ថ្មី
                 </span>
               )}
             </h1>
@@ -89,7 +89,7 @@ export function NotificationsPage() {
             className="inline-flex items-center gap-1.5 text-xs text-[#FF3B30] hover:text-[#ff6f61] font-bold transition-all px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20"
           >
             <CheckCheck className="w-4 h-4" />
-            Mark all as read
+            អានទាំងអស់
           </button>
         )}
       </div>
@@ -107,7 +107,7 @@ export function NotificationsPage() {
             <div className="w-16 h-16 rounded-full bg-[#15060A] border border-red-500/30 flex items-center justify-center mx-auto text-gray-400 shadow-xl shadow-red-500/10">
               <Bell className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-300 text-base font-bold">No notifications yet</p>
+            <p className="text-gray-300 text-base font-bold">មិនទាន់មានការជូនដំណឹងនៅឡើយទេ</p>
             <p className="text-xs text-gray-500">នៅពេលមានភាគថ្មី ឬដំណឹងពិសេស នឹងបង្ហាញនៅទីនេះ</p>
           </div>
         ) : (

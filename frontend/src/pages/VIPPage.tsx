@@ -47,7 +47,7 @@ export function VIPPage() {
   const plans: Plan[] = [
     {
       id: '1month',
-      name: '1 Month Plan',
+      name: 'គម្រោង ១ ខែ',
       titleKhmer: 'គម្រោង ១ ខែ',
       duration: '៣០ ថ្ងៃ',
       days: 30,
@@ -76,14 +76,14 @@ export function VIPPage() {
     },
     {
       id: '3month',
-      name: '3 Months Plan',
+      name: 'គម្រោង ៣ ខែ',
       titleKhmer: 'គម្រោង ៣ ខែ',
       duration: '៩០ ថ្ងៃ',
       days: 90,
       priceUsd: 6.25,
       priceKhr: 25000,
       khrText: '២៥,០០០',
-      badge: '★ ពេញនិយមបំផុត (Popular)',
+      badge: '★ ពេញនិយមបំផុត',
       popular: true,
       theme: {
         border: 'border-2 border-amber-400',
@@ -106,14 +106,14 @@ export function VIPPage() {
     },
     {
       id: '6month',
-      name: '6 Months Plan',
+      name: 'គម្រោង ៦ ខែ',
       titleKhmer: 'គម្រោង ៦ ខែ',
       duration: '១៨០ ថ្ងៃ',
       days: 180,
       priceUsd: 12.50,
       priceKhr: 50000,
       khrText: '៥០,០០០',
-      badge: '💎 តម្លៃពិសេស (Special)',
+      badge: '💎 តម្លៃពិសេស',
       popular: false,
       theme: {
         border: 'border-cyan-500/35 hover:border-cyan-400/60',
@@ -136,14 +136,14 @@ export function VIPPage() {
     },
     {
       id: '1year',
-      name: '1 Year Plan',
+      name: 'គម្រោង ១ ឆ្នាំ',
       titleKhmer: 'គម្រោង ១ ឆ្នាំ',
       duration: '៣៦៥ ថ្ងៃ',
       days: 365,
       priceUsd: 22.50,
       priceKhr: 90000,
       khrText: '៩០,០០០',
-      badge: '👑 ល្អបំផុត (Best Value)',
+      badge: '👑 ល្អបំផុត',
       popular: false,
       theme: {
         border: 'border-purple-500/40 hover:border-purple-400/70',
@@ -190,7 +190,7 @@ export function VIPPage() {
       {/* Header Banner */}
       <div className="text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/50 text-amber-300 text-xs md:text-sm font-black mb-4 shadow-[0_0_25px_rgba(245,158,11,0.25)] animate-pulse">
-          <Crown className="w-4 h-4 fill-amber-400 text-amber-400" /> សមាជិក VIP EXCLUSIVE MEMBER
+          <Crown className="w-4 h-4 fill-amber-400 text-amber-400" /> សមាជិក VIP ពិសេស
         </div>
         <h1 className="font-display font-black text-3xl md:text-5xl lg:text-6xl text-white tracking-tight leading-tight">
           ជ្រើសរើសគម្រោង <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">VIP Member</span>
@@ -248,7 +248,7 @@ export function VIPPage() {
             rel="noopener noreferrer"
             className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black text-xs font-black shadow-lg shadow-amber-500/20 transition flex items-center gap-2 shrink-0 cursor-pointer"
           >
-            <Zap className="w-3.5 h-3.5" /> ពន្យារពេលបន្ថែម (Extend Plan)
+            <Zap className="w-3.5 h-3.5" /> ពន្យារពេលបន្ថែម
           </a>
         </div>
       )}
@@ -294,7 +294,7 @@ export function VIPPage() {
                   {/* KHR Currency Highlight */}
                   <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/40 border border-white/10 shadow-inner">
                     <span className="text-amber-400 font-display font-black text-sm">≈ {plan.khrText} ៛</span>
-                    <span className="text-[10px] text-gray-400 font-bold">({plan.priceKhr.toLocaleString()} KHR)</span>
+                    <span className="text-[10px] text-gray-400 font-bold">({plan.priceKhr.toLocaleString()} រៀល)</span>
                   </div>
                 </div>
 
@@ -341,13 +341,13 @@ export function VIPPage() {
           </div>
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold mb-2">
-              <Film className="w-3.5 h-3.5" /> ភាពយន្តដុំ Movie Pay-Per-View
+              <Film className="w-3.5 h-3.5" /> ភាពយន្តដុំពិសេស
             </div>
             <h3 className="text-xl md:text-2xl font-display font-black text-white">
-              ចង់ទិញទស្សនាតែ ១ រឿងដុំ? (Movie Single Access)
+              ចង់ទិញទស្សនាតែ ១ រឿងដុំ?
             </h3>
             <p className="text-xs md:text-sm text-gray-300 mt-1 max-w-xl leading-relaxed">
-              ទិញត្រឹមតែ <strong className="text-rose-400 font-black">$1.00 (៤,០០០ ៛)</strong> តែម្តងគត់ គឺអាចទស្សនារឿង Movie នោះបានរហូតពេញមួយជីវិត (Lifetime Access) ទោះមិនមែនជាសមាជិក VIP ក៏ដោយ!
+              ទិញត្រឹមតែ <strong className="text-rose-400 font-black">$1.00 (៤,០០០ ៛)</strong> តែម្តងគត់ គឺអាចទស្សនារឿង Movie នោះបានរហូតពេញមួយជីវិត ទោះមិនមែនជាសមាជិក VIP ក៏ដោយ!
             </p>
           </div>
         </div>
@@ -355,7 +355,7 @@ export function VIPPage() {
         <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0 w-full md:w-auto">
           <div className="text-center md:text-right">
             <div className="font-display font-black text-3xl text-rose-400">$1.00</div>
-            <div className="text-xs text-gray-400 font-bold">≈ ៤,០០០ ៛ (4,000 KHR)</div>
+            <div className="text-xs text-gray-400 font-bold">≈ ៤,០០០ រៀល</div>
           </div>
           <a
             href={`https://t.me/Huang404?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie ($1.00 / ៤,០០០ ៛) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
@@ -363,7 +363,7 @@ export function VIPPage() {
             rel="noopener noreferrer"
             className="w-full sm:w-auto py-3.5 px-7 rounded-2xl bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 hover:from-rose-500 hover:to-pink-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30 active:scale-95 transition"
           >
-            <Send className="w-4 h-4" /> ទិញ Movie តាម Telegram
+            <Send className="w-4 h-4" /> ទិញភាពយន្តតាម Telegram
           </a>
         </div>
       </div>
@@ -379,7 +379,7 @@ export function VIPPage() {
               <Film className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-sm">4K Ultra HD & Zero Watermarks</h4>
+              <h4 className="font-bold text-white text-sm">កម្រិត 4K Ultra HD & គ្មានស្លាកសញ្ញា</h4>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">ទស្សនាវីដេអូច្បាស់ត្រជាក់ភ្នែក គ្មាន Logo ឬ Watermark ណាដែលបាំងលើអេក្រង់ឡើយ។</p>
             </div>
           </div>
@@ -389,7 +389,7 @@ export function VIPPage() {
               <Zap className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-sm">High-Speed VIP Cloud Servers</h4>
+              <h4 className="font-bold text-white text-sm">ម៉ាស៊ីនបម្រើ VIP Cloud ល្បឿនលឿន</h4>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">Server ល្បឿនលឿនពិសេស គ្មានការរអាក់រអួល ឬ Buffering ពេលទស្សនាក្នុងម៉ោងមមាញឹក។</p>
             </div>
           </div>
@@ -399,7 +399,7 @@ export function VIPPage() {
               <Tv className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-sm">Full Screen Support on All Devices</h4>
+              <h4 className="font-bold text-white text-sm">គាំទ្រអេក្រង់ពេញ (Full Screen) គ្រប់ឧបករណ៍</h4>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">អាចពង្រីកមើល FULL SCREEN បានយ៉ាងងាយស្រួល ទាំងលើទូរស័ព្ទ កុំព្យូទ័រ និង Smart TV។</p>
             </div>
           </div>

@@ -51,12 +51,12 @@ export function DownloadsPage() {
           <div className="flex items-center gap-3">
             <WifiOff className="w-5 h-5 shrink-0 text-amber-400" />
             <div>
-              <p className="font-bold text-sm">អ្នកកំពុងស្ថិតក្នុងទម្រង់ Offline (No Internet Connection)</p>
-              <p className="text-xs text-amber-300/80">អ្នកអាចទស្សនាភាគដែលបានទាញយករួចនៅក្នុង Library នេះដោយសេរី!</p>
+              <p className="font-bold text-sm">អ្នកកំពុងស្ថិតក្នុងទម្រង់គ្មានអ៊ីនធឺណិត (Offline Mode)</p>
+              <p className="text-xs text-amber-300/80">អ្នកអាចទស្សនាភាគដែលបានទាញយករួចនៅក្នុងបណ្ណាល័យនេះដោយសេរី!</p>
             </div>
           </div>
           <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs">
-            Offline Mode
+            ទម្រង់ Offline
           </span>
         </div>
       )}
@@ -65,10 +65,10 @@ export function DownloadsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display font-black text-2xl md:text-3xl text-white flex items-center gap-3">
-            <Download className="w-7 h-7 text-brand-400" /> បណ្ណាល័យទាញយក (Offline Library)
+            <Download className="w-7 h-7 text-brand-400" /> បណ្ណាល័យទាញយកទុកមើល
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            ទស្សនាភាគដែលបានទាញយកទុកមើលគ្រប់ពេលវេលា ទោះបីគ្មានសេវាអ៊ីនធឺណិត (Offline) ក៏ដោយ។
+            ទស្សនាភាគដែលបានទាញយកទុកមើលគ្រប់ពេលវេលា ទោះបីគ្មានសេវាអ៊ីនធឺណិតក៏ដោយ។
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export function DownloadsPage() {
             <HardDrive className="w-4 h-4 text-brand-400" />
           </div>
           <p className="font-display font-black text-2xl text-white">{storageUsed.usedMB} MB</p>
-          <p className="text-xs text-gray-400 mt-1">ទំហំទំនេរនៅលើ Device: ~{storageUsed.quotaMB} MB</p>
+          <p className="text-xs text-gray-400 mt-1">ទំហំទំនេរនៅលើឧបករណ៍: ~{storageUsed.quotaMB} MB</p>
         </div>
 
         <div className="card p-5 bg-gradient-to-br from-purple-950/40 to-dark-card border-purple-500/30">
@@ -102,13 +102,13 @@ export function DownloadsPage() {
 
         <div className="card p-5 bg-gradient-to-br from-emerald-950/40 to-dark-card border-emerald-500/30">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase">ស្ថានភាព Offline</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase">ស្ថានភាពទុកមើលក្រៅបណ្ដាញ</span>
             <span className="flex items-center gap-1 text-xs font-bold text-emerald-400">
-              <Check className="w-3.5 h-3.5" /> 100% Ready
+              <Check className="w-3.5 h-3.5" /> រួចរាល់ 100%
             </span>
           </div>
-          <p className="font-display font-black text-xl text-white">IndexedDB Storage</p>
-          <p className="text-xs text-gray-400 mt-1">ចាក់វីដេអូបានលឿន មិនត្រូវការ Data</p>
+          <p className="font-display font-black text-xl text-white">ទំហំផ្ទុកលើឧបករណ៍</p>
+          <p className="text-xs text-gray-400 mt-1">ចាក់វីដេអូបានលឿន មិនអស់ទិន្នន័យអ៊ីនធឺណិត</p>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export function DownloadsPage() {
       {activeDownloadsList.length > 0 && (
         <div className="card p-6 border-brand-500/40 space-y-4">
           <h2 className="font-display font-bold text-lg text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-brand-400" /> កំពុងទាញយក (Downloading Queue)
+            <Sparkles className="w-5 h-5 text-brand-400" /> កំពុងទាញយក
           </h2>
           <div className="space-y-3">
             {activeDownloadsList.map((ad) => (
@@ -153,7 +153,7 @@ export function DownloadsPage() {
           </div>
           <h3 className="font-display font-bold text-lg text-white">មិនទាន់មានវីដេអូទាញយកនៅឡើយទេ</h3>
           <p className="text-gray-400 text-sm max-w-md mx-auto">
-            លោកអ្នកអាចចុចលើប៊ូតុង <b>"ទាញយកទុកមើល (Download Offline)"</b> ក្នុងទំព័រមើលរឿង ដើម្បីរក្សាទុកភាគដែលលោកអ្នកចូលចិត្តទស្សនាពេលគ្មានអ៊ីនធឺណិត។
+            លោកអ្នកអាចចុចលើប៊ូតុង <b>"ទាញយកទុកមើល"</b> ក្នុងទំព័រមើលរឿង ដើម្បីរក្សាទុកភាគដែលលោកអ្នកចូលចិត្តទស្សនាពេលគ្មានអ៊ីនធឺណិត។
           </p>
           <div className="pt-2">
             <Link to="/donghua" className="btn-primary text-sm px-6 py-2.5">

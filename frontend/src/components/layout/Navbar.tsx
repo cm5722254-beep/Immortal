@@ -63,10 +63,10 @@ export function Navbar() {
 
   const getPageTitle = (pathname: string) => {
     if (pathname === '/') return 'ទំព័រដើម';
-    if (pathname.startsWith('/donghua')) return 'រឿងចិន (Donghua)';
-    if (pathname.startsWith('/anime')) return 'រឿងជប៉ុន (Anime)';
-    if (pathname.startsWith('/drama')) return 'រឿងភាគ (Drama)';
-    if (pathname.startsWith('/movies')) return 'ភាពយន្តដុំ (Movies)';
+    if (pathname.startsWith('/donghua')) return 'រឿងចិន 3D';
+    if (pathname.startsWith('/anime')) return 'រឿងជប៉ុន';
+    if (pathname.startsWith('/drama')) return 'រឿងភាគ';
+    if (pathname.startsWith('/movies')) return 'ភាពយន្តដុំ';
     if (pathname.startsWith('/explore')) return 'រុករក';
     if (pathname.startsWith('/search')) return 'ស្វែងរក';
     if (pathname.startsWith('/favorites')) return 'បញ្ជីរក្សាទុក';
@@ -197,7 +197,7 @@ export function Navbar() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ស្វែងរករឿង, Anime..."
+              placeholder="ស្វែងរករឿងចិន, រឿងជប៉ុន..."
               className="w-full bg-[#101522]/90 border border-white/10 rounded-full pl-9 pr-3 py-1.5 text-sm sm:text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#e8452c] focus:ring-1 focus:ring-[#e8452c]/30 transition-all backdrop-blur-md"
             />
           </form>

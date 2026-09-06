@@ -38,10 +38,10 @@ export function ProfilePage() {
       <div className="mb-6 pt-1 flex items-center justify-between">
         <div>
           <h1 className="font-display font-black text-2xl sm:text-3xl text-white">
-            {isTelegram ? 'Telegram Account' : isMobileApp ? 'App Settings' : 'User Account'}
+            {isTelegram ? 'គណនី Telegram' : isMobileApp ? 'ការកំណត់កម្មវិធី' : 'ព័ត៌មានគណនី'}
           </h1>
           <p className="text-xs text-gray-400 mt-0.5">
-            {isTelegram ? 'NAMI ANIME Mini App' : isMobileApp ? 'NAMI ANIME Mobile APK v1.5' : 'NAMI ANIME Portal'}
+            {isTelegram ? 'កម្មវិធីទស្សនារឿង Telegram' : isMobileApp ? 'កម្មវិធីទូរស័ព្ទ App v1.5' : 'គេហទំព័រទស្សនារឿង'}
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export function ProfilePage() {
           isMobileApp ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
           'bg-white/10 text-gray-300 border border-white/20'
         }`}>
-          {isTelegram ? 'Telegram Mode' : isMobileApp ? 'Android APK' : 'Web Browser'}
+          {isTelegram ? 'របៀប Telegram' : isMobileApp ? 'កម្មវិធី Android' : 'កម្មវិធីរុករក Web'}
         </span>
       </div>
 
@@ -84,19 +84,19 @@ export function ProfilePage() {
                   </span>
                 ) : user?.role === 'ADMIN' ? (
                   <span className="badge bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-bold flex items-center gap-1">
-                    <ShieldAlert className="w-3 h-3" /> ADMIN
+                    <ShieldAlert className="w-3 h-3" /> អ្នកគ្រប់គ្រង (Admin)
                   </span>
                 ) : user?.role === 'STAFF' ? (
                   <span className="badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold flex items-center gap-1">
-                    <ShieldAlert className="w-3 h-3" /> STAFF (រឿង/ភាគ)
+                    <ShieldAlert className="w-3 h-3" /> បុគ្គលិក (Staff)
                   </span>
                 ) : user?.is_vip_active || user?.is_vip ? (
                   <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black">
-                    <Crown className="w-3 h-3 fill-amber-400" /> VIP ({user.vip_plan ? user.vip_plan.toUpperCase() : 'ACTIVE'})
+                    <Crown className="w-3 h-3 fill-amber-400" /> VIP ({user.vip_plan ? user.vip_plan.toUpperCase() : 'សកម្ម'})
                   </span>
                 ) : (
                   <span className="badge-rating text-[10px] py-0.5 px-2">
-                    <Sparkles className="w-3 h-3 text-yellow-400" /> Free Member
+                    <Sparkles className="w-3 h-3 text-yellow-400" /> សមាជិកឥតគិតថ្លៃ
                   </span>
                 )}
               </div>
@@ -106,7 +106,7 @@ export function ProfilePage() {
                 ) : user?.telegram_username ? (
                   <span className="text-[#24A1DE]">@{user.telegram_username}</span>
                 ) : (
-                  <span className="text-emerald-400"><Zap className="w-3 h-3 inline" /> 4K Ultra HD Active</span>
+                  <span className="text-emerald-400"><Zap className="w-3 h-3 inline" /> កម្រិត 4K Ultra HD សកម្ម</span>
                 )}
               </p>
             </div>
@@ -118,7 +118,7 @@ export function ProfilePage() {
           <div className="rounded-2xl bg-[#0E1B2B]/90 border border-[#24A1DE]/30 p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Send className="w-4 h-4 text-[#24A1DE]" /> Telegram Channel
+                <Send className="w-4 h-4 text-[#24A1DE]" /> ប៉ុស្តិ៍ Telegram ផ្លូវការ
               </span>
               <a
                 href="https://t.me/Huang404"
@@ -126,7 +126,7 @@ export function ProfilePage() {
                 rel="noopener noreferrer"
                 className="text-xs text-[#24A1DE] font-bold hover:underline"
               >
-                Join Channel →
+                ចូលរួម Channel →
               </a>
             </div>
             <p className="text-[11px] text-gray-400">
@@ -142,16 +142,16 @@ export function ProfilePage() {
                 <Smartphone className="w-4 h-4 text-amber-400" /> NAMI ANIME APK v1.5
               </span>
               <span className="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">
-                Up to date
+                កំណែចុងក្រោយ
               </span>
             </div>
             <div className="pt-2 flex items-center justify-between text-xs text-gray-400 border-t border-amber-500/20">
-              <span>Offline Download Cache:</span>
+              <span>ទិន្នន័យផ្ទុកបណ្ដោះអាសន្ន (Cache)៖</span>
               <button
-                onClick={() => showToast('Cache Cleared!')}
+                onClick={() => showToast('បានសម្អាត Cache រួចរាល់!')}
                 className="text-amber-400 font-bold hover:underline flex items-center gap-1"
               >
-                <Trash2 className="w-3.5 h-3.5" /> Clear Cache
+                <Trash2 className="w-3.5 h-3.5" /> សម្អាត Cache
               </button>
             </div>
           </div>
@@ -164,7 +164,7 @@ export function ProfilePage() {
             onClick={() => {
               const next = streamQuality === '4K Ultra HD' ? '1080p Full HD' : '4K Ultra HD';
               setStreamQuality(next);
-              showToast(`Streaming Quality: ${next}`);
+              showToast(`កម្រិតរូបភាព៖ ${next}`);
             }}
             className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
           >
@@ -172,7 +172,7 @@ export function ProfilePage() {
               <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-black shadow-md shadow-amber-500/20">
                 <Tv className="w-4.5 h-4.5" />
               </div>
-              <span className="font-display font-bold text-sm text-white">Default Resolution</span>
+              <span className="font-display font-bold text-sm text-white">កម្រិតរូបភាពលំនាំដើម</span>
             </div>
             <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
               <span className="text-amber-400">{streamQuality}</span>
@@ -182,17 +182,17 @@ export function ProfilePage() {
 
           {/* Language Selector */}
           <div
-            onClick={() => showToast('Language: Khmer / English')}
+            onClick={() => showToast('ភាសា៖ ភាសាខ្មែរ 100%')}
             className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
                 <Languages className="w-4.5 h-4.5" />
               </div>
-              <span className="font-display font-bold text-sm text-white">Language / ភាសា</span>
+              <span className="font-display font-bold text-sm text-white">ភាសាបង្ហាញ (Language)</span>
             </div>
             <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
-              <span className="text-white font-semibold">ភាសាខ្មែរ / EN</span>
+              <span className="text-white font-semibold">ភាសាខ្មែរ (Khmer 100%)</span>
               <ChevronRight className="w-4 h-4 text-gray-500" />
             </div>
           </div>
@@ -206,7 +206,7 @@ export function ProfilePage() {
               <div className="w-8 h-8 rounded-xl bg-red-500 flex items-center justify-center text-white shadow-md shadow-red-500/20">
                 <ShieldAlert className="w-4.5 h-4.5" />
               </div>
-              <span className="font-display font-bold text-sm text-red-300">Keys & Shortcuts ហាមឃាត់</span>
+              <span className="font-display font-bold text-sm text-red-300">គោលការណ៍សុវត្ថិភាព និងប៊ូតុងហាមឃាត់</span>
             </div>
             <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
               <span>សេចក្ដីព្រមាន</span>
@@ -225,7 +225,7 @@ export function ProfilePage() {
               <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
                 <Headset className="w-4.5 h-4.5" />
               </div>
-              <span className="font-display font-bold text-sm text-white">Customer Support</span>
+              <span className="font-display font-bold text-sm text-white">ផ្នែកបម្រើអតិថិជន និងជំនួយ</span>
             </div>
             <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
               <span className="text-emerald-400">@Huang404</span>

@@ -5,13 +5,13 @@ import type { WeeklySchedule, Anime } from '../../types';
 import api from '../../services/api';
 
 const DAYS = [
-  { id: 'Monday', label: 'Mon', full: 'Monday', zh: '周一' },
-  { id: 'Tuesday', label: 'Tue', full: 'Tuesday', zh: '周二' },
-  { id: 'Wednesday', label: 'Wed', full: 'Wednesday', zh: '周三' },
-  { id: 'Thursday', label: 'Thu', full: 'Thursday', zh: '周四' },
-  { id: 'Friday', label: 'Fri', full: 'Friday', zh: '周五' },
-  { id: 'Saturday', label: 'Sat', full: 'Saturday', zh: '周六' },
-  { id: 'Sunday', label: 'Sun', full: 'Sunday', zh: '周日' },
+  { id: 'Monday', label: 'ចន្ទ', full: 'ថ្ងៃចន្ទ', zh: 'Mon' },
+  { id: 'Tuesday', label: 'អង្គារ', full: 'ថ្ងៃអង្គារ', zh: 'Tue' },
+  { id: 'Wednesday', label: 'ពុធ', full: 'ថ្ងៃពុធ', zh: 'Wed' },
+  { id: 'Thursday', label: 'ព្រហស្បតិ៍', full: 'ថ្ងៃព្រហស្បតិ៍', zh: 'Thu' },
+  { id: 'Friday', label: 'សុក្រ', full: 'ថ្ងៃសុក្រ', zh: 'Fri' },
+  { id: 'Saturday', label: 'សៅរ៍', full: 'ថ្ងៃសៅរ៍', zh: 'Sat' },
+  { id: 'Sunday', label: 'អាទិត្យ', full: 'ថ្ងៃអាទិត្យ', zh: 'Sun' },
 ];
 
 export function ScheduleSection() {
@@ -37,12 +37,12 @@ export function ScheduleSection() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold">
-              📅 每日更新周历 BROADCAST TIMETABLE
+              📅 កាលវិភាគផ្សាយប្រចាំសប្តាហ៍
             </span>
           </div>
-          <h2 className="section-title text-gradient-cyan text-2xl md:text-3xl">
+          <h2 className="section-title text-gradient-cyan text-2xl md:text-3xl flex items-center gap-2">
             <Calendar className="w-6 h-6 text-cyan-400" />
-            Weekly Airing Timetable (កាលវិភាគចេញផ្សាយ)
+            <span>កាលវិភាគចេញផ្សាយភាគថ្មី</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1">កាលវិភាគចេញភាគថ្មីៗនៃរឿង Donghua & Anime ផ្ទាល់តាមថ្ងៃនីមួយៗ</p>
         </div>
@@ -75,7 +75,7 @@ export function ScheduleSection() {
                 )}
               </div>
               <span className={`text-[10px] mt-1 font-semibold ${isSelected ? 'text-white' : isCurrentToday ? 'text-emerald-300' : 'text-gray-500'}`}>
-                {isCurrentToday ? '★ TODAY' : `${count} series`}
+                {isCurrentToday ? '★ ថ្ងៃនេះ' : `${count} រឿង`}
               </span>
             </button>
           );
@@ -92,7 +92,7 @@ export function ScheduleSection() {
       ) : itemsForDay.length === 0 ? (
         <div className="card p-12 text-center bg-[#0e0b1c] border border-white/10 rounded-3xl">
           <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-300 text-base font-bold">No releases scheduled for {activeDay}</p>
+          <p className="text-gray-300 text-base font-bold">មិនមានរឿងចេញផ្សាយនៅ{DAYS.find((d) => d.id === activeDay)?.full || activeDay}ឡើយ</p>
           <p className="text-xs text-gray-500 mt-1">សូមជ្រើសរើសថ្ងៃផ្សេងទៀតដើម្បីទស្សនាកាលវិភាគរឿង។</p>
         </div>
       ) : (
@@ -122,11 +122,11 @@ export function ScheduleSection() {
                 <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
                   {isToday ? (
                     <span className="badge bg-emerald-500 text-black font-black text-[9px] shadow-lg animate-pulse py-0.5 px-2">
-                      ⚡ AIRING TODAY
+                      ⚡ ផ្សាយថ្ងៃនេះ
                     </span>
                   ) : (
                     <span className="badge bg-black/75 text-cyan-300 border border-cyan-500/40 text-[9px] font-bold">
-                      {activeDay.slice(0, 3)}
+                      {DAYS.find((d) => d.id === activeDay)?.label || activeDay}
                     </span>
                   )}
                 </div>
@@ -152,8 +152,8 @@ export function ScheduleSection() {
                   <p className="text-[10px] text-gray-400 line-clamp-1 font-serif mt-0.5">{anime.alt_title}</p>
                 )}
                 <div className="flex items-center justify-between text-[10px] text-gray-400 mt-2 pt-1 border-t border-white/5">
-                  <span className="text-gray-500 truncate max-w-[80px]">{anime.studio || 'Sparkly Key'}</span>
-                  <span className="text-cyan-400 font-bold">{anime.episode_count || 12} eps</span>
+                  <span className="text-gray-500 truncate max-w-[80px]">{anime.studio || 'Animation Studio'}</span>
+                  <span className="text-cyan-400 font-bold">{anime.episode_count || 12} ភាគ</span>
                 </div>
               </div>
             </Link>

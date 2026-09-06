@@ -86,7 +86,7 @@ export function PromoCountdownBanner() {
           </div>
           <p className="text-gray-300 text-[11px] truncate">
             <span className="bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.2 rounded text-[9px] uppercase mr-1 inline-block">
-              Free Promo
+              ប្រូម៉ូសិនពិសេស
             </span>
             <span className="hidden sm:inline">ទស្សនាឥតគិតថ្លៃ! ពេលផុតកំណត់ ៧ ថ្ងៃ រឿងទាំងអស់នឹងជាប់ VIP</span>
           </p>
@@ -97,7 +97,7 @@ export function PromoCountdownBanner() {
           <div className="flex items-center gap-1 bg-black/50 px-2 py-0.5 rounded-lg border border-white/10 font-mono text-[10px] sm:text-[11px]">
             <Clock className="w-3 h-3 text-amber-400 mr-0.5" />
             <span className="text-amber-300 font-bold">
-              {pad(promoData.days)}d : {pad(promoData.hours)}h : {pad(promoData.minutes)}m : {pad(promoData.seconds)}s
+              {pad(promoData.days)}ថ្ងៃ {pad(promoData.hours)}ម៉:{pad(promoData.minutes)}ន:{pad(promoData.seconds)}វ
             </span>
           </div>
 

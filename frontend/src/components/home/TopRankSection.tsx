@@ -16,12 +16,12 @@ export function TopRankSection({ items, isLoading }: TopRankSectionProps) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-              🔥 巅峰热度榜 TOP LEADERBOARD
+              🔥 តារាងចំណាត់ថ្នាក់កំពូល
             </span>
           </div>
-          <h2 className="section-title text-gradient-gold text-2xl md:text-3xl">
+          <h2 className="section-title text-gradient-gold text-2xl md:text-3xl flex items-center gap-2">
             <Trophy className="w-6 h-6 text-amber-400 fill-amber-400/20" />
-            Top 10 Cultivation Donghua & Anime
+            <span>កំពូលរឿងទាំង ១០ ពេញនិយមបំផុត</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1">តារាងចំណាត់ថ្នាក់រឿងដែលមានអ្នកទស្សនាច្រើន និងពេញនិយមបំផុតប្រចាំសប្តាហ៍</p>
         </div>
@@ -92,7 +92,7 @@ export function TopRankSection({ items, isLoading }: TopRankSectionProps) {
                     <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
                       anime.type === 'DONGHUA' ? 'bg-red-600/30 text-red-300 border border-red-500/40' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
                     }`}>
-                      {anime.type}
+                      {anime.type === 'DONGHUA' ? 'រឿងចិន 3D' : anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្ត' : 'រឿងភាគ'}
                     </span>
                     {isTop3 && (
                       <span className="badge-4k text-[8px] py-0">4K</span>

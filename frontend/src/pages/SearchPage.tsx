@@ -117,7 +117,7 @@ export function SearchPage() {
           type="text"
           value={query}
           onChange={handleChange}
-          placeholder="វាយបញ្ចូលឈ្មោះរឿងចិន (Donghua), ជប៉ុន (Anime), ឬភាពយន្ត..."
+          placeholder="វាយបញ្ចូលឈ្មោះរឿងចិន 3D, រឿងជប៉ុន, ឬភាពយន្ត..."
           autoFocus
           className="input pl-12 pr-11 py-3.5 text-sm rounded-2xl bg-[#1e1e1e] border border-white/10 focus:border-[#E50914] w-full text-white placeholder-gray-400"
           aria-label="ស្វែងរក"

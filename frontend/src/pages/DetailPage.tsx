@@ -152,12 +152,12 @@ export function DetailPage() {
     return (
       <div className="min-h-screen bg-[#141414] pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
         <Film className="w-16 h-16 text-amber-500/50 mb-4 animate-pulse" />
-        <h2 className="text-2xl font-black text-white mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ (Title Not Found)</h2>
+        <h2 className="text-2xl font-black text-white mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ</h2>
         <p className="text-gray-400 text-sm max-w-md mb-6">
           រឿងដែលលោកអ្នកកំពុងស្វែងរកប្រហែលជាត្រូវបានផ្លាស់ប្តូរតំណភ្ជាប់ ឬមិនទាន់បានដាក់បញ្ចូល។
         </p>
         <Link to="/explore" className="py-3 px-6 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition shadow-lg">
-          រុករករឿងផ្សេងៗ (Explore All)
+          រុករករឿងផ្សេងៗ
         </Link>
       </div>
     );
@@ -208,7 +208,7 @@ export function DetailPage() {
             aria-label="Go back"
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-xs font-semibold border border-white/10 transition-all hover:scale-105 active:scale-95 shadow-lg"
           >
-            <ArrowLeft className="w-4 h-4" /> ត្រឡប់ក្រោយ (Back)
+            <ArrowLeft className="w-4 h-4" /> ត្រឡប់ក្រោយ
           </button>
         </div>
 
@@ -500,7 +500,7 @@ export function DetailPage() {
                       <span className={`text-[9px] font-bold mt-1 px-1.5 py-0.2 rounded ${
                         isEpVip ? 'bg-amber-500/20 text-amber-300 group-hover:bg-black/30 group-hover:text-white' : 'bg-emerald-500/20 text-emerald-300 group-hover:bg-black/30 group-hover:text-white'
                       }`}>
-                        {isEpVip ? 'VIP' : 'FREE'}
+                        {isEpVip ? 'VIP' : 'ឥតគិតថ្លៃ'}
                       </span>
                     </Link>
                   );
@@ -517,7 +517,7 @@ export function DetailPage() {
             <div className="lg:col-span-2 space-y-6">
               <div className="p-6 md:p-8 rounded-3xl bg-[#111726] border border-white/10 shadow-2xl space-y-4">
                 <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
-                  <Info className="w-5 h-5 text-amber-400" /> សាច់រឿងសង្ខេប (Synopsis)
+                  <Info className="w-5 h-5 text-amber-400" /> សាច់រឿងសង្ខេប
                 </h3>
                 <p className="text-sm md:text-base text-gray-300 leading-relaxed font-sans whitespace-pre-line">
                   {anime.description || 'មិនមានការពិពណ៌នាសាច់រឿងលម្អិតឡើយ។'}
@@ -534,36 +534,36 @@ export function DetailPage() {
             {/* Right 1 Col: Metadata Info Card */}
             <div className="p-6 rounded-3xl bg-[#111726] border border-white/10 shadow-2xl space-y-4 text-xs">
               <h4 className="font-display font-bold text-sm text-white border-b border-white/10 pb-3">
-                ព័ត៌មានលម្អិត (Series Info)
+                ព័ត៌មានលម្អិតអំពីរឿង
               </h4>
 
               <div className="space-y-3">
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ឈ្មោះដើម (Original):</span>
+                  <span className="text-gray-400">ឈ្មោះដើម៖</span>
                   <span className="text-white font-bold">{anime.alt_title || anime.title}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ប្រភេទ (Category):</span>
-                  <span className="text-amber-400 font-bold">{anime.type || 'Donghua'}</span>
+                  <span className="text-gray-400">ប្រភេទ៖</span>
+                  <span className="text-amber-400 font-bold">{anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ស្ថានភាព (Status):</span>
-                  <span className="text-emerald-400 font-bold">{anime.status === 'COMPLETED' ? 'ចប់សព្វគ្រប់' : 'កំពុងចាក់ផ្សាយ (Ongoing)'}</span>
+                  <span className="text-gray-400">ស្ថានភាព៖</span>
+                  <span className="text-emerald-400 font-bold">{anime.status === 'COMPLETED' ? 'ចប់សព្វគ្រប់' : 'កំពុងចាក់ផ្សាយ'}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ស្ទូឌីយោ (Studio):</span>
+                  <span className="text-gray-400">ស្ទូឌីយោ៖</span>
                   <span className="text-white font-bold">{anime.studio || 'NINT Studio Animation'}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ឆ្នាំផលិត (Release):</span>
+                  <span className="text-gray-400">ឆ្នាំផលិត៖</span>
                   <span className="text-white font-bold">{anime.year || 2024}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ចំនួនភាគ (Episodes):</span>
+                  <span className="text-gray-400">ចំនួនភាគ៖</span>
                   <span className="text-white font-bold">{anime.episode_count || episodes.length} ភាគ</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-gray-400">គុណភាព (Resolution):</span>
+                  <span className="text-gray-400">កម្រិតច្បាស់៖</span>
                   <span className="text-amber-400 font-bold">4K Ultra HD • 60 FPS</span>
                 </div>
               </div>
@@ -575,7 +575,7 @@ export function DetailPage() {
         {activeTab === 'related' && (
           <div className="space-y-4">
             <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400" /> រឿងដែលអ្នកអាចនឹងចូលចិត្ត (You May Also Like)
+              <Sparkles className="w-5 h-5 text-amber-400" /> រឿងដែលអ្នកអាចនឹងចូលចិត្ត
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {relatedAnime.map((item) => (
@@ -611,7 +611,7 @@ export function DetailPage() {
       {showFeedbackModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
           <div className="w-full max-w-md bg-[#111726] border border-white/15 rounded-3xl p-6 space-y-4 shadow-2xl animate-scale-in">
-            <h3 className="font-display font-bold text-lg text-white">មតិកែលម្អ ឬរាយការណ៍បញ្ហា (Feedback)</h3>
+            <h3 className="font-display font-bold text-lg text-white">មតិកែលម្អ ឬរាយការណ៍បញ្ហា</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
               មានបញ្ហាទាក់ទងនឹងវីដេអូ សំឡេង ឬចំណងជើង? សូមផ្ញើសារមកកាន់យើងខ្ញុំ៖
             </p>

@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { Sparkles, ChevronRight } from 'lucide-react';
 
 const REALTIME_UPDATES = [
-  { id: 1, text: '🔥 Renegade Immortal (仙逆) — Episode 12 is now streaming in 4K Ultra HD!', slug: 'renegade-immortal', ep: 12 },
-  { id: 2, text: '⚡ Perfect World (完美世界) — Shi Hao triggers the Kunpeng breakthrough!', slug: 'perfect-world', ep: 10 },
-  { id: 3, text: '⚔️ Battle Through The Heavens — Xiao Yan claims the 3rd Heavenly Flame!', slug: 'battle-through-the-heavens', ep: 8 },
-  { id: 4, text: '🌟 A Record of Mortal\'s Journey to Immortality — Han Li enters Heavenly South Sect!', slug: 'a-record-of-a-mortals-journey-to-immortality', ep: 10 },
+  { id: 1, text: '🔥 អ្នកបួសបះបោរ (Renegade Immortal) — ភាគថ្មីចាក់ផ្សាយកម្រិត 4K Ultra HD សំឡេងខ្មែរ!', slug: 'renegade-immortal', ep: 12 },
+  { id: 2, text: '⚡ ពិភពដ៏ល្អឥតខ្ចោះ (Perfect World) — ស៊ីហាវ បញ្ចេញក្បាច់គុណគុនប៉េងបំបែកមេឃា!', slug: 'perfect-world', ep: 10 },
+  { id: 3, text: '⚔️ ដាវទេពប្រយុទ្ធមេឃា (BTTH) — សៀវយាន ស្រូបយកអណ្តាតភ្លើងឋានសួគ៌ជោគជ័យ!', slug: 'battle-through-the-heavens', ep: 8 },
+  { id: 4, text: '🌟 ដំណើរផ្សងព្រេងរបស់បុរសសាមញ្ញ (RMJI) — ហានលី ឈានជើងចូលក្នុងពិភពមន្តអាគមថ្មី!', slug: 'a-record-of-a-mortals-journey-to-immortality', ep: 10 },
 ];
 
 export function LiveTicker() {
@@ -31,7 +31,7 @@ export function LiveTicker() {
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500" />
           </span>
           <span className="text-xs font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" /> Live Updates
+            <Sparkles className="w-3.5 h-3.5" /> ផ្សាយផ្ទាល់ថ្មីៗ
           </span>
         </div>
 
@@ -49,7 +49,7 @@ export function LiveTicker() {
 
         {/* Right action */}
         <div className="hidden md:flex items-center gap-2 shrink-0">
-          <span className="text-[11px] text-gray-500 font-mono">Real-time sync</span>
+          <span className="text-[11px] text-gray-500 font-mono">អាប់ដេតស្វ័យប្រវត្តិ</span>
         </div>
       </div>
     </div>

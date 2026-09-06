@@ -103,7 +103,7 @@ export function AnimeCard({
             </span>
           ) : anime.is_free ? (
             <span className="bg-emerald-600/90 text-white text-[9px] font-black px-2 py-0.5 rounded shadow">
-              FREE
+              ឥតគិតថ្លៃ
             </span>
           ) : (
             <span className="bg-[#E50914] text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow">
@@ -139,9 +139,9 @@ export function AnimeCard({
             </button>
           </div>
 
-          {/* Quick Netflix Match & Quality Indicators */}
+          {/* Quick Match & Quality Indicators */}
           <div className="flex items-center gap-2 text-[10px] font-bold text-white mb-1">
-            <span className="text-[#46d369]">98% Match</span>
+            <span className="text-[#46d369]">ត្រូវចិត្ត 98%</span>
             <span className="border border-white/40 px-1 py-0.2 rounded text-[8px]">4K</span>
             <span className="text-gray-300 font-normal">{tagText}</span>
           </div>
@@ -160,7 +160,7 @@ export function AnimeCard({
         <div className="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium">
           <span>{anime.year || '2024'}</span>
           <span>•</span>
-          <span className="capitalize">{anime.type ? anime.type.toLowerCase() : 'donghua'}</span>
+          <span>{anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្ត' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}</span>
         </div>
       </div>
     </div>

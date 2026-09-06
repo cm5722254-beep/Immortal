@@ -15,14 +15,14 @@ export function ContinueWatchingSection({ items, onClear }: ContinueWatchingSect
       {/* ── Section Header with "Continue Watching" and "Clear" ── */}
       <div className="flex items-center justify-between mb-2.5">
         <h2 className="font-display font-bold text-base sm:text-lg text-white">
-          Continue Watching
+          បន្តទស្សនាពីកន្លែងចាស់
         </h2>
         {onClear && (
           <button
             onClick={onClear}
             className="text-xs font-bold text-[#E8452C] hover:text-[#ff6f61] transition-colors"
           >
-            Clear History
+            លុបប្រវត្តិ
           </button>
         )}
       </div>
@@ -67,7 +67,7 @@ export function ContinueWatchingSection({ items, onClear }: ContinueWatchingSect
 
                 {/* Episode Tag */}
                 <span className="absolute bottom-1.5 left-2 text-[10px] font-bold text-white/90 drop-shadow">
-                  Ep {item.episode_number}
+                  ភាគ {item.episode_number}
                 </span>
               </div>
 

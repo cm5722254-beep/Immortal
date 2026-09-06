@@ -74,7 +74,7 @@ export function LoginPage() {
                 ទស្សនា <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500">រឿង</span>
               </span>
               <p className="text-[10px] text-amber-300 font-bold uppercase tracking-widest flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-400" /> Ultra HD 4K Streaming App
+                <Sparkles className="w-3 h-3 text-amber-400" /> កម្មវិធីទស្សនារឿងកម្រិត 4K Ultra HD
               </p>
             </div>
           </Link>
@@ -102,14 +102,14 @@ export function LoginPage() {
               {(error.toLowerCase().includes('disabled') || error.toLowerCase().includes('banned') || error.toLowerCase().includes('403') || error.toLowerCase().includes('បិទ')) && (
                 <div className="pt-2 border-t border-red-500/30">
                   <p className="text-[11px] text-gray-300 font-normal mb-2">
-                    គណនីរបស់អ្នកត្រូវបានបិទ (Disabled)។ សូមដាក់ពាក្យស្នើសុំដោះសោរទៅកាន់ Admin៖
+                    គណនីរបស់អ្នកត្រូវបានផ្អាកដំណើរការ។ សូមដាក់ពាក្យស្នើសុំដោះសោរទៅកាន់ Admin៖
                   </p>
                   <button
                     type="button"
                     onClick={() => setShowAppeal(true)}
                     className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs shadow-md transition-all active:scale-95"
                   >
-                    📝 ដាក់ពាក្យស្នើសុំដោះសោរ (Submit Appeal)
+                    📝 ដាក់ពាក្យស្នើសុំដោះសោរ
                   </button>
                 </div>
               )}
@@ -157,7 +157,7 @@ export function LoginPage() {
 
                   <div>
                     <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      មូលហេតុស្នើសុំដោះសោរ (Appeal Reason)៖
+                      មូលហេតុស្នើសុំដោះសោរ៖
                     </label>
                     <textarea
                       value={appealReason}
@@ -171,7 +171,7 @@ export function LoginPage() {
 
                   <div>
                     <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      ព័ត៌មានទំនាក់ទំនង (Telegram / Phone) [Optional]៖
+                      ព័ត៌មានទំនាក់ទំនង (Telegram ឬលេខទូរស័ព្ទ) [បើមាន]៖
                     </label>
                     <input
                       type="text"
@@ -200,7 +200,7 @@ export function LoginPage() {
                   <Play className="w-6 h-6 fill-current ml-0.5" />
                 </div>
                 <p className="text-xs text-amber-300 font-bold mb-4">
-                  ⚡ ចុចប៊ូតុងខាងក្រោមដើម្បី Login ភ្លាមៗ៖
+                  ⚡ ចុចប៊ូតុងខាងក្រោមដើម្បីចូលប្រើប្រាស់ភ្លាមៗ៖
                 </p>
                 <div className="w-full flex justify-center">
                   <GoogleSignInButton
@@ -215,15 +215,15 @@ export function LoginPage() {
               <div className="pt-4 border-t border-white/10 space-y-2.5 text-xs text-gray-300 text-left">
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>ចូលប្រើប្រាស់ដោយផ្ទាល់ជាមួយគណនី Google (1-Click Login)</span>
+                  <span>ចូលប្រើប្រាស់ដោយផ្ទាល់ជាមួយគណនី Google យ៉ាងរហ័ស</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Film className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>ស្វ័យប្រវត្តិចងចាំប្រវត្តិទស្សនា និងរឿងពេញចិត្ត (Bookmarks)</span>
+                  <span>ស្វ័យប្រវត្តិចងចាំប្រវត្តិទស្សនា និងបញ្ជីរឿងទុកមើល</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Smartphone className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>ទស្សនា Anime & Donghua កម្រិត 4K ទាំងលើទូរសព្ទ និងកុំព្យូទ័រ</span>
+                  <span>ទស្សនារឿងភាគ និងភាពយន្តកម្រិត 4K លើគ្រប់ឧបករណ៍</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Shield className="w-4 h-4 text-amber-400 shrink-0" />
@@ -238,7 +238,7 @@ export function LoginPage() {
         {/* ── Back to Home ── */}
         <div className="text-center mt-6">
           <Link to="/" className="text-xs text-gray-400 hover:text-amber-400 transition-colors inline-flex items-center gap-1">
-            ← ត្រឡប់ទៅទំព័រដើម (Back to Home)
+            ← ត្រឡប់ទៅទំព័រដើម
           </Link>
         </div>
       </div>

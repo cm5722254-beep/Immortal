@@ -74,7 +74,7 @@ export function InstantSearchModal({ isOpen, onClose }: InstantSearchModalProps)
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="វាយបញ្ចូលឈ្មោះរឿងចិន (Donghua), ជប៉ុន (Anime)..."
+            placeholder="វាយបញ្ចូលឈ្មោះរឿងចិន 3D ឬរឿងជប៉ុន..."
             className="flex-1 bg-transparent text-white placeholder-gray-500 text-base focus:outline-none"
           />
           {query && (
@@ -82,7 +82,7 @@ export function InstantSearchModal({ isOpen, onClose }: InstantSearchModalProps)
               <X className="w-5 h-5" />
             </button>
           )}
-          <span className="text-[10px] bg-dark-muted px-2 py-1 rounded text-gray-400 font-mono">ESC</span>
+          <span className="text-[10px] bg-dark-muted px-2 py-1 rounded text-gray-400 font-mono">ចាកចេញ (ESC)</span>
         </div>
 
         {/* Results List */}
@@ -115,7 +115,7 @@ export function InstantSearchModal({ isOpen, onClose }: InstantSearchModalProps)
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className={anime.type === 'ANIME' ? 'badge-anime text-[10px] py-0 px-2' : 'badge-donghua text-[10px] py-0 px-2'}>
-                      {anime.type}
+                      {anime.type === 'ANIME' ? 'រឿងជប៉ុន' : 'រឿងចិន 3D'}
                     </span>
                     <span className="text-xs text-yellow-400 flex items-center gap-1 font-semibold">
                       <Star className="w-3 h-3 fill-current" /> {anime.average_rating.toFixed(1)}

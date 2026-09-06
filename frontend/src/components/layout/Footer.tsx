@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Globe, MessageCircle, Play, ShieldAlert } from 'lucide-react';
+import { Globe, MessageCircle, ShieldAlert } from 'lucide-react';
 import { Logo } from './Logo';
 import { SecurityPolicyModal } from '../common/SecurityPolicyModal';
 
@@ -17,14 +17,14 @@ export function Footer() {
 
   return (
     <>
-      <footer className="hidden md:block border-t border-white/[0.08] bg-[#101010] mt-20 text-neutral-400">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <footer className="border-t border-white/[0.08] bg-[#0e0e10] mt-16 md:mt-24 text-neutral-400 pb-24 md:pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             {/* Brand */}
-            <div className="md:col-span-1 space-y-3">
+            <div className="space-y-3 sm:col-span-2 md:col-span-1">
               <Logo size="md" showWordmark={true} />
               <p className="text-gray-400 text-xs leading-relaxed font-sans">
-                គេហទំព័រទស្សនារឿងភាគចិន 3D (Donghua) និងរឿងជប៉ុន (Anime) កម្រិតច្បាស់ Full HD & 4K UHD គ្រប់ពេលវេលា គ្រប់ទីកន្លែង។
+                គេហទំព័រទស្សនារឿងភាគចិន 3D (Donghua) និងរឿងជប៉ុន (Anime) កម្រិតច្បាស់ Full HD & 4K UHD គ្រប់ពេលវេលា គ្រប់ទីកន្លែង ដោយឥតគិតថ្លៃ និងល្បឿនលឿន។
               </p>
               <div className="flex gap-2.5 pt-2">
                 <a
@@ -38,18 +38,11 @@ export function Footer() {
                   <MessageCircle className="w-4 h-4" />
                 </a>
                 <a
-                  href="#"
-                  className="w-8 h-8 rounded-xl bg-[#161F33] hover:bg-amber-500 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
-                  aria-label="Youtube"
-                >
-                  <Play className="w-4 h-4" />
-                </a>
-                <a
                   href="https://t.me/Huang404"
                   target="_blank"
                   rel="noreferrer"
                   className="w-8 h-8 rounded-xl bg-[#161F33] hover:bg-amber-500 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
-                  aria-label="Website"
+                  aria-label="Telegram Admin"
                   title="Developer Telegram"
                 >
                   <Globe className="w-4 h-4" />
@@ -65,17 +58,32 @@ export function Footer() {
               <ul className="space-y-2 text-xs">
                 <li>
                   <Link to="/" className="text-gray-400 hover:text-amber-400 transition-colors">
-                    ទំព័រដើម (Home)
+                    ទំព័រដើម
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/donghua" className="text-gray-400 hover:text-amber-400 transition-colors">
+                    រឿងចិន 3D (Donghua)
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/anime" className="text-gray-400 hover:text-amber-400 transition-colors">
+                    រឿងជប៉ុន (Anime)
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/movies" className="text-gray-400 hover:text-amber-400 transition-colors">
+                    ភាពយន្តដុំ (Movies)
                   </Link>
                 </li>
                 <li>
                   <Link to="/search" className="text-gray-400 hover:text-amber-400 transition-colors">
-                    ស្វែងរករឿង Anime & Donghua
+                    ស្វែងរករឿង
                   </Link>
                 </li>
                 <li>
                   <Link to="/vip" className="text-amber-400 hover:text-amber-300 font-bold transition-colors">
-                    👑 គម្រោងតម្លៃ VIP ($2.50)
+                    👑 គម្រោងសមាជិក VIP
                   </Link>
                 </li>
               </ul>
@@ -106,7 +114,7 @@ export function Footer() {
                 <span>គោលការណ៍សុវត្ថិភាព & DMCA</span>
               </h4>
               <p className="text-[11px] text-gray-400 leading-relaxed font-sans mb-2">
-                <strong>NAMI ANIME</strong> ជាគេហទំព័រផ្តល់ការកម្សាន្ត និងស្វែងរករឿង។ រាល់វីដេអូទាំងអស់ត្រូវបានចាក់បញ្ចាំងពីប្រភពសាធារណៈ។
+                <strong>ទស្សនារឿង (NAMI ANIME)</strong> ជាគេហទំព័រផ្តល់ការកម្សាន្ត និងស្វែងរករឿង។ រាល់វីដេអូទាំងអស់ត្រូវបានចាក់បញ្ចាំងពីប្រភពសាធារណៈ។
               </p>
               <div className="pt-2 space-y-2">
                 <button
@@ -114,10 +122,10 @@ export function Footer() {
                   className="w-full px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
                 >
                   <ShieldAlert className="w-4 h-4 text-red-400" />
-                  <span>⚠️ Keys & Shortcuts ហាមឃាត់ (Security Policy)</span>
+                  <span>⚠️ គោលការណ៍សុវត្ថិភាព (Security Policy)</span>
                 </button>
                 <p className="text-[11px] text-amber-300/90 font-mono text-center">
-                  DMCA Contact: <a href="https://t.me/Huang404" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">@Huang404</a>
+                  ទំនាក់ទំនង DMCA: <a href="https://t.me/Huang404" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">@Huang404</a>
                 </p>
               </div>
             </div>
@@ -125,10 +133,10 @@ export function Footer() {
 
           {/* Bottom bar */}
           <div className="border-t border-[#1E283C] mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <p className="text-gray-500">
-              © {new Date().getFullYear()} <strong className="text-amber-400">ទស្សនារឿង</strong>. All rights reserved.
+            <p className="text-gray-500 text-center sm:text-left">
+              © {new Date().getFullYear()} <strong className="text-amber-400">ទស្សនារឿង</strong>. រក្សាសិទ្ធិគ្រប់យ៉ាង។
             </p>
-            <p className="text-amber-400/90 font-semibold flex items-center gap-2">
+            <p className="text-amber-400/90 font-semibold flex items-center gap-2 text-center sm:text-right">
               <span>ទស្សនារឿង — Stream Anime & Donghua 4K Ultra HD</span>
             </p>
           </div>

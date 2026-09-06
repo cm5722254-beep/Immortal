@@ -310,7 +310,7 @@ export function WatchPage() {
 
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/40 shadow-sm">
-                      <Film className="w-3.5 h-3.5" /> រឿងភាពយន្តដុំ (Pay-Per-View Movie)
+                      <Film className="w-3.5 h-3.5" /> រឿងភាពយន្តដុំពិសេស
                     </div>
                     <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight leading-snug">
                       {anime?.title}
@@ -355,7 +355,7 @@ export function WatchPage() {
 
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
-                      <Crown className="w-3.5 h-3.5 fill-amber-400" /> សមាជិក VIP MEMBER ប៉ុណ្ណោះ
+                      <Crown className="w-3.5 h-3.5 fill-amber-400" /> សម្រាប់តែសមាជិក VIP ប៉ុណ្ណោះ
                     </div>
                     <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight leading-snug">
                       {anime?.title} (ភាគ {currentEp.episode_number})
@@ -399,7 +399,7 @@ export function WatchPage() {
                   subtitleUrl={currentEp.subtitle_url}
                   onProgress={handleProgress}
                   resumeAt={resumeAt}
-                  title={`${anime?.title} — Ep. ${currentEp.episode_number}${currentEp.title ? `: ${currentEp.title}` : ''}`}
+                  title={`${anime?.title} — ភាគ ${currentEp.episode_number}${currentEp.title ? `: ${currentEp.title}` : ''}`}
                   hasPrev={!!prevEp}
                   hasNext={!!nextEp}
                   onPrevEpisode={() => prevEp && goToEp(prevEp.episode_number)}
@@ -478,8 +478,8 @@ export function WatchPage() {
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
-                    title="Grid View (រៀបជាក្រឡា)"
-                    aria-label="Grid View"
+                    title="ទិដ្ឋភាពក្រឡា"
+                    aria-label="ទិដ្ឋភាពក្រឡា"
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
                   </button>
@@ -490,8 +490,8 @@ export function WatchPage() {
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
-                    title="List View (រៀបជាបញ្ជី)"
-                    aria-label="List View"
+                    title="ទិដ្ឋភាពបញ្ជី"
+                    aria-label="ទិដ្ឋភាពបញ្ជី"
                   >
                     <List className="w-3.5 h-3.5" />
                   </button>
@@ -580,7 +580,7 @@ export function WatchPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <p className={`text-xs font-bold truncate ${isActive ? 'text-amber-400' : 'text-gray-100'}`}>
-                              {ep.title || `Episode ${ep.episode_number}`}
+                              {ep.title || `ភាគ ${ep.episode_number}`}
                             </p>
                             {isEpVip && (
                               <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -589,7 +589,7 @@ export function WatchPage() {
                             )}
                           </div>
                           <p className="text-[10px] text-gray-400">
-                            {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)}m` : '24m'} · Full HD
+                            {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)} នាទី` : '24 នាទី'} · Full HD
                           </p>
                         </div>
                       </button>
