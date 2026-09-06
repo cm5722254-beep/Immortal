@@ -3,6 +3,7 @@ import api from '../services/api';
 
 export interface SystemUpdateConfig {
   enabled: boolean;
+  allow_vip?: boolean;
   title: string;
   message: string;
   version: string;
@@ -26,6 +27,7 @@ interface SystemUpdateState {
 
 const DEFAULT_CONFIG: SystemUpdateConfig = {
   enabled: false,
+  allow_vip: false,
   title: '🚀 Website កំពុង Update ជំនាន់ថ្មី',
   message: 'យើងខ្ញុំកំពុងធ្វើការអាប់ដេតប្រព័ន្ធ និងបន្ថែមមុខងារថ្មីៗ ដើម្បីផ្ដល់នូវបទពិសោធន៍ទស្សនាកាន់តែរលូន និងល្អបំផុតជូនប្រិយមិត្តទាំងអស់គ្នា! សូមអភ័យទោសចំពោះការរំខាន។',
   version: 'v2.5.0 Update',
@@ -58,6 +60,7 @@ export const useSystemUpdateStore = create<SystemUpdateState>((set, get) => ({
       if (res.data && typeof res.data.enabled === 'boolean') {
         const newConfig: SystemUpdateConfig = {
           enabled: res.data.enabled,
+          allow_vip: res.data.allow_vip ?? false,
           title: res.data.title || DEFAULT_CONFIG.title,
           message: res.data.message || DEFAULT_CONFIG.message,
           version: res.data.version || DEFAULT_CONFIG.version,

@@ -31,6 +31,7 @@ def load_promo_config() -> dict:
         "force_vip_lock": False,
         # System Update / Maintenance Mode settings
         "system_update_enabled": False,
+        "system_update_allow_vip": False,
         "system_update_title": "🚀 Website កំពុង Update ជំនាន់ថ្មី",
         "system_update_message": "យើងខ្ញុំកំពុងធ្វើការអាប់ដេតប្រព័ន្ធ និងបន្ថែមមុខងារថ្មីៗ ដើម្បីផ្ដល់នូវបទពិសោធន៍ទស្សនាកាន់តែរលូន និងល្អបំផុតជូនប្រិយមិត្តទាំងអស់គ្នា! សូមអភ័យទោសចំពោះការរំខានបណ្ដោះអាសន្ន។",
         "system_update_version": "v2.5.0 Update",
@@ -122,6 +123,7 @@ class PromoUpdateRequest(BaseModel):
 
 class SystemUpdateUpdateRequest(BaseModel):
     enabled: Optional[bool] = None
+    allow_vip: Optional[bool] = None
     title: Optional[str] = None
     message: Optional[str] = None
     version: Optional[str] = None
@@ -144,6 +146,7 @@ async def get_system_update_status():
     config = load_promo_config()
     return {
         "enabled": config.get("system_update_enabled", False),
+        "allow_vip": config.get("system_update_allow_vip", False),
         "title": config.get("system_update_title", "🚀 Website កំពុង Update ជំនាន់ថ្មី"),
         "message": config.get("system_update_message", "យើងខ្ញុំកំពុងធ្វើការអាប់ដេតប្រព័ន្ធ និងបន្ថែមមុខងារថ្មីៗ ដើម្បីផ្ដល់នូវបទពិសោធន៍ទស្សនាកាន់តែរលូន និងល្អបំផុតជូនប្រិយមិត្តទាំងអស់គ្នា!"),
         "version": config.get("system_update_version", "v2.5.0 Update"),
@@ -165,6 +168,8 @@ async def update_system_update_status(
 
     if data.enabled is not None:
         config["system_update_enabled"] = data.enabled
+    if data.allow_vip is not None:
+        config["system_update_allow_vip"] = data.allow_vip
     if data.title is not None:
         config["system_update_title"] = data.title.strip()
     if data.message is not None:
@@ -186,6 +191,7 @@ async def update_system_update_status(
         "message": "System Update status updated successfully",
         "system_update": {
             "enabled": config.get("system_update_enabled", False),
+            "allow_vip": config.get("system_update_allow_vip", False),
             "title": config.get("system_update_title"),
             "message": config.get("system_update_message"),
             "version": config.get("system_update_version"),

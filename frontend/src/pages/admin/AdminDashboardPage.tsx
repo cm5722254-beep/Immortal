@@ -5,7 +5,7 @@ import {
   ArrowUpRight, Flame, Clock, Lock, Unlock, RotateCcw,
   Globe, Smartphone, Bot, Tv,
   ShieldCheck, Layers, ChevronRight, CheckCircle2,
-  Bell, Settings2, Save
+  Bell, Settings2, Save, UserX, Search, CheckSquare, Square, X, Shield, Check, Crown
 } from 'lucide-react';
 
 import { AdminLayout } from './AdminLayout';
@@ -46,6 +46,87 @@ export function AdminDashboardPage() {
   });
   const [updateNoticeMsg, setUpdateNoticeMsg] = useState<string | null>(null);
 
+  // ── Block Specific Users Feature ──
+  const [showBlockUsersModal, setShowBlockUsersModal] = useState(false);
+  const [modalUsers, setModalUsers] = useState<User[]>([]);
+  const [isModalUsersLoading, setIsModalUsersLoading] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
+  const [userFilterTab, setUserFilterTab] = useState<'all' | 'blocked' | 'active'>('all');
+  const [blockActionMsg, setBlockActionMsg] = useState<string | null>(null);
+  const [isBlockingAction, setIsBlockingAction] = useState(false);
+
+  const fetchModalUsers = async () => {
+    setIsModalUsersLoading(true);
+    try {
+      const res = await api.get('/admin/users?per_page=100');
+      const items = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+      setModalUsers(items);
+    } catch {
+      // ignore
+    } finally {
+      setIsModalUsersLoading(false);
+    }
+  };
+
+  const handleToggleBlockSingleUser = async (u: User) => {
+    setIsBlockingAction(true);
+    const newActiveState = !u.is_active;
+    try {
+      await api.put(`/admin/users/${u.id}`, { is_active: newActiveState });
+      setModalUsers((prev) =>
+        prev.map((item) => (item.id === u.id ? { ...item, is_active: newActiveState } : item))
+      );
+      setBlockActionMsg(
+        newActiveState
+          ? `✅ បានដោះសោរ (Unblock) ជូន ${u.username} ជោគជ័យ!`
+          : `🔒 បានចាក់សោរបិទ (Block) ${u.username} ជោគជ័យ!`
+      );
+      setTimeout(() => setBlockActionMsg(null), 3500);
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || 'Failed to update user status');
+    } finally {
+      setIsBlockingAction(false);
+    }
+  };
+
+  const handleBatchBlockSelected = async (block: boolean) => {
+    if (selectedUserIds.size === 0) return;
+    setIsBlockingAction(true);
+    const ids = Array.from(selectedUserIds);
+    try {
+      for (const id of ids) {
+        const u = modalUsers.find((x) => x.id === id);
+        if (!u || u.role === 'OWNER') continue;
+        await api.put(`/admin/users/${id}`, { is_active: !block });
+      }
+      setModalUsers((prev) =>
+        prev.map((u) => (selectedUserIds.has(u.id) && u.role !== 'OWNER' ? { ...u, is_active: !block } : u))
+      );
+      const count = selectedUserIds.size;
+      setSelectedUserIds(new Set());
+      setBlockActionMsg(
+        block
+          ? `🔒 បានចាក់សោរបិទ User ចំនួន ${count} នាក់ជោគជ័យ!`
+          : `✅ បានដោះសោរ User ចំនួន ${count} នាក់ជោគជ័យ!`
+      );
+      setTimeout(() => setBlockActionMsg(null), 3500);
+    } catch {
+      alert('Failed to perform batch action');
+    } finally {
+      setIsBlockingAction(false);
+    }
+  };
+
+  const handleToggleSelectUser = (id: number) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   useEffect(() => {
     fetchUpdateStatus();
   }, []);
@@ -63,10 +144,18 @@ export function AdminDashboardPage() {
     }
   }, [updateConfig]);
 
-  const handleToggleSystemUpdate = async (enabled: boolean) => {
+  const handleToggleSystemMode = async (mode: 'open' | 'vip_only' | 'closed') => {
     try {
-      await updateSystemUpdate({ enabled });
-      setUpdateNoticeMsg(enabled ? '✅ បានបើកផ្ទាំង Website Update ជោគជ័យ' : '✅ បានបិទផ្ទាំង Website Update ជោគជ័យ');
+      if (mode === 'open') {
+        await updateSystemUpdate({ enabled: false, allow_vip: false });
+        setUpdateNoticeMsg('✅ បានបើក Website អោយមនុស្សគ្រប់គ្នាចូលទស្សនាធម្មតា');
+      } else if (mode === 'vip_only') {
+        await updateSystemUpdate({ enabled: true, allow_vip: true });
+        setUpdateNoticeMsg('👑 បានកំណត់ Website អោយតែសមាជិក VIP ប៉ុណ្ណោះចូលទស្សនាបាន');
+      } else {
+        await updateSystemUpdate({ enabled: true, allow_vip: false });
+        setUpdateNoticeMsg('🔒 បានបិទ Website ទាំងស្រុង (សម្រាប់តែ Admin/Owner កំពុង Update)');
+      }
       setTimeout(() => setUpdateNoticeMsg(null), 3500);
     } catch {
       alert('Failed to update system mode');
@@ -459,42 +548,80 @@ export function AdminDashboardPage() {
                       🚧 បិទ Website ពេលកំពុង Develop / Update
                     </h3>
                     <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${
-                      updateConfig.enabled
-                        ? 'bg-red-500/20 text-red-300 border-red-500/40 shadow-sm shadow-red-500/20 animate-pulse'
-                        : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                      !updateConfig.enabled
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                        : updateConfig.allow_vip
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                        : 'bg-red-500/20 text-red-300 border-red-500/40 shadow-sm shadow-red-500/20 animate-pulse'
                     }`}>
-                      <span className={`w-2 h-2 rounded-full ${updateConfig.enabled ? 'bg-red-400 animate-ping' : 'bg-emerald-400'}`} />
-                      {updateConfig.enabled ? '🔒 បានបិទ Website (User មិនអាចចូលមើលបាន)' : '🌐 Website កំពុងបើកធម្មតា (Online)'}
+                      <span className={`w-2 h-2 rounded-full ${
+                        !updateConfig.enabled
+                          ? 'bg-emerald-400'
+                          : updateConfig.allow_vip
+                          ? 'bg-amber-400 animate-ping'
+                          : 'bg-red-400 animate-ping'
+                      }`} />
+                      {!updateConfig.enabled
+                        ? '🌐 Website កំពុងបើកធម្មតា (Online)'
+                        : updateConfig.allow_vip
+                        ? '👑 បើកអោយតែសមាជិក VIP (VIP Only Mode)'
+                        : '🔒 បានបិទ Website ទាំងស្រុង (Lock for Update)'}
                     </span>
                   </div>
                   <p className="text-xs text-gray-300 mt-1 leading-relaxed max-w-2xl">
-                    ពេលចុចបិទ Website៖ User ទូទៅដែលចូលមកកាន់ Website នឹងមិនអាចចូលមើល ឬចុចរឿងអ្វីបានឡើយ (បង្ហាញផ្ទាំង Maintenance Lock ថា Website កំពុង Update)។ <strong>Admin/Owner នៅតែអាចចូលមើល & Develop ធម្មតាបាន!</strong>
+                    Admin អាចជ្រើសរើសបើក Website ទៅកាន់មនុស្សគ្រប់គ្នា, បើកអោយតែសមាជិក VIP, ឬបិទទាំងស្រុងពេលកំពុង Develop/Update បានតាមចិត្ត!
                   </p>
                 </div>
               </div>
 
-              {/* Action Buttons: Toggle, Preview & Edit */}
+              {/* Action Buttons: 3 Modes, Preview & Edit */}
               <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto shrink-0">
-                {/* 1-Click Main Toggle Switch */}
-                {updateConfig.enabled ? (
+                {/* 3-Mode Access Controls */}
+                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-black/40 border border-white/10 shadow-inner">
+                  {/* Mode 1: Public Online */}
                   <button
-                    onClick={() => handleToggleSystemUpdate(false)}
+                    onClick={() => handleToggleSystemMode('open')}
                     disabled={isUpdatingSystemStatus}
-                    className="px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
+                    className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                      !updateConfig.enabled
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
                   >
-                    <Unlock className="w-4 h-4" />
-                    <span>🔓 ចុចបើក Website វិញ (Open Site)</span>
+                    <Unlock className="w-3.5 h-3.5" />
+                    <span>🌐 បើកទូទៅ (Public)</span>
                   </button>
-                ) : (
+
+                  {/* Mode 2: VIP Members Only */}
                   <button
-                    onClick={() => handleToggleSystemUpdate(true)}
+                    onClick={() => handleToggleSystemMode('vip_only')}
                     disabled={isUpdatingSystemStatus}
-                    className="px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white shadow-lg shadow-red-600/30 flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
+                    className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                      updateConfig.enabled && updateConfig.allow_vip
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black shadow-lg shadow-amber-500/30 border border-amber-300'
+                        : 'text-amber-400 hover:bg-amber-500/10'
+                    }`}
+                    title="បើកឱ្យតែសមាជិក VIP ចូលទស្សនាបានប៉ុណ្ណោះ"
                   >
-                    <Lock className="w-4 h-4" />
-                    <span>🔒 ចុចបិទ Website (Lock for Update)</span>
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>👑 បើកតែ VIP</span>
                   </button>
-                )}
+
+                  {/* Mode 3: Locked All */}
+                  <button
+                    onClick={() => handleToggleSystemMode('closed')}
+                    disabled={isUpdatingSystemStatus}
+                    className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                      updateConfig.enabled && !updateConfig.allow_vip
+                        ? 'bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-md shadow-red-600/30'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="បិទ Website ទាំងស្រុង"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>🔒 បិទទាំងអស់</span>
+                  </button>
+                </div>
 
                 {/* Live Preview Button */}
                 <button
@@ -514,6 +641,19 @@ export function AdminDashboardPage() {
                   <Settings2 className="w-3.5 h-3.5" />
                   <span>{showEditUpdateModal ? 'បិទការកែប្រែ' : 'កែប្រែអក្សរ'}</span>
                 </button>
+
+                {/* Select & Block Specific Users Button */}
+                <button
+                  onClick={() => {
+                    setShowBlockUsersModal(true);
+                    fetchModalUsers();
+                  }}
+                  className="px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-red-600/30 to-rose-700/30 hover:from-red-600/40 hover:to-rose-700/40 text-red-300 hover:text-red-200 border border-red-500/40 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-red-500/10"
+                  title="ជ្រើសរើសបុគ្គលជាក់លាក់ដើម្បីបិទ ឬចាក់សោរ"
+                >
+                  <UserX className="w-4 h-4 text-red-400" />
+                  <span>🚫 Select បិទទៅលើបុគ្គល</span>
+                </button>
               </div>
             </div>
 
@@ -531,8 +671,14 @@ export function AdminDashboardPage() {
               </div>
               <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
                 <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">សិទ្ធិចូលទស្សនា (Status):</span>
-                <p className={`font-bold mt-0.5 ${updateConfig.enabled ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {updateConfig.enabled ? '🔒 កំពុងចាក់សោរបិទ Website ទាំងស្រុង' : '🌐 បើកអោយ User ចូលទស្សនាធម្មតា'}
+                <p className={`font-bold mt-0.5 ${
+                  !updateConfig.enabled ? 'text-emerald-400' : updateConfig.allow_vip ? 'text-amber-300' : 'text-red-400'
+                }`}>
+                  {!updateConfig.enabled
+                    ? '🌐 បើកអោយមនុស្សគ្រប់គ្នាចូលទស្សនាធម្មតា'
+                    : updateConfig.allow_vip
+                    ? '👑 បើកអោយតែសមាជិក VIP ចូលទស្សនា'
+                    : '🔒 កំពុងចាក់សោរបិទ Website ទាំងស្រុង'}
                 </p>
               </div>
             </div>
@@ -870,6 +1016,282 @@ export function AdminDashboardPage() {
         </div>
 
       </div>
+
+      {/* ── 🚫 SELECT & BLOCK SPECIFIC USERS MODAL ── */}
+      {showBlockUsersModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-150">
+          <div className="max-w-2xl w-full bg-[#11070c] border border-red-500/30 rounded-3xl shadow-[0_0_60px_rgba(239,68,68,0.2)] overflow-hidden flex flex-col max-h-[85vh]">
+            
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-red-950/40 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400">
+                  <UserX className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    🚫 Select បុគ្គលដែលចង់បិទ / ចាក់សោរ
+                  </h3>
+                  <p className="text-[11px] text-gray-400">
+                    Select ជ្រើសរើសបុគ្គលជាក់លាក់ដើម្បីបិទមិនឱ្យចូល Website (User ដទៃចូលមើលបានធម្មតា)
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBlockUsersModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Notification Toast in Modal */}
+            {blockActionMsg && (
+              <div className="mx-4 mt-3 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-2 animate-in fade-in">
+                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{blockActionMsg}</span>
+              </div>
+            )}
+
+            {/* Search and Filter Tabs */}
+            <div className="p-4 border-b border-white/10 space-y-3 bg-white/[0.01]">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  placeholder="ស្វែងរកតាម Username, Email, Phone, Telegram..."
+                  className="w-full pl-10 pr-4 py-2.5 text-xs bg-black/40 border border-white/15 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50"
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10">
+                  <button
+                    onClick={() => setUserFilterTab('all')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      userFilterTab === 'all' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    ទាំងអស់ ({modalUsers.length})
+                  </button>
+                  <button
+                    onClick={() => setUserFilterTab('blocked')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                      userFilterTab === 'blocked' ? 'bg-red-500/25 text-red-300 border border-red-500/40' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🔴 បានបិទ ({modalUsers.filter((u) => !u.is_active).length})
+                  </button>
+                  <button
+                    onClick={() => setUserFilterTab('active')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                      userFilterTab === 'active' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🟢 ធម្មតា ({modalUsers.filter((u) => u.is_active).length})
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const filtered = modalUsers.filter((u) => {
+                        const q = userSearchTerm.toLowerCase().trim();
+                        const matchQ = !q || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+                        if (!matchQ) return false;
+                        if (userFilterTab === 'blocked') return !u.is_active;
+                        if (userFilterTab === 'active') return u.is_active;
+                        return true;
+                      });
+                      setSelectedUserIds(new Set(filtered.filter((u) => u.role !== 'OWNER').map((u) => u.id)));
+                    }}
+                    className="text-[11px] text-gray-400 hover:text-white underline cursor-pointer"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-gray-600">·</span>
+                  <button
+                    onClick={() => setSelectedUserIds(new Set())}
+                    className="text-[11px] text-gray-400 hover:text-white underline cursor-pointer"
+                  >
+                    Clear Select
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Batch Action Bar when users are selected */}
+            {selectedUserIds.size > 0 && (
+              <div className="px-4 py-2.5 bg-red-950/50 border-b border-red-500/30 flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top-2">
+                <span className="font-bold text-red-200 flex items-center gap-1.5">
+                  <CheckSquare className="w-4 h-4 text-red-400" />
+                  បាន Select {selectedUserIds.size} នាក់
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleBatchBlockSelected(true)}
+                    disabled={isBlockingAction}
+                    className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs flex items-center gap-1 shadow-md cursor-pointer active:scale-95"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>🔒 បិទអ្នកដែលបាន Select</span>
+                  </button>
+                  <button
+                    onClick={() => handleBatchBlockSelected(false)}
+                    disabled={isBlockingAction}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center gap-1 shadow-md cursor-pointer active:scale-95"
+                  >
+                    <Unlock className="w-3.5 h-3.5" />
+                    <span>🔓 បើកវិញ</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Users List Body */}
+            <div className="p-3 sm:p-4 overflow-y-auto space-y-2 flex-1 divide-y divide-white/5">
+              {isModalUsersLoading ? (
+                <div className="py-12 text-center text-gray-400 text-xs">
+                  <div className="w-7 h-7 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  កំពុងទាញយកបញ្ជី User...
+                </div>
+              ) : (() => {
+                const filtered = modalUsers.filter((u) => {
+                  const q = userSearchTerm.toLowerCase().trim();
+                  const matchQ = !q ||
+                    u.username.toLowerCase().includes(q) ||
+                    u.email.toLowerCase().includes(q) ||
+                    (u.phone_number && u.phone_number.includes(q)) ||
+                    (u.telegram_username && u.telegram_username.toLowerCase().includes(q)) ||
+                    String(u.id) === q;
+                  if (!matchQ) return false;
+                  if (userFilterTab === 'blocked') return !u.is_active;
+                  if (userFilterTab === 'active') return u.is_active;
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-12 text-center text-gray-500 text-xs">
+                      រកមិនឃើញ User តាមការស្វែងរកនេះឡើយ
+                    </div>
+                  );
+                }
+
+                return filtered.map((u) => {
+                  const isSelected = selectedUserIds.has(u.id);
+                  const isOwnerAccount = u.role === 'OWNER';
+                  const isBlocked = !u.is_active;
+
+                  return (
+                    <div
+                      key={u.id}
+                      className={`pt-2 flex items-center justify-between p-2.5 rounded-2xl transition-all ${
+                        isBlocked
+                          ? 'bg-red-950/20 border border-red-500/25'
+                          : isSelected
+                          ? 'bg-white/10 border border-white/20'
+                          : 'hover:bg-white/[0.04] border border-transparent'
+                      }`}
+                    >
+                      {/* Checkbox and User Info */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        {!isOwnerAccount ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSelectUser(u.id)}
+                            className="text-gray-400 hover:text-white cursor-pointer shrink-0"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className="w-4 h-4 text-red-400" />
+                            ) : (
+                              <Square className="w-4 h-4 text-gray-500" />
+                            )}
+                          </button>
+                        ) : (
+                          <span title="Owner account protected">
+                            <Shield className="w-4 h-4 text-amber-400 shrink-0" />
+                          </span>
+                        )}
+
+                        <div className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 ${
+                          isBlocked ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white'
+                        }`}>
+                          {u.username.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-white truncate">{u.username}</span>
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-gray-300">
+                              {u.role}
+                            </span>
+                            {isBlocked ? (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">
+                                🔒 បានបិទ
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                                🟢 ធម្មតា
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-gray-400 truncate">
+                            {u.email || u.phone_number || (u.telegram_username ? `@${u.telegram_username}` : 'No contact')}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Toggle Button */}
+                      <div className="shrink-0 ml-2">
+                        {isOwnerAccount ? (
+                          <span className="text-[10px] text-amber-400 font-bold px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            🛡️ ម្ចាស់វេបសាយ
+                          </span>
+                        ) : isBlocked ? (
+                          <button
+                            onClick={() => handleToggleBlockSingleUser(u)}
+                            disabled={isBlockingAction}
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-md flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                          >
+                            <Unlock className="w-3.5 h-3.5" />
+                            <span>🔓 បើកវិញ</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleBlockSingleUser(u)}
+                            disabled={isBlockingAction}
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                          >
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>🔒 ចុចបិទ</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 sm:p-4 border-t border-white/10 bg-black/40 flex items-center justify-between text-xs text-gray-400">
+              <span>
+                🔒 ពេលចុចបិទ User៖ គណនី និងឧបករណ៍របស់បុគ្គលនោះ នឹងត្រូវចាក់សោរមិនអាចចូល Website បានឡើយ។
+              </span>
+              <button
+                onClick={() => setShowBlockUsersModal(false)}
+                className="btn-secondary text-xs py-1.5 px-4 cursor-pointer"
+              >
+                រួចរាល់
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

@@ -98,11 +98,16 @@ function OwnerGuard({ children }: { children: React.ReactNode }) {
 // Layout wrapper for public pages
 function PublicLayout({ children }: { children: React.ReactNode }) {
   const { config } = useSystemUpdateStore();
-  const { isAdmin, isOwner, isStaff } = useAuthStore();
+  const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
+  const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active || user?.is_vip;
 
-  // 🔒 Website Maintenance Lock: If enabled, visitors cannot view or click anything!
+  // 🔒 Website Maintenance Lock: If enabled, check if VIP only or full lock
   if (config.enabled && !isAdmin && !isOwner && !isStaff) {
-    return <MaintenancePage />;
+    if (config.allow_vip && isVipUser) {
+      // 👑 Allowed: VIP users can browse normally!
+    } else {
+      return <MaintenancePage isVipOnlyMode={Boolean(config.allow_vip)} />;
+    }
   }
 
   return (
@@ -122,10 +127,15 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
 // Layout wrapper for watch page with Maintenance Lock
 function PublicWatchLayout({ children }: { children: React.ReactNode }) {
   const { config } = useSystemUpdateStore();
-  const { isAdmin, isOwner, isStaff } = useAuthStore();
+  const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
+  const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active || user?.is_vip;
 
   if (config.enabled && !isAdmin && !isOwner && !isStaff) {
-    return <MaintenancePage />;
+    if (config.allow_vip && isVipUser) {
+      // 👑 Allowed: VIP users can watch normally!
+    } else {
+      return <MaintenancePage isVipOnlyMode={Boolean(config.allow_vip)} />;
+    }
   }
 
   return (
