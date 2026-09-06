@@ -79,7 +79,7 @@ export function AdminBackupPage() {
         setSnapshots([
           {
             filename: 'seed_export.json',
-            label: '🌟 Master Database Snapshot (Complete 69 Titles & 674 Episodes)',
+            label: '🌟 កញ្ចប់ទិន្នន័យមេ Master Snapshot (៦៩ រឿង & ៦៧៤ ភាគពេញលេញ)',
             is_master: true,
             size_kb: 580,
             timestamp: cat.exported_at || new Date().toISOString(),
@@ -310,10 +310,10 @@ export function AdminBackupPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-display font-black text-base sm:text-xl text-white">
-                    Permanent Data Protection (ប្រព័ន្ធការពារទិន្នន័យ)
+                    ប្រព័ន្ធការពារទិន្នន័យ (Permanent Data Protection)
                   </h2>
                   <span className="badge bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">
-                    ACTIVE 100%
+                    សកម្ម ១០០%
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-gray-300 mt-1">
@@ -329,7 +329,7 @@ export function AdminBackupPage() {
                 className="btn-primary text-xs sm:text-sm py-2.5 px-4 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 text-white font-bold transition-all active:scale-95 cursor-pointer"
               >
                 <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                {isSyncing ? 'កំពុងរក្សាទុក...' : '💾 រក្សាទុកទិន្នន័យ (Save)'}
+                {isSyncing ? 'កំពុងរក្សាទុក...' : '💾 រក្សាទុកទិន្នន័យ'}
               </button>
 
               <button
@@ -339,7 +339,7 @@ export function AdminBackupPage() {
                 title="ស្តាររឿង ឬភាគដែលបាត់បង់មកវិញភ្លាមៗ"
               >
                 <RotateCcw className={`w-4 h-4 ${isRecovering ? 'animate-spin' : ''}`} />
-                {isRecovering ? 'កំពុងស្តារ...' : '🔄 ស្តាររឿង (Recover)'}
+                {isRecovering ? 'កំពុងស្តារ...' : '🔄 ស្តារទិន្នន័យឡើងវិញ'}
               </button>
             </div>
           </div>
@@ -367,16 +367,16 @@ export function AdminBackupPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="card p-5 space-y-2">
             <div className="flex items-center justify-between text-gray-400">
-              <span className="text-xs font-semibold">ស្ថានភាពប្រព័ន្ធ (Status)</span>
+              <span className="text-xs font-semibold">ស្ថានភាពប្រព័ន្ធ</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
             <p className="text-lg font-bold text-emerald-400">ការពារ 100% ជាប់រហូត</p>
-            <p className="text-[11px] text-gray-500">Auto-Persistent Activated</p>
+            <p className="text-[11px] text-gray-500">ប្រព័ន្ធការពារទិន្នន័យសកម្ម</p>
           </div>
 
           <div className="card p-5 space-y-2">
             <div className="flex items-center justify-between text-gray-400">
-              <span className="text-xs font-semibold">ទំហំឯកសារ Storage</span>
+              <span className="text-xs font-semibold">ទំហំឯកសារបម្រុងទុក</span>
               <FileJson className="w-4 h-4 text-brand-400" />
             </div>
             <p className="text-lg font-bold text-white">
@@ -387,24 +387,24 @@ export function AdminBackupPage() {
 
           <div className="card p-5 space-y-2">
             <div className="flex items-center justify-between text-gray-400">
-              <span className="text-xs font-semibold">ចំនួន Backup Snapshots</span>
+              <span className="text-xs font-semibold">ចំនួនកញ្ចប់បម្រុងទុក</span>
               <Layers className="w-4 h-4 text-purple-400" />
             </div>
             <p className="text-lg font-bold text-white">
-              {snapshots.length || status?.total_backups_saved || 1} Snapshots
+              {snapshots.length || status?.total_backups_saved || 1} កញ្ចប់
             </p>
-            <p className="text-[11px] text-gray-500">Redundant Fallbacks</p>
+            <p className="text-[11px] text-gray-500">ទិន្នន័យបម្រុងទុកមានសុវត្ថិភាព</p>
           </div>
 
           <div className="card p-5 space-y-2">
             <div className="flex items-center justify-between text-gray-400">
-              <span className="text-xs font-semibold">ទម្រង់រក្សាទុក (Mode)</span>
+              <span className="text-xs font-semibold">ទម្រង់រក្សាទុក</span>
               <HardDrive className="w-4 h-4 text-blue-400" />
             </div>
             <p className="text-xs font-bold text-white truncate">
-              Dual Redundancy
+              ទិន្នន័យឆ្លងកាត់ពហុស្រទាប់
             </p>
-            <p className="text-[11px] text-gray-500">SQLite + JSON Snapshots</p>
+            <p className="text-[11px] text-gray-500">Supabase PostgreSQL + JSON</p>
           </div>
         </div>
 
@@ -413,17 +413,17 @@ export function AdminBackupPage() {
           <div className="flex items-center justify-between border-b border-dark-border pb-3">
             <div>
               <h3 className="text-base font-black text-white flex items-center gap-2 font-display">
-                <History className="w-5 h-5 text-amber-400" /> បញ្ជីឯកសារទិន្នន័យបម្រុងទុក (Saved Backup Snapshots)
+                <History className="w-5 h-5 text-amber-400" /> បញ្ជីឯកសារទិន្នន័យបម្រុងទុក
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                ចុចប៊ូតុង "ស្តារទិន្នន័យ" ដើម្បីយកទិន្នន័យរឿង និងភាគដែលបាត់បង់ត្រឡប់មកវិញភ្លាមៗ (Safe Merge)
+                ចុចប៊ូតុង "ស្តារទិន្នន័យ" ដើម្បីយកទិន្នន័យរឿង និងភាគដែលបាត់បង់ត្រឡប់មកវិញភ្លាមៗ (សុវត្ថិភាពខ្ពស់)
               </p>
             </div>
             <button
               onClick={fetchSnapshots}
               className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Refresh
+              <RefreshCw className="w-3.5 h-3.5" /> ផ្ទុកឡើងវិញ
             </button>
           </div>
 
