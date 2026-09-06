@@ -1,8 +1,12 @@
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
+import os
+from app.core.config import settings
 
-DATABASE_URL = "postgresql+asyncpg://postgres.tcrocbddnnfvwdpbokcb:NamiAnime2026%40Pass@aws-0-ap-south-1.pooler.supabase.com:6543/postgres"
+DATABASE_URL = settings.DATABASE_URL.strip()
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 tables = ["episodes", "anime", "users", "comments", "banners", "genres", "ratings", "favorites", "watch_histories"]
 

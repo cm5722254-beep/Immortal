@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "exported_at": "2026-09-06T05:31:21.186685+00:00",
+  "exported_at": "2026-09-06T08:30:44.322575+00:00",
   "counts": {
     "genres": 16,
     "users": 33,
@@ -169,25 +169,6 @@
       "created_at": "2026-09-01T06:04:14.382524+00:00"
     },
     {
-      "id": 6,
-      "username": "Huang404",
-      "email": "tg_7777639689@telegram.merdonghua.com",
-      "password_hash": "=19=65536,t=3,p=4+bJfsek2ZoC6W41zRaQ7N0fZ6vaIak",
-      "role": "ADMIN",
-      "is_active": true,
-      "is_verified": false,
-      "is_vip": false,
-      "vip_plan": null,
-      "vip_started_at": null,
-      "vip_expires_at": null,
-      "avatar_url": "https://t.me/i/userpic/320/GBsq6rTLmVxRBGUPO06IrqgWtOAudVfNzLvv4Evo8NacN5JSjcRo55VUu3Hcndkd.svg",
-      "phone_number": null,
-      "telegram_id": "7777639689",
-      "telegram_username": "Huang404",
-      "login_source": "telegram",
-      "created_at": "2026-09-01T06:04:14.382524+00:00"
-    },
-    {
       "id": 7,
       "username": "DonghuaHD",
       "email": "tg_8769719333@telegram.merdonghua.com",
@@ -230,7 +211,7 @@
       "username": "MOENGMIX",
       "email": "moengmix12345@gmail.com",
       "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$XcvZG0PonVNKqXVurZUSAg$YMDDuom6HEduErozTaDNbKCM2MAAlAkD+MkAyb0bd8c",
-      "role": "ADMIN",
+      "role": "USER",
       "is_active": true,
       "is_verified": false,
       "is_vip": false,
@@ -708,16 +689,35 @@
       "role": "USER",
       "is_active": true,
       "is_verified": true,
-      "is_vip": false,
-      "vip_plan": null,
-      "vip_started_at": null,
-      "vip_expires_at": null,
+      "is_vip": true,
+      "vip_plan": "1month",
+      "vip_started_at": "2026-09-06T05:31:58.271309+00:00",
+      "vip_expires_at": "2026-10-06T05:31:58.271309+00:00",
       "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocKLTcPN-4yokcXzjXVLepqDFggPyc7KlxfBhIhDkZrrJvpBaQ=s96-c",
       "phone_number": null,
       "telegram_id": null,
       "telegram_username": null,
       "login_source": "google",
       "created_at": "2026-09-05T16:03:33.628099+00:00"
+    },
+    {
+      "id": 49,
+      "username": "Nint_Anime1",
+      "email": "tg_7777639689@telegram.merdonghua.com",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$MYaQ0prT+t/bW6t1bi0FgA$pwLHJLz0bLnXT/4RxCY8mpoldkFq2dAT3WNHkzwsOxM",
+      "role": "USER",
+      "is_active": true,
+      "is_verified": true,
+      "is_vip": false,
+      "vip_plan": null,
+      "vip_started_at": null,
+      "vip_expires_at": null,
+      "avatar_url": "https://t.me/i/userpic/320/GBsq6rTLmVxRBGUPO06IrqgWtOAudVfNzLvv4Evo8NacN5JSjcRo55VUu3Hcndkd.svg",
+      "phone_number": null,
+      "telegram_id": "7777639689",
+      "telegram_username": "Nint_Anime1",
+      "login_source": "telegram",
+      "created_at": "2026-09-06T06:01:40.738863+00:00"
     }
   ],
   "anime": [
@@ -741,12 +741,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 64,
+      "view_count": 65,
       "average_rating": 4.9,
       "rating_count": 0,
       "episode_count": 70,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T04:59:15.823885+00:00"
+      "updated_at": "2026-09-06T06:20:10.348160+00:00"
     },
     {
       "id": 2,
@@ -800,7 +800,7 @@
       "rating_count": 0,
       "episode_count": 187,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T05:05:08.306023+00:00"
+      "updated_at": "2026-09-06T08:30:37.919100+00:00"
     },
     {
       "id": 4,
@@ -822,12 +822,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 26,
+      "view_count": 27,
       "average_rating": 5.0,
       "rating_count": 0,
       "episode_count": 32,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T05:04:50.226018+00:00"
+      "updated_at": "2026-09-06T06:15:22.203080+00:00"
     },
     {
       "id": 5,
@@ -1065,12 +1065,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 10,
+      "view_count": 11,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 6,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T02:34:38.375725+00:00"
+      "updated_at": "2026-09-06T05:49:13.750509+00:00"
     },
     {
       "id": 14,

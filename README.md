@@ -1,141 +1,143 @@
-# MER DONGHUA (墨尔动画)
-### Anime & Donghua Streaming Platform
+# 🎬 MER DONGHUA (墨尔动画 / ទស្សនារឿង) — IMMORTAL V2
 
-> **Anime & Donghua — Anytime, Anywhere.**
-> A high-performance, full-stack video streaming platform.
+<div align="center">
 
-[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python)](backend/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](frontend/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?logo=fastapi)](backend/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](frontend/)
-[![Security Scan](https://github.com/your-org/your-repo/actions/workflows/secret-scan.yml/badge.svg)](.github/workflows/secret-scan.yml)
+![Version](https://img.shields.io/badge/version-2.5.0-blue.svg?style=for-the-badge)
+![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=for-the-badge&logo=typescript)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql)
+![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)
+![License](https://img.shields.io/badge/License-Proprietary-red.svg?style=for-the-badge)
 
----
+**វេទិកាទស្សនាភាពយន្ត Anime, Donghua 3D, និង Drama កម្សាន្តកម្រិតខ្ពស់ (Next-Gen Streaming Platform)**  
+*រចនាឡើងយ៉ាងប្រណីត Version 2 Design (ភាសាខ្មែរ ១០០%) ដំណើរការលឿន គ្មាន Delay (Zero-Delay Performance)*
 
-## 🌟 Features
+[📱 ចូលមើល Website](http://localhost:5173) • [📖 ឯកសារ API Docs](http://localhost:8000/docs) • [💬 Telegram Community](https://t.me/namianime_channel)
 
-### 🎬 Streaming & User Experience
-- **Cinematic Dark Theme** — dark gradients, glow accents, glassmorphic UI
-- **Custom HLS Player** — `.m3u8` & MP4, auto-next episode, keyboard shortcuts
-- **Continue Watching** — tracks seconds watched per episode with resume bar
-- **Favorites & Watch History** — authenticated user library
-- **Threaded Comments & Likes** — discussion per title with reply threads
-- **5-Star Community Ratings** — real-time score updates
-- **Search & Filter** — debounced search, genre tags, type & status filters
-
-### 🛡️ Admin Management Panel
-- **Dashboard KPI Metrics** — users, titles, episodes, total views
-- **Full CRUD** — anime/donghua catalog, episodes, subtitles, thumbnails
-- **User Moderation** — roles (`USER`, `ADMIN`), active status controls
-- **Comment Moderation** — filter reported and deleted content
-
-### 🔒 Security & Architecture
-- **Argon2 Password Hashing** — industry-standard cryptographic hashing
-- **JWT Token Auth** — 30m access + 7d refresh with auto-refresh interceptors
-- **RBAC** — protected routes on both FastAPI and React Router layers
-- **Rate Limiting** — `slowapi` on auth & search endpoints
-- **3× CDN Redundancy** — Cloudflare R2 primary + 2 mirrors
+</div>
 
 ---
 
-## 🚀 Tech Stack
+## 🌟 លក្ខណៈពិសេសចម្បង (Key Features)
 
-| Layer | Technology |
-|-------|-----------|
-| **Backend** | Python 3.12+, FastAPI, SQLAlchemy 2 (Async), PostgreSQL, Pydantic v2 |
-| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Zustand, React Router v6 |
-| **Mobile** | Capacitor (Android + iOS) |
-| **Storage** | Cloudflare R2 (3× redundant) |
-| **Cache** | Redis (Upstash / Redis Cloud) |
-| **Deployment** | Docker, Netlify, Render, Railway |
+### 🎬 ប្រព័ន្ធទស្សនាភាពយន្ត (Streaming Experience)
+- **Cinematic Dark Luxury UI**: រចនាបទបែប Version 2 Luxury Glassmorphism គាំទ្រភាសាខ្មែរ ១០០% ទាំងទូរស័ព្ទ និងកុំព្យូទ័រ។
+- **Custom HLS & MP4 Player**: កម្មវិធីចាក់វីដេអូល្បឿនលឿន គាំទ្រ Full HD, Auto-Next Episode, និងចងចាំនាទីទស្សនាចុងក្រោយ (Resume Watching)។
+- **Multi-Category Catalog**: ចាត់ថ្នាក់ច្បាស់លាស់៖ រឿងភាគចិន 3D (Donghua), ភាពយន្តភាគ (Drama), ភាពយន្តបែបកុន (Movies), និងគំនូរជីវចល (Anime)។
+- **Real-Time Danmaku & Comments**: ខមិនបញ្ចេញមតិ និងអក្សររត់លើវីដេអូ (Danmaku) តាមពេលវេលាជាក់ស្តែង។
+
+### 👑 ប្រព័ន្ធសមាជិកភាព & VIP (VIP & Member Access)
+- **VIP Membership Plans**: កំណត់គម្រោង ១ខែ, ៣ខែ, ៦ខែ, ១ឆ្នាំ, និងពេញមួយជីវិត (Lifetime VIP)។
+- **Movie Individual Unlock**: មុខងារបើកសិទ្ធិឱ្យ User ទស្សនារឿងកុន (Movie) ជាក់លាក់មួយៗដាច់ដោយឡែក។
+- **Telegram & Google Fast Login**: ចូលប្រើប្រាស់ភ្លាមៗជាមួយគណនី Telegram ឬ Google ក្នុងរយៈពេល ០.១ វិនាទី។
+
+### 🛡️ ផ្ទាំងគ្រប់គ្រង Admin កម្រិតខ្ពស់ (Admin Control Panel)
+- **ផ្ទាំងគ្រប់គ្រងសមាជិក (User Management)**: កែប្រែ Role (USER, STAFF, ADMIN, OWNER), បើក/បិទ VIP, និងប្រព័ន្ធការពារគណនី Owner ដាច់ខាត (Owner Immunity Protection)។
+- **គ្រប់គ្រងភាគរឿង (Episode Management)**: បន្ថែមភាគរឿង កែសម្រួល URL Video, ប្តូរស្ថានភាព Free/VIP, និងមើលតេស្តវីដេអូផ្ទាល់ក្នុងផ្ទាំង Admin (In-Dashboard Preview Player)។
+- **បម្រុងទុក & ស្តារទិន្នន័យ (Backup & Restore)**: មុខងារ Backup ទិន្នន័យទៅ Cloud និងស្តារភាគរឿងដែលបាត់បង់មកវិញដោយស្វ័យប្រវត្តិ (Safe Merge Recovery)។
+- **ផ្ញើសារដំណឹងទៅ Telegram Bot**: ផ្ញើការជូនដំណឹងភាគរឿងថ្មីៗទៅកាន់ Telegram Channel/Group ដោយស្វ័យប្រវត្តិ។
 
 ---
 
-## 🛠️ Quick Start
+## 🏗️ ស្ថាបត្យកម្មប្រព័ន្ធ (System Architecture)
 
-> **Read the full guide**: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
-
-```bash
-# 1. Clone
-git clone <repo-url>
-cd Huang-anime
-
-# 2. Configure credentials (NEVER commit real credentials!)
-cp .env.example .env
-cp r2_config.example.json r2_config.json
-cp multi_server_config.example.json multi_server_config.json
-# Edit each file with your real credentials
-
-# 3. Start with Docker
-docker compose up -d --build
-
-# Frontend: http://localhost:5173
-# Backend:  http://localhost:8000
-# API Docs: http://localhost:8000/docs
+```mermaid
+graph TD
+    UserClient[Web Browser / Mobile Capacitor] -->|Port 5173| Frontend[React 18 + Vite + TailwindCSS]
+    Frontend -->|Axios REST API / Fast Cache| Backend[FastAPI Python 3.12]
+    Backend -->|Async SQLAlchemy + asyncpg| DB[(Supabase PostgreSQL Database)]
+    Backend -->|Cloud Storage| R2[Cloudflare R2 / Video CDN]
+    Backend -->|Bot API| Telegram[Telegram Channel & Bot Notifications]
 ```
 
 ---
 
-## 📁 Project Structure
+## 📂 រចនាសម្ព័ន្ធគម្រោង (Repository Structure)
 
-```
+```text
 Huang-anime/
-├── backend/          # FastAPI Python API
-├── frontend/         # React + TypeScript SPA + Mobile (Capacitor)
-├── modules/          # Experimental language modules (Go, Rust, Elixir...)
-├── tools/            # Admin automation & content management scripts
-├── docs/             # Architecture, deployment, and security docs
-├── .github/          # CI/CD workflows, issue & PR templates
-├── .env.example      # Environment variable template
-├── r2_config.example.json
-├── multi_server_config.example.json
-├── docker-compose.yml
-├── LICENSE           # Proprietary — All Rights Reserved
-└── SECURITY.md       # Vulnerability disclosure policy
+├── backend/                       # 🐍 FastAPI Backend Engine
+│   ├── app/
+│   │   ├── api/                   # API Endpoints (anime, episodes, users, admin, auth, stream)
+│   │   ├── core/                  # Database engines, Security, JWT, Config
+│   │   ├── dependencies/          # Authentication & Role-Based Access Control (RBAC)
+│   │   ├── models/                # SQLAlchemy Models (User, Anime, Episode, Banner, Comment)
+│   │   ├── schemas/               # Pydantic v2 Request/Response Schemas
+│   │   └── services/              # Telegram service, data persistence & sync
+│   ├── fix_sequences.py           # PostgreSQL Sequence Auto-Repair Utility
+│   └── requirements.txt           # Python Dependencies
+│
+├── frontend/                      # ⚡ React + Vite + TypeScript Frontend
+│   ├── src/
+│   │   ├── components/            # Reusable UI Components (Player, Modals, Navbar, Footer)
+│   │   ├── pages/                 # User Pages (Home, Watch, Catalog, VIP, Profile)
+│   │   │   └── admin/             # Admin Control Pages (Users, Anime, Episodes, Backup, Theme)
+│   │   ├── services/              # Axios API Client with In-Memory Fast Cache
+│   │   ├── store/                 # Zustand State Stores (authStore, themeStore, confirmStore)
+│   │   └── types/                 # TypeScript Type Definitions
+│   └── package.json               # Frontend Dependencies & Scripts
+│
+├── scripts/                       # 🛠️ Automation & Helper Batch Scripts
+├── docs/                          # 📖 Architecture & Deployment Documentation
+├── .gitignore                     # Git Ignore rules (Strict secrets & large files protection)
+└── README.md                      # ឯកសារណែនាំគម្រោង (Project Documentation)
 ```
 
 ---
 
-## 📖 Documentation
+## 🚀 របៀបតម្លើង និងដំណើរការ (Quick Setup Guide)
 
-| Document | Description |
-|----------|-------------|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, security model |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker, manual, cloud & mobile deployment |
-| [SECURITY.md](SECURITY.md) | Vulnerability reporting & credential policy |
+### ១. តម្រូវការជាមុន (Prerequisites)
+- **Node.js**: v18.0.0 ឬខ្ពស់ជាងនេះ
+- **Python**: v3.11 ឬ v3.12
+- **Git**: ជំនាន់ចុងក្រោយ
 
----
-
-## 🐳 Docker
-
+### ២. ដំណើរការ Backend (FastAPI)
 ```bash
-docker compose up -d --build
+# ចូលទៅកាន់ folder backend
+cd backend
+
+# បង្កើត និងបើក Virtual Environment (Windows)
+python -m venv venv
+.\venv\Scripts\activate
+
+# តម្លើង Dependencies
+pip install -r requirements.txt
+
+# បង្កើត .env ដោយចម្លងពី .env.example
+copy .env.example .env
+
+# ដំណើរការ Backend Server (Port 8000)
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8000 |
-| API Docs | http://localhost:8000/docs |
-| PostgreSQL | localhost:5432 |
-| Redis | localhost:6379 |
+### ៣. ដំណើរការ Frontend (Vite + React)
+```bash
+# ចូលទៅកាន់ folder frontend
+cd frontend
+
+# តម្លើង Packages
+npm install
+
+# ដំណើរការ Development Server (Port 5173)
+npm run dev
+```
 
 ---
 
-## 🔑 Security
+## 🔒 សុវត្ថិភាព & ការការពារកូដ (Security & Standards)
 
-- **Never commit** `r2_config.json`, `multi_server_config.json`, `.env`, or `*.keystore`
-- All secrets must be stored in `.env` files (git-ignored)
-- Use example templates (`*.example.json`) as references
-- See [SECURITY.md](SECURITY.md) for the full security policy
+1. **ការសម្ងាត់ និង Credentials**: គ្មានការ Hardcode API Keys, Passwords, ឬ Database Connection Strings ចូលទៅក្នុង Git ឡើយ — គ្រប់ទិន្នន័យសម្ងាត់ត្រូវបានគ្រប់គ្រងតាមរយៈ `.env` ទាំងស្រុង។
+2. **PostgreSQL Sequence Auto-Sync**: ប្រព័ន្ធការពារកំហុស `episodes_pkey` ដោយធ្វើសមកាលកម្ម Sequence ទៅកាន់ `MAX(id)` ដោយស្វ័យប្រវត្តិកាលណាប្រព័ន្ធចាប់ផ្តើម។
+3. **Owner Protection**: គណនី Owner ត្រូវបានការពារដាច់ខាត មិនអាចត្រូវ demote ឬ delete ដោយ Admin ផ្សេងទៀតបានឡើយ។
+4. **Zero-Delay Optimization**: ប្រព័ន្ធប្រើ In-Memory Fast Cache រួមជាមួយ Timeout 12s ការពារភាពយឺតយ៉ាវ និងធានាថារាល់ការផ្លាស់ប្តូរទិន្នន័យនឹងបង្ហាញឡើងវិញភ្លាមៗ (Instant Feedback)។
 
 ---
 
-## 📜 Legal & Content Policy
+<div align="center">
 
-MER DONGHUA only distributes video content that the platform owner has legal rights
-or explicit authorization to distribute.
+**រក្សាសិទ្ធិគ្រប់យ៉ាង © 2026 MER DONGHUA / IMMORTAL TEAM**  
+*Developed with ❤️ for the Donghua & Anime Community*
 
-**© 2024–2026 MER DONGHUA. All Rights Reserved.**
-See [LICENSE](LICENSE) for terms. Unauthorized copying or redistribution is prohibited.
+</div>
