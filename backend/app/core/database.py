@@ -76,3 +76,19 @@ async def init_db():
         except Exception as e:
             print(f"[DB INFO] Safe column check: {e}")
 
+        # Automatically synchronize sequences to MAX(id) so inserts never fail on duplicate keys
+        try:
+            seq_tables = ["episodes", "anime", "users", "comments", "banners", "genres", "ratings", "favorites"]
+            for tbl in seq_tables:
+                try:
+                    max_id_res = await conn.execute(text(f"SELECT COALESCE(MAX(id), 0) FROM {tbl};"))
+                    m_id = max_id_res.scalar() or 0
+                    seq_res = await conn.execute(text(f"SELECT pg_get_serial_sequence('{tbl}', 'id');"))
+                    seq_name = seq_res.scalar()
+                    if seq_name:
+                        await conn.execute(text(f"SELECT setval('{seq_name}', {max(1, m_id)});"))
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[DB INFO] Sequence sync: {e}")
+

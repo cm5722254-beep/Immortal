@@ -518,19 +518,37 @@ export function AdminEpisodesPage() {
     setSaving(true);
     setError('');
     try {
-      const payload = {
-        ...form,
+      const cleanPayload = {
+        anime_id: Number(form.anime_id),
+        episode_number: Number(form.episode_number),
+        title: form.title?.trim() || null,
+        description: (form as any).description?.trim() || null,
+        video_url: form.video_url?.trim() || null,
+        subtitle_url: form.subtitle_url?.trim() || null,
+        thumbnail_url: form.thumbnail_url?.trim() || null,
+        duration_seconds: Number(form.duration_seconds) || 1440,
+        is_published: Boolean(form.is_published),
         is_free: !form.is_vip,
       };
+
       if (editEp) {
-        await api.put(`/episodes/${editEp.id}`, payload);
+        await api.put(`/episodes/${editEp.id}`, cleanPayload);
+        setStatusMessage(`បានកែប្រែភាគទី ${cleanPayload.episode_number} ជោគជ័យ!`);
       } else {
-        await api.post('/episodes', payload);
+        await api.post('/episodes', cleanPayload);
+        setStatusMessage(`បានបន្ថែមភាគទី ${cleanPayload.episode_number} ជោគជ័យ!`);
       }
+      setTimeout(() => setStatusMessage(''), 4000);
       setShowModal(false);
       if (selectedAnime) fetchEpisodes(selectedAnime);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Failed to save episode');
+      const d = err?.response?.data?.detail;
+      const msg = typeof d === 'string'
+        ? d
+        : Array.isArray(d)
+        ? d.map((x: any) => x.msg || JSON.stringify(x)).join('; ')
+        : (d?.msg || err?.message || 'បរាជ័យក្នុងការរក្សាទុកភាគរឿង (Failed to save episode)');
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -1409,7 +1427,7 @@ export function AdminEpisodesPage() {
           <div className="bg-dark-card border border-dark-border rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-dark-border bg-dark-muted/30">
               <h2 className="font-display font-bold text-xl text-white flex items-center gap-2">
-                {editEp ? `Edit Episode ${editEp.episode_number}` : 'Add New Episode'}
+                {editEp ? `✏️ កែប្រែភាគទី ${editEp.episode_number}` : '➕ បន្ថែមភាគរឿងថ្មី'}
               </h2>
               <button onClick={() => setShowModal(false)} className="btn-icon"><X className="w-5 h-5" /></button>
             </div>
@@ -1417,7 +1435,7 @@ export function AdminEpisodesPage() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Series</label>
+                  <label className="label">រឿង (Series) *</label>
                   <select
                     value={form.anime_id || ''}
                     onChange={(e) => setForm((f) => ({ ...f, anime_id: parseInt(e.target.value) }))}
@@ -1429,7 +1447,7 @@ export function AdminEpisodesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">Episode # *</label>
+                  <label className="label">ភាគទី (Episode #) *</label>
                   <input
                     type="number"
                     value={form.episode_number}
@@ -1440,35 +1458,36 @@ export function AdminEpisodesPage() {
               </div>
 
               <div>
-                <label className="label">Episode Title</label>
+                <label className="label">ចំណងជើងភាគ (Episode Title)</label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   className="input"
-                  placeholder="Optional episode title or arc name"
+                  placeholder="ឧ. ភាគទី ១ (ឬទុកចោលក៏បាន)"
                 />
               </div>
 
               <div>
-                <label className="label">Video Stream URL (MP4 / HLS .m3u8) *</label>
+                <label className="label">តំណភ្ជាប់វីដេអូ (Video Stream URL: MP4 / HLS .m3u8) *</label>
                 <input
                   type="url"
                   value={form.video_url}
                   onChange={(e) => setForm((f) => ({ ...f, video_url: e.target.value }))}
                   className="input"
                   placeholder="https://authorized-host.com/stream/ep-01.mp4"
+                  required
                 />
               </div>
 
               <div>
-                <label className="label">Subtitle URL (.vtt)</label>
+                <label className="label">តំណភ្ជាប់អក្សររត់ (Subtitle URL: .vtt)</label>
                 <input
                   type="url"
                   value={form.subtitle_url}
                   onChange={(e) => setForm((f) => ({ ...f, subtitle_url: e.target.value }))}
                   className="input"
-                  placeholder="https://.../subtitles-en.vtt"
+                  placeholder="https://.../subtitles-kh.vtt"
                 />
               </div>
 
@@ -1501,7 +1520,7 @@ export function AdminEpisodesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Duration (seconds)</label>
+                  <label className="label">រយៈពេល (Duration គិតជាវិនាទី)</label>
                   <input
                     type="number"
                     value={form.duration_seconds}
@@ -1518,7 +1537,7 @@ export function AdminEpisodesPage() {
                       onChange={(e) => setForm((f) => ({ ...f, is_published: e.target.checked }))}
                       className="w-4 h-4 accent-brand-500 rounded"
                     />
-                    <span className="text-xs font-semibold text-gray-300">Published / Live</span>
+                    <span className="text-xs font-semibold text-gray-300">ផ្សាយផ្ទាល់ (Published / Live)</span>
                   </label>
                 </div>
               </div>
@@ -1526,11 +1545,11 @@ export function AdminEpisodesPage() {
               {error && <p className="text-red-400 text-xs">{error}</p>}
 
               <div className="flex gap-3 pt-4 border-t border-dark-border">
-                <button type="submit" disabled={saving} className="btn-primary flex-1 py-3">
-                  {saving ? 'Saving...' : editEp ? 'Update Episode' : 'Save Episode'}
+                <button type="submit" disabled={saving} className="btn-primary flex-1 py-3 cursor-pointer">
+                  {saving ? 'កំពុងរក្សាទុក...' : editEp ? '💾 កែប្រែភាគរឿង' : '💾 រក្សាទុកភាគរឿង'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-ghost py-3">
-                  Cancel
+                <button type="button" onClick={() => setShowModal(false)} className="btn-ghost py-3 cursor-pointer">
+                  បោះបង់
                 </button>
               </div>
             </form>

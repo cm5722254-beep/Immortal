@@ -11,13 +11,32 @@ const BASE_URL =
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 60000,
+  timeout: 12000,
 });
 
-// Fast in-memory cache for public GET endpoints (30s TTL)
+// Fast in-memory cache for public GET endpoints (20s TTL)
 const apiCache = new Map<string, { data: any; status: number; timestamp: number }>();
-const CACHE_TTL = 30 * 1000; // 30 seconds
-const CACHEABLE_ROUTES = ['/anime', '/admin/banners', '/theme', '/genres', '/schedule'];
+const CACHE_TTL = 20 * 1000; // 20 seconds
+const CACHEABLE_ROUTES = [
+  '/anime',
+  '/admin/banners',
+  '/theme',
+  '/genres',
+  '/schedule',
+  '/site-settings/promo-countdown',
+  '/site-settings/system-update',
+];
+
+// Helper to clear cache on mutations
+export const clearApiCache = (pattern?: string) => {
+  if (!pattern) {
+    apiCache.clear();
+  } else {
+    for (const key of apiCache.keys()) {
+      if (key.includes(pattern)) apiCache.delete(key);
+    }
+  }
+};
 
 // Inject JWT Bearer token on every request & check cache for GET
 api.interceptors.request.use((config) => {
@@ -26,8 +45,16 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // Clear relevant cache on write actions
+  const method = config.method?.toLowerCase();
+  if (method === 'post' || method === 'put' || method === 'delete' || method === 'patch') {
+    if (config.url?.includes('episodes')) clearApiCache('episodes');
+    if (config.url?.includes('anime')) clearApiCache('anime');
+    if (config.url?.includes('banners')) clearApiCache('banners');
+  }
+
   // Check cache for GET
-  if (config.method?.toLowerCase() === 'get' && config.url) {
+  if (method === 'get' && config.url) {
     const isCacheable = CACHEABLE_ROUTES.some((route) => config.url?.includes(route));
     if (isCacheable) {
       const cacheKey = `${config.url}?${JSON.stringify(config.params || {})}`;
@@ -68,8 +95,13 @@ api.interceptors.response.use(
     return res;
   },
   async (error: AxiosError) => {
-    // If local backend is unreachable, automatically fallback to live Render API
-    if (!error.response && error.config && !error.config.headers?.['X-Fallback-Tried']) {
+    // Only fallback to live Render API if in production and localhost is truly unavailable
+    if (
+      !import.meta.env.DEV &&
+      !error.response &&
+      error.config &&
+      !error.config.headers?.['X-Fallback-Tried']
+    ) {
       const currentUrl = error.config.baseURL || '';
       if (currentUrl.includes('localhost:8000')) {
         error.config.baseURL = 'https://merdonghua-com.onrender.com/api';
