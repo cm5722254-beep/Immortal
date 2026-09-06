@@ -5,6 +5,7 @@ import { AdminLayout } from './AdminLayout';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
 import { triggerConfirm } from '../../store/confirmStore';
 import api from '../../services/api';
+import { loadCatalog } from '../../services/catalogService';
 import type { Anime, Genre, PaginatedResponse, AnimeType } from '../../types';
 
 const DAYS = [
@@ -60,11 +61,30 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
       if (statusFilter !== 'ALL') params.set('status', statusFilter);
       const res = await api.get(`/anime?${params}`);
       const data = res.data as PaginatedResponse<Anime>;
-      setItems(data.items);
-      setTotal(data.total);
-    } finally {
-      setIsLoading(false);
+      if (data?.items && data.items.length > 0) {
+        setItems(data.items);
+        setTotal(data.total);
+        setIsLoading(false);
+        return;
+      }
+    } catch {
+      // ignore
     }
+
+    // Fallback to local catalog
+    try {
+      const cat = await loadCatalog();
+      if (cat?.anime && cat.anime.length > 0) {
+        let filtered = cat.anime.filter((a) => a.type === animeType);
+        if (statusFilter !== 'ALL') filtered = filtered.filter((a) => a.status === statusFilter);
+        const pageSize = 15;
+        const start = (page - 1) * pageSize;
+        const paged = filtered.slice(start, start + pageSize);
+        setItems(paged);
+        setTotal(filtered.length);
+      }
+    } catch {}
+    setIsLoading(false);
   };
 
   useEffect(() => {

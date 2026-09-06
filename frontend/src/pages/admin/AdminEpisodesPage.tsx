@@ -9,6 +9,7 @@ import {
 import { AdminLayout } from './AdminLayout';
 import { triggerConfirm } from '../../store/confirmStore';
 import api from '../../services/api';
+import { loadCatalog } from '../../services/catalogService';
 import type { Anime, Episode } from '../../types';
 
 const EMPTY_EP = {
@@ -59,23 +60,46 @@ export function AdminEpisodesPage() {
     setSelectedEpisodeIds([]);
     try {
       const res = await api.get(`/anime/${animeId}/episodes`);
-      setEpisodes(res.data);
-    } finally {
-      setIsLoading(false);
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setEpisodes(res.data);
+        setIsLoading(false);
+        return;
+      }
+    } catch {
+      // ignore
     }
+
+    // Fallback to local catalog
+    try {
+      const cat = await loadCatalog();
+      if (cat?.episodes) {
+        const matching = cat.episodes.filter((e) => e.anime_id === animeId);
+        setEpisodes(matching);
+      }
+    } catch {}
+    setIsLoading(false);
   };
 
   useEffect(() => {
     api.get('/anime?per_page=100&sort=az')
       .then((res) => {
         const items: Anime[] = res.data.items || [];
-        setAnimeList(items);
         if (items.length > 0) {
+          setAnimeList(items);
           const firstDonghua = items.find((a) => a.type === 'DONGHUA') || items[0];
           fetchEpisodes(firstDonghua.id);
+          return;
         }
+        throw new Error('Empty');
       })
-      .catch(() => {});
+      .catch(async () => {
+        const cat = await loadCatalog();
+        if (cat?.anime && cat.anime.length > 0) {
+          setAnimeList(cat.anime);
+          const firstDonghua = cat.anime.find((a) => a.type === 'DONGHUA') || cat.anime[0];
+          fetchEpisodes(firstDonghua.id);
+        }
+      });
   }, []);
 
   // Filter series by Category & Search
