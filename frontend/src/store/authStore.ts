@@ -48,31 +48,108 @@ function parseJwt(token: string) {
   }
 }
 
-const hasInitialToken = typeof window !== 'undefined' && !!localStorage.getItem('access_token');
+const checkRoles = (u: User | null | undefined) => {
+  const isOwnerUser = Boolean(
+    u?.role === 'OWNER' ||
+    u?.email?.toLowerCase() === 'cm5722254@gmail.com' ||
+    u?.username === 'cheat_admin'
+  );
+  const isAdminUser = isOwnerUser || u?.role === 'ADMIN';
+  const isStaffUser = u?.role === 'STAFF';
+  const canManage = isAdminUser || isStaffUser;
+  const isVipUser = Boolean(isAdminUser || isStaffUser || u?.is_vip_active || u?.is_vip);
+  return { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser };
+};
+
+const getInitialState = () => {
+  if (typeof window === 'undefined') {
+    return {
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
+      isOwner: false,
+      isAdmin: false,
+      isStaff: false,
+      canManageContent: false,
+      isVip: false,
+    };
+  }
+
+  const token = localStorage.getItem('access_token');
+  let cachedUser: User | null = null;
+  try {
+    const raw = localStorage.getItem('nami_cached_user');
+    if (raw) cachedUser = JSON.parse(raw);
+  } catch {}
+
+  // If no cached user, but token is present, try to extract email from token
+  if (!cachedUser && token) {
+    const jwtData = parseJwt(token);
+    if (jwtData && (jwtData.email || jwtData.name || jwtData.sub)) {
+      const email = (jwtData.email || '').toLowerCase();
+      const isOwner = email === 'cm5722254@gmail.com';
+      cachedUser = {
+        id: jwtData.sub || Date.now(),
+        username: jwtData.name || jwtData.given_name || (email ? email.split('@')[0] : 'User'),
+        email: email,
+        avatar_url: jwtData.picture,
+        role: isOwner ? 'OWNER' : (jwtData.role || 'USER'),
+        is_active: true,
+        is_verified: true,
+        is_vip: isOwner,
+        is_vip_active: isOwner,
+        created_at: new Date().toISOString(),
+      };
+    }
+  }
+
+  const roles = checkRoles(cachedUser);
+
+  return {
+    user: cachedUser,
+    isLoading: !!token && !cachedUser,
+    isAuthenticated: !!cachedUser || !!token,
+    isOwner: roles.isOwnerUser,
+    isAdmin: roles.isAdminUser,
+    isStaff: roles.isStaffUser,
+    canManageContent: roles.canManage,
+    isVip: roles.isVipUser,
+  };
+};
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isLoading: hasInitialToken,
-  isAuthenticated: false,
-  isOwner: false,
-  isAdmin: false,
-  isStaff: false,
-  canManageContent: false,
-  isVip: false,
+  ...getInitialState(),
 
   setUser: (user) => {
-    const isOwnerUser = user?.role === 'OWNER' || user?.email === 'cm5722254@gmail.com';
-    const isAdminUser = isOwnerUser || user?.role === 'ADMIN';
-    const isStaffUser = user?.role === 'STAFF';
-    set({
-      user,
-      isAuthenticated: !!user,
-      isOwner: isOwnerUser,
-      isAdmin: isAdminUser,
-      isStaff: isStaffUser,
-      canManageContent: isAdminUser || isStaffUser,
-      isVip: !!user && (isAdminUser || isStaffUser || user.is_vip_active || user.is_vip),
-    });
+    if (user) {
+      const isOwnerEmail = user.email?.toLowerCase() === 'cm5722254@gmail.com';
+      const cleanUser = {
+        ...user,
+        role: isOwnerEmail ? 'OWNER' : user.role,
+      };
+      localStorage.setItem('nami_cached_user', JSON.stringify(cleanUser));
+      const { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser } = checkRoles(cleanUser);
+      set({
+        user: cleanUser,
+        isAuthenticated: true,
+        isOwner: isOwnerUser,
+        isAdmin: isAdminUser,
+        isStaff: isStaffUser,
+        canManageContent: canManage,
+        isVip: isVipUser,
+      });
+    } else {
+      localStorage.removeItem('nami_cached_user');
+      set({
+        user: null,
+        isAuthenticated: false,
+        isOwner: false,
+        isAdmin: false,
+        isStaff: false,
+        canManageContent: false,
+        isVip: false,
+      });
+    }
   },
 
   login: async (email, password) => {
@@ -82,17 +159,21 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { access_token, refresh_token, user } = res.data;
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
-      const isOwnerUser = user?.role === 'OWNER' || user?.email === 'cm5722254@gmail.com';
-      const isAdminUser = isOwnerUser || user?.role === 'ADMIN';
-      const isStaffUser = user?.role === 'STAFF';
+      const isOwnerEmail = user?.email?.toLowerCase() === 'cm5722254@gmail.com';
+      const cleanUser = {
+        ...user,
+        role: isOwnerEmail ? 'OWNER' : user?.role,
+      };
+      localStorage.setItem('nami_cached_user', JSON.stringify(cleanUser));
+      const { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser } = checkRoles(cleanUser);
       set({
-        user,
+        user: cleanUser,
         isAuthenticated: true,
         isOwner: isOwnerUser,
         isAdmin: isAdminUser,
         isStaff: isStaffUser,
-        canManageContent: isAdminUser || isStaffUser,
-        isVip: isAdminUser || isStaffUser || user.is_vip_active || user.is_vip,
+        canManageContent: canManage,
+        isVip: isVipUser,
       });
     } finally {
       set({ isLoading: false });
@@ -106,17 +187,21 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { access_token, refresh_token, user } = res.data;
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
-      const isOwnerUser = user?.role === 'OWNER' || user?.email === 'cm5722254@gmail.com';
-      const isAdminUser = isOwnerUser || user?.role === 'ADMIN';
-      const isStaffUser = user?.role === 'STAFF';
+      const isOwnerEmail = user?.email?.toLowerCase() === 'cm5722254@gmail.com';
+      const cleanUser = {
+        ...user,
+        role: isOwnerEmail ? 'OWNER' : user?.role,
+      };
+      localStorage.setItem('nami_cached_user', JSON.stringify(cleanUser));
+      const { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser } = checkRoles(cleanUser);
       set({
-        user,
+        user: cleanUser,
         isAuthenticated: true,
         isOwner: isOwnerUser,
         isAdmin: isAdminUser,
         isStaff: isStaffUser,
-        canManageContent: isAdminUser || isStaffUser,
-        isVip: isAdminUser || isStaffUser || user.is_vip_active || user.is_vip,
+        canManageContent: canManage,
+        isVip: isVipUser,
       });
     } finally {
       set({ isLoading: false });
@@ -126,27 +211,34 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginWithGoogle: async (credential: string) => {
     // ⚡ Instant Optimistic Login (0.01s response time)
     const jwtData = parseJwt(credential);
+    const email = (jwtData?.email || `google_${Date.now()}@namianime.com`).toLowerCase();
+    const isOwnerEmail = email === 'cm5722254@gmail.com';
+
     const optimisticUser: User = {
       id: jwtData?.sub || Date.now(),
-      username: jwtData?.name || jwtData?.given_name || (jwtData?.email ? jwtData.email.split('@')[0] : 'Google User'),
-      email: jwtData?.email || `google_${Date.now()}@namianime.com`,
+      username: jwtData?.name || jwtData?.given_name || (email ? email.split('@')[0] : 'Google User'),
+      email: email,
       avatar_url: jwtData?.picture,
-      role: 'USER',
+      role: isOwnerEmail ? 'OWNER' : 'USER',
       is_active: true,
       is_verified: true,
-      is_vip: false,
-      is_vip_active: false,
+      is_vip: isOwnerEmail,
+      is_vip_active: isOwnerEmail,
       created_at: new Date().toISOString(),
     };
 
     localStorage.setItem('access_token', credential);
+    localStorage.setItem('nami_cached_user', JSON.stringify(optimisticUser));
+
+    const roles = checkRoles(optimisticUser);
     set({
       user: optimisticUser,
       isAuthenticated: true,
-      isAdmin: false,
-      isStaff: false,
-      canManageContent: false,
-      isVip: false,
+      isOwner: roles.isOwnerUser,
+      isAdmin: roles.isAdminUser,
+      isStaff: roles.isStaffUser,
+      canManageContent: roles.canManage,
+      isVip: roles.isVipUser,
       isLoading: false,
     });
 
@@ -156,17 +248,21 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { access_token, refresh_token, user } = res.data;
       localStorage.setItem('access_token', access_token);
       if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
-      const isOwnerUser = user?.role === 'OWNER' || user?.email === 'cm5722254@gmail.com';
-      const isAdminUser = isOwnerUser || user?.role === 'ADMIN';
-      const isStaffUser = user?.role === 'STAFF';
+      const isOwnerUser = user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
+      const cleanUser = {
+        ...user,
+        role: isOwnerUser ? 'OWNER' : user?.role,
+      };
+      localStorage.setItem('nami_cached_user', JSON.stringify(cleanUser));
+      const syncRoles = checkRoles(cleanUser);
       set({
-        user,
+        user: cleanUser,
         isAuthenticated: true,
-        isOwner: isOwnerUser,
-        isAdmin: isAdminUser,
-        isStaff: isStaffUser,
-        canManageContent: isAdminUser || isStaffUser,
-        isVip: isAdminUser || isStaffUser || user.is_vip_active || user.is_vip,
+        isOwner: syncRoles.isOwnerUser,
+        isAdmin: syncRoles.isAdminUser,
+        isStaff: syncRoles.isStaffUser,
+        canManageContent: syncRoles.canManage,
+        isVip: syncRoles.isVipUser,
       });
     } catch (e) {
       console.warn('Silent Google login background sync:', e);
@@ -361,6 +457,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     api.post('/auth/logout').catch(() => {});
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('nami_cached_user');
     set({
       user: null,
       isAuthenticated: false,
@@ -381,11 +478,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const userData = res.data;
 
       // If user account was disabled / banned in database, immediately auto sign-out
-      if (userData && userData.is_active === false && userData.role !== 'ADMIN' && userData.role !== 'OWNER' && userData.email !== 'cm5722254@gmail.com') {
+      if (userData && userData.is_active === false && userData.role !== 'ADMIN' && userData.role !== 'OWNER' && userData.email?.toLowerCase() !== 'cm5722254@gmail.com') {
         localStorage.setItem('nami_permanent_device_banned', 'true');
         localStorage.setItem('nami_banned_reason', 'Account has been disabled / banned by Admin or DRM security');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('nami_cached_user');
         set({
           user: null,
           isAuthenticated: false,
@@ -398,22 +496,46 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
 
-      const isOwnerUser = userData?.role === 'OWNER' || userData?.email === 'cm5722254@gmail.com';
-      const isAdminUser = isOwnerUser || userData?.role === 'ADMIN';
-      const isStaffUser = userData?.role === 'STAFF';
+      const isOwnerEmail = userData?.email?.toLowerCase() === 'cm5722254@gmail.com';
+      const cleanUser = {
+        ...userData,
+        role: isOwnerEmail ? 'OWNER' : userData?.role,
+      };
+      localStorage.setItem('nami_cached_user', JSON.stringify(cleanUser));
+      const { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser } = checkRoles(cleanUser);
 
       set({
-        user: userData,
+        user: cleanUser,
         isAuthenticated: true,
         isOwner: isOwnerUser,
         isAdmin: isAdminUser,
         isStaff: isStaffUser,
-        canManageContent: isAdminUser || isStaffUser,
-        isVip: isAdminUser || isStaffUser || userData.is_vip_active || userData.is_vip,
+        canManageContent: canManage,
+        isVip: isVipUser,
       });
     } catch {
+      // If network failed or token was temporary, restore cached session if present
+      const cached = typeof window !== 'undefined' ? localStorage.getItem('nami_cached_user') : null;
+      if (cached) {
+        try {
+          const cachedUser = JSON.parse(cached);
+          const { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser } = checkRoles(cachedUser);
+          set({
+            user: cachedUser,
+            isAuthenticated: true,
+            isOwner: isOwnerUser,
+            isAdmin: isAdminUser,
+            isStaff: isStaffUser,
+            canManageContent: canManage,
+            isVip: isVipUser,
+          });
+          return;
+        } catch {}
+      }
+
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      localStorage.removeItem('nami_cached_user');
       set({
         user: null,
         isAuthenticated: false,

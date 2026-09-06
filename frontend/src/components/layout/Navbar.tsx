@@ -30,7 +30,11 @@ const NAV_LINKS = [
 ];
 
 export function Navbar() {
-  const { user, isAuthenticated, isStaff, isOwner, canManageContent, logout } = useAuthStore();
+  const { user, isAuthenticated, isStaff, isOwner, isAdmin, canManageContent, logout } = useAuthStore();
+  const isOwnerUser = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
+  const isAdminUser = isOwnerUser || isAdmin || user?.role === 'ADMIN';
+  const isStaffUser = isStaff || user?.role === 'STAFF';
+  const canManage = canManageContent || isAdminUser || isStaffUser;
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -379,20 +383,20 @@ export function Navbar() {
                     <span>ប្រវត្តិទស្សនា</span>
                   </Link>
 
-                  {canManageContent && (
+                  {canManage && (
                     <Link
                       to="/admin"
                       onClick={() => setIsUserMenuOpen(false)}
                       className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
-                        isOwner
+                        isOwnerUser
                           ? 'text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30'
-                          : isStaff
+                          : isStaffUser
                           ? 'text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20'
                           : 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20'
                       }`}
                     >
-                      <Shield className={`w-4 h-4 ${isOwner ? 'text-amber-400 fill-amber-400/20' : isStaff ? 'text-cyan-400' : 'text-amber-400'}`} />
-                      <span>{isOwner ? '👑 ផ្ទាំងគ្រប់គ្រង Owner' : isStaff ? 'ផ្ទាំងគ្រប់គ្រង Staff' : 'ផ្ទាំងគ្រប់គ្រង Admin'}</span>
+                      <Shield className={`w-4 h-4 ${isOwnerUser ? 'text-amber-400 fill-amber-400/20' : isStaffUser ? 'text-cyan-400' : 'text-amber-400'}`} />
+                      <span>{isOwnerUser ? '👑 ផ្ទាំងគ្រប់គ្រង Owner' : isStaffUser ? 'ផ្ទាំងគ្រប់គ្រង Staff' : 'ផ្ទាំងគ្រប់គ្រង Admin'}</span>
                     </Link>
                   )}
 

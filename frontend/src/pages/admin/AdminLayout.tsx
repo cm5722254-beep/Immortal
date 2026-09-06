@@ -100,7 +100,10 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, title, section }: AdminLayoutProps) {
-  const { user, logout, isStaff, isOwner } = useAuthStore();
+  const { user, logout, isStaff, isOwner, isAdmin } = useAuthStore();
+  const isEffectiveOwner = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
+  const isEffectiveAdmin = isEffectiveOwner || isAdmin || user?.role === 'ADMIN';
+  const isEffectiveStaff = isStaff || user?.role === 'STAFF';
   const { config: updateConfig, previewModal: previewUpdateModal } = useSystemUpdateStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -112,27 +115,27 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
     ...sections
       .map((sec) => {
         if (sec.id === 'website') {
-          const allowedItems = isStaff
+          const allowedItems = isEffectiveStaff && !isEffectiveAdmin
             ? sec.items.filter((item) =>
                 ['/admin', '/admin/donghua', '/admin/drama', '/admin/movies', '/admin/anime', '/admin/episodes'].includes(item.to)
               )
             : sec.items;
           return {
             ...sec,
-            label: isStaff ? 'គ្រប់គ្រងរឿង & ភាគ' : sec.label,
-            sublabel: isStaff ? 'Anime & Episodes' : sec.sublabel,
+            label: isEffectiveStaff && !isEffectiveAdmin ? 'គ្រប់គ្រងរឿង & ភាគ' : sec.label,
+            sublabel: isEffectiveStaff && !isEffectiveAdmin ? 'Anime & Episodes' : sec.sublabel,
             items: allowedItems,
           };
         }
         // Mobile and Telegram management sections are ADMIN/OWNER-only
-        if (isStaff && (sec.id === 'mobile' || sec.id === 'telegram')) {
+        if (isEffectiveStaff && !isEffectiveAdmin && (sec.id === 'mobile' || sec.id === 'telegram')) {
           return null;
         }
         return sec;
       })
       .filter(Boolean),
     // OWNER-only section — pinned at top of nav
-    ...(isOwner ? [ownerSection] : []),
+    ...(isEffectiveOwner ? [ownerSection] : []),
   ] as typeof sections;
 
   // Auto-detect active section based on current path
