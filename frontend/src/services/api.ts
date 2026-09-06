@@ -68,6 +68,17 @@ api.interceptors.response.use(
     return res;
   },
   async (error: AxiosError) => {
+    // If local backend is unreachable, automatically fallback to live Render API
+    if (!error.response && error.config && !error.config.headers?.['X-Fallback-Tried']) {
+      const currentUrl = error.config.baseURL || '';
+      if (currentUrl.includes('localhost:8000')) {
+        error.config.baseURL = 'https://merdonghua-com.onrender.com/api';
+        error.config.headers = error.config.headers || {};
+        error.config.headers['X-Fallback-Tried'] = 'true';
+        return axios(error.config);
+      }
+    }
+
     if (error.response?.status === 401 && !refreshing) {
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
