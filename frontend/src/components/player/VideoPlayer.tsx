@@ -766,7 +766,8 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Controls Overlay */}
+      {/* Controls Overlay (Hidden when playing YouTube/iframe to avoid duplicate controls) */}
+      {!isIframeEmbed && (
       <div
         className={`absolute inset-0 flex flex-col justify-between p-3 sm:p-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] px-[max(0.75rem,env(safe-area-inset-left))] bg-gradient-to-t from-black/90 via-transparent to-black/60 transition-opacity duration-300 pointer-events-none z-30 ${
           showControls ? 'opacity-100' : 'opacity-0'
@@ -976,6 +977,7 @@ export function VideoPlayer({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
