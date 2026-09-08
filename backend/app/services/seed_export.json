@@ -1,9 +1,9 @@
 {
   "version": "2.0.0",
-  "exported_at": "2026-09-08T08:50:33.661770+00:00",
+  "exported_at": "2026-09-08T12:22:03.205083+00:00",
   "counts": {
     "genres": 16,
-    "users": 37,
+    "users": 38,
     "anime": 69,
     "episodes": 922,
     "banners": 3,
@@ -794,6 +794,25 @@
       "telegram_username": null,
       "login_source": "google",
       "created_at": "2026-09-08T02:31:59.899809+00:00"
+    },
+    {
+      "id": 54,
+      "username": "么Netz",
+      "email": "netzkompulsmos04@gmail.com",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$fM85hzBmLMX4X+u9N8Z4Lw$IqXIQNQujNIv9ifg1rPNBJ8zcaAuK3zRnQwJwhV5f/w",
+      "role": "ADMIN",
+      "is_active": true,
+      "is_verified": true,
+      "is_vip": false,
+      "vip_plan": null,
+      "vip_started_at": null,
+      "vip_expires_at": null,
+      "avatar_url": null,
+      "phone_number": null,
+      "telegram_id": null,
+      "telegram_username": null,
+      "login_source": "google",
+      "created_at": "2026-09-08T10:19:31.595619+00:00"
     }
   ],
   "anime": [
@@ -803,7 +822,7 @@
       "slug": "renegade-immortal",
       "alt_title": "仙逆 (Renegade Immortal)",
       "description": "Wang Lin is a very smart boy with loving parents. Although he and his parents are shunned by the rest of their relatives, his parents always held high hopes that he would one day become a great cultivator. Through sheer determination, perseverance, and possessing the mysterious Heaven-Defying Bead, Wang Lin embarks on the brutal, blood-soaked path of cultivation to defy the heavens themselves.",
-      "poster_url": "http://localhost:8000/uploads/401f4eb99dd24d0396b8256dbaab4a6b.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/80ae801324fa4131b628167a0148c686.jpg",
       "banner_url": "https://i.pinimg.com/1200x/22/8b/1c/228b1c79d7985f5631611dac8ed97d19.jpg",
       "trailer_url": "https://youtu.be/QN9ttg2725c?si=e1w-0yH9MQu3KrxO",
       "year": 2023,
@@ -822,7 +841,7 @@
       "rating_count": 0,
       "episode_count": 71,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T08:34:56.239642+00:00"
+      "updated_at": "2026-09-08T08:59:40.713787+00:00"
     },
     {
       "id": 2,
@@ -830,7 +849,7 @@
       "slug": "perfect-world",
       "alt_title": "完美世界 (Perfect World)",
       "description": "Born into a unique world where villages fight for survival and celestial beasts roam the continents, Shi Hao is a prodigy blessed by the heavens, yet stripped of his Supreme Being Bone in early childhood. Rising from the humble Stone Village with an indomitable spirit, Shi Hao cultivates boundless power to reclaim what was stolen and shake the vast universe.",
-      "poster_url": "http://localhost:8000/uploads/66ac40a3e876431e96b86df3c9083ba9.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/5b63643dbcea46a489ff2cdf3fe7d8c3.png",
       "banner_url": "https://i.pinimg.com/1200x/65/92/09/659209536e7e5272c8120bccddff0b0c.jpg",
       "trailer_url": "",
       "year": 2021,
@@ -849,7 +868,7 @@
       "rating_count": 0,
       "episode_count": 12,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T08:19:51.232429+00:00"
+      "updated_at": "2026-09-08T09:18:16.444487+00:00"
     },
     {
       "id": 3,
@@ -884,7 +903,7 @@
       "slug": "battle-through-the-heavens",
       "alt_title": "斗破苍穹 (Battle Through the Heavens)",
       "description": "In a land where strength dictates respect and no magic exists, Xiao Yan was once a legendary prodigy. Suddenly, at the age of ten, he lost all his powers and became the laughingstock of his clan. When he discovers the spirit of Yao Chen residing within his mother's ring, Xiao Yan's journey to conquer Heavenly Flames and conquer the Dou Qi continent begins.",
-      "poster_url": "https://i.pinimg.com/736x/8a/c9/b8/8ac9b8efb39095d3ea3ee2d1c9da4949.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/cfe74af55f394339b3198f01f80bf2cf.png",
       "banner_url": "https://i.pinimg.com/736x/8a/c9/b8/8ac9b8efb39095d3ea3ee2d1c9da4949.jpg",
       "trailer_url": "",
       "year": 2017,
@@ -903,7 +922,7 @@
       "rating_count": 0,
       "episode_count": 34,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T17:38:10.769182+00:00"
+      "updated_at": "2026-09-08T09:06:39.550604+00:00"
     },
     {
       "id": 5,
@@ -911,7 +930,7 @@
       "slug": "soul-land-2-the-peerless-tang-clan",
       "alt_title": "斗罗大陆II绝世唐门 (Soul Land 2)",
       "description": "Ten thousand years after the founding of the Tang Sect on the Douluo Continent, the once glorious clan is on the brink of extinction. Huo Yuhao, a young boy bearing immense grief and the million-year Spirit Soul Skydream Iceworm, enters Shrek Academy with determination to revive the legendary Tang Sect.",
-      "poster_url": "https://i.pinimg.com/736x/b7/56/fb/b756fb0ca3bc43f527eebc8707bca447.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/143b2d492b7c43829543ca47586ce70b.jpg",
       "banner_url": "https://i.pinimg.com/736x/b7/56/fb/b756fb0ca3bc43f527eebc8707bca447.jpg",
       "trailer_url": "",
       "year": 2023,
@@ -930,7 +949,7 @@
       "rating_count": 0,
       "episode_count": 11,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:21.763636+00:00"
+      "updated_at": "2026-09-08T10:21:18.428349+00:00"
     },
     {
       "id": 6,
@@ -952,12 +971,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 9,
+      "view_count": 10,
       "average_rating": 4.7,
       "rating_count": 0,
       "episode_count": 3,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T13:04:42.155643+00:00"
+      "updated_at": "2026-09-08T10:04:19.304112+00:00"
     },
     {
       "id": 7,
@@ -1046,7 +1065,7 @@
       "slug": "the-wealth-gods",
       "alt_title": "猪八戒 / 财神 (Zhu Zhanlong)",
       "description": "The Wealth Gods",
-      "poster_url": "https://i.pinimg.com/736x/c7/87/45/c787458d3959cbfc3948c1656d807c73.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/5b04858232bc47eeae199702cc7c97f8.png",
       "banner_url": "https://i.pinimg.com/736x/c7/87/45/c787458d3959cbfc3948c1656d807c73.jpg",
       "trailer_url": "",
       "year": 2026,
@@ -1065,7 +1084,7 @@
       "rating_count": 0,
       "episode_count": 4,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T16:51:40.590944+00:00"
+      "updated_at": "2026-09-08T09:10:26.360963+00:00"
     },
     {
       "id": 11,
@@ -1127,7 +1146,7 @@
       "slug": "one-slash-to-the-heavens",
       "alt_title": "顾安 / 一刀震天 (Gu An / One Slash To The Heavens)",
       "description": "",
-      "poster_url": "https://i.pinimg.com/736x/fa/32/4c/fa324c0b115fe61806b22ae9905f0d1c.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/c3734e27a4804dea82aa3ad24c056975.jpg",
       "banner_url": "https://i.pinimg.com/736x/fa/32/4c/fa324c0b115fe61806b22ae9905f0d1c.jpg",
       "trailer_url": "",
       "year": 2026,
@@ -1141,12 +1160,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 11,
+      "view_count": 12,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 6,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T05:49:13.750509+00:00"
+      "updated_at": "2026-09-08T10:22:39.973458+00:00"
     },
     {
       "id": 14,
@@ -1154,7 +1173,7 @@
       "slug": "talesofherdinggods",
       "alt_title": "牧神记 (Tales of Herding Gods)",
       "description": "",
-      "poster_url": "https://i.pinimg.com/1200x/1d/19/72/1d19726dbe508589ede095c875958681.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/9522393338f84f50aa9a9005fe03dbfe.jpg",
       "banner_url": "https://i.pinimg.com/1200x/1d/19/72/1d19726dbe508589ede095c875958681.jpg",
       "trailer_url": "",
       "year": 2026,
@@ -1173,7 +1192,7 @@
       "rating_count": 0,
       "episode_count": 84,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T16:50:50.589212+00:00"
+      "updated_at": "2026-09-08T09:01:25.223044+00:00"
     },
     {
       "id": 15,
@@ -1316,7 +1335,7 @@
       "slug": "beyondtimesgaze",
       "alt_title": "光阴之外 (Beyond Time's Gaze)",
       "description": "",
-      "poster_url": "http://localhost:8000/uploads/8ad700f63257417c8ec706b9bc341199.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/026218416ba04b97960bb6110f619188.jpg",
       "banner_url": "https://i.pinimg.com/736x/0a/82/98/0a8298d7deb58e67ea47b3d05bab3a7e.jpg",
       "trailer_url": "",
       "year": 2026,
@@ -1335,7 +1354,7 @@
       "rating_count": 0,
       "episode_count": 37,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T06:14:42.709021+00:00"
+      "updated_at": "2026-09-08T08:59:17.982584+00:00"
     },
     {
       "id": 21,
@@ -1370,7 +1389,7 @@
       "slug": "alian-among-immortal",
       "alt_title": "一人之下 (Aliens Among Immortals)",
       "description": "",
-      "poster_url": "https://i.pinimg.com/736x/34/19/e7/3419e70a2ed5c28fdce939b6183e29e9.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/862d518008b94fc1b3ca78a8e2ce7855.jpg",
       "banner_url": "https://i.pinimg.com/736x/2b/d7/b9/2bd7b915080d373af206ee9a7fc5592f.jpg",
       "trailer_url": "",
       "year": 2026,
@@ -1389,7 +1408,7 @@
       "rating_count": 0,
       "episode_count": 21,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:24.955009+00:00"
+      "updated_at": "2026-09-08T09:02:19.159764+00:00"
     },
     {
       "id": 23,
@@ -1609,11 +1628,11 @@
     },
     {
       "id": 31,
-      "title": "ជ្រើសរើសវាសនា",
+      "title": "ផ្លូវជ្រើសរើសវាសនា",
       "slug": "way-of-choices",
       "alt_title": "择天记 (Way of Choices)",
       "description": "",
-      "poster_url": "https://i.pinimg.com/736x/e2/48/57/e24857dea6bbc8027405198edb47a759.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/9434cb947e1146f2a3b307c823c89a70.jpg",
       "banner_url": "",
       "trailer_url": "",
       "year": 2026,
@@ -1632,7 +1651,7 @@
       "rating_count": 0,
       "episode_count": 26,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:26.642694+00:00"
+      "updated_at": "2026-09-08T10:23:34.797618+00:00"
     },
     {
       "id": 32,
@@ -1744,7 +1763,7 @@
     },
     {
       "id": 36,
-      "title": "ដំណើរឆ្ពោះទៅរកកំរិតអាទិទេព",
+      "title": "ដំណើរឆ្ពោះទៅរកកំរិតអាទិទេព  វគ្គ៣",
       "slug": "apotheosis-season-3",
       "alt_title": "百炼成神 (Apotheosis)",
       "description": "",
@@ -1767,7 +1786,7 @@
       "rating_count": 0,
       "episode_count": 9,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:27.580698+00:00"
+      "updated_at": "2026-09-08T09:50:09.594894+00:00"
     },
     {
       "id": 37,
@@ -2180,7 +2199,7 @@
       "slug": "supreme-god-emperor",
       "alt_title": "无上神帝 (Supreme God Emperor / Wu Shang Shen Di)",
       "description": "Ten thousand years ago, the Supreme Immortal Emperor Mu Yun was betrayed and fell. Reincarnating into the body of an illegitimate weak youth in the Southern Cloud Empire, Mu Yun awakens his ancient supreme alchemy and martial memories to storm back into the heavens.",
-      "poster_url": "http://localhost:8000/uploads/84bf92abb2ca4d649eaa3a0f124a3523.jfif",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/a9a8a07edb5d4144a9eebf5305c49563.jfif",
       "banner_url": "https://i.pinimg.com/736x/00/fc/01/00fc01036aed9eef08c3301ede243a53.jpg",
       "trailer_url": "",
       "year": 2023,
@@ -2199,11 +2218,11 @@
       "rating_count": 0,
       "episode_count": 0,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T06:15:10.372945+00:00"
+      "updated_at": "2026-09-08T08:57:04.574876+00:00"
     },
     {
       "id": 53,
-      "title": "អ្នកប្រម៉ាញ់បិសាច",
+      "title": "អាទិទេពប្រម៉ាញ់បិសាច",
       "slug": "the-demon-hunter",
       "alt_title": "沧元图 (The Demon Hunter / Cang Yuan Tu)",
       "description": "Demons invade the world, leaving humanity clinging to sanctuaries defended by Divine Slayers. Meng Chuan, a young painting prodigy whose mother was killed by demons, enters Early Mountain God Academy and masters the peerless Thunder-Lightning Blade technique to exterminate demons.",
@@ -2226,7 +2245,7 @@
       "rating_count": 0,
       "episode_count": 0,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-05T18:10:30.773700+00:00"
+      "updated_at": "2026-09-08T09:38:06.791807+00:00"
     },
     {
       "id": 54,
@@ -2234,7 +2253,7 @@
       "slug": "immortal-goddesses",
       "alt_title": "仙界神女 (Immortal Goddesses of Cultivation)",
       "description": "In the divine sacred realm of the high heavens, celestial goddesses and fairy empresses master the ancient secret arts of lotus spiritual dao. When celestial tribulations threaten the balance of the multiverse, the immortal maidens descend to protect the mortal realm.",
-      "poster_url": "http://localhost:8000/uploads/9a5ba5a2e21744a5805eac99f15393b0.jfif",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/57829476c98f4d1db24cff8db672a7a3.jfif",
       "banner_url": "https://i.pinimg.com/736x/2b/d7/b9/2bd7b915080d373af206ee9a7fc5592f.jpg",
       "trailer_url": "",
       "year": 2024,
@@ -2253,7 +2272,7 @@
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T06:14:58.353656+00:00"
+      "updated_at": "2026-09-08T08:57:27.349544+00:00"
     },
     {
       "id": 55,
@@ -2342,7 +2361,7 @@
       "slug": "xianlong-sect-leader",
       "alt_title": "仙龙宗主 (Sect Leader of Xianlong)",
       "description": "The supreme ancient dragon reincarnates as the young leader of a decaying mountain sect. Commanding dragon bloodline divine beasts, he leads his sect to dominate the continent.",
-      "poster_url": "http://localhost:8000/uploads/549bc5208163486d9fb9a1416c9bde50.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/e5c6f2f1b3144c2dbf8ab351f998855f.jfif",
       "banner_url": "https://i.pinimg.com/736x/e7/41/e5/e741e5c0fc0c44d38f3a3bee88e5440b.jpg",
       "trailer_url": "",
       "year": 2024,
@@ -2361,7 +2380,7 @@
       "rating_count": 0,
       "episode_count": 0,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T06:15:32.793782+00:00"
+      "updated_at": "2026-09-08T08:57:50.463128+00:00"
     },
     {
       "id": 59,
@@ -2423,7 +2442,7 @@
       "slug": "tales-of-demons-and-gods",
       "alt_title": "妖神记 (Tales of Demons and Gods)",
       "description": "Nie Li, the strongest Demon Spiritualist, is killed in battle with the Sage Emperor and reborn back to his 13-year-old self. Armed with boundless knowledge, he trains to protect Glory City and defeat the Sage Emperor.",
-      "poster_url": "http://localhost:8000/uploads/3b08340bf59349a98e82bf9da221ffea.jpg",
+      "poster_url": "https://merdonghua-com.onrender.com/uploads/38978f568dbb4f36a3c15c9fcc98e1be.jpg",
       "banner_url": "",
       "trailer_url": "",
       "year": 2023,
@@ -2442,7 +2461,7 @@
       "rating_count": 0,
       "episode_count": 0,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T06:16:01.864795+00:00"
+      "updated_at": "2026-09-08T09:01:55.329566+00:00"
     },
     {
       "id": 62,
@@ -2599,12 +2618,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 21,
+      "view_count": 22,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T08:27:56.844957+00:00"
+      "updated_at": "2026-09-08T08:54:58.968637+00:00"
     },
     {
       "id": 68,

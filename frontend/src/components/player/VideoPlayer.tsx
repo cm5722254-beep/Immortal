@@ -5,9 +5,10 @@ import {
   SkipBack, SkipForward, Settings, Subtitles,
   ChevronLeft, ChevronRight, AlertCircle,
   Moon, Sun, FastForward, Check, ShieldAlert,
-  Smartphone, RotateCw, Scan
+  Smartphone, RotateCw, Scan, ExternalLink
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { parseYouTubeVideoId, getYouTubeEmbedUrl } from '../../utils/youtube';
 
 interface VideoPlayerProps {
   src: string;
@@ -85,6 +86,7 @@ export function VideoPlayer({
   const [cinemaMode, setCinemaMode] = useState(false);
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [isIframeEmbed, setIsIframeEmbed] = useState(false);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [triedProxy, setTriedProxy] = useState(false);
 
@@ -135,23 +137,45 @@ export function VideoPlayer({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // ─── SMART SOURCE DETECTOR (YouTube, Google Drive, OK.ru, HLS, MP4) ───
   useEffect(() => {
-    setCurrentSrc(src);
+    if (!src) return;
+    const clean = src.trim();
+    const ytId = parseYouTubeVideoId(clean);
+
+    if (ytId) {
+      setYoutubeVideoId(ytId);
+      setIsIframeEmbed(true);
+      const embedUrl = getYouTubeEmbedUrl(ytId, { autoplay: true });
+      setCurrentSrc(embedUrl);
+      setIsLoading(false);
+      setError(null);
+    } else {
+      setYoutubeVideoId(null);
+      // Check if other embed iframe (Google Drive, OK.ru, Streamtape, Dood, etc.)
+      const isOtherEmbed = clean.includes('/embed/') ||
+        clean.includes('drive.google.com/file/d/') ||
+        clean.includes('ok.ru/videoembed') ||
+        clean.includes('streamtape.com/e/') ||
+        clean.includes('iframe.mediadelivery.net') ||
+        clean.includes('dood');
+
+      if (isOtherEmbed) {
+        let finalEmbed = clean;
+        if (clean.includes('drive.google.com/file/d/') && clean.includes('/view')) {
+          finalEmbed = clean.replace('/view', '/preview');
+        }
+        setIsIframeEmbed(true);
+        setCurrentSrc(finalEmbed);
+        setIsLoading(false);
+        setError(null);
+      } else {
+        setIsIframeEmbed(false);
+        setCurrentSrc(clean);
+      }
+    }
     setTriedProxy(false);
   }, [src]);
-
-  // Check if link is an embed iframe
-  useEffect(() => {
-    if (!currentSrc) return;
-    const isEmbed = currentSrc.includes('/embed/') ||
-      currentSrc.includes('youtube.com/embed') ||
-      currentSrc.includes('drive.google.com/file/d/') ||
-      currentSrc.includes('ok.ru/videoembed') ||
-      currentSrc.includes('streamtape.com/e/') ||
-      currentSrc.includes('iframe.mediadelivery.net') ||
-      currentSrc.includes('dood');
-    setIsIframeEmbed(isEmbed);
-  }, [currentSrc]);
 
   // Initialize HLS or direct MP4
   useEffect(() => {
@@ -575,19 +599,39 @@ export function VideoPlayer({
       } : undefined}
       onMouseMove={resetControlsTimer}
       onMouseEnter={resetControlsTimer}
-      onClick={togglePlay}
+      onClick={isIframeEmbed ? undefined : togglePlay}
       onDoubleClick={(e) => { e.stopPropagation(); cycleScaleMode(e); }}
     >
       {/* Video or Iframe Element */}
       {isIframeEmbed ? (
-        <iframe
-          src={currentSrc}
-          className={`w-full h-full border-0 transition-all duration-300 ${scaleMode === 'cover' ? 'object-cover' : ''}`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-          allowFullScreen
-          referrerPolicy="no-referrer"
-          title={title || 'Video Player'}
-        />
+        <div className="relative w-full h-full bg-black">
+          <iframe
+            src={currentSrc}
+            className={`w-full h-full border-0 transition-all duration-300 ${scaleMode === 'cover' ? 'object-cover' : ''}`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            title={title || 'Video Player'}
+          />
+          {youtubeVideoId && (
+            <div className="absolute top-3 right-3 z-30 pointer-events-auto flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+              <a
+                href={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="px-2.5 py-1 rounded-full bg-red-600/90 hover:bg-red-600 text-white text-[10px] sm:text-xs font-bold shadow-lg backdrop-blur-md flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
+                title="បើកមើលលើ YouTube App / Web ផ្ទាល់"
+              >
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                <span>មើលលើ YouTube</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          )}
+        </div>
       ) : (
         <video
           ref={videoRef}
@@ -735,8 +779,12 @@ export function VideoPlayer({
             <p className="text-white font-bold text-xs sm:text-sm md:text-base drop-shadow-md truncate max-w-[140px] sm:max-w-sm">
               {title}
             </p>
-            <span className="badge bg-brand-500/20 text-brand-400 border border-brand-500/40 text-[9px] sm:text-[10px] shrink-0">
-              {quality}
+            <span className={`badge text-[9px] sm:text-[10px] shrink-0 ${
+              youtubeVideoId
+                ? 'bg-red-600/20 text-red-400 border-red-500/40'
+                : 'bg-brand-500/20 text-brand-400 border-brand-500/40'
+            }`}>
+              {youtubeVideoId ? 'YouTube HD' : quality}
             </span>
           </div>
 

@@ -11,6 +11,7 @@ import { triggerConfirm } from '../../store/confirmStore';
 import api from '../../services/api';
 import { loadCatalog } from '../../services/catalogService';
 import type { Anime, Episode } from '../../types';
+import { parseYouTubeVideoId, isYouTubeUrl, getYouTubeThumbnail } from '../../utils/youtube';
 
 const EMPTY_EP = {
   anime_id: 0, episode_number: 1, title: '',
@@ -1309,10 +1310,19 @@ export function AdminEpisodesPage() {
                           </td>
                           <td className="px-4 py-3.5 text-gray-500">
                             {ep.video_url ? (
-                              <span className="text-xs font-mono text-emerald-400 flex items-center gap-1 truncate max-w-xs">
-                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                                {ep.video_url.substring(0, 45)}...
-                              </span>
+                              isYouTubeUrl(ep.video_url) ? (
+                                <span className="text-xs font-mono text-red-400 flex items-center gap-1.5 truncate max-w-xs font-bold">
+                                  <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                  </svg>
+                                  <span>YouTube: {parseYouTubeVideoId(ep.video_url)}</span>
+                                </span>
+                              ) : (
+                                <span className="text-xs font-mono text-emerald-400 flex items-center gap-1 truncate max-w-xs">
+                                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                  {ep.video_url.substring(0, 45)}...
+                                </span>
+                              )
                             ) : (
                               <span className="text-red-400 text-xs flex items-center gap-1">
                                 <AlertCircle className="w-3.5 h-3.5" /> No Stream URL
@@ -1386,13 +1396,23 @@ export function AdminEpisodesPage() {
               <div className="p-4 space-y-3">
                 {previewVideoEp.video_url ? (
                   <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-inner">
-                    <video
-                      src={previewVideoEp.video_url}
-                      controls
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-contain"
-                    />
+                    {isYouTubeUrl(previewVideoEp.video_url) ? (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${parseYouTubeVideoId(previewVideoEp.video_url)}?autoplay=1&enablejsapi=1&rel=0`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        className="w-full h-full border-0"
+                      />
+                    ) : (
+                      <video
+                        src={previewVideoEp.video_url}
+                        controls
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-contain"
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="py-16 text-center text-gray-400">
@@ -1469,15 +1489,57 @@ export function AdminEpisodesPage() {
               </div>
 
               <div>
-                <label className="label">តំណភ្ជាប់វីដេអូ (Video Stream URL: MP4 / HLS .m3u8) *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="label mb-0">តំណភ្ជាប់វីដេអូ (YouTube / MP4 / HLS .m3u8 / Embed Iframe) *</label>
+                  {isYouTubeUrl(form.video_url) && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2.5 py-0.5 rounded-full">
+                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                      YouTube Detected
+                    </span>
+                  )}
+                </div>
                 <input
-                  type="url"
+                  type="text"
                   value={form.video_url}
                   onChange={(e) => setForm((f) => ({ ...f, video_url: e.target.value }))}
-                  className="input"
-                  placeholder="https://authorized-host.com/stream/ep-01.mp4"
+                  className="input font-mono text-xs"
+                  placeholder="https://www.youtube.com/watch?v=... ឬ https://youtu.be/... ឬ MP4 / m3u8"
                   required
                 />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  💡 អាចដាក់ link YouTube ធម្មតា (watch?v=, youtu.be, shorts), MP4, m3u8 ឬ iframe embed ក៏បាន
+                </p>
+
+                {/* YouTube Link Preview Card */}
+                {isYouTubeUrl(form.video_url) && (
+                  <div className="mt-2.5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between gap-3 animate-fade-in">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <img
+                        src={getYouTubeThumbnail(form.video_url, 'hq') || ''}
+                        alt="YouTube preview"
+                        className="w-16 h-10 rounded-lg object-cover border border-white/20 shrink-0 shadow-sm"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-white truncate">
+                          YouTube Video ID: <span className="text-red-400">{parseYouTubeVideoId(form.video_url)}</span>
+                        </p>
+                        <p className="text-[10px] text-gray-400">Player នឹងចាក់ដោយស្វ័យប្រវត្តិគ្មាន Error ឡើយ</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const thumb = getYouTubeThumbnail(form.video_url, 'hq');
+                        if (thumb) setForm((f) => ({ ...f, thumbnail_url: thumb }));
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold shrink-0 transition-colors shadow-sm cursor-pointer"
+                    >
+                      ប្រើ Thumbnail នេះ
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>
