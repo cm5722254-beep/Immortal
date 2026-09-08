@@ -63,6 +63,27 @@ export function isFacebookUrl(url: string | null | undefined): boolean {
   return /facebook\.com\/(?:watch|.*\/videos|share\/v|reel|plugins\/video\.php)|fb\.watch\//i.test(target);
 }
 
+export function parseFacebookVideoId(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const cleanUrl = url.trim();
+  const iframeMatch = cleanUrl.match(/src=["'](.*?)["']/i);
+  const target = iframeMatch ? iframeMatch[1] : cleanUrl;
+
+  // Match /videos/.../123456789 or /videos/123456789
+  const videosMatch = target.match(/\/videos\/(?:[^\/?#]+\/)?(\d+)/i);
+  if (videosMatch && videosMatch[1]) return videosMatch[1];
+
+  // Match /watch/?v=123456789
+  const watchMatch = target.match(/[?&]v=(\d+)/i);
+  if (watchMatch && watchMatch[1]) return watchMatch[1];
+
+  // Match /reel/123456789
+  const reelMatch = target.match(/\/reel\/(\d+)/i);
+  if (reelMatch && reelMatch[1]) return reelMatch[1];
+
+  return null;
+}
+
 export function getFacebookEmbedUrl(url: string, options: { autoplay?: boolean } = { autoplay: true }): string {
   if (!url) return '';
   const cleanUrl = url.trim();
@@ -74,11 +95,17 @@ export function getFacebookEmbedUrl(url: string, options: { autoplay?: boolean }
     return target;
   }
 
-  // Strip tracking queries that break Facebook plugin embeds
-  try {
-    const parsed = new URL(target);
-    target = `${parsed.origin}${parsed.pathname}`;
-  } catch {}
+  // If we can extract the numeric video ID, use the 100% reliable canonical watch URL
+  const videoId = parseFacebookVideoId(target);
+  if (videoId) {
+    target = `https://www.facebook.com/watch/?v=${videoId}`;
+  } else {
+    // Strip tracking queries that break Facebook plugin embeds
+    try {
+      const parsed = new URL(target);
+      target = `${parsed.origin}${parsed.pathname}`;
+    } catch {}
+  }
 
   // Otherwise convert to official Facebook Video Plugin URL
   const autoplayParam = options.autoplay ? '1' : '0';
