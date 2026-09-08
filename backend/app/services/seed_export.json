@@ -1,11 +1,11 @@
 {
   "version": "2.0.0",
-  "exported_at": "2026-09-08T12:22:03.205083+00:00",
+  "exported_at": "2026-09-08T14:05:56.947451+00:00",
   "counts": {
     "genres": 16,
     "users": 38,
     "anime": 69,
-    "episodes": 922,
+    "episodes": 923,
     "banners": 3,
     "comments": 0
   },
@@ -836,12 +836,12 @@
       "is_trending": true,
       "is_published": true,
       "is_free": false,
-      "view_count": 75,
+      "view_count": 76,
       "average_rating": 4.9,
       "rating_count": 0,
       "episode_count": 71,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T08:59:40.713787+00:00"
+      "updated_at": "2026-09-08T12:47:19.736033+00:00"
     },
     {
       "id": 2,
@@ -1214,12 +1214,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 15,
+      "view_count": 16,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 52,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-06T13:05:39.006705+00:00"
+      "updated_at": "2026-09-08T12:47:44.798493+00:00"
     },
     {
       "id": 16,
@@ -1403,12 +1403,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 20,
+      "view_count": 22,
       "average_rating": 0.0,
       "rating_count": 0,
-      "episode_count": 21,
+      "episode_count": 22,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-08T09:02:19.159764+00:00"
+      "updated_at": "2026-09-08T13:03:29.629795+00:00"
     },
     {
       "id": 23,
@@ -11857,6 +11857,19 @@
       "is_vip_only": false,
       "view_count": 0,
       "created_at": "2026-09-05T18:10:34.277243+00:00"
+    },
+    {
+      "id": 985,
+      "anime_id": 22,
+      "episode_number": 22,
+      "title": "Episode 22",
+      "video_url": "https://youtu.be/jqDY-HfXrbQ?si=jCb5gz-CCb8SwB7z",
+      "duration_seconds": 1440,
+      "thumbnail_url": "https://merdonghua-com.onrender.com/uploads/862d518008b94fc1b3ca78a8e2ce7855.jpg",
+      "is_published": true,
+      "is_vip_only": false,
+      "view_count": 0,
+      "created_at": "2026-09-08T12:25:10.256181+00:00"
     },
     {
       "id": 213,
