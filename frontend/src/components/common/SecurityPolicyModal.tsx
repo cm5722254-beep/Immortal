@@ -151,12 +151,12 @@ export const SecurityPolicyModal: React.FC<SecurityPolicyModalProps> = ({ isOpen
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
             <span>ប្រសិនបើច្រឡំដៃ ឬត្រូវការជំនួយ សូមទាក់ទង Admin៖</span>
             <a
-              href="https://t.me/Huang404"
+              href="https://t.me/watchflixanimeadmin"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-black font-bold hover:bg-amber-400 transition-colors shrink-0"
             >
-              <span>💬 Contact Admin (@Huang404)</span>
+              <span>💬 Contact Admin (@watchflixanimeadmin)</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

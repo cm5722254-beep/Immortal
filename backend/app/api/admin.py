@@ -4,6 +4,9 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 import math
+import os
+import uuid
+import shutil
 
 from app.core.database import get_db
 from app.dependencies.auth import require_admin, require_staff_or_admin
@@ -17,6 +20,53 @@ from app.schemas.user import UserRead, UserAdminUpdate, VIPGrantRequest, MovieUn
 from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+# ── Image Upload Directory ──
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
+MAX_IMAGE_SIZE_MB = 10
+
+
+@router.post("/upload-image")
+async def upload_image(
+    file: UploadFile = File(...),
+    staff: User = Depends(require_staff_or_admin),
+):
+    """Upload a poster or banner image and return its public URL."""
+    # Validate file type
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type: {file.content_type}. Allowed: JPEG, PNG, WebP, GIF"
+        )
+
+    # Read file and check size
+    contents = await file.read()
+    size_mb = len(contents) / (1024 * 1024)
+    if size_mb > MAX_IMAGE_SIZE_MB:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large ({size_mb:.1f}MB). Maximum size is {MAX_IMAGE_SIZE_MB}MB"
+        )
+
+    # Generate unique filename preserving extension
+    ext = os.path.splitext(file.filename or "image.jpg")[1] or ".jpg"
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    save_path = os.path.join(UPLOAD_DIR, unique_name)
+
+    with open(save_path, "wb") as f:
+        f.write(contents)
+
+    # Return the public URL
+    public_url = f"/uploads/{unique_name}"
+    return {
+        "status": "success",
+        "url": public_url,
+        "filename": unique_name,
+        "size_mb": round(size_mb, 2),
+    }
 
 
 @router.get("/stats", response_model=AdminStats)

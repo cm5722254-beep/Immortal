@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║   🎬  MER DONGHUA — Professional Video Downloader & Website Scanner v3.2     ║
+║   🎬  MER DONGHUA — Professional Video Downloader & Website Scanner v3.3     ║
 ║   Scan & Download All Anime / Episodes Directly From Website With Khmer Names║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
@@ -9,7 +9,7 @@ import os, sys, re, json, time, math, threading, queue
 import urllib.request, urllib.error, urllib.parse
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -37,11 +37,43 @@ def _find_seed() -> str:
 
     return os.path.join("D:\\", "Huang-anime", "backend", "app", "services", "seed_export.json")
 
+def _get_base_dir() -> str:
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+def _default_out() -> str:
+    r"""Default save directory: prioritize D:\MerDonghua_Videos."""
+    if os.path.exists("D:\\"):
+        p = os.path.join("D:\\", "MerDonghua_Videos")
+        os.makedirs(p, exist_ok=True)
+        return p
+    p = os.path.join(os.path.expanduser("~"), "Desktop", "MerDonghua_Videos")
+    os.makedirs(p, exist_ok=True)
+    return p
+
 SEED_FILE   = _find_seed()
-DEFAULT_OUT = os.path.join(os.path.expanduser("~"), "Desktop", "MerDonghua_Videos")
+CONFIG_FILE = os.path.join(_get_base_dir(), "downloader_config.json")
+DEFAULT_OUT = _default_out()
 DEFAULT_API = "https://merdonghua-com.onrender.com/api"
 UA          = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0"
-VERSION     = "3.2 (Website Scanner)"
+VERSION     = "3.3 (Smart Duplicate Guard & Disk Scanner)"
+
+def load_config() -> dict:
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_config(cfg: dict):
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
 
 # ══════════════════════════════════════════════════════════════════════════════
 def sanitize(name: str, mx: int = 100) -> str:
@@ -71,6 +103,82 @@ def build_hdrs(url: str, token: str = "") -> dict:
     if token: h["Authorization"] = f"Bearer {token}"
     return h
 
+# ── Smart Title & Folder Resolution ──────────────────────────────────────────
+def clean_title_for_match(t: str) -> str:
+    if not t: return ""
+    t = re.sub(r'\s+', ' ', t).strip().lower()
+    t = re.sub(r'(?:វគ្គ|រដូវ|រដូវកាល|season|part)[\s\S]*$', '', t, flags=re.IGNORECASE).strip()
+    return t
+
+def get_anime_folder(out_base: str, anime: dict, existing_folders: Optional[List[str]] = None) -> str:
+    """Resolves the existing folder for an anime or creates a standard sanitized folder."""
+    if existing_folders is None:
+        try:
+            existing_folders = [f for f in os.listdir(out_base) if os.path.isdir(os.path.join(out_base, f))]
+        except Exception:
+            existing_folders = []
+
+    aid = anime.get('id', 0)
+    titles = [
+        anime.get('title') or '',
+        anime.get('title_en') or '',
+        anime.get('slug') or '',
+        anime.get('alt_title') or '',
+        f"Anime_{aid}"
+    ]
+    # 1. Exact match
+    for t in titles:
+        if not t: continue
+        s = sanitize(t)
+        if s in existing_folders:
+            return os.path.join(out_base, s)
+
+    # 2. Base title match without season/part
+    kh = clean_title_for_match(anime.get('title') or '')
+    if kh and len(kh) >= 4:
+        for ef in existing_folders:
+            ef_clean = clean_title_for_match(ef)
+            if kh == ef_clean or kh in ef_clean or ef_clean in kh:
+                return os.path.join(out_base, ef)
+
+    # Fallback to standard sanitize title
+    std = sanitize(anime.get('title') or anime.get('title_en') or f"Anime_{aid}")
+    return os.path.join(out_base, std)
+
+def is_episode_downloaded(folder_path: str, ep_num: int, ep_title: str = "") -> Tuple[bool, Optional[str], int]:
+    """Check if episode is already downloaded with valid size (>500KB).
+    Returns (is_downloaded: bool, file_path: Optional[str], file_size: int)
+    """
+    if not os.path.isdir(folder_path):
+        return False, None, 0
+    try:
+        files = os.listdir(folder_path)
+    except Exception:
+        return False, None, 0
+
+    patterns = [
+        rf'(?:^|[_\s\-\(\[])0*{ep_num}(?:[_\s\-\.\)\]]|$)',
+        rf'(?:ភាគ|ep|episode)[\s_#\-]*0*{ep_num}(?:[_\s\-\.\)\]]|$)'
+    ]
+
+    for f in files:
+        if not f.lower().endswith(('.mp4', '.mkv', '.ts', '.webm')):
+            continue
+        fp = os.path.join(folder_path, f)
+        try:
+            sz = os.path.getsize(fp)
+        except OSError:
+            continue
+        if sz < 500 * 1024:  # Under 500KB is incomplete or 0-byte placeholder
+            continue
+
+        f_clean = f.lower()
+        for p_regex in patterns:
+            if re.search(p_regex, f_clean):
+                return True, fp, sz
+
+    return False, None, 0
+
 # ══════════════════════════════════════════════════════════════════════════════
 class Task:
     def __init__(self, url, out_path, anime_name, ep_num, ep_title):
@@ -81,7 +189,22 @@ class Task:
 
 def do_dl(task: Task, cancel: threading.Event, token: str = ""):
     url = task.url; path = task.out_path
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    folder = os.path.dirname(path)
+    os.makedirs(folder, exist_ok=True)
+
+    # ── Strict Duplicate Prevention ("ហាម down ជាន់គ្នា")
+    already_dl, existing_file, ex_sz = is_episode_downloaded(folder, task.ep_num, task.ep_title)
+    if already_dl and existing_file:
+        task.status = "skipped"
+        task.done = ex_sz
+        task.total = ex_sz
+        return
+
+    # Clean up empty or broken placeholder file (< 100KB)
+    if os.path.exists(path) and os.path.getsize(path) < 100 * 1024:
+        try: os.remove(path)
+        except Exception: pass
+
     hdrs = build_hdrs(url, token)
     existing = os.path.getsize(path) if os.path.exists(path) else 0
 
@@ -140,7 +263,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title(f"🎬  MER DONGHUA Downloader & Website Scanner  v{VERSION}")
-        self.geometry("1180x780"); self.minsize(980, 640)
+        self.geometry("1200x800"); self.minsize(1020, 660)
         self.configure(bg=self.BG)
         self.anime_list: List[dict] = []
         self.episodes:   List[dict] = []
@@ -155,21 +278,37 @@ class App(tk.Tk):
         self._scanned_eps:   List[dict] = []
         self._scan_checked:  set = set()
 
+        # Disk scan state
+        self._disk_status: Dict[int, Dict[str, Any]] = {}
+        self._is_scanning_disk = False
+
+        # Load persisted config
+        cfg = load_config()
+        saved_dir = cfg.get("out_dir")
+        init_out = saved_dir if (saved_dir and os.path.exists(saved_dir)) else DEFAULT_OUT
+
         # Options
-        self.opt_threads    = tk.IntVar(value=3)
-        self.opt_out_dir    = tk.StringVar(value=DEFAULT_OUT)
-        self.opt_token      = tk.StringVar(value="")
-        self.opt_api_url    = tk.StringVar(value=DEFAULT_API)
-        self.opt_naming     = tk.StringVar(value="kh")
+        self.opt_threads    = tk.IntVar(value=cfg.get("threads", 3))
+        self.opt_out_dir    = tk.StringVar(value=init_out)
+        self.opt_token      = tk.StringVar(value=cfg.get("token", ""))
+        self.opt_api_url    = tk.StringVar(value=cfg.get("api_url", DEFAULT_API))
+        self.opt_naming     = tk.StringVar(value=cfg.get("naming", "kh"))
         self.opt_skip_done  = tk.BooleanVar(value=True)
         self.opt_open_after = tk.BooleanVar(value=False)
-        self.opt_filter     = tk.StringVar(value="all")
+        # Default to Missing Only as requested by user ("បើខ្វះភាគ ចាំដោន")
+        self.opt_filter     = tk.StringVar(value=cfg.get("filter", "missing"))
         self.opt_ep_from    = tk.IntVar(value=1)
         self.opt_ep_to      = tk.IntVar(value=9999)
+
+        self._ui_queue = queue.Queue()
 
         self._style(); self._build()
         self._load_async()
         self.after(400, self._poll)
+
+    def dispatch(self, fn):
+        """Thread-safe UI callback dispatcher."""
+        self._ui_queue.put(fn)
 
     def _style(self):
         s = ttk.Style(self); s.theme_use("clam")
@@ -182,7 +321,7 @@ class App(tk.Tk):
         s.configure("M.TLabel", foreground=self.MUTED, font=("Segoe UI", 9))
         def btn(n, bg, act):
             s.configure(n, background=bg, foreground="white",
-                        font=("Segoe UI", 10, "bold"), padding=(12, 6), relief="flat", borderwidth=0)
+                        font=("Segoe UI", 10, "bold"), padding=(10, 5), relief="flat", borderwidth=0)
             s.map(n, background=[("active", act), ("disabled", "#2d2d4e")])
         btn("A.TButton", self.ACCENT, "#6d28d9"); btn("C.TButton", self.CYAN, "#0891b2")
         btn("G.TButton", self.GREEN, "#16a34a");  btn("R.TButton", self.RED, "#b91c1c")
@@ -255,12 +394,20 @@ class App(tk.Tk):
         pw = tk.PanedWindow(parent, orient="horizontal", bg=self.PANEL, sashwidth=5, sashrelief="flat")
         pw.pack(fill="both", expand=True, padx=8, pady=6)
 
-        # LEFT panel
-        left = tk.Frame(pw, bg=self.PANEL, width=310); pw.add(left, minsize=250)
-        tk.Label(left, text="📺  ជ្រើស Anime", bg=self.PANEL, fg=self.TEXT,
-                 font=self.FH2).pack(anchor="w", padx=8, pady=(6, 2))
+        # LEFT panel: Anime Selection & Disk Status
+        left = tk.Frame(pw, bg=self.PANEL, width=390); pw.add(left, minsize=350)
+        
+        # Disk Scan Card at top of left panel
+        dsk_bar = tk.Frame(left, bg=self.CARD, padx=8, pady=6)
+        dsk_bar.pack(fill="x", padx=8, pady=(6, 4))
+        self.lbl_disk_summary = tk.Label(dsk_bar, text="💾 វីដេអូក្នុង Disk: កំពុងស្កេន…",
+                                         bg=self.CARD, fg=self.CYAN, font=("Segoe UI", 9, "bold"))
+        self.lbl_disk_summary.pack(side="left", fill="x", expand=True)
+        ttk.Button(dsk_bar, text="🔄 ស្កេន Disk", style="C.TButton",
+                   command=lambda: self._scan_disk_videos(show_msg=True)).pack(side="right")
 
-        sf = tk.Frame(left, bg=self.PANEL); sf.pack(fill="x", padx=8, pady=(0, 4))
+        # Search bar
+        sf = tk.Frame(left, bg=self.PANEL); sf.pack(fill="x", padx=8, pady=(2, 4))
         tk.Label(sf, text="🔍", bg=self.PANEL, fg=self.MUTED).pack(side="left")
         self._sv = tk.StringVar(); self._sv.trace_add("write", lambda *_: self._filter())
         tk.Entry(sf, textvariable=self._sv, bg=self.CARD, fg=self.TEXT,
@@ -268,34 +415,42 @@ class App(tk.Tk):
                  highlightbackground=self.ACCENT, highlightthickness=1,
                  font=self.FN).pack(side="left", fill="x", expand=True, ipady=4, padx=(4, 0))
 
+        # Selection buttons: Missing Only, All, None
         bb = tk.Frame(left, bg=self.PANEL); bb.pack(fill="x", padx=8, pady=(0, 4))
+        ttk.Button(bb, text="⚠️ ជ្រើសតែខ្វះ", style="Y.TButton", command=self._sel_missing).pack(side="left", padx=(0, 4))
         ttk.Button(bb, text="✅ All", style="G.TButton", command=self._sel_all).pack(side="left", padx=(0, 4))
         ttk.Button(bb, text="❌ None", style="R.TButton", command=self._sel_none).pack(side="left")
         self.lbl_sel = tk.Label(bb, text="0 រឿង", bg=self.PANEL, fg=self.MUTED, font=("Segoe UI", 9))
         self.lbl_sel.pack(side="right")
 
+        # Treeview with columns: ឈ្មោះរឿង, ភាគ (មាន/សរុប), ស្ថានភាព, ✓
         tf = tk.Frame(left, bg=self.PANEL); tf.pack(fill="both", expand=True, padx=6, pady=(0, 6))
-        self.atv = ttk.Treeview(tf, columns=("eps", "dl"), show="tree headings", selectmode="browse")
-        self.atv.heading("#0", text="ឈ្មោះរឿង"); self.atv.heading("eps", text="ភាគ")
-        self.atv.heading("dl", text="✓"); self.atv.column("#0", width=185)
-        self.atv.column("eps", width=42, anchor="center"); self.atv.column("dl", width=32, anchor="center")
-        self.atv.tag_configure("on", foreground=self.GREEN)
-        self.atv.tag_configure("off", foreground=self.TEXT)
+        cols = ("eps", "status", "dl")
+        self.atv = ttk.Treeview(tf, columns=cols, show="tree headings", selectmode="browse")
+        self.atv.heading("#0", text="ឈ្មោះរឿង"); self.atv.column("#0", width=175)
+        self.atv.heading("eps", text="ភាគ"); self.atv.column("eps", width=65, anchor="center")
+        self.atv.heading("status", text="ស្ថានភាព"); self.atv.column("status", width=75, anchor="center")
+        self.atv.heading("dl", text="✓"); self.atv.column("dl", width=30, anchor="center")
+        
+        self.atv.tag_configure("complete", foreground="#22c55e")
+        self.atv.tag_configure("partial", foreground="#f59e0b")
+        self.atv.tag_configure("empty", foreground="#94a3b8")
         self.atv.bind("<ButtonRelease-1>", self._toggle)
+
         asb = ttk.Scrollbar(tf, orient="vertical", command=self.atv.yview)
         self.atv.configure(yscrollcommand=asb.set)
         self.atv.pack(side="left", fill="both", expand=True); asb.pack(side="right", fill="y")
 
-        # RIGHT panel
-        right = tk.Frame(pw, bg=self.PANEL); pw.add(right, minsize=540)
+        # RIGHT panel: Controls & Queue
+        right = tk.Frame(pw, bg=self.PANEL); pw.add(right, minsize=520)
         dr = tk.Frame(right, bg=self.PANEL); dr.pack(fill="x", padx=8, pady=(6, 2))
         tk.Label(dr, text="📁 Save:", bg=self.PANEL, fg=self.MUTED, font=self.FN).pack(side="left")
         tk.Label(dr, textvariable=self.opt_out_dir, bg=self.PANEL, fg=self.CYAN,
-                 font=self.FN).pack(side="left", padx=6, fill="x", expand=True)
+                 font=("Segoe UI", 10, "bold")).pack(side="left", padx=6, fill="x", expand=True)
         ttk.Button(dr, text=" … ", style="C.TButton", command=self._pick_dir).pack(side="right")
 
         cr = tk.Frame(right, bg=self.PANEL); cr.pack(fill="x", padx=8, pady=(2, 6))
-        self.btn_dl = ttk.Button(cr, text="  ⬇  ចាប់ផ្តើម Download",
+        self.btn_dl = ttk.Button(cr, text="  ⬇  ចាប់ផ្តើម Download (តែភាគខ្វះ)  ",
                                 style="A.TButton", command=self._start)
         self.btn_dl.pack(side="left", padx=(0, 6))
         self.btn_stop = ttk.Button(cr, text="⏹ Stop", style="R.TButton",
@@ -420,7 +575,7 @@ class App(tk.Tk):
                      font=self.FN).pack(side="left")
             widget_fn(f)
 
-        sec("📁  Save Directory")
+        sec("📁  Save Directory (Main Drive)")
         def dir_w(f):
             tk.Entry(f, textvariable=self.opt_out_dir, bg=self.CARD, fg=self.TEXT,
                      relief="flat", font=self.FN, width=44, insertbackground=self.TEXT
@@ -428,40 +583,11 @@ class App(tk.Tk):
             ttk.Button(f, text="Browse…", style="C.TButton", command=self._pick_dir).pack(side="left")
         row("Output Folder:", dir_w)
 
-        sec("🌐  API Base URL")
-        def api_w(f):
-            tk.Entry(f, textvariable=self.opt_api_url, bg=self.CARD, fg=self.TEXT,
-                     relief="flat", font=self.FN, width=44, insertbackground=self.TEXT
-                     ).pack(side="left", ipady=4, padx=(0, 8))
-        row("API URL:", api_w)
-
-        sec("🏷  Naming Format")
-        def naming_w(f):
-            opts = [("kh", "ខ្មែរ: ភាគ 001 - Episode Title.mp4"),
-                    ("en", "English: Ep001 - Episode Title.mp4"),
-                    ("num", "លេខសុទ្ធ: 001.mp4")]
-            for val, lbl in opts:
-                ttk.Radiobutton(f, text=lbl, variable=self.opt_naming, value=val
-                                ).pack(side="left", padx=(0, 16))
-        row("File Name:", naming_w)
-
-        sec("⚡  Speed & Engine")
-        def th_w(f):
-            ttk.Spinbox(f, textvariable=self.opt_threads, from_=1, to=8, width=5,
-                        font=self.FN).pack(side="left")
-            tk.Label(f, text="(threads ដំណើរការព្រមគ្នា)", bg=self.PANEL,
-                     fg=self.MUTED, font=self.FN).pack(side="left", padx=8)
-        row("Threads:", th_w)
-        row("⏩  Resume:", lambda f: ttk.Checkbutton(
-            f, text="Skip files already downloaded", variable=self.opt_skip_done
-            ).pack(side="left"))
-        row("📂  After Done:", lambda f: ttk.Checkbutton(
-            f, text="Auto-open download folder", variable=self.opt_open_after
-            ).pack(side="left"))
-
-        sec("🔍  Episode Filter")
+        sec("🔍  Episode Filter (ការពារ Down ជាន់គ្នា)")
         def flt_w(f):
-            for v, l in [("all", "All Episodes"), ("missing", "Missing Only"), ("range", "Range")]:
+            for v, l in [("missing", "⭐ ខ្វះភាគប៉ុណ្ណោះ (Missing Only - Skip Downloaded)"),
+                         ("all", "All Episodes"),
+                         ("range", "Range")]:
                 ttk.Radiobutton(f, text=l, variable=self.opt_filter, value=v
                                 ).pack(side="left", padx=(0, 14))
         row("📋  Mode:", flt_w)
@@ -474,6 +600,37 @@ class App(tk.Tk):
                         width=6, font=self.FN).pack(side="left", padx=4)
         row("🔢  Range:", range_w)
 
+        sec("⚡  Speed & Engine")
+        def th_w(f):
+            ttk.Spinbox(f, textvariable=self.opt_threads, from_=1, to=8, width=5,
+                        font=self.FN).pack(side="left")
+            tk.Label(f, text="(threads ដំណើរការព្រមគ្នា)", bg=self.PANEL,
+                     fg=self.MUTED, font=self.FN).pack(side="left", padx=8)
+        row("Threads:", th_w)
+        row("⏩  Resume:", lambda f: ttk.Checkbutton(
+            f, text="Skip files already downloaded (ការពារ Down ជាន់គ្នា)", variable=self.opt_skip_done
+            ).pack(side="left"))
+        row("📂  After Done:", lambda f: ttk.Checkbutton(
+            f, text="Auto-open download folder", variable=self.opt_open_after
+            ).pack(side="left"))
+
+        sec("🏷  Naming Format")
+        def naming_w(f):
+            opts = [("kh", "ខ្មែរ: ភាគ 001 - Episode Title.mp4"),
+                    ("en", "English: Ep001 - Episode Title.mp4"),
+                    ("num", "លេខសុទ្ធ: 001.mp4")]
+            for val, lbl in opts:
+                ttk.Radiobutton(f, text=lbl, variable=self.opt_naming, value=val
+                                ).pack(side="left", padx=(0, 16))
+        row("File Name:", naming_w)
+
+        sec("🌐  API Base URL")
+        def api_w(f):
+            tk.Entry(f, textvariable=self.opt_api_url, bg=self.CARD, fg=self.TEXT,
+                     relief="flat", font=self.FN, width=44, insertbackground=self.TEXT
+                     ).pack(side="left", ipady=4, padx=(0, 8))
+        row("API URL:", api_w)
+
         sec("🔑  Auth (Optional)")
         def tok_w(f):
             tk.Entry(f, textvariable=self.opt_token, bg=self.CARD, fg=self.TEXT,
@@ -482,9 +639,22 @@ class App(tk.Tk):
         row("🔒  Auth Token:", tok_w)
 
         tk.Frame(inner, bg=self.PANEL, height=10).pack()
-        ttk.Button(inner, text="  💾  Save Options  ", style="G.TButton",
-                   command=lambda: self._log("✅ Options saved!", "ok")
-                   ).pack(padx=24, anchor="w")
+        ttk.Button(inner, text="  💾  Save Options & Apply  ", style="G.TButton",
+                   command=self._save_options_btn).pack(padx=24, anchor="w")
+
+    def _save_options_btn(self):
+        cfg = {
+            "out_dir": self.opt_out_dir.get(),
+            "threads": self.opt_threads.get(),
+            "token": self.opt_token.get(),
+            "api_url": self.opt_api_url.get(),
+            "naming": self.opt_naming.get(),
+            "filter": self.opt_filter.get()
+        }
+        save_config(cfg)
+        self._log("✅ Options saved to config file!", "ok")
+        self._scan_disk_videos()
+        messagebox.showinfo("Saved", "បានរក្សាទុក Options រួចរាល់!")
 
     # ── Tab 4: Log ────────────────────────────────────────────────────────────
     def _tab_log(self, parent):
@@ -561,7 +731,7 @@ class App(tk.Tk):
 
             episodes = sorted(episodes, key=lambda e: e.get("episode_number", 0))
 
-            self.after(0, lambda: self._on_scan_done(matched_anime, episodes, auto_select_in_tab1))
+            self.dispatch(lambda: self._on_scan_done(matched_anime, episodes, auto_select_in_tab1))
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -572,7 +742,6 @@ class App(tk.Tk):
         self._scan_checked  = set(range(len(episodes)))
 
         title = anime.get("title") or anime.get("title_en") or "Anime"
-        alt = anime.get("alt_title") or ""
         total_eps = len(episodes)
 
         if not episodes:
@@ -610,7 +779,6 @@ class App(tk.Tk):
                 self._checked.add(aid)
                 self._rrow(str(aid))
                 self._upd_sel()
-                # Highlight and focus in atv
                 try:
                     self.atv.see(str(aid))
                     self.atv.selection_set(str(aid))
@@ -657,10 +825,11 @@ class App(tk.Tk):
         if not self._scan_checked or not self._scanned_anime:
             messagebox.showwarning("⚠️", "សូមជ្រើសរើស Episode យ៉ាងហោចណាស់មួយ!"); return
 
-        a_title = sanitize(self._scanned_anime.get("title") or self._scanned_anime.get("title_en") or "Anime")
         out_base = self.opt_out_dir.get()
         naming = self.opt_naming.get()
         skip = self.opt_skip_done.get()
+        anime_folder = get_anime_folder(out_base, self._scanned_anime)
+        a_title = os.path.basename(anime_folder)
 
         tasks = []
         for idx in sorted(self._scan_checked):
@@ -670,17 +839,22 @@ class App(tk.Tk):
             if not url or not url.startswith("http"): continue
             ep_num = ep.get("episode_number", idx + 1)
             ep_title = sanitize(ep.get("title") or f"Episode {ep_num}", mx=80)
+
+            # Smart duplicate prevention
+            is_dl, _, _ = is_episode_downloaded(anime_folder, ep_num, ep_title)
+            if skip and is_dl:
+                continue
+
             n = f"{ep_num:03d}"
             if naming == "kh": fname = f"ភាគ {n} - {ep_title}.mp4"
             elif naming == "en": fname = f"Ep{n} - {ep_title}.mp4"
             else: fname = f"{n}.mp4"
-            out_path = os.path.join(out_base, a_title, fname)
-            if skip and os.path.exists(out_path) and os.path.getsize(out_path) > 100 * 1024:
-                continue
+            out_path = os.path.join(anime_folder, fname)
+
             tasks.append(Task(url, out_path, a_title, ep_num, ep_title))
 
         if not tasks:
-            messagebox.showinfo("ℹ️", "Episode ទាំងអស់ត្រូវបាន Download រួចហើយ!\n(បើចង់ Download ឡើងវិញ សូមបិទ 'Resume' ក្នុង Options)"); return
+            messagebox.showinfo("ℹ️", "Episode ទាំងអស់ត្រូវបាន Download រួចហើយ!\n(មិនមានភាគណាខ្វះត្រូវ Download ជាន់គ្នាទេ)"); return
 
         # Switch to Tab 1 and launch download
         self.nb.select(0)
@@ -710,27 +884,100 @@ class App(tk.Tk):
                     items = data.get("items", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
                     if items:
                         self.anime_list = sorted(items, key=lambda a: a.get("title", ""))
-                        self.after(0, lambda: self._on_api_synced(len(items)))
+                        self.dispatch(lambda: self._on_api_synced(len(items)))
             except Exception as ex:
-                self.after(0, lambda: self._log(f"❌ API Sync error: {ex}", "err"))
+                self.dispatch(lambda: self._log(f"❌ API Sync error: {ex}", "err"))
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_api_synced(self, count):
         self._log(f"✅ Synced {count} anime from live API!", "ok")
-        self._refresh_list(self.anime_list)
+        self._scan_disk_videos()
         messagebox.showinfo("API Sync", f"បាន Sync {count} Anime ពី live website API ដោយជោគជ័យ!")
+
+    # ── Disk Video Scanner Methods ────────────────────────────────────────────
+    def _scan_disk_videos(self, show_msg: bool = False):
+        r"""Scans the output directory (D:\MerDonghua_Videos) for existing episodes."""
+        if self._is_scanning_disk: return
+        self._is_scanning_disk = True
+        self.lbl_disk_summary.config(text="⏳ កំពុងស្កេន Disk...", fg=self.YELLOW)
+        out_base = self.opt_out_dir.get()
+
+        def worker():
+            try:
+                os.makedirs(out_base, exist_ok=True)
+                existing_folders = [f for f in os.listdir(out_base) if os.path.isdir(os.path.join(out_base, f))]
+            except Exception:
+                existing_folders = []
+
+            ep_map: Dict[int, List[dict]] = {}
+            for ep in self.episodes:
+                aid = ep.get("anime_id", 0)
+                ep_map.setdefault(aid, []).append(ep)
+
+            new_status = {}
+            total_dl = 0
+            total_miss = 0
+
+            for a in self.anime_list:
+                aid = a.get("id", 0)
+                eps = ep_map.get(aid, [])
+                if not eps:
+                    new_status[aid] = {"folder": "", "downloaded": 0, "total": 0, "missing": 0, "missing_eps": []}
+                    continue
+
+                folder = get_anime_folder(out_base, a, existing_folders)
+                dl_count = 0
+                missing_eps = []
+                for ep in eps:
+                    ep_n = ep.get("episode_number", 0)
+                    ok, _, _ = is_episode_downloaded(folder, ep_n, ep.get("title", ""))
+                    if ok:
+                        dl_count += 1
+                    else:
+                        missing_eps.append(ep_n)
+
+                new_status[aid] = {
+                    "folder": folder,
+                    "downloaded": dl_count,
+                    "total": len(eps),
+                    "missing": len(missing_eps),
+                    "missing_eps": missing_eps
+                }
+                total_dl += dl_count
+                total_miss += len(missing_eps)
+
+            self.dispatch(lambda: self._on_disk_scanned(new_status, total_dl, total_miss, show_msg))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_disk_scanned(self, new_status, total_dl, total_miss, show_msg):
+        self._is_scanning_disk = False
+        self._disk_status = new_status
+        self.lbl_disk_summary.config(
+            text=f"💾 មានរួច: {total_dl} ភាគ  |  ខ្វះ: {total_miss} ភាគ",
+            fg=self.GREEN if total_miss == 0 else self.CYAN
+        )
+        self._log(f"✅ បានស្កេន Disk ({self.opt_out_dir.get()}): រកឃើញ {total_dl} ភាគមានរួចរាល់, ខ្វះ {total_miss} ភាគ", "ok")
+        self._refresh_list(self._get_filtered_anime())
+        self._upd_sel()
+        if show_msg:
+            messagebox.showinfo("✅ លទ្ធផលស្កេន Disk",
+                f"📁 ទីតាំង Disk: {self.opt_out_dir.get()}\n\n"
+                f"  ✅  វីដេអូមានរួចក្នុង Disk : {total_dl} ភាគ\n"
+                f"  ⚠️  វីដេអូដែលខ្វះ          : {total_miss} ភាគ\n\n"
+                f"ចុចប៊ូតុង '⚠️ ជ្រើសតែខ្វះ' ដើម្បីជ្រើសរើសតែរឿងណាដែលខ្វះភាគ (ការពារ Down ជាន់គ្នា)!")
 
     # ── Data Loading ──────────────────────────────────────────────────────────
     def _load_async(self):
         def w():
             try:
                 if not os.path.exists(SEED_FILE):
-                    self.after(0, lambda: messagebox.showerror(
+                    self.dispatch(lambda: messagebox.showerror(
                         "File Not Found", f"seed_export.json not found:\n{SEED_FILE}")); return
                 with open(SEED_FILE, encoding="utf-8") as f: data = json.load(f)
-                self.after(0, lambda: self._on_loaded(data))
+                self.dispatch(lambda: self._on_loaded(data))
             except Exception as ex:
-                self.after(0, lambda: messagebox.showerror("Load Error", str(ex)))
+                self.dispatch(lambda: messagebox.showerror("Load Error", str(ex)))
         threading.Thread(target=w, daemon=True).start()
 
     def _on_loaded(self, data):
@@ -741,21 +988,12 @@ class App(tk.Tk):
         na, ne = len(self.anime_list), len(self.episodes)
         self.lbl_seed.config(text=f"✅  {na} រឿង  ·  {ne} ភាគ", fg=self.GREEN)
         self._log(f"Loaded {na} anime, {ne} episodes from database", "ok")
-        self._refresh_list(self.anime_list)
+        # Automatically scan disk videos on load
+        self._scan_disk_videos()
 
-    def _refresh_list(self, sub):
-        self.atv.delete(*self.atv.get_children())
-        for a in sub:
-            aid = a.get("id", 0); on = aid in self._checked
-            title = a.get("title") or a.get("title_en") or f"ID {aid}"
-            self.atv.insert("", "end", iid=str(aid),
-                            text=f" {'☑' if on else '☐'}  {title}",
-                            values=(self._ep_count.get(aid, 0), "✅" if on else ""),
-                            tags=("on" if on else "off",))
-
-    def _filter(self):
+    def _get_filtered_anime(self) -> List[dict]:
         q = self._sv.get().strip().lower()
-        self._refresh_list([
+        return [
             a for a in self.anime_list
             if not q
             or q in (a.get("title") or "").lower()
@@ -763,7 +1001,43 @@ class App(tk.Tk):
             or q in (a.get("alt_title") or "").lower()
             or q in (a.get("slug") or "").lower()
             or (q in ["139", "big-brother", "brother", "senior", "ឈ្លាស", "ល្បិច"] and (a.get("slug") == "big-brother" or a.get("id") == 9))
-        ])
+        ]
+
+    def _refresh_list(self, sub):
+        self.atv.delete(*self.atv.get_children())
+        for a in sub:
+            aid = a.get("id", 0); on = aid in self._checked
+            title = a.get("title") or a.get("title_en") or f"ID {aid}"
+            total_eps = self._ep_count.get(aid, 0)
+
+            st = self._disk_status.get(aid, {})
+            dl_cnt = st.get("downloaded", 0)
+            missing = st.get("missing", total_eps)
+
+            if total_eps == 0:
+                ep_text = "0"
+                stat_text = "–"
+                tag = "empty"
+            elif dl_cnt >= total_eps and dl_cnt > 0:
+                ep_text = f"{dl_cnt}/{total_eps}"
+                stat_text = "✅ គ្រប់"
+                tag = "complete"
+            elif dl_cnt > 0:
+                ep_text = f"{dl_cnt}/{total_eps}"
+                stat_text = f"⚠️ ខ្វះ {missing}"
+                tag = "partial"
+            else:
+                ep_text = f"0/{total_eps}"
+                stat_text = f"❌ ខ្វះ {total_eps}"
+                tag = "empty"
+
+            self.atv.insert("", "end", iid=str(aid),
+                            text=f" {'☑' if on else '☐'}  {title}",
+                            values=(ep_text, stat_text, "✅" if on else ""),
+                            tags=(tag,))
+
+    def _filter(self):
+        self._refresh_list(self._get_filtered_anime())
 
     def _toggle(self, event):
         if self.atv.identify("region", event.x, event.y) not in ("tree", "cell"): return
@@ -780,25 +1054,69 @@ class App(tk.Tk):
         if not a: return
         on = aid in self._checked
         title = a.get("title") or a.get("title_en") or f"ID {aid}"
+        total_eps = self._ep_count.get(aid, 0)
+
+        st = self._disk_status.get(aid, {})
+        dl_cnt = st.get("downloaded", 0)
+        missing = st.get("missing", total_eps)
+
+        if total_eps == 0:
+            ep_text = "0"; stat_text = "–"; tag = "empty"
+        elif dl_cnt >= total_eps and dl_cnt > 0:
+            ep_text = f"{dl_cnt}/{total_eps}"; stat_text = "✅ គ្រប់"; tag = "complete"
+        elif dl_cnt > 0:
+            ep_text = f"{dl_cnt}/{total_eps}"; stat_text = f"⚠️ ខ្វះ {missing}"; tag = "partial"
+        else:
+            ep_text = f"0/{total_eps}"; stat_text = f"❌ ខ្វះ {total_eps}"; tag = "empty"
+
         self.atv.item(iid, text=f" {'☑' if on else '☐'}  {title}",
-                      values=(self._ep_count.get(aid, 0), "✅" if on else ""),
-                      tags=("on" if on else "off",))
+                      values=(ep_text, stat_text, "✅" if on else ""),
+                      tags=(tag,))
+
+    def _sel_missing(self):
+        """Selects ONLY anime that are missing episodes on disk."""
+        self._checked.clear()
+        selected_count = 0
+        missing_eps_count = 0
+        for a in self.anime_list:
+            aid = a.get("id", 0)
+            st = self._disk_status.get(aid, {})
+            miss = st.get("missing", self._ep_count.get(aid, 0))
+            tot = self._ep_count.get(aid, 0)
+            if tot > 0 and miss > 0:
+                self._checked.add(aid)
+                selected_count += 1
+                missing_eps_count += miss
+
+        self._refresh_list(self._get_filtered_anime())
+        self._upd_sel()
+        self._log(f"⚠️ បានជ្រើសរើស {selected_count} រឿងដែលខ្វះភាគ (សរុបខ្វះ {missing_eps_count} ភាគ, រឿងគ្រប់ភាគមិនត្រូវបានជ្រើសទេ)", "warn")
 
     def _sel_all(self):
-        for iid in self.atv.get_children(): self._checked.add(int(iid)); self._rrow(iid)
+        for a in self._get_filtered_anime():
+            self._checked.add(a.get("id", 0))
+        self._refresh_list(self._get_filtered_anime())
         self._upd_sel()
 
     def _sel_none(self):
-        for iid in self.atv.get_children(): self._checked.discard(int(iid)); self._rrow(iid)
+        self._checked.clear()
+        self._refresh_list(self._get_filtered_anime())
         self._upd_sel()
 
     def _upd_sel(self):
-        n = len(self._checked); ne = sum(self._ep_count.get(a, 0) for a in self._checked)
-        self.lbl_sel.config(text=f"{n} រឿង · {ne} ភាគ")
+        n = len(self._checked)
+        ne = sum(self._ep_count.get(a, 0) for a in self._checked)
+        miss = sum(self._disk_status.get(a, {}).get("missing", self._ep_count.get(a, 0)) for a in self._checked)
+        self.lbl_sel.config(text=f"{n} រឿង (ខ្វះ {miss} ភាគ)")
 
     def _pick_dir(self):
-        d = filedialog.askdirectory(title="ជ្រើស Folder", initialdir=self.opt_out_dir.get())
-        if d: self.opt_out_dir.set(d)
+        d = filedialog.askdirectory(title="ជ្រើស Folder Save", initialdir=self.opt_out_dir.get())
+        if d:
+            self.opt_out_dir.set(d)
+            cfg = load_config()
+            cfg["out_dir"] = d
+            save_config(cfg)
+            self._scan_disk_videos()
 
     def _open_folder(self):
         d = self.opt_out_dir.get(); os.makedirs(d, exist_ok=True); os.startfile(d)
@@ -810,29 +1128,51 @@ class App(tk.Tk):
         for ep in self.episodes:
             aid = ep.get("anime_id", 0)
             if aid in self._checked: ep_map.setdefault(aid, []).append(ep)
-        naming = self.opt_naming.get(); filt = self.opt_filter.get()
-        ep_from = self.opt_ep_from.get(); ep_to = self.opt_ep_to.get()
-        out_base = self.opt_out_dir.get(); skip = self.opt_skip_done.get()
+
+        naming = self.opt_naming.get()
+        filt = self.opt_filter.get()
+        ep_from = self.opt_ep_from.get()
+        ep_to = self.opt_ep_to.get()
+        out_base = self.opt_out_dir.get()
+        skip = self.opt_skip_done.get()
+
+        try:
+            existing_folders = [f for f in os.listdir(out_base) if os.path.isdir(os.path.join(out_base, f))]
+        except Exception:
+            existing_folders = []
+
         tasks = []
         for aid in sorted(self._checked):
             anime = aid_map.get(aid, {})
-            a_title = sanitize(anime.get("title") or anime.get("title_en") or f"Anime_{aid}")
             eps = sorted(ep_map.get(aid, []), key=lambda e: e.get("episode_number", 0))
+            if not eps: continue
+
+            anime_folder = get_anime_folder(out_base, anime, existing_folders)
+            a_title = os.path.basename(anime_folder)
+
             for ep in eps:
                 url = (ep.get("video_url") or "").strip()
                 if not url or not url.startswith("http"): continue
                 ep_num = ep.get("episode_number", 0)
                 ep_title = sanitize(ep.get("title") or f"Episode {ep_num}", mx=80)
-                if filt == "range" and not (ep_from <= ep_num <= ep_to): continue
+
+                if filt == "range" and not (ep_from <= ep_num <= ep_to):
+                    continue
+
+                # ── Smart Check: Has this episode already been downloaded?
+                is_dl, existing_fp, sz = is_episode_downloaded(anime_folder, ep_num, ep_title)
+                if (filt == "missing" or skip) and is_dl:
+                    # STRICTLY SKIP: Never re-download existing video ("ហាម down ជាន់គ្នា")
+                    continue
+
                 n = f"{ep_num:03d}"
                 if naming == "kh": fname = f"ភាគ {n} - {ep_title}.mp4"
                 elif naming == "en": fname = f"Ep{n} - {ep_title}.mp4"
                 else: fname = f"{n}.mp4"
-                out_path = os.path.join(out_base, a_title, fname)
-                if filt == "missing" and os.path.exists(out_path): continue
-                if skip and os.path.exists(out_path):
-                    if os.path.getsize(out_path) > 100 * 1024: continue
+                out_path = os.path.join(anime_folder, fname)
+
                 tasks.append(Task(url, out_path, a_title, ep_num, ep_title))
+
         return tasks
 
     def _start(self):
@@ -840,7 +1180,10 @@ class App(tk.Tk):
             messagebox.showwarning("⚠️", "សូមជ្រើស Anime មុន Download!"); return
         tasks = self._build_tasks()
         if not tasks:
-            messagebox.showinfo("ℹ️", "គ្មាន Episode ថ្មី!\nពិនិត្យ Options > Filter"); return
+            messagebox.showinfo("✅ គ្រប់ភាគអស់ហើយ",
+                "រឿងដែលបានជ្រើស គឺមានវីដេអូគ្រប់ភាគទាំងអស់រួចរាល់ហើយ!\n"
+                "(មិនមានភាគណាខ្វះត្រូវ Download ជាន់គ្នាទៀតទេ)"); return
+
         self.tasks = tasks; self._cancel.clear(); self._start_ts = time.time()
         self.qtv.delete(*self.qtv.get_children())
         for i, t in enumerate(tasks):
@@ -850,7 +1193,7 @@ class App(tk.Tk):
                             tags=("pending",))
         self.btn_dl.config(state="disabled"); self.btn_stop.config(state="normal")
         self.pbar_var.set(0); self.lbl_overall.config(text=f"0 / {len(tasks)}")
-        self._log(f"▶ Starting {len(tasks)} downloads ({self.opt_threads.get()} threads)…", "info")
+        self._log(f"▶ ចាប់ផ្តើមទាញយក {len(tasks)} ភាគដែលខ្វះ ({self.opt_threads.get()} threads)…", "info")
         threading.Thread(target=self._run, daemon=True).start()
 
     def _run(self):
@@ -867,7 +1210,7 @@ class App(tk.Tk):
         ths = [threading.Thread(target=worker, daemon=True) for _ in range(n)]
         for th in ths: th.start()
         for th in ths: th.join()
-        self.after(0, self._finished)
+        self.dispatch(self._finished)
 
     def _stop(self):
         self._cancel.set(); self.btn_stop.config(state="disabled")
@@ -881,6 +1224,10 @@ class App(tk.Tk):
         self.pbar_var.set(100); self.btn_dl.config(state="normal")
         self.btn_stop.config(state="disabled")
         self._log(f"✅ Done! Downloaded={done} Skipped={skip} Errors={err} Time={fmt_time(elapsed)}", "ok")
+        
+        # Rescan disk videos after download to refresh UI counts
+        self._scan_disk_videos()
+
         if self.opt_open_after.get(): self._open_folder()
         messagebox.showinfo("✅  Download Complete!",
             f"ការ Download បានបញ្ចប់!\n\n"
@@ -889,6 +1236,12 @@ class App(tk.Tk):
             f"📁  {self.opt_out_dir.get()}")
 
     def _poll(self):
+        while not self._ui_queue.empty():
+            try:
+                fn = self._ui_queue.get_nowait()
+                fn()
+            except Exception:
+                pass
         self.lbl_clock.config(text=datetime.now().strftime("%H:%M:%S"))
         if self.tasks:
             done_n = sum(1 for t in self.tasks if t.status in ("done", "skipped", "error", "cancelled"))

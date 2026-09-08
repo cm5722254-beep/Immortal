@@ -56,7 +56,7 @@ export function AdminTelegramPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
             <a
-              href="https://t.me/Huang404"
+              href="https://t.me/watchflixanimeadmin"
               target="_blank"
               rel="noopener noreferrer"
               className="px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-sky-500/20 transition-all"

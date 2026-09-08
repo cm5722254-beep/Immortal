@@ -4,7 +4,8 @@ import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   SkipBack, SkipForward, Settings, Subtitles,
   ChevronLeft, ChevronRight, AlertCircle,
-  Moon, Sun, FastForward, Check, ShieldAlert
+  Moon, Sun, FastForward, Check, ShieldAlert,
+  Smartphone, RotateCw, Scan
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -58,6 +59,19 @@ export function VideoPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [scaleMode, setScaleMode] = useState<'contain' | 'cover' | 'fill'>('contain');
+  const [isRotatedLandscape, setIsRotatedLandscape] = useState(false);
+  const [screenOrientation, setScreenOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [hudMessage, setHudMessage] = useState<string | null>(null);
+  const hudTimerRef = useRef<any>(null);
+
+  const showHud = (msg: string) => {
+    setHudMessage(msg);
+    if (hudTimerRef.current) clearTimeout(hudTimerRef.current);
+    hudTimerRef.current = setTimeout(() => {
+      setHudMessage(null);
+    }, 1800);
+  };
   const [showControls, setShowControls] = useState(true);
   const [speed, setSpeed] = useState(1);
   const [quality, setQuality] = useState('1080p Full HD');
@@ -328,17 +342,117 @@ export function VideoPlayer({
     setIsMuted(!isMuted);
   };
 
-  const toggleFullscreen = async () => {
+  // Aspect ratio / Scale mode cycler: 'contain' (Fit) -> 'cover' (Fill - no black bars) -> 'fill' (Stretch)
+  const cycleScaleMode = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setScaleMode((prev) => {
+      if (prev === 'contain') {
+        showHud('📐 ពេញអេក្រង់ (Crop to Fill - គ្មានគែមខ្មៅ)');
+        return 'cover';
+      } else if (prev === 'cover') {
+        showHud('📐 ពង្រីកពេញ (Stretch)');
+        return 'fill';
+      } else {
+        showHud('📐 ទំហំដើម (Fit 16:9)');
+        return 'contain';
+      }
+    });
+  };
+
+  // Toggle Portrait Fullscreen (មើលបញ្ឈពេញអេក្រង់)
+  const togglePortraitFullscreen = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const container = containerRef.current;
-    const video = videoRef.current;
     if (!container) return;
 
-    // Telegram Mini App native expand & requestFullscreen
     try {
       (window as any).Telegram?.WebApp?.expand?.();
-      (window as any).Telegram?.WebApp?.requestFullscreen?.();
     } catch {}
 
+    // If already in portrait fullscreen, exit
+    if ((isFullscreen || isPseudoFullscreen) && !isRotatedLandscape && screenOrientation === 'portrait') {
+      setIsFullscreen(false);
+      setIsPseudoFullscreen(false);
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+      } catch {}
+      showHud('📱 ចាកចេញពីរបៀបបញ្ឈ');
+      return;
+    }
+
+    // Switch to portrait fullscreen
+    setIsRotatedLandscape(false);
+    setScreenOrientation('portrait');
+    setIsFullscreen(true);
+    setIsPseudoFullscreen(true);
+
+    if (window.screen && (window.screen.orientation as any)?.unlock) {
+      try { (window.screen.orientation as any).unlock(); } catch {}
+    }
+    if (window.screen && (window.screen.orientation as any)?.lock) {
+      try { await (window.screen.orientation as any).lock('portrait'); } catch {}
+    }
+
+    showHud('📱 របៀបបញ្ឈពេញអេក្រង់ (Portrait Full)');
+  };
+
+  // Toggle Landscape Fullscreen (មើលផ្ដេកពេញអេក្រង់)
+  const toggleLandscapeFullscreen = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const container = containerRef.current;
+    if (!container) return;
+
+    try {
+      (window as any).Telegram?.WebApp?.expand?.();
+    } catch {}
+
+    // If already in landscape fullscreen, exit
+    if ((isFullscreen || isPseudoFullscreen) && (isRotatedLandscape || screenOrientation === 'landscape')) {
+      setIsFullscreen(false);
+      setIsPseudoFullscreen(false);
+      setIsRotatedLandscape(false);
+      setScreenOrientation('portrait');
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+      } catch {}
+      if (window.screen && (window.screen.orientation as any)?.unlock) {
+        try { (window.screen.orientation as any).unlock(); } catch {}
+      }
+      showHud('🔄 ចាកចេញពីរបៀបផ្ដេក');
+      return;
+    }
+
+    setIsFullscreen(true);
+    setIsPseudoFullscreen(true);
+    setScreenOrientation('landscape');
+
+    let locked = false;
+    try {
+      if (container.requestFullscreen) {
+        await container.requestFullscreen();
+      } else if ((container as any).webkitRequestFullscreen) {
+        await (container as any).webkitRequestFullscreen();
+      }
+    } catch {}
+
+    if (window.screen && (window.screen.orientation as any)?.lock) {
+      try {
+        await (window.screen.orientation as any).lock('landscape');
+        locked = true;
+      } catch {}
+    }
+
+    if (!locked && window.innerHeight > window.innerWidth) {
+      setIsRotatedLandscape(true);
+    } else {
+      setIsRotatedLandscape(false);
+    }
+
+    showHud('🔄 របៀបផ្ដេកពេញអេក្រង់ (Landscape Full)');
+  };
+
+  // Standard Fullscreen Toggle (smart: checks current device orientation)
+  const toggleFullscreen = async () => {
     const isCurrentlyFullscreen = !!(
       document.fullscreenElement ||
       (document as any).webkitFullscreenElement ||
@@ -347,46 +461,23 @@ export function VideoPlayer({
       isPseudoFullscreen
     );
 
-    if (!isCurrentlyFullscreen) {
-      setIsFullscreen(true);
-      setIsPseudoFullscreen(true);
-
-      // Attempt native fullscreen
-      try {
-        if (container.requestFullscreen) {
-          await container.requestFullscreen();
-        } else if ((container as any).webkitRequestFullscreen) {
-          await (container as any).webkitRequestFullscreen();
-        } else if ((video as any)?.webkitEnterFullscreen) {
-          (video as any).webkitEnterFullscreen();
-          return;
-        }
-      } catch (err) {
-        console.warn('Native fullscreen request blocked, using pseudo-fullscreen fallback:', err);
-      }
-
-      // Attempt landscape orientation lock on mobile
-      if (window.screen && (window.screen.orientation as any)?.lock) {
-        try {
-          await (window.screen.orientation as any).lock('landscape');
-        } catch {}
-      }
-    } else {
+    if (isCurrentlyFullscreen) {
       setIsFullscreen(false);
       setIsPseudoFullscreen(false);
-
+      setIsRotatedLandscape(false);
       try {
         if (document.exitFullscreen && document.fullscreenElement) {
           await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen && (document as any).webkitFullscreenElement) {
-          await (document as any).webkitExitFullscreen();
         }
       } catch {}
-
       if (window.screen && (window.screen.orientation as any)?.unlock) {
-        try {
-          (window.screen.orientation as any).unlock();
-        } catch {}
+        try { (window.screen.orientation as any).unlock(); } catch {}
+      }
+    } else {
+      if (window.innerHeight > window.innerWidth) {
+        await togglePortraitFullscreen();
+      } else {
+        await toggleLandscapeFullscreen();
       }
     }
   };
@@ -470,15 +561,28 @@ export function VideoPlayer({
           ? 'fixed inset-0 z-[99999] w-screen h-[100dvh] max-w-none rounded-none border-none shadow-none flex items-center justify-center bg-black'
           : 'w-full aspect-video rounded-xl sm:rounded-2xl border border-white/[0.08] shadow-2xl'
       } ${cinemaMode ? 'cinema-active' : ''}`}
+      style={isRotatedLandscape ? {
+        transform: 'rotate(90deg)',
+        transformOrigin: 'center center',
+        width: '100dvh',
+        height: '100dvw',
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        marginTop: '-50dvw',
+        marginLeft: '-50dvh',
+        zIndex: 99999,
+      } : undefined}
       onMouseMove={resetControlsTimer}
       onMouseEnter={resetControlsTimer}
       onClick={togglePlay}
+      onDoubleClick={(e) => { e.stopPropagation(); cycleScaleMode(e); }}
     >
       {/* Video or Iframe Element */}
       {isIframeEmbed ? (
         <iframe
           src={currentSrc}
-          className="w-full h-full border-0"
+          className={`w-full h-full border-0 transition-all duration-300 ${scaleMode === 'cover' ? 'object-cover' : ''}`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
           allowFullScreen
           referrerPolicy="no-referrer"
@@ -487,7 +591,9 @@ export function VideoPlayer({
       ) : (
         <video
           ref={videoRef}
-          className="w-full h-full object-contain select-none pointer-events-auto"
+          className={`w-full h-full select-none pointer-events-auto transition-all duration-300 ${
+            scaleMode === 'cover' ? 'object-cover' : scaleMode === 'fill' ? 'object-fill' : 'object-contain'
+          }`}
           playsInline
           webkit-playsinline="true"
           disablePictureInPicture
@@ -586,6 +692,15 @@ export function VideoPlayer({
         </div>
       )}
 
+      {/* Floating HUD Feedback (Orientation / Scale Fit alerts) */}
+      {hudMessage && (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-fade-in">
+          <div className="px-3.5 py-1.5 rounded-full bg-black/85 text-white text-xs sm:text-sm font-semibold border border-brand-500/50 shadow-2xl backdrop-blur-md flex items-center gap-2">
+            <span>{hudMessage}</span>
+          </div>
+        </div>
+      )}
+
       {/* Auto-Next Episode Toast */}
       {autoNextCountdown !== null && autoNextCountdown <= 5 && hasNext && (
         <div
@@ -615,21 +730,49 @@ export function VideoPlayer({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between pointer-events-auto">
-          <div className="flex items-center gap-2">
-            <p className="text-white font-bold text-sm md:text-base drop-shadow-md truncate max-w-sm">
+        <div className="flex items-center justify-between pointer-events-auto gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <p className="text-white font-bold text-xs sm:text-sm md:text-base drop-shadow-md truncate max-w-[140px] sm:max-w-sm">
               {title}
             </p>
-            <span className="badge bg-brand-500/20 text-brand-400 border border-brand-500/40 text-[10px]">
+            <span className="badge bg-brand-500/20 text-brand-400 border border-brand-500/40 text-[9px] sm:text-[10px] shrink-0">
               {quality}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Quick Switch: Portrait Fullscreen (បញ្ឈពេញ) */}
+            <button
+              onClick={togglePortraitFullscreen}
+              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1 border transition-all ${
+                (isFullscreen || isPseudoFullscreen) && !isRotatedLandscape && screenOrientation === 'portrait'
+                  ? 'bg-brand-500 text-white border-brand-400 shadow-md shadow-brand-500/30'
+                  : 'glass text-white/90 hover:text-white border-white/10 hover:border-white/25'
+              }`}
+              title="មើលបញ្ឈពេញអេក្រង់ (Portrait Full)"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-brand-400" />
+              <span>បញ្ឈ</span>
+            </button>
+
+            {/* Quick Switch: Landscape Fullscreen (ផ្ដេកពេញ) */}
+            <button
+              onClick={toggleLandscapeFullscreen}
+              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1 border transition-all ${
+                (isFullscreen || isPseudoFullscreen) && (isRotatedLandscape || screenOrientation === 'landscape')
+                  ? 'bg-brand-500 text-white border-brand-400 shadow-md shadow-brand-500/30'
+                  : 'glass text-white/90 hover:text-white border-white/10 hover:border-white/25'
+              }`}
+              title="មើលផ្ដេកពេញអេក្រង់ (Landscape Full)"
+            >
+              <RotateCw className="w-3.5 h-3.5 text-amber-400" />
+              <span>ផ្ដេក</span>
+            </button>
+
             {/* Cinema light toggle */}
             <button
               onClick={() => setCinemaMode(!cinemaMode)}
-              className="btn-icon glass text-white text-xs"
+              className="btn-icon glass text-white text-xs hidden sm:flex"
               title="Cinema Lights"
             >
               {cinemaMode ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />}
@@ -637,12 +780,12 @@ export function VideoPlayer({
 
             {hasPrev && (
               <button onClick={onPrevEpisode} className="btn-icon glass text-white" aria-label="Previous episode">
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 sm:w-5 h-4 sm:h-5" />
               </button>
             )}
             {hasNext && (
               <button onClick={onNextEpisode} className="btn-icon glass text-white" aria-label="Next episode">
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 sm:w-5 h-4 sm:h-5" />
               </button>
             )}
           </div>
@@ -752,9 +895,35 @@ export function VideoPlayer({
               </button>
             )}
 
+            {/* Screen Fit / Fill Toggle (កាត់គែមខ្មៅ / ពង្រីកពេញ) */}
+            <button
+              onClick={cycleScaleMode}
+              className={`btn-icon transition-all p-1.5 sm:p-2 rounded-lg ${
+                scaleMode === 'cover'
+                  ? 'text-brand-400 bg-brand-500/20 border border-brand-500/40 shadow-sm'
+                  : scaleMode === 'fill'
+                  ? 'text-amber-400 bg-amber-500/20 border border-amber-500/40'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+              title={`ទម្រង់អេក្រង់: ${scaleMode === 'cover' ? 'ពេញអេក្រង់ (Crop to Fill - គ្មានគែមខ្មៅ)' : scaleMode === 'fill' ? 'ពង្រីកពេញ (Stretch)' : 'ទំហំដើម (Fit 16:9)'}`}
+              aria-label="Toggle Screen Fit"
+            >
+              <Scan className="w-4 sm:w-5 h-4 sm:h-5" />
+            </button>
+
+            {/* Quick Rotate for mobile */}
+            <button
+              onClick={toggleLandscapeFullscreen}
+              className="btn-icon text-white/80 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 sm:hidden"
+              title="បង្វិលផ្ដេក/បញ្ឈ"
+              aria-label="Rotate screen"
+            >
+              <RotateCw className="w-4 h-4" />
+            </button>
+
             {/* Fullscreen */}
-            <button onClick={toggleFullscreen} className="text-white hover:text-brand-400 transition-colors" aria-label="Toggle fullscreen">
-              {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+            <button onClick={toggleFullscreen} className="text-white hover:text-brand-400 transition-colors p-1.5 sm:p-2" aria-label="Toggle fullscreen">
+              {isFullscreen || isPseudoFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </button>
           </div>
         </div>

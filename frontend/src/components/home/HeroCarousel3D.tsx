@@ -185,12 +185,12 @@ export function HeroCarousel3D({ banners, anime }: HeroCarousel3DProps) {
           </div>
         )}
 
-        {/* Center Active Enlarged 3D Hero Card */}
+        {/* Center Active Enlarged 3D Hero Card (Floating 3D បែបសំហើរ) */}
         <div
           onClick={() => navigate(activeSlide.link)}
-          className="relative z-30 w-[62%] sm:w-[50%] md:w-[40%] lg:w-[36%] aspect-[3/4] max-h-[300px] sm:max-h-[380px] md:max-h-[430px] rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(255,59,48,0.28),0_25px_50px_rgba(0,0,0,0.9)] border-2 border-amber-500/40 transition-all duration-700 ease-out group cursor-pointer"
+          className="relative z-30 w-[64%] sm:w-[50%] md:w-[40%] lg:w-[36%] aspect-[3/4] max-h-[310px] sm:max-h-[380px] md:max-h-[430px] rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(255,77,109,0.35),0_25px_50px_rgba(0,0,0,0.95)] border-2 border-rose-400/80 transition-all duration-700 ease-out group cursor-pointer animate-levitate"
           style={{
-            transform: 'rotateY(0deg) scale(1) translateZ(30px)',
+            transform: 'rotateY(0deg) scale(1) translateZ(35px)',
             transformStyle: 'preserve-3d',
           }}
         >
@@ -204,37 +204,37 @@ export function HeroCarousel3D({ banners, anime }: HeroCarousel3DProps) {
           )}
 
           {/* Dynamic Scrim Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
 
           {/* Top Badges (Rating & 4K VIP) */}
           <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
-            <span className="badge-rating text-[11px] sm:text-xs py-1 px-2.5 shadow-xl bg-black/80 backdrop-blur-md border border-amber-500/40 text-amber-300">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-pulse" />
+            <span className="badge-rating text-[11px] sm:text-xs py-1 px-2.5 shadow-xl bg-black/80 backdrop-blur-md border border-rose-500/40 text-rose-300">
+              <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400 animate-pulse" />
               <span className="font-black">{activeSlide.rating?.toFixed(1) || '9.9'}</span>
             </span>
 
-            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider py-1 px-2.5 rounded-full bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/40">
-              <Sparkles className="w-3 h-3 text-yellow-300" />
+            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider py-1 px-2.5 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white shadow-lg shadow-rose-600/40">
+              <Sparkles className="w-3 h-3 text-white" />
               {activeSlide.badge || '4K UHD'}
             </span>
           </div>
 
           {/* Center Pulsing Play Button */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-red-600 to-amber-500 text-white flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.8)] group-hover:scale-115 transition-transform duration-300">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-rose-500 text-white flex items-center justify-center shadow-[0_0_30px_rgba(255,77,109,0.85)] group-hover:scale-115 transition-transform duration-300 radar-pulse">
               <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white translate-x-0.5" />
             </div>
           </div>
 
           {/* Bottom Title, Subtitle, and Watch Callout */}
           <div className="absolute bottom-3 sm:bottom-4 inset-x-3 sm:inset-x-4 text-left z-20 space-y-1">
-            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider">
-              <Film className="w-3.5 h-3.5 text-amber-400" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-rose-300 uppercase tracking-wider">
+              <Film className="w-3.5 h-3.5 text-rose-400" />
               <span>{activeSlide.type || 'Donghua'} · {activeSlide.year}</span>
             </div>
             
-            <h3 className="font-display font-black text-sm sm:text-lg md:text-xl text-white line-clamp-1 drop-shadow-md group-hover:text-amber-300 transition-colors">
+            <h3 className="font-display font-black text-sm sm:text-lg md:text-xl text-white line-clamp-1 drop-shadow-md group-hover:text-rose-300 transition-colors">
               {activeSlide.title}
             </h3>
 
@@ -245,8 +245,8 @@ export function HeroCarousel3D({ banners, anime }: HeroCarousel3DProps) {
             )}
 
             <div className="pt-1.5 flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-black text-black bg-gradient-to-r from-amber-400 to-yellow-400 px-3 py-1 rounded-xl shadow-md">
-                <Play className="w-3 h-3 fill-black" /> ទស្សនាឥឡូវនេះ (Watch Now)
+              <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-black text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 px-3.5 py-1.5 rounded-xl shadow-md shadow-rose-500/30">
+                <Play className="w-3 h-3 fill-white" /> ទស្សនាឥឡូវនេះ (Watch Now)
               </span>
             </div>
           </div>
@@ -256,7 +256,7 @@ export function HeroCarousel3D({ banners, anime }: HeroCarousel3DProps) {
         {total > 1 && (
           <div
             onClick={() => setActiveIndex(getSlideIndex(1))}
-            className="absolute right-2 sm:right-10 md:right-20 lg:right-24 z-10 w-[42%] sm:w-[35%] md:w-[30%] lg:w-[28%] aspect-[3/4] max-h-[220px] sm:max-h-[300px] md:max-h-[360px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-700 ease-out opacity-45 hover:opacity-80 shadow-[0_15px_35px_rgba(0,0,0,0.8)] border border-white/10"
+            className="absolute right-2 sm:right-10 md:right-20 lg:right-24 z-10 w-[42%] sm:w-[35%] md:w-[30%] lg:w-[28%] aspect-[3/4] max-h-[220px] sm:max-h-[300px] md:max-h-[360px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-700 ease-out opacity-45 hover:opacity-85 shadow-[0_15px_35px_rgba(0,0,0,0.8)] border border-white/10 hover:border-rose-400/50"
             style={{
               transform: 'rotateY(-24deg) scale(0.85)',
               transformStyle: 'preserve-3d',
@@ -301,7 +301,7 @@ export function HeroCarousel3D({ banners, anime }: HeroCarousel3DProps) {
             <button
               onClick={handlePrev}
               aria-label="Previous Slide"
-              className="absolute left-1 sm:left-3 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-amber-500 hover:text-black text-white border border-white/15 backdrop-blur-xl flex items-center justify-center transition-all duration-300 shadow-xl active:scale-90"
+              className="absolute left-1 sm:left-3 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-rose-500 text-white border border-white/15 backdrop-blur-xl flex items-center justify-center transition-all duration-300 shadow-xl active:scale-90 cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
@@ -309,7 +309,7 @@ export function HeroCarousel3D({ banners, anime }: HeroCarousel3DProps) {
             <button
               onClick={handleNext}
               aria-label="Next Slide"
-              className="absolute right-1 sm:right-3 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-amber-500 hover:text-black text-white border border-white/15 backdrop-blur-xl flex items-center justify-center transition-all duration-300 shadow-xl active:scale-90"
+              className="absolute right-1 sm:right-3 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-rose-500 text-white border border-white/15 backdrop-blur-xl flex items-center justify-center transition-all duration-300 shadow-xl active:scale-90 cursor-pointer"
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
@@ -325,9 +325,9 @@ export function HeroCarousel3D({ banners, anime }: HeroCarousel3DProps) {
               key={idx}
               onClick={() => setActiveIndex(idx)}
               aria-label={`Go to slide ${idx + 1}`}
-              className={`h-2 rounded-full transition-all duration-500 ${
+              className={`h-2 rounded-full transition-all duration-500 cursor-pointer ${
                 idx === activeIndex
-                  ? 'w-8 bg-gradient-to-r from-red-500 to-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.8)]'
+                  ? 'w-8 bg-gradient-to-r from-rose-500 to-pink-500 shadow-[0_0_12px_rgba(255,77,109,0.8)]'
                   : 'w-2 bg-white/20 hover:bg-white/40'
               }`}
             />

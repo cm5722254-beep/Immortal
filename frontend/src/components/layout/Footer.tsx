@@ -24,7 +24,7 @@ export function Footer() {
             <div className="space-y-3 sm:col-span-2 md:col-span-1">
               <Logo size="md" showWordmark={true} />
               <p className="text-gray-400 text-xs leading-relaxed font-sans">
-                គេហទំព័រទស្សនារឿងភាគចិន 3D (Donghua) និងរឿងជប៉ុន (Anime) កម្រិតច្បាស់ Full HD & 4K UHD គ្រប់ពេលវេលា គ្រប់ទីកន្លែង ដោយឥតគិតថ្លៃ និងល្បឿនលឿន។
+                WatchFlix Anime — គេហទំព័រទស្សនារឿងចិន 3D (Donghua) និងរឿងជប៉ុន (Anime) កម្រិតច្បាស់ Full HD & 4K UHD គ្រប់ពេលវេលា គ្រប់ទីកន្លែង ដោយឥតគិតថ្លៃ និងល្បឿនលឿន។
               </p>
               <div className="flex gap-2.5 pt-2">
                 <a
@@ -38,12 +38,12 @@ export function Footer() {
                   <MessageCircle className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://t.me/Huang404"
+                  href="https://t.me/watchflixanimeadmin"
                   target="_blank"
                   rel="noreferrer"
-                  className="w-8 h-8 rounded-xl bg-[#161F33] hover:bg-amber-500 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-xl bg-[#161F33] hover:bg-rose-500 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
                   aria-label="Telegram Admin"
-                  title="Developer Telegram"
+                  title="Admin Telegram (@watchflixanimeadmin)"
                 >
                   <Globe className="w-4 h-4" />
                 </a>
@@ -114,7 +114,7 @@ export function Footer() {
                 <span>គោលការណ៍សុវត្ថិភាព & DMCA</span>
               </h4>
               <p className="text-[11px] text-gray-400 leading-relaxed font-sans mb-2">
-                <strong>ទស្សនារឿង (NAMI ANIME)</strong> ជាគេហទំព័រផ្តល់ការកម្សាន្ត និងស្វែងរករឿង។ រាល់វីដេអូទាំងអស់ត្រូវបានចាក់បញ្ចាំងពីប្រភពសាធារណៈ។
+                <strong>WatchFlix Anime</strong> ជាគេហទំព័រផ្តល់ការកម្សាន្ត និងស្វែងរករឿង។ រាល់វីដេអូទាំងអស់ត្រូវបានចាក់បញ្ចាំងពីប្រភពសាធារណៈ។
               </p>
               <div className="pt-2 space-y-2">
                 <button
@@ -125,7 +125,7 @@ export function Footer() {
                   <span>⚠️ គោលការណ៍សុវត្ថិភាព (Security Policy)</span>
                 </button>
                 <p className="text-[11px] text-amber-300/90 font-mono text-center">
-                  ទំនាក់ទំនង DMCA: <a href="https://t.me/Huang404" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">@Huang404</a>
+                  ទំនាក់ទំនង DMCA: <a href="https://t.me/watchflixanimeadmin" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">@watchflixanimeadmin</a>
                 </p>
               </div>
             </div>
@@ -134,10 +134,10 @@ export function Footer() {
           {/* Bottom bar */}
           <div className="border-t border-[#1E283C] mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <p className="text-gray-500 text-center sm:text-left">
-              © {new Date().getFullYear()} <strong className="text-amber-400">ទស្សនារឿង</strong>. រក្សាសិទ្ធិគ្រប់យ៉ាង។
+              © {new Date().getFullYear()} <strong className="text-amber-400">WatchFlix Anime</strong>. រក្សាសិទ្ធិគ្រប់យ៉ាង។
             </p>
             <p className="text-amber-400/90 font-semibold flex items-center gap-2 text-center sm:text-right">
-              <span>ទស្សនារឿង — Stream Anime & Donghua 4K Ultra HD</span>
+              <span>WatchFlix Anime — Stream Donghua & Anime 4K Ultra HD</span>
             </p>
           </div>
         </div>

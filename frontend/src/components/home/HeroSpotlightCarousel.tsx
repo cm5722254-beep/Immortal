@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Info, Plus, Check, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Play, Info, Plus, Check, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import type { Banner, Anime } from '../../types';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
@@ -10,11 +10,41 @@ interface HeroSpotlightCarouselProps {
   anime: Anime[];
 }
 
-export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotlightCarouselProps) {
+export function HeroSpotlightCarousel({ banners, anime }: HeroSpotlightCarouselProps) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
 
-  const items = anime.length > 0 ? anime.slice(0, 10) : [];
+  // Combine custom banners (if active) and top anime into rich 3D rotating items
+  const items = useMemo(() => {
+    const bannerItems = (banners || [])
+      .filter((b) => b.is_active && b.image_url)
+      .map((b) => {
+        const matchedAnime = anime.find((a) => a.id === b.anime_id);
+        return {
+          id: matchedAnime ? matchedAnime.id : 999000 + b.id,
+          title: b.title || matchedAnime?.title || 'រឿងពិសេស Ultra 3D',
+          slug: matchedAnime?.slug || (b.link_url ? b.link_url.replace(/^\//, '').replace(/^watch\//, '').split('/')[0] : 'donghua'),
+          alt_title: b.subtitle || matchedAnime?.alt_title || 'កម្រិត 4K Ultra HD 60FPS',
+          description: matchedAnime?.description || b.subtitle || 'ទស្សនារឿង Ultra 3D គ្មានការរំខានដោយពាណិជ្ជកម្ម។',
+          banner_url: b.image_url,
+          poster_url: matchedAnime?.poster_url || b.image_url,
+          type: matchedAnime?.type || 'DONGHUA',
+          year: matchedAnime?.year || 2026,
+          episode_count: matchedAnime?.episode_count || 12,
+          average_rating: matchedAnime?.average_rating || 9.9,
+          link_url: b.link_url,
+        } as Anime & { link_url?: string };
+      });
+
+    if (bannerItems.length > 0) {
+      const existingIds = new Set(bannerItems.map((b) => b.id));
+      const remaining = anime.filter((a) => !existingIds.has(a.id));
+      return [...bannerItems, ...remaining].slice(0, 10);
+    }
+
+    return anime.slice(0, 10);
+  }, [banners, anime]);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [bookmarkedIds, setBookmarkedIds] = useState<number[]>(() => {
@@ -26,13 +56,13 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
   });
 
   const total = items.length;
-  const AUTOPLAY_TIME = 5000;
+  const AUTOPLAY_TIME = 4500;
 
   // Touch swipe support for mobile
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Responsive Window Width for Dynamic 3D Radius
+  // Responsive Window Width for Dynamic 3D Radius & Card Size
   const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
 
   useEffect(() => {
@@ -45,7 +75,15 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
   const RING_COUNT = Math.min(total, 8);
   const ringItems = items.slice(0, RING_COUNT);
   const theta = 360 / RING_COUNT;
-  const radius = windowWidth < 380 ? 115 : windowWidth < 480 ? 135 : windowWidth < 768 ? 185 : 250;
+  
+  // Dynamically calculate 3D radius based on viewport width
+  const radius = windowWidth < 380 
+    ? 125 
+    : windowWidth < 480 
+      ? 145 
+      : windowWidth < 768 
+        ? 195 
+        : 260;
 
   // Auto-rotation timer
   useEffect(() => {
@@ -63,8 +101,8 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
   const current = items[activeIndex];
   const bgImage = current.banner_url || current.poster_url || '';
   const detailType = current.type === 'ANIME' ? 'anime' : current.type === 'DRAMA' ? 'drama' : current.type === 'MOVIE' ? 'movie' : 'donghua';
-  const watchUrl = `/watch/${current.slug}/1`;
-  const detailUrl = `/${detailType}/${current.slug}`;
+  const watchUrl = (current as any).link_url || `/watch/${current.slug}/1`;
+  const detailUrl = (current as any).link_url || `/${detailType}/${current.slug}`;
 
   const rating = current.average_rating && current.average_rating > 0
     ? current.average_rating.toFixed(1)
@@ -149,13 +187,16 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
           
           {/* Left Column: Movie Info & Actions (Netflix style) */}
           <div className="max-w-xl space-y-4 text-center lg:text-left">
-            {/* Netflix Top 10 Ribbon */}
-            <div className="inline-flex items-center gap-2">
-              <span className="flex items-center justify-center w-7 h-7 rounded bg-[#E50914] text-white font-black text-xs shadow-lg shadow-red-600/40">
+            {/* Netflix Top 10 Ribbon with Ultra 3D Badge */}
+            <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-2">
+              <span className="flex items-center justify-center w-7 h-7 rounded bg-gradient-to-tr from-rose-600 to-pink-500 text-white font-black text-xs shadow-lg shadow-rose-600/40">
                 TOP
               </span>
               <span className="font-bold text-xs sm:text-sm tracking-wider uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                #{activeIndex + 1} ពេញនិយមបំផុតនៅកម្ពុជាថ្ងៃនេះ
+                #{activeIndex + 1} ពេញនិយមបំផុត
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-rose-500/25 via-pink-500/20 to-rose-500/25 border border-rose-400/50 text-rose-300 shadow-[0_0_12px_rgba(255,77,109,0.35)]">
+                ⚡ UNREAL ENGINE 5 • ULTRA 3D
               </span>
             </div>
 
@@ -178,8 +219,8 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
               <span className="text-gray-400">•</span>
               <span>{current.year || 2024}</span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">13+</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">កម្រិត 4K UHD</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">សំឡេង 5.1 CH</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-rose-400/50 bg-rose-500/15 text-rose-300 backdrop-blur-md">កម្រិត 4K UHD</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-sky-400/50 bg-sky-500/15 text-sky-300 backdrop-blur-md">60 FPS 3D</span>
               <span className="text-gray-400">•</span>
               <span className="text-gray-300 font-medium">{current.episode_count ? `${current.episode_count} ភាគ` : 'ភាគថ្មីៗ'}</span>
             </div>
@@ -193,17 +234,17 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
               <button
                 onClick={() => navigate(watchUrl)}
-                className="netflix-btn-play cursor-pointer"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black py-2.5 sm:py-3 px-6 sm:px-7 rounded-xl shadow-lg shadow-rose-500/35 hover:scale-105 active:scale-95 transition-all cursor-pointer select-none"
               >
-                <Play className="w-5 h-5 fill-black text-black" />
+                <Play className="w-5 h-5 fill-white text-white" />
                 <span className="text-sm sm:text-base font-bold">ចាក់ទស្សនា</span>
               </button>
 
               <Link
                 to={detailUrl}
-                className="netflix-btn-info cursor-pointer"
+                className="netflix-btn-info cursor-pointer hover:border-rose-500/40 hover:text-rose-200"
               >
-                <Info className="w-5 h-5" />
+                <Info className="w-5 h-5 text-rose-400" />
                 <span className="text-sm sm:text-base font-semibold">ព័ត៌មានបន្ថែម</span>
               </Link>
 
@@ -211,8 +252,8 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
                 onClick={toggleBookmark}
                 className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-200 cursor-pointer ${
                   isBookmarked
-                    ? 'border-emerald-400 bg-emerald-500/20 text-emerald-400'
-                    : 'border-white/40 bg-black/40 hover:border-white text-white hover:bg-black/60'
+                    ? 'border-emerald-400 bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                    : 'border-white/40 bg-black/40 hover:border-rose-400 text-white hover:bg-rose-500/10'
                 }`}
                 title={isBookmarked ? 'បានបញ្ចូលក្នុងបញ្ជី' : 'បញ្ចូលក្នុងបញ្ជីខ្ញុំ'}
               >
@@ -221,17 +262,41 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
             </div>
           </div>
 
-          {/* ── Right Column: 3D ROTATING CIRCULAR CAROUSEL (វិលជារង្វង់ 3D) ── */}
-          <div className="relative w-full max-w-[360px] sm:max-w-[420px] lg:max-w-[460px] h-[310px] sm:h-[350px] flex items-center justify-center scene-3d py-4">
+          {/* ── Right Column: 3D ROTATING CIRCULAR CAROUSEL (BANNER 3D វិលជុំវិញ) ── */}
+          <div className="relative w-full max-w-[360px] sm:max-w-[440px] lg:max-w-[500px] h-[340px] sm:h-[390px] md:h-[430px] flex items-center justify-center scene-3d py-4">
             
-            {/* Ambient Platform Glow beneath the 3D rotating circle */}
-            <div className="absolute bottom-4 w-64 sm:w-72 h-14 bg-[#E50914]/25 blur-3xl rounded-full pointer-events-none" />
+            {/* Top 360° 3D Rotating Badge */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-black tracking-wider uppercase bg-black/80 backdrop-blur-md border border-rose-500/50 text-rose-300 shadow-[0_0_16px_rgba(255,77,109,0.45)] animate-pulse">
+                <Sparkles className="w-3 h-3 text-rose-400 animate-spin" style={{ animationDuration: '6s' }} />
+                <span>360° 3D វិលជុំវិញ</span>
+              </span>
+            </div>
 
-            {/* The 3D Rotating Ring */}
-            <div
-              className="carousel-3d-ring relative w-[130px] sm:w-[160px] md:w-[185px] h-[190px] sm:h-[230px] md:h-[265px]"
+            {/* Cybernetic 3D Rotating Floor / Hologram Pedestal */}
+            <div 
+              className="absolute bottom-2 w-72 sm:w-84 md:w-96 h-28 pointer-events-none z-0"
               style={{
-                transform: `rotateY(${-activeIndex * theta}deg) rotateX(-5deg)`,
+                transform: 'rotateX(75deg)',
+                transformStyle: 'preserve-3d',
+              }}
+            >
+              {/* Outer glowing pulse ring */}
+              <div className="absolute inset-0 rounded-full border border-rose-500/50 shadow-[0_0_35px_rgba(255,77,109,0.6)]" />
+              {/* Inner radial gradient disc */}
+              <div className="absolute inset-4 rounded-full bg-gradient-to-t from-rose-600/30 to-transparent border border-rose-400/40 shadow-[inset_0_0_20px_rgba(255,77,109,0.4)]" />
+              {/* Center spotlight core */}
+              <div className="absolute inset-10 rounded-full bg-rose-500/30 blur-md" />
+            </div>
+
+            {/* Ambient Platform Glow beneath the 3D rotating circle */}
+            <div className="absolute bottom-3 w-64 sm:w-80 h-16 bg-rose-500/30 blur-3xl rounded-full pointer-events-none" />
+
+            {/* The 3D Rotating Cylinder Ring */}
+            <div
+              className="carousel-3d-ring relative w-[135px] sm:w-[165px] md:w-[195px] h-[195px] sm:h-[240px] md:h-[285px] z-20"
+              style={{
+                transform: `rotateY(${-activeIndex * theta}deg) rotateX(-4deg)`,
               }}
             >
               {ringItems.map((item, idx) => {
@@ -242,9 +307,9 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
                   <div
                     key={item.id}
                     onClick={() => setActiveIndex(idx)}
-                    className={`card-3d absolute inset-0 rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-500 shadow-xl ${
+                    className={`card-3d absolute inset-0 rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-500 shadow-2xl ${
                       isActive
-                        ? 'card-3d-active border-[#E50914] z-30'
+                        ? 'card-3d-active border-rose-500 z-30 shadow-[0_0_35px_rgba(255,77,109,0.85),0_15px_30px_rgba(0,0,0,0.9)] scale-105'
                         : 'card-3d-inactive border-white/20'
                     }`}
                     style={{
@@ -256,16 +321,19 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
                       src={itemImg}
                       alt={item.title}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover select-none"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80';
+                      }}
                     />
 
                     {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-black/30 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-black/35 pointer-events-none" />
 
                     {/* Rank Badge */}
                     <div className="absolute top-2.5 left-2.5">
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded shadow-md ${
-                        isActive ? 'bg-[#E50914] text-white shadow-red-600/50' : 'bg-black/70 text-gray-300'
+                        isActive ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-rose-500/60' : 'bg-black/75 text-gray-300'
                       }`}>
                         #{idx + 1}
                       </span>
@@ -273,12 +341,12 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
 
                     {/* Quality Pill */}
                     <div className="absolute top-2.5 right-2.5">
-                      <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-black/60 backdrop-blur-md text-amber-300 border border-amber-400/30">
-                        4K
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-rose-300 border border-rose-400/50">
+                        4K 3D
                       </span>
                     </div>
 
-                    {/* Title on Bottom of Card */}
+                    {/* Title & Episode on Bottom of Card */}
                     <div className="absolute bottom-2.5 inset-x-2 text-center pointer-events-none">
                       <p className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                         {item.title}
@@ -293,21 +361,21 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
             </div>
 
             {/* 3D Circular Control Arrows (Left / Right) */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none z-40 px-1">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none z-40 px-0.5 sm:px-2">
               <button
                 onClick={handlePrev}
-                className="w-9 h-9 rounded-full bg-black/70 hover:bg-[#E50914] text-white flex items-center justify-center border border-white/20 transition-all pointer-events-auto cursor-pointer shadow-lg hover:scale-110"
-                title="មុន"
+                className="w-10 h-10 rounded-full bg-black/80 hover:bg-rose-500 text-white flex items-center justify-center border border-white/30 transition-all pointer-events-auto cursor-pointer shadow-xl hover:scale-115 active:scale-95 group backdrop-blur-md"
+                title="មុន (Prev)"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
               </button>
 
               <button
                 onClick={handleNext}
-                className="w-9 h-9 rounded-full bg-black/70 hover:bg-[#E50914] text-white flex items-center justify-center border border-white/20 transition-all pointer-events-auto cursor-pointer shadow-lg hover:scale-110"
-                title="បន្ទាប់"
+                className="w-10 h-10 rounded-full bg-black/80 hover:bg-rose-500 text-white flex items-center justify-center border border-white/30 transition-all pointer-events-auto cursor-pointer shadow-xl hover:scale-115 active:scale-95 group backdrop-blur-md"
+                title="បន្ទាប់ (Next)"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
 
@@ -325,7 +393,7 @@ export function HeroSpotlightCarousel({ banners: _banners, anime }: HeroSpotligh
               onClick={() => setActiveIndex(idx)}
               className={`transition-all duration-300 rounded-full cursor-pointer ${
                 idx === activeIndex
-                  ? 'w-6 h-1.5 bg-[#E50914]'
+                  ? 'w-6 h-1.5 bg-gradient-to-r from-rose-500 to-pink-500 shadow-[0_0_8px_#ff4d6d]'
                   : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
               }`}
               aria-label={`Go to slide ${idx + 1}`}

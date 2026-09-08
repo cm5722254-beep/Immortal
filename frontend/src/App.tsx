@@ -391,12 +391,12 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
             </p>
             <div className="pt-2">
               <a
-                href="https://t.me/merdonghuakh"
+                href="https://t.me/watchflixanimeadmin"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 bg-[#229ED9] text-white text-xs font-bold py-2 px-4 rounded-xl"
               >
-                💬 @merdonghuakh (Telegram)
+                💬 @watchflixanimeadmin (Telegram)
               </a>
             </div>
           </div>

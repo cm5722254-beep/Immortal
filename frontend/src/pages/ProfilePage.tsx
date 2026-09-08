@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ChevronRight, Languages, Headset,
   Sparkles, Tv, Zap, ExternalLink,
-  Send, Smartphone, Trash2, CheckCircle2, Crown, ShieldAlert
+  Send, Smartphone, Trash2, CheckCircle2, Crown, ShieldAlert,
+  RotateCw
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { usePlatform } from '../utils/platform';
@@ -113,6 +115,34 @@ export function ProfilePage() {
           </div>
         </div>
 
+        {/* ── 1.5. VIP Lucky Wheel Quick Action Card ── */}
+        <Link
+          to="/vip#lucky-wheel"
+          className="rounded-2xl p-4 bg-gradient-to-r from-rose-500/20 via-pink-500/15 to-amber-500/15 border border-rose-500/40 shadow-[0_4px_25px_rgba(255,77,109,0.25)] flex items-center justify-between gap-3 hover:border-rose-400 hover:scale-[1.01] active:scale-[0.99] transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 flex items-center justify-center text-white shadow-lg shadow-rose-500/40 shrink-0 group-hover:rotate-45 transition-transform duration-500">
+              <RotateCw className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-amber-300">
+                <Sparkles className="w-3 h-3 text-amber-300" /> ឈ្នះរង្វាន់ VIP រហូតដល់ 3 ខែ
+              </div>
+              <h3 className="font-display font-black text-sm text-white">កង់បង្វិលសំណាង VIP (Lucky Wheel)</h3>
+              <p className="text-[11px] text-gray-300">
+                {user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.username === 'cheat_admin'
+                  ? '👑 គណនី Admin (ចាប់រង្វាន់បានរហូត)'
+                  : 'ទិញ VIP ម្ដង ចាប់រង្វាន់បានម្ដង!'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-xs shadow-md shadow-rose-500/30 shrink-0 group-hover:from-rose-400 group-hover:to-pink-400 transition-all">
+            <span>ចាប់រង្វាន់</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        </Link>
+
         {/* ── 2. Platform Specific Quick Actions ── */}
         {isTelegram && (
           <div className="rounded-2xl bg-[#0E1B2B]/90 border border-[#24A1DE]/30 p-4 space-y-2">
@@ -121,7 +151,7 @@ export function ProfilePage() {
                 <Send className="w-4 h-4 text-[#24A1DE]" /> ប៉ុស្តិ៍ Telegram ផ្លូវការ
               </span>
               <a
-                href="https://t.me/Huang404"
+                href="https://t.me/watchflixanimeadmin"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-[#24A1DE] font-bold hover:underline"
@@ -216,7 +246,7 @@ export function ProfilePage() {
 
           {/* Customer Support */}
           <a
-            href="https://t.me/Huang404"
+            href="https://t.me/watchflixanimeadmin"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
@@ -228,7 +258,7 @@ export function ProfilePage() {
               <span className="font-display font-bold text-sm text-white">ផ្នែកបម្រើអតិថិជន និងជំនួយ</span>
             </div>
             <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
-              <span className="text-emerald-400">@Huang404</span>
+              <span className="text-emerald-400">@watchflixanimeadmin</span>
               <ExternalLink className="w-4 h-4 text-gray-500" />
             </div>
           </a>

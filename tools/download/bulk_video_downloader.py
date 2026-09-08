@@ -37,7 +37,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 SEED_FILE    = os.path.join(PROJECT_ROOT, "backend", "app", "services", "seed_export.json")
-DEFAULT_OUT  = os.path.join(os.path.expanduser("~"), "Desktop", "MerDonghua_Videos")
+DEFAULT_OUT  = r"D:\MerDonghua_Videos" if os.path.exists("D:\\") else os.path.join(os.path.expanduser("~"), "Desktop", "MerDonghua_Videos")
 USER_AGENT   = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/124.0.0.0 Safari/537.36")

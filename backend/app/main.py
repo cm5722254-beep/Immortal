@@ -14,6 +14,8 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -147,6 +149,11 @@ app.include_router(notifications.router, prefix=API_PREFIX)
 app.include_router(site_settings.router, prefix=API_PREFIX)
 app.include_router(api_keys.router, prefix=API_PREFIX)
 app.include_router(ws.router)
+
+# ── Serve uploaded images (poster, banner) as static files ──
+_UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
+os.makedirs(_UPLOADS_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_UPLOADS_DIR), name="uploads")
 
 
 

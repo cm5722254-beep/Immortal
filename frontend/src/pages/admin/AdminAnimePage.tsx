@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Edit3, Trash2, Search, X, Flame, RefreshCw, RotateCcw, CheckCircle2, Send } from 'lucide-react';
+import { Plus, Edit3, Trash2, Search, X, Flame, RefreshCw, RotateCcw, CheckCircle2, Send, Upload, ImageIcon, FolderOpen } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
 import { triggerConfirm } from '../../store/confirmStore';
@@ -48,6 +48,39 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
   const [isRecovering, setIsRecovering] = useState(false);
   const [broadcastingAnimeId, setBroadcastingAnimeId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [uploadingField, setUploadingField] = useState<'poster' | 'banner' | null>(null);
+
+  const posterInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (file: File, field: 'poster_url' | 'banner_url') => {
+    const fieldKey = field === 'poster_url' ? 'poster' : 'banner';
+    setUploadingField(fieldKey);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      // ❌ Do NOT set Content-Type manually — axios sets multipart/form-data + boundary automatically
+      const res = await api.post('/admin/upload-image', formData, { timeout: 60000 });
+      if (res.data?.url) {
+        // Build full absolute URL: strip /api suffix from baseURL to get origin
+        const baseUrl = (api.defaults.baseURL || 'http://localhost:8000/api').replace(/\/api\/?$/, '');
+        const uploadedUrl = res.data.url.startsWith('http')
+          ? res.data.url
+          : `${baseUrl}${res.data.url}`;
+        setForm((f) => ({ ...f, [field]: uploadedUrl }));
+      }
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      const msg = typeof detail === 'string'
+        ? detail
+        : Array.isArray(detail)
+        ? detail.map((d: any) => d.msg || JSON.stringify(d)).join('; ')
+        : (err?.message || 'Failed to upload image. Please try again.');
+      alert(msg);
+    } finally {
+      setUploadingField(null);
+    }
+  };
 
   const fetchItems = async () => {
     setIsLoading(true);
@@ -635,36 +668,161 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
 
               {/* Media URLs & Live Previews */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* ── POSTER IMAGE ── */}
                 <div>
-                  <label className="label">Poster Image URL</label>
-                  <input
-                    type="url"
-                    value={form.poster_url}
-                    onChange={(e) => setForm((f) => ({ ...f, poster_url: e.target.value }))}
-                    className="input mb-2"
-                    placeholder="https://..."
-                  />
+                  <label className="label flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
+                    Poster Image URL
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="url"
+                      value={form.poster_url}
+                      onChange={(e) => setForm((f) => ({ ...f, poster_url: e.target.value }))}
+                      className="input flex-1 min-w-0"
+                      placeholder="https://... or import a file below"
+                    />
+                    {/* Hidden file input */}
+                    <input
+                      ref={posterInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file, 'poster_url');
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => posterInputRef.current?.click()}
+                      disabled={uploadingField === 'poster'}
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 text-xs font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-60"
+                      title="Import image from your device"
+                    >
+                      {uploadingField === 'poster' ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <FolderOpen className="w-3.5 h-3.5" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {uploadingField === 'poster' ? 'Uploading...' : 'Import'}
+                      </span>
+                    </button>
+                  </div>
+                  {/* Preview */}
                   {form.poster_url && (
-                    <div className="h-28 w-20 rounded-xl overflow-hidden bg-dark-muted border border-dark-border">
+                    <div className="relative group w-20 h-28 rounded-xl overflow-hidden bg-dark-muted border border-dark-border shadow-lg">
                       <img src={form.poster_url} alt="Poster preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, poster_url: '' }))}
+                          className="p-1.5 rounded-full bg-red-500/80 text-white"
+                          title="Remove image"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
+                  )}
+                  {!form.poster_url && (
+                    <button
+                      type="button"
+                      onClick={() => posterInputRef.current?.click()}
+                      className="w-20 h-28 rounded-xl border-2 border-dashed border-purple-500/30 hover:border-purple-500/60 bg-purple-500/5 hover:bg-purple-500/10 flex flex-col items-center justify-center gap-1.5 text-purple-400 transition-all cursor-pointer"
+                    >
+                      <Upload className="w-5 h-5" />
+                      <span className="text-[10px] font-bold">Upload</span>
+                    </button>
                   )}
                 </div>
 
+                {/* ── BANNER IMAGE ── */}
                 <div>
-                  <label className="label">Banner Landscape URL</label>
-                  <input
-                    type="url"
-                    value={form.banner_url}
-                    onChange={(e) => setForm((f) => ({ ...f, banner_url: e.target.value }))}
-                    className="input mb-2"
-                    placeholder="https://..."
-                  />
+                  <label className="label flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                    Banner Landscape URL
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="url"
+                      value={form.banner_url}
+                      onChange={(e) => setForm((f) => ({ ...f, banner_url: e.target.value }))}
+                      className="input flex-1 min-w-0"
+                      placeholder="https://... or import a file below"
+                    />
+                    {/* Hidden file input */}
+                    <input
+                      ref={bannerInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file, 'banner_url');
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => bannerInputRef.current?.click()}
+                      disabled={uploadingField === 'banner'}
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-60"
+                      title="Import image from your device"
+                    >
+                      {uploadingField === 'banner' ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <FolderOpen className="w-3.5 h-3.5" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {uploadingField === 'banner' ? 'Uploading...' : 'Import'}
+                      </span>
+                    </button>
+                  </div>
+                  {/* Preview */}
                   {form.banner_url && (
-                    <div className="h-28 w-full rounded-xl overflow-hidden bg-dark-muted border border-dark-border">
+                    <div className="relative group w-full h-28 rounded-xl overflow-hidden bg-dark-muted border border-dark-border shadow-lg">
                       <img src={form.banner_url} alt="Banner preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, banner_url: '' }))}
+                          className="p-1.5 rounded-full bg-red-500/80 text-white"
+                          title="Remove image"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
                   )}
+                  {!form.banner_url && (
+                    <button
+                      type="button"
+                      onClick={() => bannerInputRef.current?.click()}
+                      className="w-full h-28 rounded-xl border-2 border-dashed border-cyan-500/30 hover:border-cyan-500/60 bg-cyan-500/5 hover:bg-cyan-500/10 flex flex-col items-center justify-center gap-2 text-cyan-400 transition-all cursor-pointer"
+                    >
+                      <Upload className="w-5 h-5" />
+                      <span className="text-[10px] font-bold">Upload Banner</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Trailer Video URL */}
+                <div className="col-span-full">
+                  <label className="label flex items-center justify-between">
+                    <span>🎬 TRAILER VIDEO URL (YouTube / Direct MP4)</span>
+                    <span className="text-[10px] text-gray-400 font-normal">ឧទាហរណ៍៖ https://www.youtube.com/watch?v=...</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={form.trailer_url}
+                    onChange={(e) => setForm((f) => ({ ...f, trailer_url: e.target.value }))}
+                    className="input w-full"
+                    placeholder="https://www.youtube.com/watch?v=... ឬ https://.../trailer.mp4"
+                  />
                 </div>
               </div>
 

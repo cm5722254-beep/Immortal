@@ -14,6 +14,11 @@ import hmac
 import time
 import socket
 from typing import Optional
+from dotenv import load_dotenv
+
+# Ensure .env is loaded before validation
+load_dotenv()
+
 
 
 # ============================================================

@@ -59,10 +59,10 @@ export function AnimeCard({
   };
 
   return (
-    <div className="group relative flex flex-col select-none netflix-card">
+    <div className="group relative flex flex-col select-none netflix-card tilt-3d">
       <Link
         to={detailUrl}
-        className="relative block aspect-[2/3] sm:aspect-[3/4] rounded-lg overflow-hidden bg-[#181818] border border-white/[0.08] group-hover:border-white/30 transition-all duration-300 shadow-md group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.85)]"
+        className="relative block aspect-[2/3] sm:aspect-[3/4] rounded-lg overflow-hidden bg-[#181818] border border-white/[0.08] group-hover:border-rose-400/60 transition-all duration-300 shadow-md group-hover:shadow-[0_16px_36px_rgba(255,77,109,0.28)]"
       >
         {/* Poster Image or Fallback */}
         {imgSrc && !imageError ? (
@@ -76,8 +76,8 @@ export function AnimeCard({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#232323] to-[#141414] flex flex-col items-center justify-center p-3 text-center">
-            <Film className="w-8 h-8 text-[#E50914]/60 mb-2" />
+          <div className="w-full h-full bg-gradient-to-br from-[#1a1c24] to-[#0f111a] flex flex-col items-center justify-center p-3 text-center">
+            <Film className="w-8 h-8 text-rose-400/60 mb-2" />
             <span className="text-[11px] font-bold text-gray-300 line-clamp-2">
               {anime.title}
             </span>
@@ -89,30 +89,35 @@ export function AnimeCard({
 
         {/* Top-Left: Star Rating Pill */}
         <div className="absolute top-2 left-2 z-10 pointer-events-none">
-          <span className="inline-flex items-center gap-1 bg-black/70 backdrop-blur-md border border-white/15 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow">
+          <span className="inline-flex items-center gap-1 bg-black/75 backdrop-blur-md border border-white/15 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow">
             <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
             <span>{rating}</span>
           </span>
         </div>
 
-        {/* Top-Right: Netflix VIP / Free / 4K Badge */}
-        <div className="absolute top-2 right-2 z-10 pointer-events-none">
+        {/* Top-Right: Ultra 3D & VIP Badges */}
+        <div className="absolute top-2 right-2 z-10 pointer-events-none flex flex-col items-end gap-1">
+          {anime.type === 'DONGHUA' && (
+            <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(255,77,109,0.7)] animate-pulse">
+              ⚡ ULTRA 3D
+            </span>
+          )}
           {anime.type === 'MOVIE' ? (
-            <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-[9px] font-black px-2 py-0.5 rounded shadow">
+            <span className="bg-gradient-to-r from-sky-500 to-blue-500 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded shadow">
               🍿 ភាពយន្ត
             </span>
           ) : anime.is_free ? (
-            <span className="bg-emerald-600/90 text-white text-[9px] font-black px-2 py-0.5 rounded shadow">
+            <span className="bg-emerald-600/90 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded shadow">
               ឥតគិតថ្លៃ
             </span>
           ) : (
-            <span className="bg-[#E50914] text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow">
+            <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(255,77,109,0.5)]">
               4K VIP
             </span>
           )}
         </div>
 
-        {/* Netflix Hover Action Layer: Play & Add to List Buttons appear on Hover */}
+        {/* Hover Action Layer: Play & Add to List Buttons appear on Hover */}
         <div className="absolute inset-0 z-20 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/95 via-black/50 to-transparent">
           {/* Quick Action Icons */}
           <div className="flex items-center gap-2 mb-2">
@@ -123,10 +128,10 @@ export function AnimeCard({
                 e.stopPropagation();
                 navigate(watchUrl);
               }}
-              className="w-8 h-8 rounded-full bg-white hover:bg-white/80 text-black flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
+              className="w-8 h-8 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white flex items-center justify-center shadow-[0_0_12px_rgba(255,77,109,0.7)] transition-all hover:scale-115 active:scale-95 cursor-pointer"
               title="ចាក់ទស្សនា"
             >
-              <Play className="w-4 h-4 fill-black text-black ml-0.5" />
+              <Play className="w-4 h-4 fill-white text-white ml-0.5" />
             </button>
 
             {/* My List Button */}
@@ -142,7 +147,7 @@ export function AnimeCard({
           {/* Quick Match & Quality Indicators */}
           <div className="flex items-center gap-2 text-[10px] font-bold text-white mb-1">
             <span className="text-[#46d369]">ត្រូវចិត្ត 98%</span>
-            <span className="border border-white/40 px-1 py-0.2 rounded text-[8px]">4K</span>
+            <span className="border border-rose-400/50 bg-rose-500/10 text-rose-300 px-1 py-0.2 rounded text-[8px]">4K</span>
             <span className="text-gray-300 font-normal">{tagText}</span>
           </div>
         </div>
@@ -152,7 +157,7 @@ export function AnimeCard({
       <div className="pt-2 px-0.5 space-y-0.5">
         <Link
           to={detailUrl}
-          className="block font-display font-bold text-xs sm:text-sm text-white line-clamp-1 group-hover:text-[#E50914] transition-colors leading-snug"
+          className="block font-display font-bold text-xs sm:text-sm text-white line-clamp-1 group-hover:text-rose-400 transition-colors leading-snug"
           title={anime.title}
         >
           {anime.title}

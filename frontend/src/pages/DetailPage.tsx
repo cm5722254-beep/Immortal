@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { SkeletonDetail } from '../components/common/SkeletonLoader';
 import { StreamingAvailabilityHub } from '../components/common/StreamingAvailabilityHub';
+import { TrailerModal } from '../components/common/TrailerModal';
 import { isMoviePurchased } from '../services/paymentService';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
@@ -27,6 +28,7 @@ export function DetailPage() {
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [movieUnlocked] = useState(false);
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
 
   // Episode controls
   const [epSortOrder, setEpSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -185,9 +187,9 @@ export function DetailPage() {
     : 1;
 
   return (
-    <main className="min-h-screen pb-24 md:pb-16 bg-[#141414] text-gray-100 selection:bg-[#E50914] selection:text-white">
+    <main className="min-h-screen pb-24 md:pb-16 bg-[#080d1a] text-gray-100 selection:bg-rose-500 selection:text-white">
       {/* ── 1. Full-Bleed Cinematic Hero Banner with Poster & Title ── */}
-      <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#181818] via-[#141414] to-[#141414] pt-16 md:pt-20">
+      <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#111726] via-[#0d1322] to-[#080d1a] pt-16 md:pt-20">
         {/* Background Backdrop Image */}
         <div className="absolute inset-0 z-0 opacity-25 md:opacity-30 blur-sm scale-105 pointer-events-none">
           <img
@@ -198,17 +200,17 @@ export function DetailPage() {
         </div>
 
         {/* Ambient Top & Bottom Vignette Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/80 to-transparent z-0 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-[#141414]/70 to-transparent z-0 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080d1a] via-[#080d1a]/85 to-transparent z-0 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#080d1a] via-[#080d1a]/75 to-transparent z-0 pointer-events-none" />
 
         {/* Back Arrow Floating Action */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 pt-4 pb-2">
           <button
             onClick={() => navigate(-1)}
             aria-label="Go back"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-xs font-semibold border border-white/10 transition-all hover:scale-105 active:scale-95 shadow-lg"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-rose-500/20 backdrop-blur-md text-white text-xs font-semibold border border-white/10 hover:border-rose-400/40 transition-all hover:scale-105 active:scale-95 shadow-lg"
           >
-            <ArrowLeft className="w-4 h-4" /> ត្រឡប់ក្រោយ
+            <ArrowLeft className="w-4 h-4 text-rose-400" /> ត្រឡប់ក្រោយ
           </button>
         </div>
 
@@ -217,7 +219,7 @@ export function DetailPage() {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-10">
             {/* Left: Premium Glossy Poster Card */}
             <div className="w-48 sm:w-56 md:w-64 lg:w-72 shrink-0 group">
-              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] border-2 border-white/15 group-hover:border-amber-500/50 transition-all duration-300 bg-[#121622]">
+              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] border-2 border-white/15 group-hover:border-rose-400/60 transition-all duration-300 bg-[#0d1526]">
                 <img
                   src={anime.poster_url || anime.banner_url}
                   alt={anime.title}
@@ -225,20 +227,19 @@ export function DetailPage() {
                 />
 
                 {/* Rating Badge Overlay */}
-                <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-500/40 text-amber-300 text-xs font-black shadow-lg">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-rose-500/40 text-rose-300 text-xs font-black shadow-lg">
+                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                   <span>{(anime.average_rating || 9.8).toFixed(1)}</span>
                 </div>
 
                 {/* Type Badge Overlay */}
-                {/* Type Badge Overlay */}
-                <div className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-md">
+                <div className="absolute top-3 right-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-md shadow-rose-500/30">
                   {anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}
                 </div>
 
                 {/* HD / 4K Tag at bottom */}
                 <div className="absolute bottom-3 inset-x-3 flex items-center justify-between pointer-events-none">
-                  <span className="px-2 py-0.5 rounded bg-black/80 backdrop-blur-md text-[10px] font-bold text-amber-400 border border-amber-500/30">
+                  <span className="px-2 py-0.5 rounded bg-black/80 backdrop-blur-md text-[10px] font-bold text-rose-300 border border-rose-500/30">
                     4K Ultra HD
                   </span>
                   <span className="px-2 py-0.5 rounded bg-emerald-500/80 backdrop-blur-md text-[10px] font-bold text-white">
@@ -252,8 +253,8 @@ export function DetailPage() {
             <div className="flex-1 text-center md:text-left space-y-4">
               {/* Breadcrumb / Tag row */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 text-xs">
-                <span className="text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Flame className="w-4 h-4 fill-amber-400" /> រឿងល្បីពេញនិយម
+                <span className="text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                  <Flame className="w-4 h-4 fill-rose-400" /> រឿងល្បីពេញនិយម
                 </span>
                 <span className="text-gray-500">•</span>
                 <span className="text-gray-300 font-semibold">{anime.country === 'China' ? 'ប្រទេសចិន' : anime.country === 'Japan' ? 'ប្រទេសជប៉ុន' : (anime.country || 'ចិន')}</span>
@@ -282,12 +283,12 @@ export function DetailPage() {
               {/* Badges & Meta Chips */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
                 {anime.type === 'MOVIE' && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500/25 to-yellow-500/25 border border-amber-500/50 text-amber-300 text-xs font-black shadow-sm">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-rose-500/25 to-pink-500/25 border border-rose-500/50 text-rose-300 text-xs font-black shadow-sm">
                     🍿 Movie ($1.00)
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold shadow-sm">
-                  <Star className="w-3.5 h-3.5 fill-amber-400" /> {(anime.average_rating || 9.8).toFixed(1)} ពិន្ទុ
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold shadow-sm">
+                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" /> {(anime.average_rating || 9.8).toFixed(1)} ពិន្ទុ
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 border border-white/10 text-gray-200 text-xs font-semibold">
                   <Film className="w-3.5 h-3.5 text-cyan-400" /> {anime.episode_count || episodes.length} ភាគសរុប
@@ -307,7 +308,7 @@ export function DetailPage() {
                     <Link
                       key={g.id}
                       to={`/explore?genre=${g.slug}`}
-                      className="px-3 py-1 rounded-full text-xs font-semibold bg-[#161f30] hover:bg-amber-500 hover:text-black text-gray-300 border border-white/10 transition-all shadow-sm"
+                      className="px-3 py-1 rounded-full text-xs font-semibold bg-[#161f30] hover:bg-gradient-to-r hover:from-rose-500 hover:to-pink-500 hover:text-white text-gray-300 border border-white/10 transition-all shadow-sm"
                     >
                       {g.name}
                     </Link>
@@ -326,10 +327,10 @@ export function DetailPage() {
                   if (anime.type === 'MOVIE' && !hasMovieAccess) {
                     return (
                       <a
-                        href={`https://t.me/Huang404?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
+                        href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
+                        className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(255,77,109,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
                       >
                         <Send className="w-5 h-5 stroke-[2.5]" /> ទិញទស្សនា Movie ($1.00) តាម Telegram
                       </a>
@@ -339,9 +340,9 @@ export function DetailPage() {
                   return (
                     <Link
                       to={`/watch/${anime.slug}/${firstEpNum}`}
-                      className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
+                      className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(255,77,109,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
                     >
-                      <Play className="w-5 h-5 fill-black stroke-[2.5]" /> {
+                      <Play className="w-5 h-5 fill-white stroke-[2.5]" /> {
                         anime.type === 'MOVIE'
                           ? (isAdministrator ? '▶ ចាក់ទស្សនា (Admin Access)' : '▶ ចាក់ទស្សនា (បានទិញរួច)')
                           : 'ទស្សនាភាគ ១'
@@ -354,11 +355,21 @@ export function DetailPage() {
                 {latestEpNum > 1 && (
                   <Link
                     to={`/watch/${anime.slug}/${latestEpNum}`}
-                    className="py-3.5 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs md:text-sm border border-white/15 hover:border-amber-500/40 transition flex items-center justify-center gap-2 w-full sm:w-auto"
+                    className="py-3.5 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs md:text-sm border border-white/15 hover:border-rose-500/50 transition flex items-center justify-center gap-2 w-full sm:w-auto"
                   >
-                    <Sparkles className="w-4 h-4 text-amber-400" /> ភាគចុងក្រោយ (ភាគ {latestEpNum})
+                    <Sparkles className="w-4 h-4 text-rose-400" /> ភាគចុងក្រោយ (ភាគ {latestEpNum})
                   </Link>
                 )}
+
+                {/* Watch Trailer Button */}
+                <button
+                  onClick={() => setShowTrailerModal(true)}
+                  className="py-3.5 px-5 rounded-2xl bg-gradient-to-r from-rose-600/25 to-pink-600/25 hover:from-rose-600/40 hover:to-pink-600/40 text-rose-300 hover:text-white font-bold text-xs md:text-sm border border-rose-500/50 hover:border-rose-400 transition flex items-center justify-center gap-2 shadow-lg shadow-rose-500/15 active:scale-95 cursor-pointer w-full sm:w-auto"
+                  title="ទស្សនាវីដេអូឈុតខ្លីផ្លូវការ"
+                >
+                  <Film className="w-4 h-4 text-rose-400" />
+                  <span>មើលឈុតខ្លី (Trailer)</span>
+                </button>
 
                 {/* Bookmark Toggle */}
                 <button
@@ -405,9 +416,9 @@ export function DetailPage() {
         <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('episodes')}
-            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all ${
+            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'episodes'
-                ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg shadow-amber-500/25'
+                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -416,9 +427,9 @@ export function DetailPage() {
 
           <button
             onClick={() => setActiveTab('story')}
-            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all ${
+            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'story'
-                ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg shadow-amber-500/25'
+                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -428,10 +439,10 @@ export function DetailPage() {
           {relatedAnime.length > 0 && (
             <button
               onClick={() => setActiveTab('related')}
-              className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all ${
+              className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer ${
                 activeTab === 'related'
-                  ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg shadow-amber-500/25'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
               <Sparkles className="w-4 h-4" /> រឿងស្រដៀងគ្នា ({relatedAnime.length})
@@ -443,7 +454,7 @@ export function DetailPage() {
         {activeTab === 'episodes' && (
           <div className="space-y-6">
             {/* Episode Toolbar (Search + Sort + View Mode) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#111726]/80 border border-white/10 backdrop-blur-xl shadow-lg">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl shadow-lg">
               {/* Left: Search input */}
               <div className="relative flex-1 max-w-sm">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -452,7 +463,7 @@ export function DetailPage() {
                   value={epSearch}
                   onChange={(e) => setEpSearch(e.target.value)}
                   placeholder="ស្វែងរកលេខភាគ..."
-                  className="w-full bg-[#161f33] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[#131d36] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 transition-colors"
                 />
               </div>
 
@@ -461,19 +472,18 @@ export function DetailPage() {
                 {/* Sort Order Button */}
                 <button
                   onClick={() => setEpSortOrder((prev) => prev === 'asc' ? 'desc' : 'asc')}
-                  className="px-3 py-2 rounded-xl bg-[#161f33] hover:bg-white/10 border border-white/10 text-gray-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                  className="px-3 py-2 rounded-xl bg-[#131d36] hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                   title="Toggle episode order"
                 >
-                  <ArrowDownUp className="w-3.5 h-3.5 text-amber-400" />
+                  <ArrowDownUp className="w-3.5 h-3.5 text-rose-400" />
                   <span>{epSortOrder === 'asc' ? 'ភាគ 1 ➔ ចុងក្រោយ' : 'ភាគចុងក្រោយ ➔ 1'}</span>
                 </button>
-
               </div>
             </div>
 
-            {/* Episodes List Display: Clean & Modern Netflix Episode Grid */}
+            {/* Episodes List Display: Clean & Modern Episode Grid */}
             {filteredEpisodes.length === 0 ? (
-              <div className="text-center py-16 bg-[#181818]/60 rounded-3xl border border-white/5 space-y-2">
+              <div className="text-center py-16 bg-[#0e1629]/60 rounded-3xl border border-white/5 space-y-2">
                 <Film className="w-10 h-10 text-gray-500 mx-auto" />
                 <p className="text-gray-400 text-sm font-semibold">រកមិនឃើញភាគដែលស្វែងរកឡើយ</p>
                 <p className="text-gray-500 text-xs">សូមសាកល្បងស្វែងរកលេខភាគផ្សេងទៀត។</p>
@@ -487,10 +497,10 @@ export function DetailPage() {
                     <Link
                       key={ep.id}
                       to={`/watch/${anime.slug}/${ep.episode_number}`}
-                      className="group relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl bg-[#1e1e1e] border border-white/10 hover:border-[#E50914] hover:bg-[#E50914] text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+                      className="group relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl bg-[#10192e] border border-white/10 hover:border-rose-400 hover:bg-gradient-to-r hover:from-rose-600 hover:to-pink-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-rose-500/25 hover:scale-105 active:scale-95 cursor-pointer select-none"
                     >
                       {isEpVip && (
-                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-400 text-black flex items-center justify-center shadow">
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-black flex items-center justify-center shadow">
                           <Crown className="w-2.5 h-2.5 fill-black" />
                         </div>
                       )}
@@ -515,9 +525,9 @@ export function DetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Left 2 Cols: Full Synopsis */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="p-6 md:p-8 rounded-3xl bg-[#111726] border border-white/10 shadow-2xl space-y-4">
+              <div className="p-6 md:p-8 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4">
                 <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
-                  <Info className="w-5 h-5 text-amber-400" /> សាច់រឿងសង្ខេប
+                  <Info className="w-5 h-5 text-rose-400" /> សាច់រឿងសង្ខេប
                 </h3>
                 <p className="text-sm md:text-base text-gray-300 leading-relaxed font-sans whitespace-pre-line">
                   {anime.description || 'មិនមានការពិពណ៌នាសាច់រឿងលម្អិតឡើយ។'}
@@ -532,7 +542,7 @@ export function DetailPage() {
             </div>
 
             {/* Right 1 Col: Metadata Info Card */}
-            <div className="p-6 rounded-3xl bg-[#111726] border border-white/10 shadow-2xl space-y-4 text-xs">
+            <div className="p-6 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4 text-xs">
               <h4 className="font-display font-bold text-sm text-white border-b border-white/10 pb-3">
                 ព័ត៌មានលម្អិតអំពីរឿង
               </h4>
@@ -544,7 +554,7 @@ export function DetailPage() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/5">
                   <span className="text-gray-400">ប្រភេទ៖</span>
-                  <span className="text-amber-400 font-bold">{anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}</span>
+                  <span className="text-rose-400 font-bold">{anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/5">
                   <span className="text-gray-400">ស្ថានភាព៖</span>
@@ -564,7 +574,7 @@ export function DetailPage() {
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-gray-400">កម្រិតច្បាស់៖</span>
-                  <span className="text-amber-400 font-bold">4K Ultra HD • 60 FPS</span>
+                  <span className="text-rose-400 font-bold">4K Ultra HD • 60 FPS</span>
                 </div>
               </div>
             </div>
@@ -575,27 +585,27 @@ export function DetailPage() {
         {activeTab === 'related' && (
           <div className="space-y-4">
             <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400" /> រឿងដែលអ្នកអាចនឹងចូលចិត្ត
+              <Sparkles className="w-5 h-5 text-rose-400" /> រឿងដែលអ្នកអាចនឹងចូលចិត្ត
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {relatedAnime.map((item) => (
                 <Link
                   key={item.id}
                   to={`/donghua/${item.slug}`}
-                  className="group flex flex-col rounded-2xl overflow-hidden bg-[#111726] border border-white/10 hover:border-amber-500/50 transition-all duration-300 shadow-xl"
+                  className="group flex flex-col rounded-2xl overflow-hidden bg-[#0e1629] border border-white/10 hover:border-rose-500/50 transition-all duration-300 shadow-xl tilt-3d"
                 >
-                  <div className="relative aspect-[3/4] overflow-hidden bg-[#182033]">
+                  <div className="relative aspect-[3/4] overflow-hidden bg-[#141e33]">
                     <img
                       src={item.poster_url || item.banner_url}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded-md text-[10px] font-bold text-amber-400">
+                    <div className="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded-md text-[10px] font-bold text-yellow-400">
                       ⭐ {(item.average_rating || 9.6).toFixed(1)}
                     </div>
                   </div>
                   <div className="p-3">
-                    <h4 className="font-display font-bold text-xs text-white group-hover:text-amber-400 transition-colors truncate">
+                    <h4 className="font-display font-bold text-xs text-white group-hover:text-rose-400 transition-colors truncate">
                       {item.title}
                     </h4>
                     <p className="text-[10px] text-gray-400 mt-0.5">{item.episode_count || 'Multi'} ភាគ</p>
@@ -645,6 +655,13 @@ export function DetailPage() {
           </div>
         </div>
       )}
+
+      {/* Interactive Trailer Modal */}
+      <TrailerModal
+        anime={anime}
+        isOpen={showTrailerModal}
+        onClose={() => setShowTrailerModal(false)}
+      />
     </main>
   );
 }

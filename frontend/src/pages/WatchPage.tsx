@@ -323,7 +323,7 @@ export function WatchPage() {
                   {/* Buy Button */}
                   <div className="w-full pt-2 max-w-xs mx-auto">
                     <a
-                      href={`https://t.me/Huang404?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime?.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
+                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime?.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.45)] hover:scale-105 active:scale-95 transition-all"
@@ -331,7 +331,7 @@ export function WatchPage() {
                       <Send className="w-5 h-5 stroke-[2.5]" /> ទិញទស្សនា ($1.00) តាម Telegram
                     </a>
                     <p className="text-[11px] text-gray-400 mt-2">
-                      💬 ទាក់ទង Admin @Huang404 ដើម្បីបើកសិទ្ធិទស្សនាភ្លាមៗ
+                      💬 ទាក់ទង Admin @watchflixanimeadmin ដើម្បីបើកសិទ្ធិទស្សនាភ្លាមៗ
                     </p>
                   </div>
                 </div>
@@ -369,12 +369,12 @@ export function WatchPage() {
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-1">
                     <a
-                      href={`https://t.me/Huang404?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ដំឡើងសមាជិក VIP សម្រាប់គណនី: ${user?.username || 'ភ្ញៀវ'}`)}`}
+                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ដំឡើងសមាជិក VIP សម្រាប់គណនី: ${user?.username || 'ភ្ញៀវ'}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-primary w-full py-3 px-4 text-xs sm:text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-black shadow-lg shadow-amber-500/30"
                     >
-                      <Send className="w-4 h-4" /> ទាក់ទង Admin @Huang404 ដំឡើង VIP
+                      <Send className="w-4 h-4" /> ទាក់ទង Admin @watchflixanimeadmin ដំឡើង VIP
                     </a>
                     <Link
                       to="/vip"

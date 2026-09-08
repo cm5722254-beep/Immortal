@@ -21,6 +21,8 @@ class NotificationItem(BaseModel):
     link: str
     avatarUrl: Optional[str] = None
     isUnread: bool = True
+    tag: Optional[str] = None
+    category: Optional[str] = "episode"
 
 
 @router.get("", response_model=List[NotificationItem])
@@ -32,7 +34,9 @@ async def get_notifications(db: AsyncSession = Depends(get_db)):
         NotificationItem(
             id="notif-system-vip",
             icon="vip",
-            title="🔥 គម្រោង VIP 1 Month ($1.50) នឹងមកដល់ក្នុងពេលឆាប់ៗនេះ!",
+            category="vip",
+            tag="VIP ពិសេស",
+            title="👑 គម្រោង VIP 1 Month ($1.50) នឹងមកដល់ក្នុងពេលឆាប់ៗនេះ!",
             subtitle="ទទួលបានការទស្សនាកម្រិត 4K Ultra HD ដោយគ្មាន Logo បាំងលើគ្រប់ឧបករណ៍ទាំងអស់",
             time="10 នាទីមុន",
             link="/vip",
@@ -45,10 +49,12 @@ async def get_notifications(db: AsyncSession = Depends(get_db)):
         NotificationItem(
             id="notif-system-telegram",
             icon="system",
-            title="💬 ចូលរួម Telegram Channel ផ្លូវការ @Huang404",
+            category="system",
+            tag="Telegram",
+            title="💬 ចូលរួម Telegram Channel ផ្លូវការ @watchflixanimeadmin",
             subtitle="ទទួលបានដំណឹងចេញភាគថ្មីៗ និងការ Support ផ្ទាល់ពី Admin ២៤/៧",
             time="1 ម៉ោងមុន",
-            link="https://t.me/Huang404",
+            link="https://t.me/watchflixanimeadmin",
             avatarUrl="/video_mask_logo.png",
             isUnread=True,
         )
@@ -59,12 +65,27 @@ async def get_notifications(db: AsyncSession = Depends(get_db)):
         select(Episode)
         .options(selectinload(Episode.anime))
         .order_by(Episode.id.desc())
-        .limit(10)
+        .limit(12)
     )
     result = await db.execute(stmt)
     episodes = result.scalars().all()
 
-    for ep in episodes:
+    times_sequence = [
+        "ទើបចេញ",
+        "15 នាទីមុន",
+        "30 នាទីមុន",
+        "1 ម៉ោងមុន",
+        "2 ម៉ោងមុន",
+        "3 ម៉ោងមុន",
+        "5 ម៉ោងមុន",
+        "8 ម៉ោងមុន",
+        "1 ថ្ងៃមុន",
+        "2 ថ្ងៃមុន",
+        "3 ថ្ងៃមុន",
+        "5 ថ្ងៃមុន",
+    ]
+
+    for idx, ep in enumerate(episodes):
         if not ep.anime:
             continue
         
@@ -77,13 +98,17 @@ async def get_notifications(db: AsyncSession = Depends(get_db)):
         if "unsplash.com" in avatar:
             avatar = ep.anime.banner_url or ep.anime.poster_url or ""
 
+        rel_time = times_sequence[idx] if idx < len(times_sequence) else f"{idx // 2} ថ្ងៃមុន"
+
         notifications.append(
             NotificationItem(
                 id=f"notif-ep-{ep.id}",
                 icon="episode",
+                category="episode",
+                tag=f"ភាគ {ep_num}",
                 title=f"{anime_title} — ភាគ {ep_num} ចេញផ្សាយហើយ!",
                 subtitle=f"ទស្សនា {ep_title} កម្រិត 1080p / 4K UHD គ្មាន Logo បាំងឡើយ",
-                time=f"ភាគ {ep_num}",
+                time=rel_time,
                 link=f"/watch/{ep.anime.slug}/{ep_num}",
                 avatarUrl=avatar,
                 isUnread=True,

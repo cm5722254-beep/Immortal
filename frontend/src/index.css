@@ -4,24 +4,26 @@
 
 @layer base {
   :root {
-    --bg-base: #141414;
-    --bg-card: #181818;
-    --bg-card-subtle: #232323;
+    --bg-base: #080d1a;
+    --bg-card: #0d1526;
+    --bg-card-subtle: #111e35;
     --border-subtle: rgba(255, 255, 255, 0.1);
-    --accent-primary: #E50914;
-    --color-brand: 229 9 20;
-    --color-brand-light: 254 202 202;
-    --color-accent-red: 229 9 20;
+    --accent-primary: #ff4d6d;
+    --color-brand: 255 77 109;
+    --color-brand-light: 255 241 242;
+    --color-accent-red: 255 77 109;
+    --color-accent-rose: 251 113 133;
     --color-accent-cyan: 56 189 248;
     --color-accent-gold: 245 158 11;
   }
 
   body {
-    background-color: #141414;
+    background-color: #080d1a;
     background-image: 
-      radial-gradient(at 15% 0%, rgba(229, 9, 20, 0.08) 0px, transparent 45%),
-      radial-gradient(at 85% 10%, rgba(20, 20, 20, 0.5) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(10, 10, 10, 0.8) 0px, transparent 60%);
+      radial-gradient(at 15% 0%, rgba(255, 77, 109, 0.08) 0px, transparent 45%),
+      radial-gradient(at 85% 10%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(8, 13, 26, 0.9) 0px, transparent 60%),
+      radial-gradient(at 30% 60%, rgba(255, 77, 109, 0.04) 0px, transparent 40%);
     background-attachment: fixed;
     color: #ffffff;
     font-family: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -69,19 +71,19 @@
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #080306;
+    background: #080d1a;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(239, 68, 68, 0.3);
+    background: rgba(255, 77, 109, 0.35);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #FF3B30;
-    box-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
+    background: #ff4d6d;
+    box-shadow: 0 0 14px rgba(255, 77, 109, 0.7);
   }
 }
 
@@ -518,33 +520,40 @@
   transform: scale(1.04);
 }
 
-/* Netflix Card Scale & Hover Zoom */
+/* Netflix / Cinema Card Scale & Hover Zoom */
 .netflix-card {
   transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease, z-index 0.35s ease;
   will-change: transform;
 }
-.netflix-card:hover {
-  transform: scale(1.08) translateY(-4px);
-  z-index: 40;
-  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.85), 0 0 20px rgba(229, 9, 20, 0.25);
+@media (hover: hover) {
+  .netflix-card:hover {
+    transform: scale(1.06) translateY(-4px);
+    z-index: 40;
+    box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.85), 0 0 24px rgba(255, 77, 109, 0.35);
+  }
+}
+@media (hover: none) {
+  .netflix-card:active {
+    transform: scale(0.97);
+  }
 }
 
-/* Netflix Red Glow Pulse */
-@keyframes netflix-glow {
-  0%, 100% { box-shadow: 0 0 15px rgba(229, 9, 20, 0.3); }
-  50% { box-shadow: 0 0 25px rgba(229, 9, 20, 0.6); }
+/* Rose Red Glow Pulse */
+@keyframes rose-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 77, 109, 0.35); }
+  50% { box-shadow: 0 0 30px rgba(255, 77, 109, 0.7); }
 }
 
-.netflix-glow-badge {
-  animation: netflix-glow 3s infinite ease-in-out;
+.netflix-glow-badge, .rose-glow-badge {
+  animation: rose-glow 3s infinite ease-in-out;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    3D ROTATING CIRCULAR CAROUSEL (BANNER 3D វិលជារង្វង់)
    ═══════════════════════════════════════════════════════════════════ */
 .scene-3d {
-  perspective: 1100px;
-  perspective-origin: 50% 50%;
+  perspective: 1200px;
+  perspective-origin: 50% 48%;
 }
 
 .carousel-3d-ring {
@@ -555,24 +564,223 @@
 
 .card-3d {
   transform-style: preserve-3d;
-  backface-visibility: visible;
-  transition: filter 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease;
+  transition: filter 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease, transform 0.5s ease;
 }
 
 .card-3d-active {
-  box-shadow: 0 0 35px rgba(229, 9, 20, 0.7), 0 20px 40px rgba(0, 0, 0, 0.95);
-  filter: brightness(1.1);
-  border-color: #E50914 !important;
+  box-shadow: 0 0 40px rgba(255, 77, 109, 0.85), 0 20px 45px rgba(0, 0, 0, 0.95);
+  filter: brightness(1.1) contrast(1.05);
+  border-color: #ff4d6d !important;
 }
 
 .card-3d-inactive {
-  filter: brightness(0.55) blur(0.4px);
-  opacity: 0.7;
+  filter: brightness(0.5) blur(0.3px);
+  opacity: 0.65;
 }
 
 .card-3d-inactive:hover {
-  filter: brightness(0.9);
+  filter: brightness(0.9) blur(0px);
   opacity: 0.95;
   cursor: pointer;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   WATCHFLIX ANIME — FAST 3D ANIMATION SYSTEM
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Logo spin */
+@keyframes logo-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Fast 3D card entrance flip */
+@keyframes flip-in-3d {
+  0%   { transform: perspective(600px) rotateY(-90deg) scale(0.8); opacity: 0; }
+  60%  { transform: perspective(600px) rotateY(10deg) scale(1.03); opacity: 1; }
+  100% { transform: perspective(600px) rotateY(0deg) scale(1); opacity: 1; }
+}
+.animate-flip-in-3d {
+  animation: flip-in-3d 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+/* Zoom entrance from depth */
+@keyframes zoom-in-3d {
+  0%   { transform: perspective(800px) scale3d(0.6, 0.6, 0.6) translateZ(-120px); opacity: 0; }
+  100% { transform: perspective(800px) scale3d(1, 1, 1) translateZ(0); opacity: 1; }
+}
+.animate-zoom-3d {
+  animation: zoom-in-3d 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Fast slide-down with spring */
+@keyframes slide-down {
+  0%   { transform: translateY(-18px); opacity: 0; }
+  60%  { transform: translateY(3px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-down {
+  animation: slide-down 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Floating particle pulse (logo glow) */
+@keyframes float-glow {
+  0%, 100% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(255, 77, 109, 0.5)); }
+  50%       { transform: translateY(-5px); filter: drop-shadow(0 0 20px rgba(255, 77, 109, 0.9)); }
+}
+.animate-float-glow {
+  animation: float-glow 3s ease-in-out infinite;
+}
+
+/* Floating levitation */
+@keyframes float-levitate {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-8px) rotate(1deg); }
+}
+.animate-levitate {
+  animation: float-levitate 4s ease-in-out infinite;
+}
+
+/* Holographic shimmer sweep */
+@keyframes holo-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.holo-text {
+  background: linear-gradient(90deg,
+    #ff4d6d 0%,
+    #fb7185 20%,
+    #ffffff 40%,
+    #67e8f9 55%,
+    #fb7185 70%,
+    #ff4d6d 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: holo-shimmer 2.5s linear infinite;
+}
+
+/* Scale in animation */
+@keyframes scale-in {
+  0%   { transform: scale(0.88) translateY(-8px); opacity: 0; }
+  60%  { transform: scale(1.03) translateY(1px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease both;
+}
+
+/* Pulse ring for VIP / Badges */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(255, 77, 109, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Radar pulse wave for Trailer play buttons */
+@keyframes radar-wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+.radar-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: rgba(255, 77, 109, 0.5);
+  animation: radar-wave 2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  pointer-events: none;
+}
+
+/* Soundwave bars for active episode */
+@keyframes soundwave {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+.soundwave-bar {
+  width: 2.5px;
+  background: #ff4d6d;
+  border-radius: 9999px;
+  animation: soundwave 1.2s ease-in-out infinite;
+}
+.soundwave-bar:nth-child(2) { animation-delay: 0.2s; }
+.soundwave-bar:nth-child(3) { animation-delay: 0.4s; }
+
+/* 3D tilt on hover utility */
+.tilt-3d {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+@media (hover: hover) {
+  .tilt-3d:hover {
+    transform: perspective(800px) rotateX(-4deg) rotateY(4deg) scale(1.03);
+  }
+}
+
+/* WatchFlix Light Red / Rose border flow */
+@keyframes rose-border-flow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.watchflix-border {
+  background: linear-gradient(270deg, #ff4d6d, #fb7185, #fda4af, #ff4d6d);
+  background-size: 300% 300%;
+  animation: rose-border-flow 4s ease infinite;
+}
+
+/* Stagger children animation utility */
+.stagger-children > * {
+  animation: zoom-in-3d 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+/* ── Unreal Engine 5 Cinematic Aesthetics ── */
+@keyframes ue5-lumen-pulse {
+  0%, 100% {
+    box-shadow: 0 0 22px rgba(255, 77, 109, 0.3), 0 0 45px rgba(56, 189, 248, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 77, 109, 0.55), 0 0 70px rgba(56, 189, 248, 0.3);
+  }
+}
+.ue5-lumen {
+  animation: ue5-lumen-pulse 3.5s ease-in-out infinite;
+}
+
+/* Xianxia Qi lightning aura border */
+@keyframes lightning-flow {
+  0%   { border-color: rgba(255, 77, 109, 0.7); }
+  25%  { border-color: rgba(56, 189, 248, 0.85); }
+  50%  { border-color: rgba(251, 113, 133, 0.9); }
+  75%  { border-color: rgba(168, 85, 247, 0.7); }
+  100% { border-color: rgba(255, 77, 109, 0.7); }
+}
+.ue5-aura-border {
+  animation: lightning-flow 4s ease infinite;
+}

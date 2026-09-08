@@ -171,12 +171,12 @@ export function initSecurityProtection(isAdmin: boolean) {
 
           <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
             <a
-              href="https://t.me/merdonghuakh"
+              href="https://t.me/watchflixanimeadmin"
               target="_blank"
               rel="noreferrer"
               style="display: inline-flex; align-items: center; gap: 6px; color: #38BDF8; font-size: 12px; text-decoration: none; font-weight: bold;"
             >
-              💬 ទាក់ទង Admin តាម Telegram ផ្ទាល់ (@merdonghuakh)
+              💬 ទាក់ទង Admin តាម Telegram ផ្ទាល់ (@watchflixanimeadmin)
             </a>
           </div>
         </div>

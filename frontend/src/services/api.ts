@@ -10,7 +10,6 @@ const BASE_URL =
 
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
-  headers: { 'Content-Type': 'application/json' },
   timeout: 12000,
 });
 
@@ -43,6 +42,16 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Handle FormData: let browser/axios set multipart/form-data with boundary
+  if (config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers['Content-Type'];
+      if (typeof (config.headers as any).delete === 'function') {
+        (config.headers as any).delete('Content-Type');
+      }
+    }
   }
 
   // Clear relevant cache on write actions

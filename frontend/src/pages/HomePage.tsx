@@ -1,12 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ChevronRight, Sparkles, Flame, Film, Tv, Video
+  ChevronRight, Sparkles, Flame, Film, Tv, Video, Zap
 } from 'lucide-react';
 import { HeroSpotlightCarousel } from '../components/home/HeroSpotlightCarousel';
 import { AnimeCard } from '../components/home/AnimeCard';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
 import { QuickCategoryFilter, type CategoryFilterType } from '../components/home/QuickCategoryFilter';
+import { MovieTrailersSection } from '../components/home/MovieTrailersSection';
 
 import { SkeletonCard } from '../components/common/SkeletonLoader';
 import { useAuthStore } from '../store/authStore';
@@ -31,17 +32,17 @@ function ContentSection({ title, icon: Icon, link, items, isLoading }: SectionPr
       <div className="flex items-center justify-between mb-3 px-1">
         <Link
           to={link}
-          className="group/title inline-flex items-center gap-2 text-white hover:text-[#E50914] transition-colors"
+          className="group/title inline-flex items-center gap-2 text-white hover:text-rose-400 transition-colors"
         >
           <h2 className="font-display font-bold text-lg sm:text-xl md:text-2xl text-white tracking-wide flex items-center gap-2">
             {Icon && (
-              <span className="w-6 h-6 rounded bg-[#E50914]/20 flex items-center justify-center text-[#E50914]">
+              <span className="w-6 h-6 rounded bg-rose-500/20 flex items-center justify-center text-rose-400 shadow-[0_0_10px_rgba(255,77,109,0.3)]">
                 <Icon className="w-3.5 h-3.5" />
               </span>
             )}
             <span>{title}</span>
           </h2>
-          <span className="text-xs font-semibold text-[#E50914] opacity-0 group-hover/title:opacity-100 transition-all transform -translate-x-1 group-hover/title:translate-x-0 hidden sm:inline-flex items-center gap-0.5">
+          <span className="text-xs font-semibold text-rose-400 opacity-0 group-hover/title:opacity-100 transition-all transform -translate-x-1 group-hover/title:translate-x-0 hidden sm:inline-flex items-center gap-0.5">
             មើលទាំងអស់ <ChevronRight className="w-3.5 h-3.5" />
           </span>
         </Link>
@@ -157,20 +158,28 @@ export function HomePage() {
     return Array.from(map.values());
   }, [forYouDonghua, popularDonghua, animeList, movies, drama]);
 
+  // Top Ultra 3D (Unreal Engine) Donghua list
+  const ultra3dDonghua = useMemo(() => {
+    const donghuaList = allCombined.filter((a) => a.type === 'DONGHUA' || a.country === 'China');
+    if (donghuaList.length === 0) return popularDonghua;
+    return donghuaList.slice(0, 14);
+  }, [allCombined, popularDonghua]);
+
   // Filtered subset when filter is not ALL
   const filteredItems = useMemo(() => {
     if (activeFilter === 'ALL') return [];
+    if (activeFilter === 'ULTRA_3D') return ultra3dDonghua;
     if (activeFilter === 'DONGHUA') return [...forYouDonghua, ...popularDonghua];
     if (activeFilter === 'ANIME') return animeList;
     if (activeFilter === 'MOVIE') return movies;
     if (activeFilter === 'DRAMA') return drama;
     if (activeFilter === 'VIP') return allCombined.filter((a) => !a.is_free);
     return allCombined;
-  }, [activeFilter, forYouDonghua, popularDonghua, animeList, movies, drama, allCombined]);
+  }, [activeFilter, ultra3dDonghua, forYouDonghua, popularDonghua, animeList, movies, drama, allCombined]);
 
   return (
     <main className="min-h-screen pb-20 md:pb-12 text-gray-100">
-      {/* ── 1. Hero Spotlight Carousel (Style 2) ── */}
+      {/* ── 1. 3D Rotating Circular Carousel Banner (BANNER 3D វិលជុំវិញ) ── */}
       <HeroSpotlightCarousel banners={banners} anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua} />
 
       {/* ── 2. Content Container ── */}
@@ -190,14 +199,15 @@ export function HomePage() {
         {activeFilter !== 'ALL' ? (
           <section className="mt-6 mb-16 animate-fade-in">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-display font-bold text-xl text-white">
+              <h2 className="font-display font-bold text-xl text-white flex items-center gap-2">
+                {activeFilter === 'ULTRA_3D' && '⚡ កំពូលរឿង Ultra 3D (Unreal Engine 5)'}
                 {activeFilter === 'DONGHUA' && '🇨🇳 រឿងចិន 3D (Donghua)'}
                 {activeFilter === 'ANIME' && '🇯🇵 រឿងជប៉ុន (Anime)'}
                 {activeFilter === 'MOVIE' && '🍿 ភាពយន្តដុំ (Movies)'}
                 {activeFilter === 'DRAMA' && '📺 រឿងភាគ (Drama)'}
                 {activeFilter === 'VIP' && '⭐ កម្រិត Ultra HD VIP 4K'}
               </h2>
-              <span className="text-xs text-gray-400 font-medium bg-[#131926] px-3 py-1 rounded-full border border-white/[0.08]">
+              <span className="text-xs text-rose-300 font-bold bg-[#131926] px-3 py-1 rounded-full border border-rose-500/30 shadow-[0_0_10px_rgba(255,77,109,0.2)]">
                 {filteredItems.length} រឿង
               </span>
             </div>
@@ -217,6 +227,18 @@ export function HomePage() {
         ) : (
           /* ── Full Natural Feed ── */
           <div className="space-y-12 mt-6">
+            {/* Top Ultra 3D Unreal Engine Section */}
+            <ContentSection
+              title="⚡ កំពូលរឿង Ultra 3D (Unreal Engine 5) • 4K 60FPS"
+              icon={Zap}
+              link="/donghua"
+              items={ultra3dDonghua}
+              isLoading={isLoading}
+            />
+
+            {/* 🎬 New Movie & Donghua Trailers Showcase Section */}
+            <MovieTrailersSection items={ultra3dDonghua.length > 0 ? ultra3dDonghua : popularDonghua} />
+
             {/* Recommended For You */}
             <ContentSection
               title="រឿងណែនាំសម្រាប់អ្នក"
