@@ -623,6 +623,7 @@ export function VideoPlayer({
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
             title={title || 'Video Player'}
+            onLoad={() => setIsLoading(false)}
           />
           {youtubeVideoId && (
             <div className="absolute top-3 right-3 z-30 pointer-events-auto flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
@@ -758,8 +759,8 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Loading Spinner */}
-      {isLoading && !error && (
+      {/* Loading Spinner (Only show for native HTML5 video; hidden for YouTube / Facebook / Iframe embeds) */}
+      {!isIframeEmbed && isLoading && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none z-30">
           <div className="w-14 h-14 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin glow-md" />
         </div>
