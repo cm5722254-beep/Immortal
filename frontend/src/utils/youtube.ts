@@ -60,7 +60,7 @@ export function isFacebookUrl(url: string | null | undefined): boolean {
   const cleanUrl = url.trim();
   const iframeMatch = cleanUrl.match(/src=["'](.*?)["']/i);
   const target = iframeMatch ? iframeMatch[1] : cleanUrl;
-  return /facebook\.com\/(?:watch|.*\/videos|plugins\/video\.php)|fb\.watch\//i.test(target);
+  return /facebook\.com\/(?:watch|.*\/videos|share\/v|reel|plugins\/video\.php)|fb\.watch\//i.test(target);
 }
 
 export function getFacebookEmbedUrl(url: string, options: { autoplay?: boolean } = { autoplay: true }): string {
