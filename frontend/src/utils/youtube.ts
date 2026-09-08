@@ -1,15 +1,9 @@
 /**
- * YouTube Utility Helper for Video Player & Episode Management
- * Supports all standard YouTube URL variations:
- * - https://www.youtube.com/watch?v=VIDEO_ID
- * - https://youtu.be/VIDEO_ID
- * - https://www.youtube.com/shorts/VIDEO_ID
- * - https://www.youtube.com/embed/VIDEO_ID
- * - https://www.youtube.com/live/VIDEO_ID
- * - https://m.youtube.com/watch?v=VIDEO_ID
- * - <iframe src="https://www.youtube.com/embed/VIDEO_ID"></iframe>
+ * Video Source Utility Helper for Video Player & Episode Management
+ * Supports YouTube, Facebook, Google Drive, OK.ru, MP4, HLS, etc.
  */
 
+// ─── YOUTUBE UTILS ───
 export function parseYouTubeVideoId(url: string | null | undefined): string | null {
   if (!url) return null;
   const cleanUrl = url.trim();
@@ -50,4 +44,37 @@ export function getYouTubeThumbnail(urlOrId: string, quality: 'maxres' | 'hq' | 
   if (quality === 'maxres') return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
   if (quality === 'mq') return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+// ─── FACEBOOK VIDEO UTILS ───
+/**
+ * Detects if a URL is a Facebook video URL:
+ * - https://www.facebook.com/watch/?v=...
+ * - https://www.facebook.com/.../videos/...
+ * - https://fb.watch/...
+ * - https://www.facebook.com/plugins/video.php?...
+ * - <iframe src="https://www.facebook.com/plugins/video.php..."></iframe>
+ */
+export function isFacebookUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const cleanUrl = url.trim();
+  const iframeMatch = cleanUrl.match(/src=["'](.*?)["']/i);
+  const target = iframeMatch ? iframeMatch[1] : cleanUrl;
+  return /facebook\.com\/(?:watch|.*\/videos|plugins\/video\.php)|fb\.watch\//i.test(target);
+}
+
+export function getFacebookEmbedUrl(url: string, options: { autoplay?: boolean } = { autoplay: true }): string {
+  if (!url) return '';
+  const cleanUrl = url.trim();
+  const iframeMatch = cleanUrl.match(/src=["'](.*?)["']/i);
+  const target = iframeMatch ? iframeMatch[1] : cleanUrl;
+
+  // If already an official Facebook embed plugin URL, return it
+  if (target.includes('facebook.com/plugins/video.php')) {
+    return target;
+  }
+
+  // Otherwise convert to official Facebook Video Plugin URL
+  const autoplayParam = options.autoplay ? '1' : '0';
+  return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(target)}&show_text=0&autoplay=${autoplayParam}&width=auto`;
 }

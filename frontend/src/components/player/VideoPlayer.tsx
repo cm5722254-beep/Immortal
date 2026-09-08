@@ -8,7 +8,7 @@ import {
   Smartphone, RotateCw, Scan, ExternalLink
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { parseYouTubeVideoId, getYouTubeEmbedUrl } from '../../utils/youtube';
+import { parseYouTubeVideoId, getYouTubeEmbedUrl, isFacebookUrl, getFacebookEmbedUrl } from '../../utils/youtube';
 
 interface VideoPlayerProps {
   src: string;
@@ -87,6 +87,7 @@ export function VideoPlayer({
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [isIframeEmbed, setIsIframeEmbed] = useState(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const [isFacebookVideo, setIsFacebookVideo] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [triedProxy, setTriedProxy] = useState(false);
 
@@ -145,13 +146,23 @@ export function VideoPlayer({
 
     if (ytId) {
       setYoutubeVideoId(ytId);
+      setIsFacebookVideo(false);
       setIsIframeEmbed(true);
       const embedUrl = getYouTubeEmbedUrl(ytId, { autoplay: true });
       setCurrentSrc(embedUrl);
       setIsLoading(false);
       setError(null);
+    } else if (isFacebookUrl(clean)) {
+      setYoutubeVideoId(null);
+      setIsFacebookVideo(true);
+      setIsIframeEmbed(true);
+      const embedUrl = getFacebookEmbedUrl(clean, { autoplay: true });
+      setCurrentSrc(embedUrl);
+      setIsLoading(false);
+      setError(null);
     } else {
       setYoutubeVideoId(null);
+      setIsFacebookVideo(false);
       // Check if other embed iframe (Google Drive, OK.ru, Streamtape, Dood, etc.)
       const isOtherEmbed = clean.includes('/embed/') ||
         clean.includes('drive.google.com/file/d/') ||
@@ -627,6 +638,24 @@ export function VideoPlayer({
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                 </svg>
                 <span>មើលលើ YouTube</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          )}
+          {isFacebookVideo && (
+            <div className="absolute top-3 right-3 z-30 pointer-events-auto flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+              <a
+                href={src}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="px-2.5 py-1 rounded-full bg-blue-600/90 hover:bg-blue-600 text-white text-[10px] sm:text-xs font-bold shadow-lg backdrop-blur-md flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
+                title="បើកមើលលើ Facebook App / Web ផ្ទាល់"
+              >
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                <span>មើលលើ Facebook</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>

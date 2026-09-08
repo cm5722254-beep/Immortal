@@ -11,7 +11,7 @@ import { triggerConfirm } from '../../store/confirmStore';
 import api from '../../services/api';
 import { loadCatalog } from '../../services/catalogService';
 import type { Anime, Episode } from '../../types';
-import { parseYouTubeVideoId, isYouTubeUrl, getYouTubeThumbnail } from '../../utils/youtube';
+import { parseYouTubeVideoId, isYouTubeUrl, getYouTubeThumbnail, isFacebookUrl } from '../../utils/youtube';
 
 const EMPTY_EP = {
   anime_id: 0, episode_number: 1, title: '',
@@ -1490,7 +1490,7 @@ export function AdminEpisodesPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="label mb-0">តំណភ្ជាប់វីដេអូ (YouTube / MP4 / HLS .m3u8 / Embed Iframe) *</label>
+                  <label className="label mb-0">តំណភ្ជាប់វីដេអូ (Facebook / YouTube / MP4 / HLS / Iframe) *</label>
                   {isYouTubeUrl(form.video_url) && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2.5 py-0.5 rounded-full">
                       <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
@@ -1499,17 +1499,25 @@ export function AdminEpisodesPage() {
                       YouTube Detected
                     </span>
                   )}
+                  {isFacebookUrl(form.video_url) && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-400 bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 rounded-full">
+                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      Facebook Video Detected
+                    </span>
+                  )}
                 </div>
                 <input
                   type="text"
                   value={form.video_url}
                   onChange={(e) => setForm((f) => ({ ...f, video_url: e.target.value }))}
                   className="input font-mono text-xs"
-                  placeholder="https://www.youtube.com/watch?v=... ឬ https://youtu.be/... ឬ MP4 / m3u8"
+                  placeholder="https://www.facebook.com/... ឬ YouTube ឬ MP4 / m3u8"
                   required
                 />
                 <p className="text-[11px] text-gray-400 mt-1">
-                  💡 អាចដាក់ link YouTube ធម្មតា (watch?v=, youtu.be, shorts), MP4, m3u8 ឬ iframe embed ក៏បាន
+                  💡 អាចដាក់ link Facebook Video (fb.watch, facebook.com/watch), YouTube (watch?v=, youtu.be), MP4, m3u8 ឬ iframe embed ក៏បាន
                 </p>
 
                 {/* YouTube Link Preview Card */}
