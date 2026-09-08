@@ -1548,6 +1548,34 @@ export function AdminEpisodesPage() {
                     </button>
                   </div>
                 )}
+                {/* Facebook Link Preview Card */}
+                {isFacebookUrl(form.video_url) && (
+                  <div className="mt-2.5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between gap-3 animate-fade-in">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-blue-600/30 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <span className="text-blue-400">Facebook Video Stream</span>
+                        </p>
+                        <p className="text-[11px] text-gray-300">
+                          📌 ត្រូវប្រាកដថា Post នោះដាក់ Privacy ជា <span className="text-emerald-400 font-bold">Public (សាធារណៈ 🌍)</span> ទើបអាចទស្សនាបានពេញលេញ
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={form.video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold shrink-0 transition-colors shadow-sm flex items-center gap-1"
+                    >
+                      តេស្តបើកមើល ↗
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div>

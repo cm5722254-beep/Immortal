@@ -644,20 +644,20 @@ export function VideoPlayer({
             </div>
           )}
           {isFacebookVideo && (
-            <div className="absolute top-3 right-3 z-30 pointer-events-auto flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+            <div className="absolute top-3 right-3 z-30 pointer-events-auto flex items-center gap-2">
               <a
                 href={src}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="px-2.5 py-1 rounded-full bg-blue-600/90 hover:bg-blue-600 text-white text-[10px] sm:text-xs font-bold shadow-lg backdrop-blur-md flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
+                className="px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-xl border border-blue-400/40 backdrop-blur-md flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 animate-pulse"
                 title="បើកមើលលើ Facebook App / Web ផ្ទាល់"
               >
                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
                 <span>មើលលើ Facebook</span>
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
           )}

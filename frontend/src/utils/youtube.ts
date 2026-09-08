@@ -67,12 +67,18 @@ export function getFacebookEmbedUrl(url: string, options: { autoplay?: boolean }
   if (!url) return '';
   const cleanUrl = url.trim();
   const iframeMatch = cleanUrl.match(/src=["'](.*?)["']/i);
-  const target = iframeMatch ? iframeMatch[1] : cleanUrl;
+  let target = iframeMatch ? iframeMatch[1] : cleanUrl;
 
   // If already an official Facebook embed plugin URL, return it
   if (target.includes('facebook.com/plugins/video.php')) {
     return target;
   }
+
+  // Strip tracking queries that break Facebook plugin embeds
+  try {
+    const parsed = new URL(target);
+    target = `${parsed.origin}${parsed.pathname}`;
+  } catch {}
 
   // Otherwise convert to official Facebook Video Plugin URL
   const autoplayParam = options.autoplay ? '1' : '0';
