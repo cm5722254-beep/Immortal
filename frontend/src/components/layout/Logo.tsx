@@ -45,49 +45,41 @@ export function LogoIcon({ size = 36, className = '' }: { size?: number; classNa
   );
 }
 
-/** WatchFlix Anime Wordmark — premium 3D styled text in Light Red */
+/** ANIME KH Wordmark — premium 3D styled text in White & Crimson Red */
 function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
   if (size === 'sm') {
     return (
       <div className="flex flex-col leading-none select-none">
-        <div className="flex items-baseline gap-0.5">
+        <div className="flex items-baseline gap-1">
           <span
             className="font-black text-white tracking-tight"
             style={{
               fontFamily: "'Outfit', 'Inter', sans-serif",
-              fontSize: '0.85rem',
+              fontSize: '0.9rem',
               textShadow: '0 0 12px rgba(255,255,255,0.4)',
             }}
           >
-            Watch
+            ANIME
           </span>
           <span
             className="font-black tracking-tight"
             style={{
               fontFamily: "'Outfit', 'Inter', sans-serif",
-              fontSize: '0.85rem',
-              background: 'linear-gradient(135deg, #ffa8b6 0%, #ff6b8b 35%, #ff3366 70%, #e11d48 100%)',
+              fontSize: '0.9rem',
+              background: 'linear-gradient(135deg, #ff4d6d 0%, #E50914 50%, #b80710 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               textShadow: 'none',
-              filter: 'drop-shadow(0 0 8px rgba(255,77,109,0.65))',
+              filter: 'drop-shadow(0 0 8px rgba(229,9,20,0.75))',
             }}
           >
-            Flix
+            KH
           </span>
         </div>
         <span
-          className="font-bold uppercase tracking-widest"
-          style={{
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: '0.55rem',
-            background: 'linear-gradient(90deg, #ff758f, #fda4af)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            letterSpacing: '0.2em',
-          }}
+          className="font-bold text-[9px] text-rose-300/90 tracking-wide mt-0.5"
         >
-          ANIME
+          ចេញផ្សាយរឿង
         </span>
       </div>
     );
@@ -95,49 +87,48 @@ function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
 
   return (
     <div className="flex flex-col leading-none select-none">
-      {/* WatchFlix */}
-      <div className="flex items-baseline gap-0.5">
+      {/* ANIME KH */}
+      <div className="flex items-baseline gap-1">
         <span
-          className="font-black text-white"
+          className="font-black text-white tracking-tight"
           style={{
             fontFamily: "'Outfit', 'Inter', sans-serif",
-            fontSize: size === 'lg' ? '1.35rem' : '1.05rem',
+            fontSize: size === 'lg' ? '1.4rem' : '1.15rem',
             letterSpacing: '-0.02em',
             textShadow: '0 2px 12px rgba(255,255,255,0.25), 0 0 30px rgba(255,255,255,0.1)',
           }}
         >
-          Watch
+          ANIME
         </span>
         <span
-          className="font-black"
+          className="font-black tracking-tight"
           style={{
             fontFamily: "'Outfit', 'Inter', sans-serif",
-            fontSize: size === 'lg' ? '1.35rem' : '1.05rem',
+            fontSize: size === 'lg' ? '1.4rem' : '1.15rem',
             letterSpacing: '-0.02em',
-            background: 'linear-gradient(135deg, #ffa8b6 0%, #ff6b8b 35%, #ff3366 70%, #e11d48 100%)',
+            background: 'linear-gradient(135deg, #ff4d6d 0%, #E50914 50%, #b80710 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            filter: 'drop-shadow(0 0 10px rgba(255,77,109,0.75))',
+            filter: 'drop-shadow(0 0 10px rgba(229,9,20,0.85))',
           }}
         >
-          Flix
+          KH
         </span>
       </div>
-      {/* ANIME subtitle */}
+      {/* Khmer subtitle */}
       <div className="flex items-center gap-1 mt-0.5">
         <span className="text-rose-400/80 font-black" style={{ fontSize: '0.55rem' }}>─</span>
         <span
-          className="font-black uppercase tracking-[0.25em]"
+          className="font-bold tracking-wider"
           style={{
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: size === 'lg' ? '0.65rem' : '0.55rem',
+            fontSize: size === 'lg' ? '0.7rem' : '0.6rem',
             background: 'linear-gradient(90deg, #ffa8b6 0%, #ff758f 50%, #fb7185 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             filter: 'drop-shadow(0 0 6px rgba(255,117,143,0.5))',
           }}
         >
-          ANIME
+          ចេញផ្សាយរឿង
         </span>
         <span className="text-rose-400/80 font-black" style={{ fontSize: '0.55rem' }}>─</span>
       </div>
@@ -155,7 +146,7 @@ export function Logo({
   return (
     <Link
       to="/"
-      aria-label="WatchFlix Anime Home"
+      aria-label="ANIME KH Home"
       className={`inline-flex items-center gap-2.5 transition-all duration-300 active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 rounded-xl ${className}`}
     >
       <LogoIcon size={s.icon} />
