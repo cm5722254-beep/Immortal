@@ -6,6 +6,7 @@ import {
 import { HeroSpotlightCarousel } from '../components/home/HeroSpotlightCarousel';
 import { AnimeCard } from '../components/home/AnimeCard';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
+import { TrendingRankCarousel } from '../components/home/TrendingRankCarousel';
 import { QuickCategoryFilter, type CategoryFilterType } from '../components/home/QuickCategoryFilter';
 import { MovieTrailersSection } from '../components/home/MovieTrailersSection';
 
@@ -138,16 +139,70 @@ export function HomePage() {
     return () => { isMounted = false; };
   }, []);
 
+  // ── Load Watch History (Server if authenticated, LocalStorage for guests) ──
   useEffect(() => {
-    if (!isAuthenticated) return;
-    api.get('/history')
-      .then((res) => {
-        if (Array.isArray(res.data)) {
-          setHistory(res.data);
+    let isSet = false;
+    if (isAuthenticated) {
+      api.get('/history')
+        .then((res) => {
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            setHistory(res.data);
+            isSet = true;
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (!isSet) {
+      try {
+        const raw = localStorage.getItem('local_watch_history');
+        if (raw) {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list) && list.length > 0) {
+            const mapped: WatchHistoryItem[] = list.map((item: any, idx: number) => ({
+              id: idx + 1,
+              user_id: 0,
+              anime_id: 0,
+              episode_id: 0,
+              progress_seconds: item.progress_seconds || item.progress || 0,
+              duration_seconds: item.duration_seconds || item.duration || 1200,
+              last_watched_at: new Date(item.updated_at || Date.now()).toISOString(),
+              anime_title: item.anime_title || item.slug,
+              anime_slug: item.slug,
+              anime_poster: item.poster_url || `/posters/${item.slug}.jpg`,
+              episode_number: item.episode_number || 1,
+              episode_title: `ភាគ ${item.episode_number || 1}`,
+              episode_thumbnail: item.episode_thumbnail || item.poster_url || `/posters/${item.slug}.jpg`,
+            }));
+            setHistory(mapped);
+          }
         }
-      })
-      .catch(() => {});
+      } catch {}
+    }
   }, [isAuthenticated]);
+
+  const handleClearHistory = () => {
+    localStorage.removeItem('local_watch_history');
+    setHistory([]);
+    if (isAuthenticated) {
+      api.delete('/history').catch(() => {});
+    }
+  };
+
+  const handleRemoveHistoryItem = (id: number | string) => {
+    setHistory((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      try {
+        const raw = localStorage.getItem('local_watch_history');
+        if (raw) {
+          const list = JSON.parse(raw);
+          const filtered = list.filter((_: any, idx: number) => idx + 1 !== id);
+          localStorage.setItem('local_watch_history', JSON.stringify(filtered));
+        }
+      } catch {}
+      return updated;
+    });
+  };
 
   // Combine all items for quick filtering
   const allCombined = useMemo(() => {
@@ -157,6 +212,11 @@ export function HomePage() {
     });
     return Array.from(map.values());
   }, [forYouDonghua, popularDonghua, animeList, movies, drama]);
+
+  // Top 10 sorted by heat_score/popularity
+  const top10Trending = useMemo(() => {
+    return allCombined.slice().sort((a, b) => (b.heat_score || 0) - (a.heat_score || 0)).slice(0, 10);
+  }, [allCombined]);
 
   // Top Ultra 3D (Unreal Engine) Donghua list
   const ultra3dDonghua = useMemo(() => {
@@ -188,11 +248,20 @@ export function HomePage() {
         {/* Quick Filter Pill Bar */}
         <QuickCategoryFilter activeFilter={activeFilter} onSelect={setActiveFilter} />
 
-        {/* ── Continue Watching (if logged in & has history) ── */}
-        {isAuthenticated && history.length > 0 && activeFilter === 'ALL' && (
+        {/* ── Continue Watching (works for both guests & logged in) ── */}
+        {history.length > 0 && activeFilter === 'ALL' && (
           <div className="mb-10">
-            <ContinueWatchingSection items={history} />
+            <ContinueWatchingSection
+              items={history}
+              onClear={handleClearHistory}
+              onRemoveItem={handleRemoveHistoryItem}
+            />
           </div>
+        )}
+
+        {/* ── Top 10 Trending Carousel (Netflix Style with Giant Rank Digits) ── */}
+        {activeFilter === 'ALL' && top10Trending.length > 0 && (
+          <TrendingRankCarousel items={top10Trending} isLoading={isLoading} />
         )}
 
         {/* ── If a specific category filter is chosen ── */}

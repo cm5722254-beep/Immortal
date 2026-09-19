@@ -536,6 +536,35 @@ export function VideoPlayer({
       if (e.key === 'Escape' && isPseudoFullscreen) {
         setIsPseudoFullscreen(false);
         setIsFullscreen(false);
+        return;
+      }
+
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (e.code === 'Space' || e.key === 'k' || e.key === 'K') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.code === 'ArrowLeft' || e.key === 'j' || e.key === 'J') {
+        e.preventDefault();
+        if (videoRef.current) {
+          videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+          showHud('⏪ -10s');
+        }
+      } else if (e.code === 'ArrowRight' || e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        if (videoRef.current) {
+          videoRef.current.currentTime = Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + 10);
+          showHud('⏩ +10s');
+        }
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        toggleMute();
       }
     };
 
@@ -775,22 +804,54 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Auto-Next Episode Toast */}
-      {autoNextCountdown !== null && autoNextCountdown <= 5 && hasNext && (
+      {/* ─── NETFLIX-STYLE AUTO-NEXT EPISODE COUNTDOWN OVERLAY ─── */}
+      {autoNextCountdown !== null && autoNextCountdown <= 10 && hasNext && (
         <div
-          className="absolute top-4 right-4 glass-dark rounded-2xl p-4 text-sm z-40 animate-scale-in border border-brand-500/40 shadow-2xl"
+          className="absolute bottom-20 right-4 sm:right-6 max-w-xs sm:max-w-sm bg-[#111726]/95 border border-rose-500/50 rounded-3xl p-5 text-sm z-40 animate-scale-in shadow-[0_15px_45px_rgba(0,0,0,0.85)] backdrop-blur-xl pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-white font-bold flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-            ភាគបន្ទាប់ក្នុង {autoNextCountdown} វិនាទី
-          </p>
-          <div className="flex gap-2 mt-3">
-            <button onClick={() => setAutoNextCountdown(null)} className="btn-secondary text-xs py-1.5 px-3">
-              នៅទីនេះ
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                </span>
+                <span className="text-white font-black text-sm">ភាគបន្ទាប់នឹងចាក់ក្នុង</span>
+              </div>
+              <p className="text-gray-400 text-xs mt-1">
+                ត្រៀមទស្សនាភាគបន្ទាប់ដោយស្វ័យប្រវត្តិ
+              </p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center font-black text-lg text-rose-300 shadow-inner">
+              {autoNextCountdown}s
+            </div>
+          </div>
+
+          {/* Linear countdown progress indicator */}
+          <div className="w-full bg-white/10 rounded-full h-1.5 mt-3.5 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-1000 ease-linear"
+              style={{ width: `${(autoNextCountdown / 10) * 100}%` }}
+            />
+          </div>
+
+          <div className="flex gap-2.5 mt-4">
+            <button
+              onClick={() => setAutoNextCountdown(null)}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-bold text-xs border border-white/10 transition active:scale-95 cursor-pointer"
+            >
+              បោះបង់
             </button>
-            <button onClick={() => { setAutoNextCountdown(null); onNextEpisode?.(); }} className="btn-primary text-xs py-1.5 px-3">
-              ចាក់ភ្លាម
+            <button
+              onClick={() => {
+                setAutoNextCountdown(null);
+                onNextEpisode?.();
+              }}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-rose-500/30 transition active:scale-95 cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 fill-white" />
+              <span>ចាក់ភ្លាម</span>
             </button>
           </div>
         </div>
@@ -894,10 +955,30 @@ export function VideoPlayer({
             </button>
 
             {/* Skip 10s */}
-            <button onClick={() => videoRef.current && (videoRef.current.currentTime -= 10)} className="btn-icon text-white hover:text-brand-400 p-1.5 sm:p-2" aria-label="Skip back 10s">
+            <button
+              onClick={() => {
+                if (videoRef.current) {
+                  videoRef.current.currentTime -= 10;
+                  showHud('⏪ -10s');
+                }
+              }}
+              className="btn-icon text-white hover:text-brand-400 p-1.5 sm:p-2 cursor-pointer"
+              aria-label="Skip back 10s"
+              title="ថយក្រោយ 10 វិនាទី (Left Arrow / J)"
+            >
               <SkipBack className="w-4 h-4" />
             </button>
-            <button onClick={() => videoRef.current && (videoRef.current.currentTime += 10)} className="btn-icon text-white hover:text-brand-400 p-1.5 sm:p-2" aria-label="Skip forward 10s">
+            <button
+              onClick={() => {
+                if (videoRef.current) {
+                  videoRef.current.currentTime += 10;
+                  showHud('⏩ +10s');
+                }
+              }}
+              className="btn-icon text-white hover:text-brand-400 p-1.5 sm:p-2 cursor-pointer"
+              aria-label="Skip forward 10s"
+              title="ទៅមុខ 10 វិនាទី (Right Arrow / L)"
+            >
               <SkipForward className="w-4 h-4" />
             </button>
 

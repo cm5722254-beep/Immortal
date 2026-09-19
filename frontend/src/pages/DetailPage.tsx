@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Play, Bookmark, Share2, MessageSquare, ArrowLeft,
   Star, Check, Sparkles, Crown, Clock, Film,
-  Search, ArrowDownUp, Flame, Info, Tv, Send
+  Search, ArrowDownUp, Flame, Info, Tv, Send, ThumbsUp, ListPlus
 } from 'lucide-react';
 import { SkeletonDetail } from '../components/common/SkeletonLoader';
 import { StreamingAvailabilityHub } from '../components/common/StreamingAvailabilityHub';
@@ -12,7 +12,9 @@ import { isMoviePurchased } from '../services/paymentService';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { loadCatalog, extractAnimeDetail } from '../services/catalogService';
-import type { Anime, Episode } from '../types';
+import type { Anime, Episode, Comment } from '../types';
+
+type MyListStatus = 'NONE' | 'WATCHING' | 'PLAN_TO_WATCH' | 'COMPLETED' | 'FAVORITE';
 
 export function DetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -23,6 +25,8 @@ export function DetailPage() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [relatedAnime, setRelatedAnime] = useState<Anime[]>([]);
   const [isFav, setIsFav] = useState(false);
+  const [myListStatus, setMyListStatus] = useState<MyListStatus>('NONE');
+  const [showMyListDropdown, setShowMyListDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
@@ -30,10 +34,23 @@ export function DetailPage() {
   const [movieUnlocked] = useState(false);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
 
+  // 5-Star Rating State
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [ratingToast, setRatingToast] = useState<string | null>(null);
+
+  // Comments State
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsCount, setCommentsCount] = useState<number>(0);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [guestAuthorName, setGuestAuthorName] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [likedCommentIds, setLikedCommentIds] = useState<number[]>([]);
+
   // Episode controls
   const [epSortOrder, setEpSortOrder] = useState<'asc' | 'desc'>('asc');
   const [epSearch, setEpSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'episodes' | 'story' | 'related'>('episodes');
+  const [activeTab, setActiveTab] = useState<'episodes' | 'story' | 'comments' | 'related'>('episodes');
 
   const fetchData = useCallback(async () => {
     if (!slug) return;
@@ -62,7 +79,6 @@ export function DetailPage() {
         const animeRes = await api.get(`/anime/${decodedSlug}`);
         animeData = animeRes.data as Anime;
       } catch {
-        // Retry with original slug if different
         if (decodedSlug !== slug) {
           try {
             const retryRes = await api.get(`/anime/${slug}`);
@@ -72,21 +88,49 @@ export function DetailPage() {
       }
 
       if (!animeData) {
-        // Search in all anime list as last resort
         const allRes = await api.get('/anime?per_page=100').catch(() => ({ data: { items: [] } }));
-        const matched = (allRes.data?.items || []).find((a: Anime) => 
-          a.slug === slug || 
-          a.slug === decodedSlug || 
-          a.title?.trim() === decodedSlug || 
+        const matched = (allRes.data?.items || []).find((a: Anime) =>
+          a.slug === slug ||
+          a.slug === decodedSlug ||
+          a.title?.trim() === decodedSlug ||
           a.title?.trim() === slug
         );
-        if (matched) {
-          animeData = matched;
-        }
+        if (matched) animeData = matched;
       }
 
       if (animeData) {
         setAnime(animeData);
+
+        // Load saved rating from localStorage or backend
+        try {
+          const savedRatings = JSON.parse(localStorage.getItem('animekh_user_ratings') || '{}');
+          if (savedRatings[animeData.id]) {
+            setUserRating(savedRatings[animeData.id]);
+          }
+        } catch {}
+
+        if (isAuthenticated) {
+          api.get(`/anime/${animeData.id}/my-rating`).then((r) => {
+            if (r.data?.score) {
+              setUserRating(Math.round(r.data.score / 2));
+            }
+          }).catch(() => {});
+
+          api.get('/favorites').then((r) => {
+            const found = r.data.some((a: Anime) => a.id === animeData!.id);
+            setIsFav(found);
+            if (found) setMyListStatus('FAVORITE');
+          }).catch(() => {});
+        }
+
+        // Load My List status from localStorage
+        try {
+          const myLists = JSON.parse(localStorage.getItem('animekh_my_list') || '{}');
+          if (myLists[animeData.id]) {
+            setMyListStatus(myLists[animeData.id]);
+          }
+        } catch {}
+
         try {
           const epsRes = await api.get(`/anime/${animeData.slug || animeData.id}/episodes`);
           epsData = epsRes.data || [];
@@ -98,11 +142,8 @@ export function DetailPage() {
         const relatedRes = await api.get('/anime?per_page=6&sort=popular').catch(() => ({ data: { items: [] } }));
         setRelatedAnime(relatedRes.data?.items?.filter((a: Anime) => a.id !== animeData!.id).slice(0, 5) || []);
 
-        if (isAuthenticated) {
-          api.get('/favorites').then((r) => {
-            setIsFav(r.data.some((a: Anime) => a.id === animeData!.id));
-          }).catch(() => {});
-        }
+        // Fetch comments
+        fetchComments(animeData.id);
       }
     } catch {
       // Error handled by state
@@ -111,22 +152,148 @@ export function DetailPage() {
     }
   }, [slug, isAuthenticated]);
 
+  const fetchComments = async (animeId: number) => {
+    try {
+      const res = await api.get(`/anime/${animeId}/comments`);
+      if (res.data) {
+        const apiComments = res.data.items || [];
+        // Combine with any local guest comments
+        const localComments: Comment[] = JSON.parse(localStorage.getItem(`animekh_comments_${animeId}`) || '[]');
+        const combined = [...localComments, ...apiComments];
+        setComments(combined);
+        setCommentsCount(res.data.total || combined.length);
+      }
+    } catch {
+      // Load fallback local comments
+      const localComments: Comment[] = JSON.parse(localStorage.getItem(`animekh_comments_${animeId}`) || '[]');
+      setComments(localComments);
+      setCommentsCount(localComments.length);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const toggleFavorite = async () => {
-    if (!isAuthenticated || !anime) { navigate('/login'); return; }
+  // Handle User Star Rating
+  const handleRate = async (star: number) => {
+    if (!anime) return;
+    setUserRating(star);
+
+    // Save in LocalStorage immediately
     try {
-      if (isFav) {
-        await api.delete(`/favorites/${anime.id}`);
-        setIsFav(false);
+      const savedRatings = JSON.parse(localStorage.getItem('animekh_user_ratings') || '{}');
+      savedRatings[anime.id] = star;
+      localStorage.setItem('animekh_user_ratings', JSON.stringify(savedRatings));
+    } catch {}
+
+    setRatingToast(`អ្នកបានដាក់ពិន្ទុ ${star} ផ្កាយ ⭐! អរគុណច្រើន!`);
+    setTimeout(() => setRatingToast(null), 3000);
+
+    // Send 10-scale score to backend
+    if (isAuthenticated) {
+      try {
+        await api.post(`/anime/${anime.id}/rate`, { score: star * 2 });
+      } catch {}
+    }
+  };
+
+  // Handle My List Category
+  const handleSetMyList = async (status: MyListStatus) => {
+    if (!anime) return;
+    setMyListStatus(status);
+    setShowMyListDropdown(false);
+
+    try {
+      const myLists = JSON.parse(localStorage.getItem('animekh_my_list') || '{}');
+      if (status === 'NONE') {
+        delete myLists[anime.id];
       } else {
-        await api.post(`/favorites/${anime.id}`);
-        setIsFav(true);
+        myLists[anime.id] = status;
       }
-    } catch {
-      setIsFav(!isFav);
+      localStorage.setItem('animekh_my_list', JSON.stringify(myLists));
+    } catch {}
+
+    if (status === 'FAVORITE' || status === 'WATCHING') {
+      setIsFav(true);
+      if (isAuthenticated) {
+        api.post(`/favorites/${anime.id}`).catch(() => {});
+      }
+    } else if (status === 'NONE') {
+      setIsFav(false);
+      if (isAuthenticated) {
+        api.delete(`/favorites/${anime.id}`).catch(() => {});
+      }
+    }
+  };
+
+  const toggleFavorite = async () => {
+    if (!anime) return;
+    if (isFav) {
+      handleSetMyList('NONE');
+    } else {
+      handleSetMyList('FAVORITE');
+    }
+  };
+
+  const handlePostComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!anime || !newCommentText.trim()) return;
+
+    setIsSubmittingComment(true);
+    const authorName = user?.username || guestAuthorName.trim() || 'អ្នកទស្សនា (Guest)';
+
+    const newCommentObj: Comment = {
+      id: Date.now(),
+      anime_id: anime.id,
+      user_id: user?.id || 0,
+      content: newCommentText.trim(),
+      likes_count: 0,
+      is_reported: false,
+      is_deleted: false,
+      created_at: new Date().toISOString(),
+      user: {
+        id: user?.id || 0,
+        username: authorName,
+        avatar_url: user?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${authorName}`,
+      },
+      replies: [],
+    };
+
+    // Save in LocalStorage immediately
+    try {
+      const localComments: Comment[] = JSON.parse(localStorage.getItem(`animekh_comments_${anime.id}`) || '[]');
+      localComments.unshift(newCommentObj);
+      localStorage.setItem(`animekh_comments_${anime.id}`, JSON.stringify(localComments));
+      setComments((prev) => [newCommentObj, ...prev]);
+      setCommentsCount((prev) => prev + 1);
+    } catch {}
+
+    // If authenticated, sync with backend
+    if (isAuthenticated) {
+      try {
+        await api.post(`/anime/${anime.id}/comments`, {
+          content: newCommentText.trim(),
+        });
+      } catch {}
+    }
+
+    setNewCommentText('');
+    setIsSubmittingComment(false);
+  };
+
+  const handleLikeComment = async (commentId: number) => {
+    if (likedCommentIds.includes(commentId)) return;
+    setLikedCommentIds((prev) => [...prev, commentId]);
+
+    setComments((prev) =>
+      prev.map((c) => (c.id === commentId ? { ...c, likes_count: (c.likes_count || 0) + 1 } : c))
+    );
+
+    if (isAuthenticated) {
+      try {
+        await api.post(`/comments/${commentId}/like`);
+      } catch {}
     }
   };
 
@@ -153,13 +320,13 @@ export function DetailPage() {
   if (!anime) {
     return (
       <div className="min-h-screen bg-[#141414] pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
-        <Film className="w-16 h-16 text-amber-500/50 mb-4 animate-pulse" />
+        <Film className="w-16 h-16 text-rose-500/50 mb-4 animate-pulse" />
         <h2 className="text-2xl font-black text-white mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ</h2>
         <p className="text-gray-400 text-sm max-w-md mb-6">
           រឿងដែលលោកអ្នកកំពុងស្វែងរកប្រហែលជាត្រូវបានផ្លាស់ប្តូរតំណភ្ជាប់ ឬមិនទាន់បានដាក់បញ្ចូល។
         </p>
-        <Link to="/explore" className="py-3 px-6 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition shadow-lg">
-          រុករករឿងផ្សេងៗ
+        <Link to="/search" className="py-3 px-6 rounded-2xl bg-[#E50914] hover:bg-[#b80710] text-white font-bold text-sm transition shadow-lg">
+          ស្វែងរករឿងផ្សេងៗ
         </Link>
       </div>
     );
@@ -316,8 +483,47 @@ export function DetailPage() {
                 </div>
               )}
 
+              {/* ── 5-Star Interactive Rating Widget Bar ── */}
+              <div className="pt-2">
+                <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-[#111a2e]/90 border border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-md">
+                  <span className="text-xs font-bold text-gray-300">
+                    {userRating > 0 ? `ពិន្ទុរបស់អ្នក (${userRating}/5)៖` : 'ដាក់ពិន្ទុរឿងនេះ៖'}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => handleRate(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="p-1 hover:scale-125 active:scale-95 transition-transform cursor-pointer"
+                        title={`ដាក់ពិន្ទុ ${star} ផ្កាយ`}
+                      >
+                        <Star
+                          className={`w-5 h-5 transition-colors ${
+                            (hoverRating || userRating) >= star
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                              : 'text-gray-500 hover:text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {userRating > 0 && (
+                    <span className="text-xs text-amber-400 font-bold bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                      បានដាក់រួច
+                    </span>
+                  )}
+                </div>
+                {ratingToast && (
+                  <p className="text-xs text-amber-300 font-bold mt-1.5 animate-fade-in flex items-center justify-center md:justify-start gap-1">
+                    <Check className="w-3.5 h-3.5 text-emerald-400" /> {ratingToast}
+                  </p>
+                )}
+              </div>
+
               {/* Primary Action Buttons Bar */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-3">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-2">
                 {/* Watch / Buy Primary CTA */}
                 {(() => {
                   const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
@@ -371,38 +577,81 @@ export function DetailPage() {
                   <span>មើលឈុតខ្លី (Trailer)</span>
                 </button>
 
-                {/* Bookmark Toggle */}
+                {/* My List Multi-Category Dropdown */}
+                <div className="relative w-full sm:w-auto">
+                  <button
+                    onClick={() => setShowMyListDropdown(!showMyListDropdown)}
+                    className={`py-3.5 px-5 rounded-2xl border transition-all flex items-center justify-center gap-2 text-xs md:text-sm font-bold w-full sm:w-auto cursor-pointer ${
+                      myListStatus !== 'NONE'
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-lg shadow-rose-500/20'
+                        : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/15'
+                    }`}
+                  >
+                    <ListPlus className="w-4 h-4 text-rose-400" />
+                    <span>
+                      {myListStatus === 'WATCHING' ? 'កំពុងមើល' :
+                       myListStatus === 'PLAN_TO_WATCH' ? 'គ្រោងមើល' :
+                       myListStatus === 'COMPLETED' ? 'មើលចប់ហើយ' :
+                       myListStatus === 'FAVORITE' ? 'បានរក្សាទុក' : 'បញ្ចូលក្នុងបញ្ជី'}
+                    </span>
+                  </button>
+
+                  {/* Dropdown Options */}
+                  {showMyListDropdown && (
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-[#111726] border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
+                      {[
+                        { status: 'WATCHING' as MyListStatus, label: '👁️ កំពុងមើល (Watching)' },
+                        { status: 'PLAN_TO_WATCH' as MyListStatus, label: '⏳ គ្រោងមើល (Plan)' },
+                        { status: 'COMPLETED' as MyListStatus, label: '✅ មើលចប់ (Completed)' },
+                        { status: 'FAVORITE' as MyListStatus, label: '💖 ចូលចិត្ត (Favorite)' },
+                        { status: 'NONE' as MyListStatus, label: '❌ ដកចេញពីបញ្ជី' },
+                      ].map((item) => (
+                        <button
+                          key={item.status}
+                          onClick={() => handleSetMyList(item.status)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                            myListStatus === item.status
+                              ? 'bg-rose-500 text-white'
+                              : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {myListStatus === item.status && <Check className="w-3.5 h-3.5" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Quick Bookmark Toggle */}
                 <button
                   onClick={toggleFavorite}
-                  className={`p-3.5 rounded-2xl border transition-all flex items-center gap-2 text-xs md:text-sm font-bold ${
+                  className={`p-3.5 rounded-2xl border transition-all flex items-center justify-center gap-2 text-xs md:text-sm font-bold cursor-pointer ${
                     isFav
                       ? 'bg-red-500/20 text-red-400 border-red-500/40 shadow-lg shadow-red-500/20'
                       : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/15'
                   }`}
-                  title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                  title={isFav ? 'ដកចេញពីចំណូលចិត្ត' : 'ដាក់ក្នុងចំណូលចិត្ត'}
                 >
-                  <Bookmark className={`w-4 h-4 ${isFav ? 'fill-red-400' : ''}`} />
-                  <span>{isFav ? 'បានរក្សាទុក' : 'រក្សាទុក'}</span>
+                  <Bookmark className={`w-4 h-4 ${isFav ? 'fill-red-400 text-red-400' : ''}`} />
                 </button>
 
                 {/* Share Button */}
                 <button
                   onClick={share}
-                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 transition flex items-center gap-2 text-xs md:text-sm font-bold"
+                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 transition flex items-center justify-center gap-2 text-xs md:text-sm font-bold cursor-pointer"
                   title="Share"
                 >
                   <Share2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">ចែករំលែក</span>
                 </button>
 
                 {/* Feedback Modal Trigger */}
                 <button
                   onClick={() => setShowFeedbackModal(true)}
-                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 transition flex items-center gap-2 text-xs md:text-sm font-bold"
+                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 transition flex items-center justify-center gap-2 text-xs md:text-sm font-bold cursor-pointer"
                   title="Report or Feedback"
                 >
                   <MessageSquare className="w-4 h-4" />
-                  <span className="hidden sm:inline">មតិកែលម្អ</span>
                 </button>
               </div>
             </div>
@@ -416,7 +665,7 @@ export function DetailPage() {
         <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('episodes')}
-            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'episodes'
                 ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -427,7 +676,7 @@ export function DetailPage() {
 
           <button
             onClick={() => setActiveTab('story')}
-            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'story'
                 ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -436,10 +685,21 @@ export function DetailPage() {
             <Info className="w-4 h-4" /> ដំណើររឿងសង្ខេប & ព័ត៌មាន
           </button>
 
+          <button
+            onClick={() => setActiveTab('comments')}
+            className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+              activeTab === 'comments'
+                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" /> មតិយោបល់ ({commentsCount})
+          </button>
+
           {relatedAnime.length > 0 && (
             <button
               onClick={() => setActiveTab('related')}
-              className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer ${
+              className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                 activeTab === 'related'
                   ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -469,7 +729,6 @@ export function DetailPage() {
 
               {/* Right: Sort Order & View Mode Toggles */}
               <div className="flex items-center gap-2 justify-end">
-                {/* Sort Order Button */}
                 <button
                   onClick={() => setEpSortOrder((prev) => prev === 'asc' ? 'desc' : 'asc')}
                   className="px-3 py-2 rounded-xl bg-[#131d36] hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
@@ -481,7 +740,7 @@ export function DetailPage() {
               </div>
             </div>
 
-            {/* Episodes List Display: Clean & Modern Episode Grid */}
+            {/* Episodes List Display */}
             {filteredEpisodes.length === 0 ? (
               <div className="text-center py-16 bg-[#0e1629]/60 rounded-3xl border border-white/5 space-y-2">
                 <Film className="w-10 h-10 text-gray-500 mx-auto" />
@@ -523,7 +782,6 @@ export function DetailPage() {
         {/* ── TAB 2: STORY & DETAILS CONTENT ── */}
         {activeTab === 'story' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* Left 2 Cols: Full Synopsis */}
             <div className="lg:col-span-2 space-y-6">
               <div className="p-6 md:p-8 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4">
                 <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
@@ -534,14 +792,12 @@ export function DetailPage() {
                 </p>
               </div>
 
-              {/* Streaming Availability */}
               <StreamingAvailabilityHub
                 animeTitle={anime.title}
                 merDonghuaUrl={`/watch/${anime.slug}/1`}
               />
             </div>
 
-            {/* Right 1 Col: Metadata Info Card */}
             <div className="p-6 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4 text-xs">
               <h4 className="font-display font-bold text-sm text-white border-b border-white/10 pb-3">
                 ព័ត៌មានលម្អិតអំពីរឿង
@@ -581,7 +837,109 @@ export function DetailPage() {
           </div>
         )}
 
-        {/* ── TAB 3: RELATED RECOMMENDATIONS CONTENT ── */}
+        {/* ── TAB 3: COMMENTS & REVIEWS ── */}
+        {activeTab === 'comments' && (
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Post a Comment Form */}
+            <div className="p-6 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4">
+              <h3 className="font-display font-black text-lg text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-rose-400" /> បញ្ចេញមតិយោបល់របស់អ្នក
+              </h3>
+              <form onSubmit={handlePostComment} className="space-y-3">
+                {!isAuthenticated && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 mb-1">
+                      ឈ្មោះរបស់អ្នក (Display Name)
+                    </label>
+                    <input
+                      type="text"
+                      value={guestAuthorName}
+                      onChange={(e) => setGuestAuthorName(e.target.value)}
+                      placeholder="ឧ. សុខា, វិចិត្រ..."
+                      className="w-full sm:w-64 bg-[#131d36] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 transition-colors"
+                    />
+                  </div>
+                )}
+                <textarea
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  placeholder="ចែករំលែកមតិរបស់អ្នកអំពីសាច់រឿង តួអង្គ ឬគុណភាពវីដេអូនៅទីនេះ..."
+                  rows={3}
+                  className="w-full bg-[#131d36] border border-white/10 rounded-2xl p-3.5 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 transition-colors resize-none"
+                />
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-[11px] text-gray-400">
+                    សូមបញ្ចេញមតិប្រកបដោយសុជីវធម៌ និងការគោរពគ្នាទៅវិញទៅមក។
+                  </p>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingComment || !newCommentText.trim()}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-rose-500/20 transition cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isSubmittingComment ? 'កំពុងផ្ញើ...' : 'ផ្ញើមតិ'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Comments List */}
+            <div className="space-y-3">
+              {comments.length === 0 ? (
+                <div className="text-center py-12 bg-[#0e1629]/60 rounded-3xl border border-white/5 space-y-2">
+                  <MessageSquare className="w-8 h-8 text-gray-500 mx-auto" />
+                  <p className="text-gray-400 text-sm font-semibold">មិនទាន់មានមតិយោបល់នៅឡើយទេ</p>
+                  <p className="text-gray-500 text-xs">ក្លាយជាអ្នកដំបូងគេដែលបញ្ចេញមតិលើរឿងនេះ!</p>
+                </div>
+              ) : (
+                comments.map((c) => (
+                  <div
+                    key={c.id}
+                    className="p-4 sm:p-5 rounded-2xl bg-[#0e1629] border border-white/10 shadow-md flex items-start gap-3.5"
+                  >
+                    <img
+                      src={c.user?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${c.user?.username || 'user'}`}
+                      alt=""
+                      className="w-9 h-9 rounded-full object-cover bg-white/5 border border-white/10 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs sm:text-sm text-white">
+                            {c.user?.username || 'អ្នកទស្សនា'}
+                          </span>
+                          <span className="text-[10px] text-gray-500">
+                            {new Date(c.created_at).toLocaleDateString('km-KH', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleLikeComment(c.id)}
+                          className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                            likedCommentIds.includes(c.id)
+                              ? 'text-rose-400 bg-rose-500/10'
+                              : 'text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <ThumbsUp className={`w-3.5 h-3.5 ${likedCommentIds.includes(c.id) ? 'fill-current' : ''}`} />
+                          <span>{c.likes_count || 0}</span>
+                        </button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans">
+                        {c.content}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 4: RELATED RECOMMENDATIONS CONTENT ── */}
         {activeTab === 'related' && (
           <div className="space-y-4">
             <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
@@ -591,7 +949,7 @@ export function DetailPage() {
               {relatedAnime.map((item) => (
                 <Link
                   key={item.id}
-                  to={`/donghua/${item.slug}`}
+                  to={`/anime/${item.slug}`}
                   className="group flex flex-col rounded-2xl overflow-hidden bg-[#0e1629] border border-white/10 hover:border-rose-500/50 transition-all duration-300 shadow-xl tilt-3d"
                 >
                   <div className="relative aspect-[3/4] overflow-hidden bg-[#141e33]">

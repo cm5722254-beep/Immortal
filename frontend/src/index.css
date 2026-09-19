@@ -784,3 +784,21 @@
 .ue5-aura-border {
   animation: lightning-flow 4s ease infinite;
 }
+
+/* Netflix-style Top 10 Giant Rank Number */
+.netflix-rank-number {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 900;
+  line-height: 0.8;
+  color: #07090e;
+  -webkit-text-stroke: 4px #596579;
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+  transition: all 0.3s ease;
+  user-select: none;
+}
+.group:hover .netflix-rank-number {
+  -webkit-text-stroke: 4px #ff4d6d;
+  color: #12070e;
+  filter: drop-shadow(0 0 16px rgba(255, 77, 109, 0.6));
+  transform: scale(1.05);
+}

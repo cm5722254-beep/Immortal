@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Crown, Sparkles, User } from 'lucide-react';
+import { Home, Search, Tv, Sparkles, User } from 'lucide-react';
 import { triggerHaptic } from '../../utils/telegram';
 
 export function MobileNav() {
@@ -13,9 +13,9 @@ export function MobileNav() {
   const tabs = [
     { to: '/', icon: Home, label: 'ទំព័រដើម', activeMatches: ['/'] },
     { to: '/donghua', icon: Sparkles, label: 'រឿងចិន 3D', activeMatches: ['/donghua'] },
-    { to: '/vip', icon: Crown, label: 'VIP', activeMatches: ['/vip'] },
+    { to: '/anime', icon: Tv, label: 'រឿងជប៉ុន', activeMatches: ['/anime'] },
     { to: '/search', icon: Search, label: 'ស្វែងរក', activeMatches: ['/search'] },
-    { to: '/profile', icon: User, label: 'គណនី', activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history'] },
+    { to: '/profile', icon: User, label: 'គណនី', activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history', '/vip'] },
   ];
 
   return (
