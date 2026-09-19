@@ -92,11 +92,12 @@ async def get_notifications(db: AsyncSession = Depends(get_db)):
         anime_title = ep.anime.title
         ep_num = ep.episode_number
         ep_title = ep.title or f"Episode {ep_num}"
-        avatar = ep.thumbnail_url or ep.anime.poster_url or ep.anime.banner_url or ""
-        
-        # Clean unsplash URLs
-        if "unsplash.com" in avatar:
-            avatar = ep.anime.banner_url or ep.anime.poster_url or ""
+        slug = ep.anime.slug
+        avatar = f"/posters/{slug}.jpg"
+        if ep.thumbnail_url and "onrender.com" not in ep.thumbnail_url and "unsplash.com" not in ep.thumbnail_url:
+            avatar = ep.thumbnail_url
+        elif ep.anime.poster_url and "onrender.com" not in ep.anime.poster_url and "unsplash.com" not in ep.anime.poster_url:
+            avatar = ep.anime.poster_url
 
         rel_time = times_sequence[idx] if idx < len(times_sequence) else f"{idx // 2} ថ្ងៃមុន"
 

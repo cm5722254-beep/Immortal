@@ -190,39 +190,55 @@ export function NotificationsPage() {
               >
                 {/* Poster / Avatar */}
                 <div className="relative shrink-0 mt-0.5">
-                  {item.avatarUrl ? (
-                    <div className="w-14 h-16 rounded-xl overflow-hidden border border-white/15 bg-black/60 shadow-md">
-                      <img
-                        src={item.avatarUrl}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLElement).style.display = 'none';
-                          const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback');
-                          if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                        }}
-                      />
-                      <div className="avatar-fallback hidden w-full h-full bg-rose-900/30 flex items-center justify-center text-rose-400">
-                        <Film className="w-6 h-6" />
+                  {(() => {
+                    const slugMatch = item.link?.match(/\/watch\/([^/]+)/);
+                    const slug = slugMatch ? slugMatch[1] : '';
+                    const hasValidAvatar = item.avatarUrl && !item.avatarUrl.includes('onrender.com') && !item.avatarUrl.includes('unsplash.com');
+                    const posterSrc = hasValidAvatar ? item.avatarUrl : (slug ? `/posters/${slug}.jpg` : item.avatarUrl);
+
+                    if (posterSrc) {
+                      return (
+                        <div className="w-14 h-16 rounded-xl overflow-hidden border border-white/15 bg-black/60 shadow-md">
+                          <img
+                            src={posterSrc}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              if (slug && !target.src.includes(`/posters/${slug}.jpg`)) {
+                                target.src = `/posters/${slug}.jpg`;
+                              } else {
+                                target.style.display = 'none';
+                                const fallback = target.parentElement?.querySelector('.avatar-fallback');
+                                if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                              }
+                            }}
+                          />
+                          <div className="avatar-fallback hidden w-full h-full bg-rose-900/30 flex items-center justify-center text-rose-400">
+                            <Film className="w-6 h-6" />
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-[#FF3B30] shadow-md border ${
+                        item.icon === 'vip'
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                          : item.icon === 'system'
+                          ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                          : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                      }`}>
+                        {item.icon === 'vip' ? (
+                          <Crown className="w-7 h-7 text-amber-400 fill-amber-400" />
+                        ) : item.icon === 'system' ? (
+                          <Send className="w-6 h-6 text-cyan-400" />
+                        ) : (
+                          <Film className="w-7 h-7" />
+                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-[#FF3B30] shadow-md border ${
-                      item.icon === 'vip'
-                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                        : item.icon === 'system'
-                        ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                    }`}>
-                      {item.icon === 'vip' ? (
-                        <Crown className="w-7 h-7 text-amber-400 fill-amber-400" />
-                      ) : item.icon === 'system' ? (
-                        <Send className="w-6 h-6 text-cyan-400" />
-                      ) : (
-                        <Film className="w-7 h-7" />
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
                   {isUnread && (
                     <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 ring-2 ring-[#0c101d] shadow-[0_0_8px_#ff4d6d] animate-pulse" />
                   )}
