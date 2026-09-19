@@ -1,9 +1,9 @@
 {
   "version": "2.0.0",
-  "exported_at": "2026-09-19T18:30:41.249449+00:00",
+  "exported_at": "2026-09-19T19:50:31.819176+00:00",
   "counts": {
     "genres": 16,
-    "users": 42,
+    "users": 43,
     "anime": 75,
     "episodes": 960,
     "banners": 3,
@@ -889,6 +889,25 @@
       "telegram_username": null,
       "login_source": "google",
       "created_at": "2026-09-19T02:23:25.782703+00:00"
+    },
+    {
+      "id": 59,
+      "username": "teamai",
+      "email": "teamai036@gmail.com",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$V+r9XwsBIOQcgxDi3Lu3Vg$PmC8nkzCkx6diyRDtXzk7JK7qX95m9dbdZfgeKXy3CA",
+      "role": "USER",
+      "is_active": true,
+      "is_verified": true,
+      "is_vip": false,
+      "vip_plan": null,
+      "vip_started_at": null,
+      "vip_expires_at": null,
+      "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocJUTJapIoZTMdukF4KxFcSFm6D0xdLHy11puYR4XCc9mYZOETEQ=s96-c",
+      "phone_number": null,
+      "telegram_id": null,
+      "telegram_username": null,
+      "login_source": "google",
+      "created_at": "2026-09-19T19:20:46.878712+00:00"
     }
   ],
   "anime": [
@@ -1263,12 +1282,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 44,
+      "view_count": 45,
       "average_rating": 5.0,
       "rating_count": 0,
       "episode_count": 84,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-19T17:22:18.195924+00:00"
+      "updated_at": "2026-09-19T18:40:50.334429+00:00"
     },
     {
       "id": 15,
@@ -1425,12 +1444,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": false,
-      "view_count": 84,
+      "view_count": 85,
       "average_rating": 4.0,
       "rating_count": 0,
       "episode_count": 37,
       "created_at": "2026-09-01T06:04:18.025739+00:00",
-      "updated_at": "2026-09-19T17:22:19.333093+00:00"
+      "updated_at": "2026-09-19T19:21:01.698901+00:00"
     },
     {
       "id": 21,
@@ -2761,7 +2780,7 @@
       "slug": "chef-time-travel",
       "alt_title": "",
       "description": "",
-      "poster_url": "/uploads/98aaf8f5ec384bf885bab38e71431044.png",
+      "poster_url": "https://immortal-s7ui.onrender.com/uploads/444d71b7396843fbad44c6ecc2e2ffc9.png",
       "banner_url": "",
       "trailer_url": "",
       "year": 2026,
@@ -2780,7 +2799,7 @@
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-09T03:25:50.995434+00:00",
-      "updated_at": "2026-09-19T17:16:58.703199+00:00"
+      "updated_at": "2026-09-19T19:11:16.185143+00:00"
     },
     {
       "id": 71,
@@ -2788,7 +2807,7 @@
       "slug": "sold-in-the-rain",
       "alt_title": "",
       "description": "",
-      "poster_url": "/uploads/e02b86a7c118474d856494be853aeae0.png",
+      "poster_url": "https://immortal-s7ui.onrender.com/uploads/13c305edc27a42c2b7fa2cf2454ab40f.png",
       "banner_url": "",
       "trailer_url": "",
       "year": 2026,
@@ -2807,7 +2826,7 @@
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-09T03:29:51.815700+00:00",
-      "updated_at": "2026-09-19T17:16:58.896777+00:00"
+      "updated_at": "2026-09-19T19:12:28.102727+00:00"
     },
     {
       "id": 72,
@@ -2815,7 +2834,7 @@
       "slug": "lucky-princess-daughter",
       "alt_title": "",
       "description": "",
-      "poster_url": "/uploads/e456739d58c84e638724927a908592f8.png",
+      "poster_url": "https://immortal-s7ui.onrender.com/uploads/53186869fb2e4010aeca5c85a1690f0a.png",
       "banner_url": "",
       "trailer_url": "",
       "year": 2026,
@@ -2834,7 +2853,7 @@
       "rating_count": 0,
       "episode_count": 2,
       "created_at": "2026-09-09T03:33:27.789290+00:00",
-      "updated_at": "2026-09-19T17:16:59.108490+00:00"
+      "updated_at": "2026-09-19T19:14:31.903945+00:00"
     },
     {
       "id": 73,
@@ -2842,7 +2861,7 @@
       "slug": "betrayed-in-past-life",
       "alt_title": "",
       "description": "",
-      "poster_url": "/uploads/1a145604c3cf45ce98f07225efce0288.jpg",
+      "poster_url": "https://immortal-s7ui.onrender.com/uploads/3896aa0c69384a189ac761698b805e92.png",
       "banner_url": "",
       "trailer_url": "",
       "year": 2026,
@@ -2861,7 +2880,7 @@
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-09T03:36:28.910332+00:00",
-      "updated_at": "2026-09-19T17:16:59.305685+00:00"
+      "updated_at": "2026-09-19T19:15:21.066439+00:00"
     },
     {
       "id": 74,
@@ -2869,7 +2888,7 @@
       "slug": "reborn-as-princess",
       "alt_title": "",
       "description": "",
-      "poster_url": "/uploads/3b08340bf59349a98e82bf9da221ffea.jpg",
+      "poster_url": "https://immortal-s7ui.onrender.com/uploads/d800f3fa057c416eb9b8f82bca87b215.png",
       "banner_url": "",
       "trailer_url": "",
       "year": 2026,
@@ -2888,7 +2907,7 @@
       "rating_count": 0,
       "episode_count": 2,
       "created_at": "2026-09-09T03:39:51.389031+00:00",
-      "updated_at": "2026-09-19T17:16:59.500862+00:00"
+      "updated_at": "2026-09-19T19:16:07.638266+00:00"
     },
     {
       "id": 75,
@@ -2896,7 +2915,7 @@
       "slug": "listening-to-inner-voice",
       "alt_title": "",
       "description": "",
-      "poster_url": "/uploads/3bcee60b929244c5b355f2542be71ead.jpg",
+      "poster_url": "https://immortal-s7ui.onrender.com/uploads/23f1e7c67b04466d8d371913da0c5b92.png",
       "banner_url": "",
       "trailer_url": "",
       "year": 2026,
@@ -2915,7 +2934,7 @@
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-09T03:44:18.577283+00:00",
-      "updated_at": "2026-09-19T18:06:38.900024+00:00"
+      "updated_at": "2026-09-19T19:17:59.849604+00:00"
     }
   ],
   "anime_genres": [

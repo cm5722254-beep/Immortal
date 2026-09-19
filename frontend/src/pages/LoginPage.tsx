@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Shield, Sparkles, CheckCircle2, AlertTriangle, Play, Smartphone, Film,
-  ShieldCheck, Lock, Check
+  ShieldCheck, Lock, Check, Images
 } from 'lucide-react';
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
+import { ImageCaptchaModal } from '../components/common/ImageCaptchaModal';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -15,15 +16,16 @@ export function LoginPage() {
 
   // Anti-Bot Protection state
   const [botVerified, setBotVerified] = useState(false);
-  const [botVerifying, setBotVerifying] = useState(false);
+  const [showImageCaptcha, setShowImageCaptcha] = useState(false);
 
-  const handleVerifyBot = () => {
-    if (botVerified || botVerifying) return;
-    setBotVerifying(true);
-    setTimeout(() => {
-      setBotVerifying(false);
-      setBotVerified(true);
-    }, 1000);
+  const handleOpenCaptcha = () => {
+    if (botVerified) return;
+    setShowImageCaptcha(true);
+  };
+
+  const handleCaptchaSuccess = () => {
+    setBotVerified(true);
+    setShowImageCaptcha(false);
   };
 
   // Unban Appeal Form states
@@ -209,43 +211,44 @@ export function LoginPage() {
           ) : (
             /* ─── GOOGLE 1-CLICK LOGIN WITH ANTI-BOT SHIELD ─── */
             <div className="space-y-5 text-center">
-              {/* Anti-Bot Verification Checkbox (Turnstile / Cyber Shield Style) */}
+              {/* Anti-Bot Verification Checkbox (Turnstile / Image Challenge Style) */}
               <div
-                onClick={handleVerifyBot}
+                onClick={handleOpenCaptcha}
                 className={`p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 select-none cursor-pointer flex items-center justify-between text-left ${
                   botVerified
                     ? 'bg-emerald-950/30 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
-                    : botVerifying
-                    ? 'bg-amber-500/10 border-amber-500/50 animate-pulse'
-                    : 'bg-black/60 hover:bg-black/80 border-white/15 hover:border-amber-500/50 shadow-inner'
+                    : 'bg-black/60 hover:bg-black/80 border-white/15 hover:border-amber-500/50 shadow-inner group'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="relative shrink-0">
-                    {botVerifying ? (
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg border-2 border-amber-400 border-t-transparent animate-spin" />
-                    ) : botVerified ? (
+                    {botVerified ? (
                       <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-500 text-black flex items-center justify-center font-bold shadow-[0_0_12px_rgba(16,185,129,0.5)]">
                         <Check className="w-4 h-4 stroke-[3]" />
                       </div>
                     ) : (
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg border-2 border-amber-400/60 hover:border-amber-400 bg-black/60 flex items-center justify-center transition-colors">
-                        <div className="w-2 h-2 rounded-sm bg-transparent" />
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg border-2 border-amber-400/60 group-hover:border-amber-400 bg-black/60 flex items-center justify-center transition-colors">
+                        <div className="w-2 h-2 rounded-sm bg-transparent group-hover:bg-amber-400/50" />
                       </div>
                     )}
                   </div>
                   <div>
                     <p className={`text-xs sm:text-[13px] font-bold transition-colors ${
-                      botVerified ? 'text-emerald-300' : 'text-gray-200'
+                      botVerified ? 'text-emerald-300' : 'text-gray-200 group-hover:text-amber-300'
                     }`}>
-                      {botVerifying
-                        ? 'កំពុងផ្ទៀងផ្ទាត់សុវត្ថិភាព...'
-                        : botVerified
+                      {botVerified
                         ? 'បានផ្ទៀងផ្ទាត់ជោគជ័យ (Verified Human)'
                         : 'ខ្ញុំមិនមែនជាមនុស្សយន្តទេ (I am not a robot)'}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-mono">
-                      {botVerified ? 'Cloud Security Verified ✓' : 'ចុចលើប្រអប់នេះដើម្បីផ្ទៀងផ្ទាត់សុវត្ថិភាព'}
+                    <p className="text-[10px] text-gray-400 font-mono flex items-center gap-1 mt-0.5">
+                      {botVerified ? (
+                        'Cloud Security Verified ✓'
+                      ) : (
+                        <>
+                          <Images className="w-3 h-3 text-amber-400" />
+                          <span>ចុចទីនេះដើម្បីរើសរូបភាពផ្ទៀងផ្ទាត់</span>
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -277,11 +280,11 @@ export function LoginPage() {
                   </div>
                 ) : (
                   <div
-                    onClick={handleVerifyBot}
+                    onClick={handleOpenCaptcha}
                     className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 hover:border-amber-500/40 flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-amber-300 cursor-pointer transition-all active:scale-95"
                   >
                     <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>ចុចផ្ទៀងផ្ទាត់ប្រអប់ Anti-Bot ដើម្បីដោះសោរ</span>
+                    <span>ចុចរើសរូបភាពផ្ទៀងផ្ទាត់ Anti-Bot ដើម្បីដោះសោរ</span>
                   </div>
                 )}
               </div>
@@ -317,6 +320,13 @@ export function LoginPage() {
           </Link>
         </div>
       </div>
+
+      {/* ── Image CAPTCHA Verification Modal ── */}
+      <ImageCaptchaModal
+        isOpen={showImageCaptcha}
+        onClose={() => setShowImageCaptcha(false)}
+        onSuccess={handleCaptchaSuccess}
+      />
     </main>
   );
 }
