@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "exported_at": "2026-09-19T18:00:35.183474+00:00",
+  "exported_at": "2026-09-19T18:10:37.653346+00:00",
   "counts": {
     "genres": 16,
     "users": 42,
@@ -2910,12 +2910,12 @@
       "is_trending": false,
       "is_published": true,
       "is_free": true,
-      "view_count": 1,
+      "view_count": 3,
       "average_rating": 0.0,
       "rating_count": 0,
       "episode_count": 1,
       "created_at": "2026-09-09T03:44:18.577283+00:00",
-      "updated_at": "2026-09-19T17:16:59.693326+00:00"
+      "updated_at": "2026-09-19T18:06:38.900024+00:00"
     }
   ],
   "anime_genres": [

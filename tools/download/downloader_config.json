@@ -1,0 +1,9 @@
+{
+  "out_dir": "D:\\MerDonghua_Videos",
+  "threads": 3,
+  "token": "",
+  "api_url": "https://merdonghua-com.onrender.com/api",
+  "naming": "kh",
+  "filter": "missing",
+  "scan_new_only": true
+}

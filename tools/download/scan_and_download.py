@@ -284,6 +284,11 @@ if __name__ == "__main__":
             continue
         fname = f"ភាគ {num:03d} - {title}.mp4"
         fpath = os.path.join(out_dir, a_title, fname)
+        if os.path.exists(fpath) and os.path.getsize(fpath) > 500 * 1024:
+            print(f"[{idx}/{len(episodes)}] ⏩ ភាគ {num} មានរួចរាល់ហើយ (Skipped): {fname}")
+            success_count += 1
+            continue
+
         print(f"\n[{idx}/{len(episodes)}] ⬇ កំពុង Download ភាគ {num}: {fname}")
         if download_single_video(url, fpath):
             success_count += 1

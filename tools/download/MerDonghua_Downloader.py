@@ -57,7 +57,7 @@ CONFIG_FILE = os.path.join(_get_base_dir(), "downloader_config.json")
 DEFAULT_OUT = _default_out()
 DEFAULT_API = "https://merdonghua-com.onrender.com/api"
 UA          = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0"
-VERSION     = "3.3 (Smart Duplicate Guard & Disk Scanner)"
+VERSION     = "3.4 (Smart New Anime Scanner & Duplicate Guard)"
 
 def load_config() -> dict:
     if os.path.exists(CONFIG_FILE):
@@ -297,6 +297,7 @@ class App(tk.Tk):
         self.opt_open_after = tk.BooleanVar(value=False)
         # Default to Missing Only as requested by user ("បើខ្វះភាគ ចាំដោន")
         self.opt_filter     = tk.StringVar(value=cfg.get("filter", "missing"))
+        self.opt_scan_new_only = tk.BooleanVar(value=cfg.get("scan_new_only", False))
         self.opt_ep_from    = tk.IntVar(value=1)
         self.opt_ep_to      = tk.IntVar(value=9999)
 
@@ -415,9 +416,10 @@ class App(tk.Tk):
                  highlightbackground=self.ACCENT, highlightthickness=1,
                  font=self.FN).pack(side="left", fill="x", expand=True, ipady=4, padx=(4, 0))
 
-        # Selection buttons: Missing Only, All, None
+        # Selection buttons: Missing Only, New Anime Only, All, None
         bb = tk.Frame(left, bg=self.PANEL); bb.pack(fill="x", padx=8, pady=(0, 4))
         ttk.Button(bb, text="⚠️ ជ្រើសតែខ្វះ", style="Y.TButton", command=self._sel_missing).pack(side="left", padx=(0, 4))
+        ttk.Button(bb, text="🆕 ស្កេនតែរឿងថ្មី", style="A.TButton", command=self._sel_new_only).pack(side="left", padx=(0, 4))
         ttk.Button(bb, text="✅ All", style="G.TButton", command=self._sel_all).pack(side="left", padx=(0, 4))
         ttk.Button(bb, text="❌ None", style="R.TButton", command=self._sel_none).pack(side="left")
         self.lbl_sel = tk.Label(bb, text="0 រឿង", bg=self.PANEL, fg=self.MUTED, font=("Segoe UI", 9))
@@ -508,8 +510,12 @@ class App(tk.Tk):
         self.btn_scan = ttk.Button(in_bar, text="  🔍 ស្កេនវីដេអូ  ", style="C.TButton",
                                    command=self._do_scan_website)
         self.btn_scan.pack(side="left", padx=(0, 6))
-        ttk.Button(in_bar, text="🌐 ស្កេន All Anime ពី API", style="Y.TButton",
-                   command=self._scan_all_from_api).pack(side="left")
+        ttk.Button(in_bar, text="🆕 ស្កេនចាប់តែរឿងថ្មី", style="A.TButton",
+                   command=self._scan_new_from_api).pack(side="left", padx=(0, 6))
+        ttk.Button(in_bar, text="🌐 ស្កេន All ពី API", style="Y.TButton",
+                   command=self._scan_all_from_api).pack(side="left", padx=(0, 6))
+        ttk.Checkbutton(in_bar, text="ចាប់តែរឿងថ្មី", variable=self.opt_scan_new_only
+                        ).pack(side="left", padx=(0, 4))
 
         # Results info card
         self.scan_card = tk.Frame(parent, bg=self.CARD, padx=14, pady=8)
@@ -583,9 +589,10 @@ class App(tk.Tk):
             ttk.Button(f, text="Browse…", style="C.TButton", command=self._pick_dir).pack(side="left")
         row("Output Folder:", dir_w)
 
-        sec("🔍  Episode Filter (ការពារ Down ជាន់គ្នា)")
+        sec("🔍  Episode Filter & Scan (ការពារ Down ជាន់គ្នា)")
         def flt_w(f):
-            for v, l in [("missing", "⭐ ខ្វះភាគប៉ុណ្ណោះ (Missing Only - Skip Downloaded)"),
+            for v, l in [("missing", "⭐ ខ្វះភាគប៉ុណ្ណោះ (Missing Only)"),
+                         ("new_only", "🆕 រឿងថ្មីប៉ុណ្ណោះ (New Anime Only - មិនទាន់មានក្នុង Disk)"),
                          ("all", "All Episodes"),
                          ("range", "Range")]:
                 ttk.Radiobutton(f, text=l, variable=self.opt_filter, value=v
@@ -599,6 +606,9 @@ class App(tk.Tk):
             ttk.Spinbox(f, textvariable=self.opt_ep_to, from_=1, to=9999,
                         width=6, font=self.FN).pack(side="left", padx=4)
         row("🔢  Range:", range_w)
+        row("🆕  ស្កេនរឿងថ្មី:", lambda f: ttk.Checkbutton(
+            f, text="ស្កេនចាប់តែរឿងថ្មី (Scan / Capture Only New Anime - មិនទាន់មានក្នុង Disk)", variable=self.opt_scan_new_only
+            ).pack(side="left"))
 
         sec("⚡  Speed & Engine")
         def th_w(f):
@@ -649,7 +659,8 @@ class App(tk.Tk):
             "token": self.opt_token.get(),
             "api_url": self.opt_api_url.get(),
             "naming": self.opt_naming.get(),
-            "filter": self.opt_filter.get()
+            "filter": self.opt_filter.get(),
+            "scan_new_only": self.opt_scan_new_only.get()
         }
         save_config(cfg)
         self._log("✅ Options saved to config file!", "ok")
@@ -894,6 +905,60 @@ class App(tk.Tk):
         self._scan_disk_videos()
         messagebox.showinfo("API Sync", f"បាន Sync {count} Anime ពី live website API ដោយជោគជ័យ!")
 
+    def _scan_new_from_api(self):
+        """Fetches anime list from API and filters for ONLY NEW ANIME (not yet downloaded on disk)."""
+        api_base = self.opt_api_url.get().rstrip("/")
+        self._log(f"🆕 កំពុងស្កេនចាប់តែរឿងថ្មីពី API: {api_base}/anime ...", "info")
+        out_base = self.opt_out_dir.get()
+
+        def worker():
+            try:
+                url = f"{api_base}/anime?per_page=100"
+                req = urllib.request.Request(url, headers=build_hdrs(url, self.opt_token.get()))
+                with urllib.request.urlopen(req, timeout=15) as r:
+                    data = json.loads(r.read().decode("utf-8"))
+                    items = data.get("items", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                    if items:
+                        existing_folders = [f for f in os.listdir(out_base) if os.path.isdir(os.path.join(out_base, f))] if os.path.exists(out_base) else []
+                        new_items = []
+                        for a in items:
+                            folder = get_anime_folder(out_base, a, existing_folders)
+                            has_videos = False
+                            if os.path.isdir(folder):
+                                try:
+                                    for f in os.listdir(folder):
+                                        if f.lower().endswith(('.mp4', '.mkv', '.ts', '.webm')) and os.path.getsize(os.path.join(folder, f)) > 500 * 1024:
+                                            has_videos = True
+                                            break
+                                except Exception:
+                                    pass
+                            if not has_videos:
+                                new_items.append(a)
+
+                        self.anime_list = sorted(items, key=lambda a: a.get("title", ""))
+                        self.dispatch(lambda: self._on_new_api_synced(new_items, len(items)))
+            except Exception as ex:
+                self.dispatch(lambda: self._log(f"❌ Error scanning new anime: {ex}", "err"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_new_api_synced(self, new_items: List[dict], total_api: int):
+        self._scan_disk_videos()
+        self._checked.clear()
+        for a in new_items:
+            aid = a.get("id")
+            if aid:
+                self._checked.add(aid)
+
+        self._refresh_list(self._get_filtered_anime())
+        self._upd_sel()
+        self._log(f"🆕 ស្កេនចាប់តែរឿងថ្មី: រកឃើញ {len(new_items)}/{total_api} រឿងថ្មីសុទ្ធ (មិនទាន់មានក្នុងកុំព្យូទ័រ)!", "ok")
+        messagebox.showinfo("🆕 ស្កេនចាប់តែរឿងថ្មី",
+            f"✅ បានស្កេនចាប់តែរឿងថ្មីពី Website/API បានជោគជ័យ!\n\n"
+            f"  • រឿងសរុបលើ Website: {total_api} រឿង\n"
+            f"  • រឿងថ្មីដែលចាប់បាន: {len(new_items)} រឿងថ្មីសុទ្ធ\n\n"
+            f"ប្រព័ន្ធបានធីកជ្រើសរើសរឿងថ្មីទាំង {len(new_items)} នេះរួចរាល់។\nចុច 'ចាប់ផ្តើម Download' ដើម្បីទាញយកភ្លាមៗ!")
+
     # ── Disk Video Scanner Methods ────────────────────────────────────────────
     def _scan_disk_videos(self, show_msg: bool = False):
         r"""Scans the output directory (D:\MerDonghua_Videos) for existing episodes."""
@@ -960,6 +1025,10 @@ class App(tk.Tk):
         self._log(f"✅ បានស្កេន Disk ({self.opt_out_dir.get()}): រកឃើញ {total_dl} ភាគមានរួចរាល់, ខ្វះ {total_miss} ភាគ", "ok")
         self._refresh_list(self._get_filtered_anime())
         self._upd_sel()
+        if getattr(self, '_initial_new_scan_done', False) is False:
+            self._initial_new_scan_done = True
+            if "--new-only" in sys.argv or self.opt_filter.get() == "new_only" or self.opt_scan_new_only.get():
+                self._sel_new_only()
         if show_msg:
             messagebox.showinfo("✅ លទ្ធផលស្កេន Disk",
                 f"📁 ទីតាំង Disk: {self.opt_out_dir.get()}\n\n"
@@ -1092,6 +1161,33 @@ class App(tk.Tk):
         self._upd_sel()
         self._log(f"⚠️ បានជ្រើសរើស {selected_count} រឿងដែលខ្វះភាគ (សរុបខ្វះ {missing_eps_count} ភាគ, រឿងគ្រប់ភាគមិនត្រូវបានជ្រើសទេ)", "warn")
 
+    def _sel_new_only(self):
+        """Selects ONLY brand new anime (0 episodes on disk or un-downloaded series)."""
+        self._checked.clear()
+        selected_count = 0
+        total_eps_to_dl = 0
+        for a in self.anime_list:
+            aid = a.get("id", 0)
+            st = self._disk_status.get(aid, {})
+            dl_cnt = st.get("downloaded", 0)
+            tot = self._ep_count.get(aid, 0)
+            if tot > 0 and dl_cnt == 0:
+                self._checked.add(aid)
+                selected_count += 1
+                total_eps_to_dl += tot
+
+        self._refresh_list(self._get_filtered_anime())
+        self._upd_sel()
+        self._log(f"🆕 បានស្កេនចាប់តែរឿងថ្មី: ជ្រើសរើសបាន {selected_count} រឿងថ្មីសុទ្ធ (សរុប {total_eps_to_dl} ភាគ មិនទាន់មានក្នុងកុំព្យូទ័រ)", "ok")
+        if selected_count == 0:
+            messagebox.showinfo("ស្កេនរឿងថ្មី", "លោកអ្នកបាន Download រឿងទាំងអស់រួចហើយ មិនមានរឿងថ្មីដែលខ្វះទាំងស្រុងនោះទេ!")
+        else:
+            messagebox.showinfo("🆕 ស្កេនចាប់តែរឿងថ្មី",
+                f"✅ បានស្កេនចាប់តែរឿងថ្មីបានជោគជ័យ!\n\n"
+                f"  • រកឃើញ: {selected_count} រឿងថ្មីសុទ្ធ\n"
+                f"  • ចំនួនភាគសរុប: {total_eps_to_dl} ភាគ\n\n"
+                f"ប្រព័ន្ធបានធីកជ្រើសរើសរឿងថ្មីទាំង {selected_count} នេះរួចរាល់។\nចុច 'ចាប់ផ្តើម Download' ដើម្បីទាញយក!")
+
     def _sel_all(self):
         for a in self._get_filtered_anime():
             self._checked.add(a.get("id", 0))
@@ -1147,6 +1243,11 @@ class App(tk.Tk):
             eps = sorted(ep_map.get(aid, []), key=lambda e: e.get("episode_number", 0))
             if not eps: continue
 
+            # If new_only filter is active, only download anime that are completely new (0 downloaded on disk)
+            st = self._disk_status.get(aid, {})
+            if filt == "new_only" and st.get("downloaded", 0) > 0:
+                continue
+
             anime_folder = get_anime_folder(out_base, anime, existing_folders)
             a_title = os.path.basename(anime_folder)
 
@@ -1161,7 +1262,7 @@ class App(tk.Tk):
 
                 # ── Smart Check: Has this episode already been downloaded?
                 is_dl, existing_fp, sz = is_episode_downloaded(anime_folder, ep_num, ep_title)
-                if (filt == "missing" or skip) and is_dl:
+                if (filt in ("missing", "new_only") or skip) and is_dl:
                     # STRICTLY SKIP: Never re-download existing video ("ហាម down ជាន់គ្នា")
                     continue
 
@@ -1290,4 +1391,14 @@ class App(tk.Tk):
             self._log(f"💾 Log saved: {f}", "ok")
 
 if __name__ == "__main__":
-    App().mainloop()
+    # Prioritize launching the ultra-modern Web GUI Studio v5.0
+    try:
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        if cur_dir not in sys.path:
+            sys.path.insert(0, cur_dir)
+        from merdonghua_downloader_web_gui import start_server
+        start_server()
+    except Exception as ex:
+        print(f"Fallback to desktop Tkinter UI: {ex}")
+        app = App()
+        app.mainloop()
