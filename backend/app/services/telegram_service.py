@@ -70,9 +70,9 @@ def _call_telegram_api(method: str, payload: dict) -> dict:
 
 
 def _get_base_url() -> str:
-    url = (settings.FRONTEND_URL or "https://merdonghuakh.netlify.app").rstrip("/")
+    url = (settings.FRONTEND_URL or "https://animekh.duckdns.org").rstrip("/")
     if url.startswith("http://localhost") or url.startswith("http://127.0.0.1"):
-        return "https://merdonghuakh.netlify.app"
+        return "https://animekh.duckdns.org"
     return url
 
 
@@ -200,6 +200,12 @@ def _send_telegram_photo_multipart(chat_id: str, photo_url: str, caption: str, r
     # 1. Download photo bytes if http or read from local disk if file path
     img_bytes = None
     if photo_url:
+        # Check local frontend/public poster existence if relative path
+        if str(photo_url).startswith("/"):
+            local_candidate = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "public", photo_url.lstrip("/")))
+            if os.path.isfile(local_candidate):
+                photo_url = local_candidate
+
         # Check local file existence first
         if os.path.isfile(photo_url):
             try:
@@ -407,14 +413,15 @@ async def notify_new_anime(anime, genres: List[str] = None):
 
         caption += f"\n⚡️ <i>ចូលទស្សនាដោយឥតគិតថ្លៃនៅលើ MER DONGHUA!</i>"
 
+        channel_url = getattr(settings, "TELEGRAM_CHANNEL_URL", "https://t.me/animekhnotocation")
         keyboard = {
             "inline_keyboard": [
                 [
                     {"text": "🎬 ទស្សនាឥឡូវនេះ / Watch Now", "url": watch_url}
                 ],
                 [
-                    {"text": "📢 Join Telegram Group", "url": "https://t.me/+TS6IZI6unQ81M2Jl"},
-                    {"text": "🌐 Nami Anime", "url": base_url}
+                    {"text": "📢 Telegram Channel", "url": channel_url},
+                    {"text": "🌐 ANIME KH", "url": base_url}
                 ]
             ]
         }
@@ -472,6 +479,7 @@ async def notify_new_episode(anime, episode):
             f"✨ <i>ចូលទស្សនាភាគថ្មីនេះដោយឥតគិតថ្លៃឥឡូវនេះ!</i>"
         )
 
+        channel_url = getattr(settings, "TELEGRAM_CHANNEL_URL", "https://t.me/animekhnotocation")
         keyboard = {
             "inline_keyboard": [
                 [
@@ -479,7 +487,7 @@ async def notify_new_episode(anime, episode):
                 ],
                 [
                     {"text": "📺 ភាគទាំងអស់", "url": anime_url},
-                    {"text": "📢 Join Telegram Group", "url": "https://t.me/+TS6IZI6unQ81M2Jl"}
+                    {"text": "📢 Telegram Channel", "url": channel_url}
                 ]
             ]
         }
