@@ -47,6 +47,7 @@ export function VIPPage() {
   const { user, isVip } = useAuthStore();
   const [notifySubscribed, setNotifySubscribed] = useState(false);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null);
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
 
   const upcomingPlans: UpcomingPlan[] = [
     {
@@ -369,22 +370,18 @@ export function VIPPage() {
                   </div>
                 </div>
 
-                {/* Active Buy Button with +1 Spin Bonus */}
+                {/* Coming Soon Button */}
                 <div className="pt-4 border-t border-white/10 space-y-2">
                   <button
-                    onClick={() => setSelectedPlanForPayment(plan.id)}
-                    className={`w-full py-3.5 px-4 rounded-2xl text-xs md:text-sm font-black flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-102 active:scale-98 ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-400 hover:to-pink-500 text-white shadow-rose-500/40'
-                        : 'bg-gradient-to-r from-white/15 to-white/10 hover:from-rose-500/30 hover:to-pink-500/30 text-white border border-white/20'
-                    }`}
+                    onClick={() => setShowComingSoonModal(true)}
+                    className="w-full py-3.5 px-4 rounded-2xl text-xs md:text-sm font-black flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-black shadow-amber-500/25"
                   >
-                    <Crown className="w-4 h-4 fill-amber-300 text-amber-300" />
-                    <span>ទិញ VIP (ថែម +1 Spin)</span>
+                    <Clock className="w-4 h-4 text-black" />
+                    <span>មកដល់ឆាប់ៗនេះ (Coming Soon)</span>
                   </button>
-                  <p className="text-[10px] text-center text-rose-300 font-bold flex items-center justify-center gap-1">
+                  <p className="text-[10px] text-center text-amber-300/90 font-bold flex items-center justify-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-300" />
-                    <span>ទូទាត់ភ្លាម ទទួលបានសិទ្ធិចាប់រង្វាន់ភ្លាម!</span>
+                    <span>ប្រព័ន្ធជាវ VIP កំពុងរៀបចំ នឹងសម្ពោធឆាប់ៗនេះ!</span>
                   </p>
                 </div>
               </div>
@@ -486,6 +483,57 @@ export function VIPPage() {
             }, 600);
           }}
         />
+      )}
+
+      {/* ── Coming Soon Modal ── */}
+      {showComingSoonModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#1c0d18] via-[#120710] to-[#0a0309] border border-amber-500/40 shadow-[0_20px_60px_rgba(245,158,11,0.3)] text-center space-y-5">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-black shadow-lg shadow-amber-500/40">
+              <Crown className="w-9 h-9 fill-black" />
+            </div>
+
+            <div>
+              <span className="text-xs font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+                🚀 Coming Soon • មកដល់ឆាប់ៗនេះ
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-white mt-2">
+                គម្រោងសមាជិក VIP 4K UHD
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+                មុខងារជាវ VIP តាមរយៈ KHQR (ABA, ACLEDA, Wing) កំពុងស្ថិតក្រោមការរៀបចំប្រព័ន្ធ។ សូមចូលរួមក្នុង Telegram Channel ផ្លូវការ ដើម្បីទទួលបានដំណឹងថ្ងៃសម្ពោធ និងកាដូ Discount Code បញ្ចុះតម្លៃ <strong>50%</strong> មុនគេបង្អស់!
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-2">
+              <a
+                href="https://t.me/animekhnotocation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-4 rounded-2xl font-black text-sm bg-gradient-to-r from-[#0088cc] to-[#00a2ed] hover:from-[#0077b5] hover:to-[#0091d5] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#0088cc]/30 transition hover:scale-102"
+              >
+                <Send className="w-4 h-4 fill-white" />
+                <span>ចូលរួម Telegram Channel ផ្លូវការ</span>
+              </a>
+
+              <a
+                href="https://t.me/animekhanddonghuabot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 rounded-2xl font-bold text-xs bg-white/10 hover:bg-white/15 text-gray-200 border border-white/15 flex items-center justify-center gap-2 transition"
+              >
+                <span>🤖 ឆាតជាមួយ Anime Bot (@animekhanddonghuabot)</span>
+              </a>
+
+              <button
+                onClick={() => setShowComingSoonModal(false)}
+                className="w-full py-2.5 text-xs text-gray-400 hover:text-white transition"
+              >
+                បិទផ្ទាំងនេះ (Close)
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

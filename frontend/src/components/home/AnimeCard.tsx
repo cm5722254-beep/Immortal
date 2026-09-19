@@ -132,6 +132,10 @@ export function AnimeCard({
               4K VIP
             </span>
           )}
+          {/* Dub vs Sub Badge */}
+          <span className="bg-amber-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow">
+            {anime.country === 'Japan' || anime.type === 'ANIME' ? 'អក្សររត់ខ្មែរ (Sub)' : 'និយាយខ្មែរ (Dub)'}
+          </span>
         </div>
 
         {/* Hover Action Layer: Play & Add to List Buttons appear on Hover */}

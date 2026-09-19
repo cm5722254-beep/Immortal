@@ -234,6 +234,18 @@ export function Navbar() {
             <span className="whitespace-nowrap font-extrabold text-[11px] sm:text-xs">VIP</span>
           </Link>
 
+          {/* Telegram Channel Direct Link */}
+          <a
+            href="https://t.me/animekhnotocation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold bg-[#0088cc]/20 hover:bg-[#0088cc]/35 text-[#29b6f6] border border-[#0088cc]/40 hover:border-[#0088cc] shadow-sm hover:scale-105 active:scale-95 transition-all group shrink-0"
+            title="ចូលរួម Telegram Channel ដើម្បីទទួលដំណឹងភាគថ្មីៗ"
+          >
+            <Send className="w-3.5 h-3.5 fill-[#29b6f6] shrink-0" />
+            <span className="hidden sm:inline whitespace-nowrap font-extrabold text-[11px] sm:text-xs">Telegram</span>
+          </a>
+
             {/* Notification Bell */}
             <div className="relative shrink-0" ref={notifRef}>
               <button

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Info, ChevronLeft, ChevronRight, Star, Sparkles, Flame, Film, Crown } from 'lucide-react';
+import { Play, Info, ChevronLeft, ChevronRight, Star, Sparkles, Flame, Film, Crown, Send } from 'lucide-react';
 import type { Banner, Anime } from '../../types';
 
 interface HeroBannerProps {
@@ -26,26 +26,59 @@ export function HeroBanner({ banners, anime }: HeroBannerProps) {
 
   if (slides.length === 0) return null;
 
+  const [isPlayingVideo, setIsPlayingVideo] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const slide = slides[current];
   const item = slide.animeItem;
   const bgImage = slide.banner?.image_url || item?.banner_url || item?.poster_url;
+  const videoUrl = (slide.banner as any)?.video_url || (item as any)?.trailer_url || (bgImage && (bgImage.endsWith('.mp4') || bgImage.endsWith('.webm')) ? bgImage : null);
   const title = slide.banner?.title || item?.title || '';
   const subtitle = slide.banner?.subtitle || item?.alt_title || '';
   const detailType = item?.type === 'ANIME' ? 'anime' : item?.type === 'DRAMA' ? 'drama' : item?.type === 'MOVIE' ? 'movie' : 'donghua';
   const linkUrl = slide.banner?.link_url || (item ? `/${detailType}/${item.slug}` : '/');
   const watchUrl = item ? `/watch/${item.slug}/1` : '/';
 
-
   return (
     <section className="relative w-full min-h-[580px] h-[78vh] max-h-[860px] overflow-hidden bg-[#07050e]">
-      {/* Background Image with Slow Cinematic Zoom */}
-      {bgImage && (
-        <div key={current} className="absolute inset-0 animate-fade-in overflow-hidden">
+      {/* Background Media (Video or Image with Slow Cinematic Zoom) */}
+      <div key={current} className="absolute inset-0 overflow-hidden">
+        {videoUrl && isPlayingVideo ? (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            autoPlay
+            muted={isMuted}
+            loop
+            playsInline
+            className="w-full h-full object-cover object-center scale-105 transition-opacity duration-1000"
+          />
+        ) : bgImage ? (
           <img
             src={bgImage}
             alt={title}
             className="w-full h-full object-cover object-center scale-105 animate-pulse-slow transition-transform duration-1000 ease-out"
           />
+        ) : null}
+      </div>
+
+      {/* Video Audio & Toggle Controls (if video available) */}
+      {videoUrl && (
+        <div className="absolute top-20 right-6 z-30 flex items-center gap-2">
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-bold border border-white/20 backdrop-blur-md transition flex items-center gap-1.5 shadow-lg"
+            title={isMuted ? "បើកសំឡេង" : "បិទសំឡេង"}
+          >
+            {isMuted ? "🔇 សំឡេងបិទ" : "🔊 សំឡេងបើក"}
+          </button>
+          <button
+            onClick={() => setIsPlayingVideo(!isPlayingVideo)}
+            className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-bold border border-white/20 backdrop-blur-md transition flex items-center gap-1.5 shadow-lg"
+          >
+            {isPlayingVideo ? "⏸️ មើលរូបភាព" : "▶️ មើលវីដេអូ"}
+          </button>
         </div>
       )}
 
@@ -154,6 +187,15 @@ export function HeroBanner({ banners, anime }: HeroBannerProps) {
               >
                 <Crown className="w-4 h-4 fill-amber-400" /> VIP 4K UHD
               </Link>
+              <a
+                href="https://t.me/animekhnotocation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-3.5 rounded-xl bg-[#0088cc]/20 hover:bg-[#0088cc]/30 border border-[#0088cc]/40 hover:border-[#0088cc] text-[#29b6f6] font-bold text-xs sm:text-sm flex items-center gap-1.5 backdrop-blur-md transition-all hover:scale-105 shadow-md shadow-[#0088cc]/20"
+                title="ចូលរួម Telegram Channel ដើម្បីទទួលដំណឹងភាគថ្មីៗ"
+              >
+                <Send className="w-4 h-4 fill-[#29b6f6]" /> Telegram Channel
+              </a>
             </div>
           </div>
 

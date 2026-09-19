@@ -98,17 +98,29 @@ export function WatchPage() {
           setOfflineVideoUrl(offlineUrl);
         }
 
-        // Get resume position from history
+        // Get resume position from history (Server if logged in, LocalStorage for guests)
+        let foundResume = false;
         if (isAuthenticated) {
           try {
             const histRes = await api.get('/history');
             const histItem = histRes.data.find(
               (h: { episode_id: number; progress_seconds: number }) => h.episode_id === ep.id
             );
-            if (histItem && histItem.progress_seconds > 30) {
+            if (histItem && histItem.progress_seconds > 15) {
               setResumeAt(histItem.progress_seconds);
+              foundResume = true;
             }
           } catch { /* no history */ }
+        }
+
+        if (!foundResume && slug) {
+          try {
+            const localResume = localStorage.getItem(`resume_${slug}_${ep.episode_number}`);
+            if (localResume) {
+              const sec = parseFloat(localResume);
+              if (sec > 15) setResumeAt(sec);
+            }
+          } catch {}
         }
       }
     }).catch(async () => {
@@ -199,6 +211,27 @@ export function WatchPage() {
   }, [currentEp?.id]);
 
   const handleProgress = useCallback(async (currentTime: number, duration: number) => {
+    // Save to LocalStorage for guest & logged in users alike
+    if (slug && currentEp && currentTime > 10) {
+      try {
+        localStorage.setItem(`resume_${slug}_${currentEp.episode_number}`, currentTime.toString());
+        const histKey = 'local_watch_history';
+        const raw = localStorage.getItem(histKey);
+        let list: any[] = raw ? JSON.parse(raw) : [];
+        list = list.filter((item: any) => !(item.slug === slug && item.episode_number === currentEp.episode_number));
+        list.unshift({
+          slug,
+          episode_number: currentEp.episode_number,
+          progress_seconds: currentTime,
+          duration_seconds: duration,
+          updated_at: Date.now(),
+          anime_title: anime?.title,
+          poster_url: anime?.poster_url
+        });
+        localStorage.setItem(histKey, JSON.stringify(list.slice(0, 50)));
+      } catch {}
+    }
+
     if (!isAuthenticated || !anime || !currentEp) return;
     try {
       await api.post('/history', {
@@ -208,7 +241,7 @@ export function WatchPage() {
         duration_seconds: duration,
       });
     } catch { /* silent */ }
-  }, [isAuthenticated, anime, currentEp]);
+  }, [isAuthenticated, anime, currentEp, slug]);
 
   const goToEp = (epNumber: number) => {
     navigate(`/watch/${slug}/${epNumber}`);
@@ -475,6 +508,16 @@ export function WatchPage() {
                     <Info className="w-4 h-4" />
                   </Link>
                 )}
+                <a
+                  href="https://t.me/animekhnotocation"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 rounded-xl text-xs font-bold bg-[#0088cc]/20 hover:bg-[#0088cc] text-[#29b6f6] hover:text-white border border-[#0088cc]/40 transition-all flex items-center gap-1.5 shadow-sm"
+                  title="ចូលរួម Telegram Channel ទទួលដំណឹងភាគថ្មីៗ"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Telegram Channel</span>
+                </a>
               </div>
             </div>
           </div>

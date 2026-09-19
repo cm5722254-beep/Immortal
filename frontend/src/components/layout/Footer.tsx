@@ -26,26 +26,28 @@ export function Footer() {
               <p className="text-gray-400 text-xs leading-relaxed font-sans">
                 WatchFlix Anime — គេហទំព័រទស្សនារឿងចិន 3D (Donghua) និងរឿងជប៉ុន (Anime) កម្រិតច្បាស់ Full HD & 4K UHD គ្រប់ពេលវេលា គ្រប់ទីកន្លែង ដោយឥតគិតថ្លៃ និងល្បឿនលឿន។
               </p>
-              <div className="flex gap-2.5 pt-2">
+              <div className="flex items-center gap-2.5 pt-2">
                 <a
-                  href="https://t.me/nintplex"
+                  href="https://t.me/animekhnotocation"
                   target="_blank"
                   rel="noreferrer"
-                  className="w-8 h-8 rounded-xl bg-[#161F33] hover:bg-amber-500 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
-                  aria-label="Telegram Group Chat"
-                  title="Telegram Group Chat (@nintplex)"
+                  className="px-3 py-1.5 rounded-xl bg-[#0088cc]/20 hover:bg-[#0088cc] text-[#29b6f6] hover:text-white border border-[#0088cc]/40 flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm"
+                  aria-label="Telegram Channel"
+                  title="Official Telegram Channel (@animekhnotocation)"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Channel</span>
                 </a>
                 <a
-                  href="https://t.me/watchflixanimeadmin"
+                  href="https://t.me/animekhanddonghuabot"
                   target="_blank"
                   rel="noreferrer"
-                  className="w-8 h-8 rounded-xl bg-[#161F33] hover:bg-rose-500 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
-                  aria-label="Telegram Admin"
-                  title="Admin Telegram (@watchflixanimeadmin)"
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-600 text-gray-300 hover:text-white border border-white/15 flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm"
+                  aria-label="Telegram Anime Bot"
+                  title="Telegram Bot (@animekhanddonghuabot)"
                 >
-                  <Globe className="w-4 h-4" />
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Anime Bot</span>
                 </a>
               </div>
             </div>
