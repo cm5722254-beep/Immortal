@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play, Plus, Check, Star, Film } from 'lucide-react';
 import type { Anime } from '../../types';
@@ -40,7 +40,24 @@ export function AnimeCard({
     ? `Season ${anime.season}`
     : 'ភាគថ្មីៗ';
 
-  const imgSrc = anime.poster_url || anime.banner_url;
+  const [imgSrc, setImgSrc] = useState(anime.poster_url || anime.banner_url || '');
+  const [triedLocalFallback, setTriedLocalFallback] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(anime.poster_url || anime.banner_url || '');
+    setImageError(false);
+    setTriedLocalFallback(false);
+  }, [anime.poster_url, anime.banner_url]);
+
+  const handleImageError = () => {
+    if (!triedLocalFallback) {
+      setTriedLocalFallback(true);
+      // Try local poster by slug or id
+      setImgSrc(`/posters/${anime.slug}.jpg`);
+    } else {
+      setImageError(true);
+    }
+  };
 
   const toggleBookmark = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,7 +89,7 @@ export function AnimeCard({
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
-            onError={() => setImageError(true)}
+            onError={handleImageError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />
         ) : (

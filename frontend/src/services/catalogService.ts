@@ -10,7 +10,7 @@ export interface StaticCatalog {
 }
 
 let memoryCatalog: StaticCatalog | null = null;
-const CATALOG_STORAGE_KEY = 'nami_static_catalog_v2';
+const CATALOG_STORAGE_KEY = 'nami_static_catalog_v3';
 
 // 1. Synchronously get catalog from memory or localStorage (0.001s)
 export function getLocalCatalogSync(): StaticCatalog | null {
@@ -25,32 +25,36 @@ export function getLocalCatalogSync(): StaticCatalog | null {
   return null;
 }
 
-// 2. Fetch catalog from Vercel Edge CDN (/data/catalog.json - 10ms) or background API
+// 2. Fetch catalog from Live Database API (first priority) or fallback
 export async function loadCatalog(): Promise<StaticCatalog> {
-  const sync = getLocalCatalogSync();
-  if (sync && sync.anime && sync.anime.length > 0) {
-    // Refresh in background without blocking
-    refreshCatalogInBackground();
-    return sync;
-  }
+  refreshCatalogInBackground();
 
+  // 1. Try Live Database API first so any website/Supabase updates persist across refreshes!
   try {
-    const res = await fetch('/data/catalog.json');
+    const apiData = await fetchCatalogFromApi();
+    if (apiData && apiData.anime && apiData.anime.length > 0) {
+      return apiData;
+    }
+  } catch {}
+
+  // 2. Try static CDN /data/catalog.json fallback
+  try {
+    const res = await fetch(`/data/catalog.json?t=${Date.now()}`);
     if (res.ok) {
       const data: StaticCatalog = await res.json();
       if (data && data.anime && data.anime.length > 0) {
         memoryCatalog = data;
-        try {
-          localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(data));
-        } catch {}
-        refreshCatalogInBackground();
         return data;
       }
     }
   } catch {}
 
-  // Fallback to API if static fetch fails
-  return fetchCatalogFromApi();
+  const sync = getLocalCatalogSync();
+  if (sync && sync.anime && sync.anime.length > 0) {
+    return sync;
+  }
+
+  return { anime: [], banners: [], episodes: [] };
 }
 
 async function refreshCatalogInBackground() {
