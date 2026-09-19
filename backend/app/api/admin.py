@@ -753,3 +753,38 @@ async def reject_unban_request(
 
     return {"success": True, "message": "បានបដិសេធសំណើស្នើសុំដោះសោរ"}
 
+
+@router.delete("/unban-requests/{req_id}")
+async def delete_unban_request(
+    req_id: str,
+    admin: User = Depends(require_admin),
+):
+    """Admin deletes an individual appeal."""
+    from app.api.auth import load_unban_requests, save_unban_requests
+    reqs = load_unban_requests()
+    initial_len = len(reqs)
+    reqs = [r for r in reqs if str(r.get("id")) != str(req_id)]
+    if len(reqs) == initial_len:
+        raise HTTPException(status_code=404, detail="Unban request not found")
+    save_unban_requests(reqs)
+    return {"success": True, "message": "បានលុបសំណើស្នើសុំដោះសោររួចរាល់"}
+
+
+@router.delete("/unban-requests")
+async def clear_unban_requests(
+    status_filter: Optional[str] = None,  # 'resolved' or None/all
+    admin: User = Depends(require_admin),
+):
+    """Admin clears appeals (either only resolved, or all)."""
+    from app.api.auth import load_unban_requests, save_unban_requests
+    reqs = load_unban_requests()
+    if status_filter == "resolved":
+        reqs = [r for r in reqs if r.get("status") == "PENDING"]
+        message = "បានសម្អាតសំណើដែលបានដោះស្រាយរួចរាល់ទាំងអស់"
+    else:
+        reqs = []
+        message = "បានសម្អាតសំណើស្នើសុំដោះសោរទាំងអស់"
+    save_unban_requests(reqs)
+    return {"success": True, "message": message}
+
+

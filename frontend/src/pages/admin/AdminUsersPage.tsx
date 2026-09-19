@@ -235,6 +235,55 @@ export function AdminUsersPage() {
     }
   };
 
+  const handleDeleteAppeal = (reqId: string) => {
+    triggerConfirm({
+      title: 'លុបសំណើស្នើសុំដោះសោរ',
+      message: 'តើអ្នកពិតជាចង់លុបសំណើស្នើសុំដោះសោរមួយនេះមែនទេ?',
+      confirmText: 'លុបចោល',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          setSaving(true);
+          await api.delete(`/admin/unban-requests/${reqId}`);
+          setSuccessMsg('បានលុបសំណើស្នើសុំដោះសោររួចរាល់!');
+          setTimeout(() => setSuccessMsg(''), 4000);
+          fetchUnbanRequests();
+        } catch (err: any) {
+          setError(err?.response?.data?.detail || 'Failed to delete unban request');
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
+  };
+
+  const handleClearAppeals = (onlyResolved: boolean) => {
+    const title = onlyResolved ? 'សម្អាតសំណើដែលបានដោះស្រាយរួច' : 'សម្អាតសំណើទាំងអស់';
+    const message = onlyResolved
+      ? 'តើអ្នកចង់លុបសំណើទាំងអស់ដែលបានដោះសោរ ឬបដិសេធរួចរាល់ (Resolved) មែនទេ?'
+      : 'តើអ្នកចង់លុបសំណើទាំងអស់ចេញពីប្រព័ន្ធមែនទេ?';
+    triggerConfirm({
+      title,
+      message,
+      confirmText: 'យល់ព្រមសម្អាត',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          setSaving(true);
+          const url = onlyResolved ? '/admin/unban-requests?status_filter=resolved' : '/admin/unban-requests';
+          const res = await api.delete(url);
+          setSuccessMsg(res.data?.message || 'បានសម្អាតសំណើរួចរាល់!');
+          setTimeout(() => setSuccessMsg(''), 4000);
+          fetchUnbanRequests();
+        } catch (err: any) {
+          setError(err?.response?.data?.detail || 'Failed to clear unban requests');
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
+  };
+
   const handleDelete = (u: User) => {
     triggerConfirm({
       title: 'Delete User Account',
@@ -314,7 +363,7 @@ export function AdminUsersPage() {
         {activeTab === 'appeals' ? (
           /* ─── UNBAN APPEALS TABLE ─── */
           <div className="card overflow-hidden shadow-2xl space-y-4 p-4 sm:p-5">
-            <div className="flex items-center justify-between pb-3 border-b border-dark-border">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-dark-border">
               <div>
                 <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2 font-display">
                   <Mail className="w-5 h-5 text-amber-400" /> សំណើស្នើសុំដោះសោរ (Appeals)
@@ -323,12 +372,34 @@ export function AdminUsersPage() {
                   User ដែលជាប់ Disabled / Banned អាចផ្ញើសំណើមកទីនេះ
                 </p>
               </div>
-              <button
-                onClick={fetchUnbanRequests}
-                className="btn-secondary text-xs py-1.5 px-3"
-              >
-                Refresh សំណើ
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {unbanRequests.some((r) => r.status !== 'PENDING') && (
+                  <button
+                    onClick={() => handleClearAppeals(true)}
+                    disabled={saving}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="លុបសំណើដែលបានអនុម័ត ឬបដិសេធរួចរាល់"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> សម្អាតដែលដោះសោររួច
+                  </button>
+                )}
+                {unbanRequests.length > 0 && (
+                  <button
+                    onClick={() => handleClearAppeals(false)}
+                    disabled={saving}
+                    className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="សម្អាតសំណើស្នើសុំដោះសោរទាំងអស់"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> សម្អាតទាំងអស់
+                  </button>
+                )}
+                <button
+                  onClick={fetchUnbanRequests}
+                  className="btn-secondary text-xs py-1.5 px-3 cursor-pointer"
+                >
+                  Refresh សំណើ
+                </button>
+              </div>
             </div>
 
             {unbanRequests.length === 0 ? (
@@ -380,25 +451,38 @@ export function AdminUsersPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right space-x-2">
-                          {req.status === 'PENDING' && (
-                            <>
-                              <button
-                                onClick={() => handleApproveUnban(req.id)}
-                                disabled={saving}
-                                className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs shadow-md transition-all active:scale-95"
-                              >
-                                ✅ យល់ព្រម
-                              </button>
-                              <button
-                                onClick={() => handleRejectUnban(req.id)}
-                                disabled={saving}
-                                className="px-3 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-all"
-                              >
-                                ❌ បដិសេធ
-                              </button>
-                            </>
-                          )}
+                        <td className="px-4 py-3 text-right">
+                          <div className="inline-flex items-center justify-end gap-1.5">
+                            {req.status === 'PENDING' && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveUnban(req.id)}
+                                  disabled={saving}
+                                  className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+                                  title="យល់ព្រមដោះសោរ"
+                                >
+                                  ✅ យល់ព្រម
+                                </button>
+                                <button
+                                  onClick={() => handleRejectUnban(req.id)}
+                                  disabled={saving}
+                                  className="px-2.5 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-all cursor-pointer"
+                                  title="បដិសេធសំណើ"
+                                >
+                                  ❌ បដិសេធ
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => handleDeleteAppeal(req.id)}
+                              disabled={saving}
+                              className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/20 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                              title="លុបសំណើនេះចោល"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">លុប</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
