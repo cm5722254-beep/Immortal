@@ -1,14 +1,19 @@
 import logging
+import csv
+import io
+import re
+import unicodedata
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from pydantic import BaseModel, Field
 import httpx
 
 from app.core.database import get_db
 from app.models.episode import Episode
+from app.models.anime import Anime
 from app.models.user import User, UserRole
 from app.core.security import decode_token
 from app.dependencies.auth import require_admin, require_staff_or_admin
@@ -16,6 +21,75 @@ from app.dependencies.auth import require_admin, require_staff_or_admin
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/stream", tags=["Streaming Proxy"])
+
+CSV_TITLE_ALIASES = {
+    "ក្បាច់គុនព្រះអសុរ៉ា": 40,
+    "កំណត់ថ្ងៃក្លាយជាអាទិទេព": 12,
+    "កំនើតវីរៈបុរសនាគរាជ": 23,
+    "កំពូលឃាតករគ្មានគូប្រៀប": 22,
+    "ខ្សែជីវិតឯការ": 28,
+    "ខ្សែជីវិតអធិរាជអមតៈ": 30,
+    "គុកវិញ្ញាណ": 38,
+    "គុជអមតះធានី": 1,
+    "គ្រូពេទ្យទេវតា": 50,
+    "ច្បាប់បិសាច": 56,
+    "ច្រកទ្វារវេទមន្តអាថ៏កំបាំង": 34,
+    "ឆន្ទៈអមតៈ": 8,
+    "ជ្រើសរើសវាសនា": 31,
+    "ដាវទិពឈិនភីនអាន": 17,
+    "ដាវទេពជូសៀន": 41,
+    "ដាវអមត ជីងធាន": 19,
+    "ដំណើរឆ្ពោះទៅរកកំរិតអាទិទេព": 29,
+    "ដំណើរស្វែងរកអាទិទេព": 21,
+    "ទឹកដីថាមពលវិញ្ញាណ វគ្គ២": 5,
+    "ទេពធីតាអមតៈ": 54,
+    "និទានព្រះបុរាណ": 14,
+    "បណ្ឌិតសភាក្បាច់គុនបូព៌ា": 11,
+    "ប្រយុទ្ធទៅកាន់មេឃា វគ្គ៥": 4,
+    "ប្រហារព្រះ": 18,
+    "ប្រហារព្រះ វគ្ក២": 49,
+    "ផ្នូរអាទិទេព រដូវទី៣": 15,
+    "ពិភពថាមពលវេទមន្ត": 2,
+    "ពិភពនៃក្បាច់គុន វគ្គ៦": 26,
+    "ពិភពអាថ៏កំបាំង": 16,
+    "ភ្លើងសង្គ្រាមបំផ្លាញផែនដី": 33,
+    "មួយកាំបិតរញ្ជួយមេឃ": 13,
+    "រន្ទះដាវឆ្មាំពិឃាត": 32,
+    "រាត្រីអន្ធការ": 24,
+    "លោកប្តីអស្ចារ្យ": 25,
+    "វីរៈបុរសស៊ូឈីង": 20,
+    "សង្គ្រាមគ្រោះមហន្តរាយ": 67,
+    "សង្គ្រាមស្ដេចអមតៈ": 68,
+    "សម្ពន្ធ័មនុស្សអាក្រក់": 37,
+    "សិស្សច្បងកំពូលល្បិច": 9,
+    "ស្តេចកំណប់ទូចានឡុង": 10,
+    "ហានលី": 3,
+}
+
+
+def _normalize_csv_title(value: str) -> str:
+    value = unicodedata.normalize("NFC", value)
+    value = re.sub(r"[\u200b-\u200f\u2060\ufeff]", "", value)
+    return " ".join(value.split()).strip().casefold()
+
+
+def _parse_csv_episode(row: dict) -> tuple[str, int] | None:
+    clean_title = (row.get("Clean Movie Title") or row.get("anime_title") or row.get("title") or "").strip()
+    match = re.fullmatch(
+        r"(?P<series>.+?)\s+(?:ភាគ\s*(?P<khmer>[0-9០-៩]+)|(?:episode|ep\.?)\s*(?P<english>[0-9]+)|E(?P<short>[0-9]{1,3}))",
+        clean_title,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        digits = str.maketrans("០១២៣៤៥៦៧៨៩", "0123456789")
+        raw_number = match.group("khmer") or match.group("english") or match.group("short")
+        return match.group("series").strip(), int(raw_number.translate(digits))
+
+    filename = row.get("Filename") or row.get("filename") or ""
+    number_match = re.search(r"(?:ep|episode)[-_ ]?([0-9]+)", filename, re.IGNORECASE)
+    if number_match:
+        return clean_title, int(number_match.group(1))
+    return None
 
 # Global client for persistent connection pooling and streaming
 _http_client: Optional[httpx.AsyncClient] = None
@@ -504,6 +578,216 @@ class BulkEpisodeImportItem(BaseModel):
 class BulkImportRequest(BaseModel):
     anime_id: int
     episodes: List[BulkEpisodeImportItem]
+
+
+@router.get("/csv-export")
+async def export_episode_csv(
+    db: AsyncSession = Depends(get_db),
+    staff: User = Depends(require_staff_or_admin),
+):
+    """Download published anime and episode video links as a re-importable CSV."""
+    result = await db.execute(
+        select(Anime, Episode)
+        .join(Episode, Episode.anime_id == Anime.id)
+        .where(Anime.is_published == True, Episode.is_published == True)
+        .order_by(Anime.id, Episode.episode_number)
+    )
+    rows = result.all()
+    output = io.StringIO(newline="")
+    output.write("\ufeff")
+    writer = csv.DictWriter(output, fieldnames=[
+        "Anime ID",
+        "Clean Movie Title",
+        "Episode ID",
+        "Episode Number",
+        "Episode Title",
+        "video_url",
+        "Status",
+    ])
+    writer.writeheader()
+    for anime, episode in rows:
+        video_url = (episode.video_url or "").strip()
+        writer.writerow({
+            "Anime ID": anime.id,
+            "Clean Movie Title": f"{anime.title} ភាគ {episode.episode_number}",
+            "Episode ID": episode.id,
+            "Episode Number": episode.episode_number,
+            "Episode Title": episode.title or f"ភាគ {episode.episode_number}",
+            "video_url": video_url,
+            "Status": "completed" if video_url else "NO_LINK",
+        })
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": 'attachment; filename="anime_video_links.csv"',
+            "X-Exported-Rows": str(len(rows)),
+        },
+    )
+
+
+@router.post("/csv-import")
+async def import_episode_csv(
+    file: UploadFile = File(...),
+    apply: bool = Form(False),
+    db: AsyncSession = Depends(get_db),
+    staff: User = Depends(require_staff_or_admin),
+):
+    """Preview or apply episode links from a CSV using resolved anime titles and episode numbers."""
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Please upload a CSV file")
+    content = await file.read(10 * 1024 * 1024 + 1)
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="CSV file must be 10 MB or smaller")
+    try:
+        text = content.decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(text))
+        rows = list(reader)
+    except (UnicodeDecodeError, csv.Error) as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid UTF-8 CSV: {exc}") from exc
+
+    if not reader.fieldnames or not rows:
+        raise HTTPException(status_code=400, detail="CSV must include a header and at least one data row")
+
+    anime_result = await db.execute(select(Anime).where(Anime.is_published == True))
+    anime_list = anime_result.scalars().all()
+    anime_by_id = {anime.id: anime for anime in anime_list}
+    title_index: dict[str, list[Anime]] = {}
+    for anime in anime_list:
+        for title in (anime.title, anime.alt_title, anime.slug):
+            normalized = _normalize_csv_title(title or "")
+            if normalized:
+                title_index.setdefault(normalized, []).append(anime)
+
+    parsed_rows: dict[tuple[int, int], dict] = {}
+    skipped: list[dict] = []
+    conflicts: list[dict] = []
+    for line_number, row in enumerate(rows, start=2):
+        status_value = (row.get("Status") or "completed").strip().casefold()
+        if status_value not in {"", "completed", "complete", "success", "ok"}:
+            skipped.append({"row": line_number, "reason": f"status is {status_value}"})
+            continue
+
+        video_url = (row.get("Public URL") or row.get("video_url") or row.get("Video Link URL") or "").strip()
+        if not video_url:
+            skipped.append({"row": line_number, "reason": "video URL is empty"})
+            continue
+        if not re.match(r"^https?://", video_url, re.IGNORECASE):
+            skipped.append({"row": line_number, "reason": "video URL must use http or https"})
+            continue
+
+        parsed = _parse_csv_episode(row)
+        if not parsed:
+            skipped.append({"row": line_number, "reason": "could not resolve episode number from title or filename"})
+            continue
+        series_title, episode_number = parsed
+
+        anime_id_value = (row.get("Anime ID") or row.get("anime_id") or row.get("ID" if "Public URL" not in row else "") or "").strip()
+        anime = None
+        if anime_id_value.isdigit() and int(anime_id_value) in anime_by_id:
+            anime = anime_by_id[int(anime_id_value)]
+        else:
+            matches = title_index.get(_normalize_csv_title(series_title), [])
+            unique_matches = {candidate.id: candidate for candidate in matches}
+            if not unique_matches:
+                alias_id = next(
+                    (anime_id for alias, anime_id in CSV_TITLE_ALIASES.items() if _normalize_csv_title(alias) == _normalize_csv_title(series_title)),
+                    None,
+                )
+                anime = anime_by_id.get(alias_id) if alias_id else None
+            elif len(unique_matches) == 1:
+                anime = next(iter(unique_matches.values()))
+            else:
+                conflicts.append({"row": line_number, "title": series_title, "reason": "anime title matches multiple catalog entries"})
+                continue
+
+        if anime is None:
+            skipped.append({"row": line_number, "title": series_title, "reason": "anime title did not match the catalog"})
+            continue
+
+        key = (anime.id, episode_number)
+        previous = parsed_rows.get(key)
+        if previous and previous["video_url"] != video_url:
+            conflicts.append({"row": line_number, "title": series_title, "episode_number": episode_number, "reason": "duplicate episode has different video URLs"})
+            parsed_rows.pop(key, None)
+            continue
+        parsed_rows[key] = {
+            "anime_id": anime.id,
+            "anime_title": anime.title,
+            "episode_number": episode_number,
+            "episode_title": (row.get("Episode Title") or row.get("title") or f"ភាគ {episode_number}").strip(),
+            "video_url": video_url,
+        }
+
+    keys = list(parsed_rows)
+    existing_result = await db.execute(
+        select(Episode).where(
+            Episode.anime_id.in_([anime_id for anime_id, _ in keys]),
+            Episode.episode_number.in_([episode_number for _, episode_number in keys]),
+        ) if keys else select(Episode).where(Episode.id == -1)
+    )
+    existing_by_key: dict[tuple[int, int], list[Episode]] = {}
+    for episode in existing_result.scalars().all():
+        existing_by_key.setdefault((episode.anime_id, episode.episode_number), []).append(episode)
+
+    preview = []
+    for key, item in parsed_rows.items():
+        existing = existing_by_key.get(key, [])
+        if len(existing) > 1:
+            conflicts.append({"title": item["anime_title"], "episode_number": item["episode_number"], "reason": "database contains duplicate episode numbers"})
+            continue
+        action = "add" if not existing else ("unchanged" if existing[0].video_url == item["video_url"] else "update")
+        preview.append({**item, "action": action})
+
+    counts = {action: sum(1 for item in preview if item["action"] == action) for action in ("add", "update", "unchanged")}
+    if apply:
+        if conflicts:
+            raise HTTPException(status_code=409, detail={"message": "Resolve CSV conflicts before applying", "conflicts": conflicts, "preview": counts})
+        for item in preview:
+            if item["action"] == "unchanged":
+                continue
+            key = (item["anime_id"], item["episode_number"])
+            existing = existing_by_key.get(key, [])
+            if existing:
+                existing[0].video_url = item["video_url"]
+            else:
+                db.add(Episode(
+                    anime_id=item["anime_id"],
+                    episode_number=item["episode_number"],
+                    title=item["episode_title"],
+                    video_url=item["video_url"],
+                    duration_seconds=1200,
+                    is_published=True,
+                    is_free=item["episode_number"] <= 3,
+                ))
+        affected_anime_ids = {item["anime_id"] for item in preview if item["action"] == "add"}
+        for anime_id in affected_anime_ids:
+            anime = anime_by_id[anime_id]
+            episode_count = await db.scalar(
+                select(func.count()).where(Episode.anime_id == anime_id, Episode.is_published == True)
+            )
+            anime.episode_count = (episode_count or 0) + sum(
+                1 for item in preview if item["anime_id"] == anime_id and item["action"] == "add"
+            )
+        await db.commit()
+        try:
+            from app.core.redis import delete_cache_pattern
+            import asyncio
+            asyncio.create_task(delete_cache_pattern("episodes:*"))
+            asyncio.create_task(delete_cache_pattern("anime:*"))
+            from app.services.data_persistence import sync_database_to_export_json
+            asyncio.create_task(sync_database_to_export_json())
+        except Exception:
+            logger.exception("CSV import succeeded but cache/persistence refresh did not start")
+
+    return {
+        "applied": apply,
+        "counts": counts,
+        "preview": preview[:500],
+        "preview_truncated": len(preview) > 500,
+        "skipped": skipped[:200],
+        "conflicts": conflicts[:200],
+    }
 
 
 @router.post("/bulk-import")

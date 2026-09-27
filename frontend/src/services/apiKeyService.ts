@@ -71,4 +71,12 @@ export const apiKeyService = {
     const res = await api.post('/stream/bulk-import', dto);
     return res.data;
   },
+
+  importEpisodeCsv: async (file: File, apply = false) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('apply', String(apply));
+    const res = await api.post('/stream/csv-import', form);
+    return res.data;
+  },
 };

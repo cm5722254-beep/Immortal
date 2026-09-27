@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -6,6 +6,7 @@ from sqlalchemy import select
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User, UserRole
+from app.models.api_key import ApiKey
 
 from typing import Optional
 from app.core.config import settings
@@ -174,4 +175,33 @@ async def require_owner(user: User = Depends(get_current_user)) -> User:
             detail="Super Owner privileges required",
         )
     return user
+
+
+async def require_external_api_key(
+    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
+    db: AsyncSession = Depends(get_db),
+) -> ApiKey:
+    """Validate a database-backed external API key and account for its use."""
+    if not x_api_key or not x_api_key.startswith("nami_live_"):
+        raise HTTPException(status_code=401, detail="A valid X-API-Key header is required")
+    from app.core.security import hash_api_key
+    from datetime import datetime, timezone
+
+    result = await db.execute(select(ApiKey).where(ApiKey.key_hash == hash_api_key(x_api_key)))
+    key = result.scalar_one_or_none()
+    if not key or not key.is_active:
+        raise HTTPException(status_code=401, detail="API key is invalid or revoked")
+    expires_at = key.expires_at
+    if expires_at:
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at <= datetime.now(timezone.utc):
+            raise HTTPException(status_code=401, detail="API key has expired")
+    scopes = {scope.strip() for scope in (key.scopes or "all").split(",")}
+    if not ("all" in scopes or "anime:read" in scopes):
+        raise HTTPException(status_code=403, detail="API key does not have anime:read scope")
+    key.request_count = (key.request_count or 0) + 1
+    key.last_used_at = datetime.now(timezone.utc)
+    await db.commit()
+    return key
 

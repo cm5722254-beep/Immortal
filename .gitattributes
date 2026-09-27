@@ -57,6 +57,9 @@
 *.pdf binary
 *.exe binary
 
+# TypeScript source files share the .ts suffix with MPEG transport-stream media.
+frontend/src/**/*.ts diff merge text eol=lf
+
 # Large files — use Git LFS if needed
 # *.json filter=lfs diff=lfs merge=lfs -text
 # *.csv filter=lfs diff=lfs merge=lfs -text

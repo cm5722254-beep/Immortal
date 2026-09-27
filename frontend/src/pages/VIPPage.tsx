@@ -18,7 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { AcledaPaymentModal } from '../components/payment/AcledaPaymentModal';
+import { ManualVipPaymentModal } from '../components/payment/ManualVipPaymentModal';
 import { VIPLuckyWheel } from '../components/vip/VIPLuckyWheel';
 
 interface UpcomingPlan {
@@ -45,9 +45,7 @@ interface UpcomingPlan {
 
 export function VIPPage() {
   const { user, isVip } = useAuthStore();
-  const [notifySubscribed, setNotifySubscribed] = useState(false);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null);
-  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
 
   const upcomingPlans: UpcomingPlan[] = [
     {
@@ -56,9 +54,9 @@ export function VIPPage() {
       titleKhmer: 'គម្រោង ១ ខែ (1 Month)',
       duration: '៣០ ថ្ងៃ',
       days: 30,
-      priceUsd: 2.00,
-      priceKhr: 8000,
-      khrText: '៨,០០០',
+      priceUsd: 2.50,
+      priceKhr: 10000,
+      khrText: '១០,០០០',
       badge: 'សាកល្បង',
       popular: false,
       theme: {
@@ -83,9 +81,9 @@ export function VIPPage() {
       titleKhmer: 'គម្រោង ៣ ខែ (3 Months)',
       duration: '៩០ ថ្ងៃ',
       days: 90,
-      priceUsd: 6.25,
-      priceKhr: 25000,
-      khrText: '២៥,០០០',
+      priceUsd: 7.50,
+      priceKhr: 30000,
+      khrText: '៣០,០០០',
       badge: '★ ពេញនិយមបំផុត',
       popular: true,
       theme: {
@@ -111,9 +109,9 @@ export function VIPPage() {
       titleKhmer: 'គម្រោង ៦ ខែ (6 Months)',
       duration: '១៨០ ថ្ងៃ',
       days: 180,
-      priceUsd: 12.50,
-      priceKhr: 50000,
-      khrText: '៥០,០០០',
+      priceUsd: 15.00,
+      priceKhr: 60000,
+      khrText: '៦០,០០០',
       badge: '💎 តម្លៃពិសេស',
       popular: false,
       theme: {
@@ -139,9 +137,9 @@ export function VIPPage() {
       titleKhmer: 'គម្រោង ១ ឆ្នាំ (1 Year VIP)',
       duration: '៣៦៥ ថ្ងៃ',
       days: 365,
-      priceUsd: 22.50,
-      priceKhr: 90000,
-      khrText: '៩០,០០០',
+      priceUsd: 25.00,
+      priceKhr: 100000,
+      khrText: '១០០,០០០',
       badge: '👑 កំពូលសន្សំសំចៃ',
       popular: false,
       theme: {
@@ -178,7 +176,7 @@ export function VIPPage() {
   };
 
   const handleNotifyMe = () => {
-    setNotifySubscribed(true);
+    document.getElementById('vip-plans-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -188,13 +186,13 @@ export function VIPPage() {
       <div className="absolute top-[500px] right-5 w-96 h-96 bg-rose-600/10 rounded-full blur-[100px] pointer-events-none -z-10" />
       <div className="absolute top-[800px] left-5 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
-      {/* ── 1. Hero COMING SOON Banner Section ── */}
+      {/* ── VIP membership and payment ── */}
       <div className="text-center max-w-3xl mx-auto mb-14">
         
         {/* Glowing 3D Badge */}
         <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-500/20 via-pink-500/20 to-rose-500/20 border border-rose-500/50 text-rose-300 text-xs md:text-sm font-black mb-6 shadow-[0_0_30px_rgba(255,77,109,0.35)] animate-pulse">
           <Clock className="w-4 h-4 text-rose-400 animate-spin" style={{ animationDuration: '6s' }} />
-          <span>🚀 COMING SOON • នឹងបើកដំណើរការឆាប់ៗនេះ</span>
+          <span>KHQR PAYMENT • OWNER REVIEW</span>
         </div>
 
         {/* 3D Animated Crown Icon with Levitation */}
@@ -211,38 +209,29 @@ export function VIPPage() {
         </h1>
 
         <p className="text-gray-300 text-sm md:text-base mt-4 leading-relaxed max-w-2xl mx-auto">
-          ប្រព័ន្ធសមាជិកភាព VIP កំពុងស្ថិតក្នុងដំណាក់កាលអភិវឌ្ឍន៍ចុងក្រោយ (Final Tuning)។ យើងនឹងបើកដំណើរការការទូទាត់ស្វ័យប្រវត្តិតាមរយៈ <strong className="text-rose-400">Bakong KHQR</strong> និងម៉ាស៊ីនបម្រើ Cloud 4K UHD ល្បឿនលឿនក្នុងពេលឆាប់ៗនេះ!
+          ជ្រើសរើសគម្រោង រួចទូទាត់តាម KHQR ឬ payment link ដែល Owner បានកំណត់។ សូមបញ្ជូន transaction reference ដើម្បីឲ្យ Owner ពិនិត្យ និងបើកសិទ្ធិ VIP។
         </p>
 
         {/* Early Access Notification Subscription Pill */}
         <div className="mt-8 max-w-md mx-auto p-2 rounded-2xl bg-[#111827]/90 border border-rose-500/30 backdrop-blur-xl shadow-2xl flex items-center gap-2">
-          {notifySubscribed ? (
-            <div className="w-full py-2.5 px-4 text-emerald-400 font-bold text-xs sm:text-sm flex items-center justify-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>អរគុណ! យើងនឹងជូនដំណឹងដល់លោកអ្នកមុនគេបង្អស់។</span>
-            </div>
-          ) : (
-            <>
-              <div className="flex-1 px-3 text-left">
-                <span className="text-xs text-gray-300 flex items-center gap-1.5">
-                  <Bell className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                  <span>ទទួលដំណឹងពេលបើកដំណើរការ VIP</span>
-                </span>
-              </div>
-              <button
-                onClick={handleNotifyMe}
-                className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-bold text-xs shrink-0 shadow-lg shadow-rose-500/30 transition-all cursor-pointer active:scale-95 flex items-center gap-1"
-              >
-                <span>ជូនដំណឹងខ្ញុំ</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </>
-          )}
+          <div className="flex-1 px-3 text-left">
+            <span className="text-xs text-gray-300 flex items-center gap-1.5">
+              <Bell className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              <span>ជ្រើសរើសគម្រោង VIP</span>
+            </span>
+          </div>
+          <button
+            onClick={handleNotifyMe}
+            className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-bold text-xs shrink-0 shadow-lg shadow-rose-500/30 transition-all cursor-pointer active:scale-95 flex items-center gap-1"
+          >
+            <span>មើលគម្រោង</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* Contact Admin for Early Access Preview */}
         <div className="mt-5 text-xs text-gray-400 flex items-center justify-center gap-2">
-          <span>ចង់សាកល្បងមុនគេ (Early Access)?</span>
+          <span>មានសំណួរអំពីការទូទាត់?</span>
           <a
             href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent('សួស្តី Admin ខ្ញុំចង់សាកសួរអំពីគម្រោង VIP Member (Early Access)')}`}
             target="_blank"
@@ -370,18 +359,18 @@ export function VIPPage() {
                   </div>
                 </div>
 
-                {/* Coming Soon Button */}
+                {/* Manual payment action */}
                 <div className="pt-4 border-t border-white/10 space-y-2">
                   <button
-                    onClick={() => setShowComingSoonModal(true)}
+                    onClick={() => setSelectedPlanForPayment(plan.id)}
                     className="w-full py-3.5 px-4 rounded-2xl text-xs md:text-sm font-black flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-black shadow-amber-500/25"
                   >
                     <Clock className="w-4 h-4 text-black" />
-                    <span>មកដល់ឆាប់ៗនេះ (Coming Soon)</span>
+                    <span>ទូទាត់តាម KHQR / Link</span>
                   </button>
                   <p className="text-[10px] text-center text-amber-300/90 font-bold flex items-center justify-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-300" />
-                    <span>ប្រព័ន្ធជាវ VIP កំពុងរៀបចំ នឹងសម្ពោធឆាប់ៗនេះ!</span>
+                    <span>បញ្ជាក់ការទូទាត់ដោយ Owner</span>
                   </p>
                 </div>
               </div>
@@ -464,77 +453,14 @@ export function VIPPage() {
 
       {/* ── 5. Bakong KHQR VIP Checkout Modal ── */}
       {selectedPlanForPayment && (
-        <AcledaPaymentModal
-          isOpen={Boolean(selectedPlanForPayment)}
-          onClose={() => setSelectedPlanForPayment(null)}
+        <ManualVipPaymentModal
           planKey={selectedPlanForPayment}
-          onPaymentSuccess={() => {
-            // Grant +1 spin for user
-            const storageKey = `vip_spins_${user?.id || 'guest'}`;
-            const currentSpins = parseInt(localStorage.getItem(storageKey) || '0', 10);
-            localStorage.setItem(storageKey, (currentSpins + 1).toString());
-
-            setSelectedPlanForPayment(null);
-
-            // Smooth scroll to lucky wheel
-            setTimeout(() => {
-              const wheelEl = document.getElementById('lucky-wheel');
-              if (wheelEl) wheelEl.scrollIntoView({ behavior: 'smooth' });
-            }, 600);
-          }}
+          planTitle={upcomingPlans.find((plan) => plan.id === selectedPlanForPayment)?.titleKhmer || 'VIP'}
+          priceKhr={upcomingPlans.find((plan) => plan.id === selectedPlanForPayment)?.priceKhr || 0}
+          onClose={() => setSelectedPlanForPayment(null)}
         />
       )}
 
-      {/* ── Coming Soon Modal ── */}
-      {showComingSoonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#1c0d18] via-[#120710] to-[#0a0309] border border-amber-500/40 shadow-[0_20px_60px_rgba(245,158,11,0.3)] text-center space-y-5">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-black shadow-lg shadow-amber-500/40">
-              <Crown className="w-9 h-9 fill-black" />
-            </div>
-
-            <div>
-              <span className="text-xs font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
-                🚀 Coming Soon • មកដល់ឆាប់ៗនេះ
-              </span>
-              <h3 className="text-xl sm:text-2xl font-black text-white mt-2">
-                គម្រោងសមាជិក VIP 4K UHD
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
-                មុខងារជាវ VIP តាមរយៈ KHQR (ABA, ACLEDA, Wing) កំពុងស្ថិតក្រោមការរៀបចំប្រព័ន្ធ។ សូមចូលរួមក្នុង Telegram Channel ផ្លូវការ ដើម្បីទទួលបានដំណឹងថ្ងៃសម្ពោធ និងកាដូ Discount Code បញ្ចុះតម្លៃ <strong>50%</strong> មុនគេបង្អស់!
-              </p>
-            </div>
-
-            <div className="space-y-2.5 pt-2">
-              <a
-                href="https://t.me/animekhnotocation"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 px-4 rounded-2xl font-black text-sm bg-gradient-to-r from-[#0088cc] to-[#00a2ed] hover:from-[#0077b5] hover:to-[#0091d5] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#0088cc]/30 transition hover:scale-102"
-              >
-                <Send className="w-4 h-4 fill-white" />
-                <span>ចូលរួម Telegram Channel ផ្លូវការ</span>
-              </a>
-
-              <a
-                href="https://t.me/animekhanddonghuabot"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 px-4 rounded-2xl font-bold text-xs bg-white/10 hover:bg-white/15 text-gray-200 border border-white/15 flex items-center justify-center gap-2 transition"
-              >
-                <span>🤖 ឆាតជាមួយ Anime Bot (@animekhanddonghuabot)</span>
-              </a>
-
-              <button
-                onClick={() => setShowComingSoonModal(false)}
-                className="w-full py-2.5 text-xs text-gray-400 hover:text-white transition"
-              >
-                បិទផ្ទាំងនេះ (Close)
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

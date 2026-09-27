@@ -8,7 +8,7 @@ import { apiKeyService } from '../../services/apiKeyService';
 import type { ApiKeyItem, SignStreamResult } from '../../services/apiKeyService';
 
 export function AdminApiKeysPage() {
-  const [activeTab, setActiveTab] = useState<'keys' | 'stream' | 'bulk'>('keys');
+  const [activeTab, setActiveTab] = useState<'keys' | 'stream' | 'bulk' | 'csv'>('keys');
 
   // Keys state
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
@@ -32,6 +32,9 @@ export function AdminApiKeysPage() {
   const [bulkText, setBulkText] = useState('');
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkResult, setBulkResult] = useState<any>(null);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvPreview, setCsvPreview] = useState<any>(null);
+  const [csvLoading, setCsvLoading] = useState(false);
 
   const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedbackMsg({ text, type });
@@ -175,6 +178,24 @@ export function AdminApiKeysPage() {
     }
   };
 
+  const handleCsvImport = async (apply: boolean) => {
+    if (!csvFile) {
+      showNotification('សូមជ្រើសរើស CSV file ជាមុន', 'error');
+      return;
+    }
+    setCsvLoading(true);
+    try {
+      const result = await apiKeyService.importEpisodeCsv(csvFile, apply);
+      setCsvPreview(result);
+      showNotification(apply ? 'បានអនុវត្ត CSV ទៅ Database រួចរាល់' : 'បានបង្កើត CSV preview រួចរាល់');
+    } catch (e: any) {
+      setCsvPreview(e?.response?.data?.detail || null);
+      showNotification(e?.response?.data?.detail?.message || e?.response?.data?.detail || 'CSV import failed', 'error');
+    } finally {
+      setCsvLoading(false);
+    }
+  };
+
   return (
     <AdminLayout title="គ្រប់គ្រង API Keys">
       <div className="space-y-4 sm:space-y-6">
@@ -263,6 +284,12 @@ export function AdminApiKeysPage() {
             >
               <Layers className="w-4 h-4" />
               R2 Bulk Importer
+            </button>
+            <button
+              onClick={() => setActiveTab('csv')}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-all ${activeTab === 'csv' ? 'border-brand-500 text-brand-400' : 'border-transparent text-gray-400 hover:text-white'}`}
+            >
+              <Database className="w-4 h-4" /> CSV Match & Import
             </button>
           </div>
         </div>
@@ -559,6 +586,42 @@ export function AdminApiKeysPage() {
             {bulkResult && (
               <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300">
                 🎉 បាន Import ជោគជ័យ៖ បន្ថែមថ្មី <strong>{bulkResult.added}</strong> ភាគ និង Update <strong>{bulkResult.updated}</strong> ភាគ!
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'csv' && (
+          <div className="max-w-4xl space-y-4 rounded-xl border border-dark-border bg-dark-card p-5 shadow-xl sm:p-6">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-bold text-white"><Database className="h-5 w-5 text-emerald-400" /> CSV Episode Link Import</h2>
+              <p className="mt-1 text-xs leading-relaxed text-gray-400">Match by Anime ID or exact catalog title / verified alias plus episode number. Pending uploads are skipped. Preview first; applying updates existing links and adds missing episodes.</p>
+            </div>
+            <label className="block text-xs font-semibold text-gray-300">Upload CSV file
+              <input type="file" accept=".csv,text/csv" onChange={(event) => { setCsvFile(event.target.files?.[0] || null); setCsvPreview(null); }} className="mt-2 block w-full rounded-lg border border-dark-border bg-dark-bg p-3 text-xs text-gray-200 file:mr-3 file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white" />
+            </label>
+            {csvFile && <p className="font-mono text-xs text-gray-400">{csvFile.name} · {(csvFile.size / 1024).toFixed(1)} KB</p>}
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => handleCsvImport(false)} disabled={csvLoading || !csvFile} className="rounded-lg border border-emerald-400/30 px-4 py-2.5 text-xs font-bold text-emerald-300 disabled:opacity-50">{csvLoading ? 'Checking…' : 'Preview matches'}</button>
+              <button onClick={() => handleCsvImport(true)} disabled={csvLoading || !csvFile || !csvPreview?.counts || (csvPreview?.conflicts?.length ?? 0) > 0} className="rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-black disabled:opacity-50">Apply CSV updates</button>
+            </div>
+            {csvPreview?.counts && (
+              <div className="space-y-3 border-t border-white/10 pt-4">
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-white/5 p-3"><strong className="block text-emerald-300">{csvPreview.counts.add}</strong><span className="text-gray-400">Add</span></div>
+                  <div className="bg-white/5 p-3"><strong className="block text-amber-300">{csvPreview.counts.update}</strong><span className="text-gray-400">Update</span></div>
+                  <div className="bg-white/5 p-3"><strong className="block text-gray-300">{csvPreview.counts.unchanged}</strong><span className="text-gray-400">Unchanged</span></div>
+                </div>
+                {!!csvPreview.conflicts?.length && <div className="border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-200">Conflicts must be resolved before applying: {csvPreview.conflicts.length}</div>}
+                <div className="max-h-72 overflow-auto border border-white/10">
+                  {(csvPreview.preview || []).slice(0, 100).map((item: any, index: number) => (
+                    <div key={`${item.anime_id}-${item.episode_number}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 border-b border-white/5 px-3 py-2 text-xs last:border-0">
+                      <span className="truncate text-gray-200">{item.anime_title} · Ep {item.episode_number}</span><span className={item.action === 'add' ? 'text-emerald-300' : item.action === 'update' ? 'text-amber-300' : 'text-gray-500'}>{item.action}</span>
+                    </div>
+                  ))}
+                  {csvPreview.preview_truncated && <p className="p-3 text-xs text-gray-500">Preview truncated to 500 rows.</p>}
+                </div>
+                {!!csvPreview.skipped?.length && <p className="text-xs text-gray-500">Skipped rows: {csvPreview.skipped.length}. Unmatched or pending rows stay untouched.</p>}
               </div>
             )}
           </div>

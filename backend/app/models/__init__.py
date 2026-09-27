@@ -11,6 +11,7 @@ from app.models.banner import Banner
 from app.models.danmaku import Danmaku
 from app.models.payment import PaymentTransaction
 from app.models.api_key import ApiKey
+from app.models.platform_setting import PlatformSetting
 
 __all__ = [
     "User", "UserRole",
@@ -25,5 +26,6 @@ __all__ = [
     "Danmaku",
     "PaymentTransaction",
     "ApiKey",
+    "PlatformSetting",
 ]
 

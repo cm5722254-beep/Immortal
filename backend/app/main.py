@@ -23,7 +23,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.redis import init_redis, close_redis, get_redis_stats, delete_cache_pattern
-from app.api import auth, users, anime, episodes, favorites, history, comments, ratings, search, admin, genres, danmaku, schedule, ws, stream, theme, notifications, site_settings, payment, api_keys
+from app.api import auth, users, anime, episodes, favorites, history, comments, ratings, search, admin, genres, danmaku, schedule, ws, stream, theme, notifications, site_settings, payment, api_keys, external_catalog
 
 
 # Rate limiter
@@ -148,6 +148,7 @@ app.include_router(theme.router, prefix=API_PREFIX)
 app.include_router(notifications.router, prefix=API_PREFIX)
 app.include_router(site_settings.router, prefix=API_PREFIX)
 app.include_router(api_keys.router, prefix=API_PREFIX)
+app.include_router(external_catalog.router, prefix=API_PREFIX)
 app.include_router(ws.router)
 
 # ── Serve uploaded images (poster, banner) as static files ──

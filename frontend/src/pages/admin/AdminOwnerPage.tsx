@@ -58,10 +58,27 @@ export function AdminOwnerPage() {
   const [stats, setStats] = useState<any>(null);
   const [admins, setAdmins] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'admins' | 'security' | 'platform' | 'logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'admins' | 'security' | 'platform' | 'video_csv' | 'logs'>('overview');
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [saving, setSaving] = useState(false);
+  const [paymentSettings, setPaymentSettings] = useState({
+    enabled: false,
+    method: 'khqr' as 'khqr' | 'link' | 'both',
+    display_name: 'VIP Membership',
+    instructions: '',
+    payment_link: '',
+    qr_image_url: '',
+    merchant_name: '',
+    currency: 'KHR',
+    accent_color: '#D5A63C',
+    background_color: '#101318',
+  });
+  const [pendingPayments, setPendingPayments] = useState<any[]>([]);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [videoCsvFile, setVideoCsvFile] = useState<File | null>(null);
+  const [videoCsvPreview, setVideoCsvPreview] = useState<any>(null);
+  const [videoCsvBusy, setVideoCsvBusy] = useState(false);
 
   // Platform Settings State
   const [platformSettings, setPlatformSettings] = useState({
@@ -103,6 +120,13 @@ export function AdminOwnerPage() {
       if (statsRes.data) setStats(statsRes.data);
       const allUsers = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data?.items || [];
       setAdmins(allUsers.filter((u: any) => u.role === 'ADMIN' || u.role === 'STAFF' || u.role === 'OWNER'));
+
+      const [paymentSettingsRes, pendingPaymentsRes] = await Promise.all([
+        api.get('/payment/settings').catch(() => ({ data: null })),
+        api.get('/payment/admin/manual/pending').catch(() => ({ data: [] })),
+      ]);
+      if (paymentSettingsRes.data) setPaymentSettings((current) => ({ ...current, ...paymentSettingsRes.data }));
+      setPendingPayments(Array.isArray(pendingPaymentsRes.data) ? pendingPaymentsRes.data : []);
 
       // Check system health
       await checkSystemHealth();
@@ -152,6 +176,103 @@ export function AdminOwnerPage() {
     });
   };
 
+  const savePaymentSettings = async () => {
+    setPaymentBusy(true);
+    try {
+      await api.put('/payment/admin/settings', paymentSettings);
+      showSuccess('KHQR/payment settings saved. VIP page updated.');
+    } catch (e: any) {
+      showError(e?.response?.data?.detail || 'Could not save payment settings');
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
+  const deletePaymentSettings = async () => {
+    if (!window.confirm('Delete the saved VIP payment settings?')) return;
+    setPaymentBusy(true);
+    try {
+      await api.delete('/payment/admin/settings');
+      setPaymentSettings((current) => ({ ...current, enabled: false, payment_link: '', qr_image_url: '' }));
+      showSuccess('Saved payment settings deleted.');
+    } catch (e: any) {
+      showError(e?.response?.data?.detail || 'Could not delete payment settings');
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
+  const reviewManualPayment = async (transactionId: string, approved: boolean) => {
+    setPaymentBusy(true);
+    try {
+      await api.post(`/payment/admin/manual/${encodeURIComponent(transactionId)}/review`, { approved });
+      const response = await api.get('/payment/admin/manual/pending');
+      setPendingPayments(response.data || []);
+      showSuccess(approved ? 'Payment approved and VIP activated.' : 'Payment declined.');
+    } catch (e: any) {
+      showError(e?.response?.data?.detail || 'Could not review payment');
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
+  const importVideoCsv = async (apply: boolean) => {
+    if (!videoCsvFile) {
+      showError('Please choose a CSV file first.');
+      return;
+    }
+    setVideoCsvBusy(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', videoCsvFile);
+      formData.append('apply', String(apply));
+      const response = await api.post('/stream/csv-import', formData);
+      setVideoCsvPreview(response.data);
+      showSuccess(apply ? 'CSV video links imported successfully.' : 'CSV preview is ready.');
+    } catch (e: any) {
+      const detail = e?.response?.data?.detail;
+      setVideoCsvPreview(detail?.conflicts ? { conflicts: detail.conflicts, counts: detail.preview } : null);
+      if (!e?.response) {
+        showError(`CSV import cannot reach the backend at ${api.defaults.baseURL}. Start the backend API, then retry.`);
+      } else {
+        showError(detail?.message || (typeof detail === 'string' ? detail : `CSV import failed (HTTP ${e.response.status}).`));
+      }
+    } finally {
+      setVideoCsvBusy(false);
+    }
+  };
+
+  const exportVideoCsv = async () => {
+    setVideoCsvBusy(true);
+    try {
+      const response = await api.get('/stream/csv-export', { responseType: 'blob' });
+      const downloadUrl = URL.createObjectURL(response.data);
+      const anchor = document.createElement('a');
+      anchor.href = downloadUrl;
+      anchor.download = 'anime_video_links.csv';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(downloadUrl);
+      showSuccess('Video links CSV downloaded.');
+    } catch (e: any) {
+      if (!e?.response) {
+        showError(`CSV export cannot reach the backend at ${api.defaults.baseURL}. Start the backend API, then retry.`);
+      } else {
+        showError(e?.response?.data?.detail || `CSV export failed (HTTP ${e.response.status}).`);
+      }
+    } finally {
+      setVideoCsvBusy(false);
+    }
+  };
+
+  const openPaymentManagement = () => {
+    setActiveTab('platform');
+    window.setTimeout(() => {
+      document.getElementById('owner-khqr-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
   const statusDot = (status: string) =>
     status === 'online' ? 'bg-emerald-400' :
     status === 'checking' ? 'bg-amber-400 animate-pulse' :
@@ -167,6 +288,7 @@ export function AdminOwnerPage() {
     { id: 'admins', label: 'Admin & Staff', icon: ShieldCheck },
     { id: 'security', label: 'Security', icon: Lock },
     { id: 'platform', label: 'Platform Settings', icon: Settings },
+    { id: 'video_csv', label: 'Video CSV', icon: Database },
     { id: 'logs', label: 'System Logs', icon: Terminal },
   ] as const;
 
@@ -268,6 +390,15 @@ export function AdminOwnerPage() {
             </button>
           ))}
           <button
+            onClick={openPaymentManagement}
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/20"
+            title="Open KHQR configuration and pending payment reviews"
+          >
+            <DollarSign className="h-3.5 w-3.5" />
+            KHQR / Payments
+            {pendingPayments.length > 0 && <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] text-white">{pendingPayments.length}</span>}
+          </button>
+          <button
             onClick={loadData}
             className="ml-auto text-gray-500 hover:text-amber-400 transition-colors p-2 rounded-xl hover:bg-white/5"
             title="Refresh All Data"
@@ -285,7 +416,7 @@ export function AdminOwnerPage() {
             {/* System Health Cards */}
             <div>
               <SectionHeader icon={Activity} title="System Health Monitor" subtitle="Real-time status of all NAMI ANIME services" />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[
                   { key: 'api_status', label: 'FastAPI Backend', icon: Server, desc: 'REST API Engine' },
                   { key: 'db_status', label: 'Database', icon: Database, desc: 'SQLite / PostgreSQL' },
@@ -312,6 +443,19 @@ export function AdminOwnerPage() {
                   </div>
                 ))}
               </div>
+              <button
+                onClick={openPaymentManagement}
+                className="mt-3 flex w-full items-center justify-between gap-4 rounded-xl border border-emerald-400/30 bg-emerald-500/[0.07] p-4 text-left transition hover:border-emerald-300/60 hover:bg-emerald-500/[0.12]"
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300"><DollarSign className="h-5 w-5" /></span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-black text-white">KHQR / VIP Payments</span>
+                    <span className="mt-0.5 block text-xs text-gray-400">{paymentSettings.enabled ? 'ទទួលសំណើទូទាត់កំពុងបើក' : 'រៀបចំ QR, payment link និងបើកការទូទាត់'} · {pendingPayments.length} សំណើរង់ចាំ</span>
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-emerald-300" />
+              </button>
             </div>
 
             {/* Full Stats Grid */}
@@ -358,6 +502,7 @@ export function AdminOwnerPage() {
                 {[
                   { label: 'Manage Admins', sub: 'Add / Remove Admins', icon: ShieldCheck, color: 'text-amber-400', border: 'border-amber-500/30', to: '#admins', tab: 'admins' },
                   { label: 'Platform Settings', sub: 'Site config & controls', icon: Settings, color: 'text-blue-400', border: 'border-blue-500/30', to: '#platform', tab: 'platform' },
+                  { label: 'Video CSV', sub: 'Import / export episode links', icon: Database, color: 'text-emerald-400', border: 'border-emerald-500/30', to: '#video_csv', tab: 'video_csv' },
                   { label: 'Security Center', sub: 'Bans & protection', icon: Lock, color: 'text-red-400', border: 'border-red-500/30', to: '#security', tab: 'security' },
                   { label: 'System Logs', sub: 'Activity & audit trail', icon: Terminal, color: 'text-purple-400', border: 'border-purple-500/30', to: '#logs', tab: 'logs' },
                 ].map(({ label, sub, icon: Icon, color, border, tab }) => (
@@ -376,6 +521,63 @@ export function AdminOwnerPage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'video_csv' && (
+          <div className="max-w-5xl space-y-5">
+            <SectionHeader
+              icon={Database}
+              title="Import / Export Video Links CSV"
+              subtitle="Match episodes by anime ID or exact title and episode number. Preview before applying changes."
+              color="text-emerald-400"
+            />
+
+            <section className="rounded-2xl border border-emerald-500/25 bg-dark-card p-5 sm:p-6 space-y-4">
+              <div>
+                <h3 className="text-sm font-black text-white">Export video links</h3>
+                <p className="mt-1 text-xs text-gray-400">Download published anime episodes with IDs, titles, episode numbers, video URLs, and link status. The CSV can be used again for import.</p>
+              </div>
+              <button onClick={exportVideoCsv} disabled={videoCsvBusy} className="inline-flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-2.5 text-xs font-black text-black disabled:opacity-50">
+                <Database className="h-4 w-4" /> Download video_links.csv
+              </button>
+            </section>
+
+            <section className="rounded-2xl border border-amber-500/25 bg-dark-card p-5 sm:p-6 space-y-4">
+              <div>
+                <h3 className="text-sm font-black text-white">Import video links</h3>
+                <p className="mt-1 text-xs text-gray-400">Completed rows are matched against existing anime and episode records. Pending rows are skipped; ambiguous titles or conflicting duplicate URLs block applying.</p>
+              </div>
+              <label className="block text-xs font-bold text-gray-300">CSV file
+                <input type="file" accept=".csv,text/csv" onChange={(event) => { setVideoCsvFile(event.target.files?.[0] || null); setVideoCsvPreview(null); }} className="mt-2 block w-full rounded-lg border border-white/10 bg-dark-bg p-3 text-xs text-gray-200 file:mr-3 file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white" />
+              </label>
+              {videoCsvFile && <p className="font-mono text-xs text-gray-500">{videoCsvFile.name} · {(videoCsvFile.size / 1024).toFixed(1)} KB</p>}
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => importVideoCsv(false)} disabled={videoCsvBusy || !videoCsvFile} className="rounded-lg border border-amber-400/30 px-4 py-2.5 text-xs font-bold text-amber-300 disabled:opacity-50">Preview matches</button>
+                <button onClick={() => importVideoCsv(true)} disabled={videoCsvBusy || !videoCsvFile || !videoCsvPreview?.counts || (videoCsvPreview?.conflicts?.length ?? 0) > 0} className="rounded-lg bg-amber-400 px-4 py-2.5 text-xs font-black text-black disabled:opacity-50">Apply CSV import</button>
+              </div>
+
+              {videoCsvPreview?.counts && (
+                <div className="space-y-3 border-t border-white/10 pt-4">
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="bg-white/5 p-3"><strong className="block text-emerald-300">{videoCsvPreview.counts.add}</strong><span className="text-gray-400">Add</span></div>
+                    <div className="bg-white/5 p-3"><strong className="block text-amber-300">{videoCsvPreview.counts.update}</strong><span className="text-gray-400">Update</span></div>
+                    <div className="bg-white/5 p-3"><strong className="block text-gray-300">{videoCsvPreview.counts.unchanged}</strong><span className="text-gray-400">Unchanged</span></div>
+                  </div>
+                  {!!videoCsvPreview.conflicts?.length && <div className="border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-200">Resolve {videoCsvPreview.conflicts.length} conflict(s) before applying.</div>}
+                  <div className="max-h-80 overflow-auto border border-white/10">
+                    {(videoCsvPreview.preview || []).slice(0, 100).map((row: any, index: number) => (
+                      <div key={`${row.anime_id}-${row.episode_number}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 border-b border-white/5 px-3 py-2 text-xs last:border-0">
+                        <span className="truncate text-gray-200">{row.anime_title} · Ep {row.episode_number}</span>
+                        <span className={row.action === 'add' ? 'text-emerald-300' : row.action === 'update' ? 'text-amber-300' : 'text-gray-500'}>{row.action}</span>
+                      </div>
+                    ))}
+                    {videoCsvPreview.preview_truncated && <p className="p-3 text-xs text-gray-500">Preview limited to 500 records.</p>}
+                  </div>
+                  {!!videoCsvPreview.skipped?.length && <p className="text-xs text-gray-500">Skipped rows: {videoCsvPreview.skipped.length}. Pending and unmatched records are left untouched.</p>}
+                </div>
+              )}
+            </section>
           </div>
         )}
 
@@ -833,6 +1035,83 @@ export function AdminOwnerPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div id="owner-khqr-settings" className="scroll-mt-6 rounded-2xl border border-amber-500/25 bg-dark-card p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-black text-amber-300">VIP Payment & KHQR</h3>
+                  <p className="mt-1 text-[11px] text-gray-400">Controls the payment block shown to users on the VIP page.</p>
+                </div>
+                <label className="flex items-center gap-2 text-xs font-bold text-gray-200">
+                  <input type="checkbox" checked={paymentSettings.enabled} onChange={(event) => setPaymentSettings((value) => ({ ...value, enabled: event.target.checked }))} className="h-4 w-4 accent-amber-500" />
+                  Accept submissions
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="text-[11px] font-bold text-gray-400">Checkout name
+                  <input value={paymentSettings.display_name} onChange={(event) => setPaymentSettings((value) => ({ ...value, display_name: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
+                </label>
+                <label className="text-[11px] font-bold text-gray-400">Merchant / account name
+                  <input value={paymentSettings.merchant_name} onChange={(event) => setPaymentSettings((value) => ({ ...value, merchant_name: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
+                </label>
+                <label className="text-[11px] font-bold text-gray-400">Payment method
+                  <select value={paymentSettings.method} onChange={(event) => setPaymentSettings((value) => ({ ...value, method: event.target.value as typeof value.method }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white">
+                    <option value="khqr">KHQR image</option><option value="link">Payment link</option><option value="both">QR + link</option>
+                  </select>
+                </label>
+                <label className="text-[11px] font-bold text-gray-400">Currency
+                  <select value={paymentSettings.currency} onChange={(event) => setPaymentSettings((value) => ({ ...value, currency: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white">
+                    <option value="KHR">KHR (៛)</option><option value="USD">USD ($)</option>
+                  </select>
+                </label>
+                <label className="text-[11px] font-bold text-gray-400">KHQR image URL
+                  <input type="url" value={paymentSettings.qr_image_url} onChange={(event) => setPaymentSettings((value) => ({ ...value, qr_image_url: event.target.value }))} placeholder="https://... or /uploads/..." className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
+                </label>
+                <label className="text-[11px] font-bold text-gray-400">Payment URL
+                  <input type="url" value={paymentSettings.payment_link} onChange={(event) => setPaymentSettings((value) => ({ ...value, payment_link: event.target.value }))} placeholder="https://..." className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
+                </label>
+                <label className="text-[11px] font-bold text-gray-400 sm:col-span-2">Instructions for users
+                  <textarea rows={3} value={paymentSettings.instructions} onChange={(event) => setPaymentSettings((value) => ({ ...value, instructions: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
+                </label>
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400">Accent color
+                  <input type="color" value={paymentSettings.accent_color} onChange={(event) => setPaymentSettings((value) => ({ ...value, accent_color: event.target.value }))} className="h-8 w-10 cursor-pointer border-0 bg-transparent" />
+                  <span className="font-mono text-gray-300">{paymentSettings.accent_color}</span>
+                </label>
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400">Panel background
+                  <input type="color" value={paymentSettings.background_color} onChange={(event) => setPaymentSettings((value) => ({ ...value, background_color: event.target.value }))} className="h-8 w-10 cursor-pointer border-0 bg-transparent" />
+                  <span className="font-mono text-gray-300">{paymentSettings.background_color}</span>
+                </label>
+              </div>
+
+              <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                <button onClick={savePaymentSettings} disabled={paymentBusy} className="rounded-lg bg-amber-400 px-4 py-2.5 text-xs font-black text-black disabled:opacity-50">Save payment settings</button>
+                <button onClick={deletePaymentSettings} disabled={paymentBusy} className="rounded-lg border border-red-400/30 px-4 py-2.5 text-xs font-bold text-red-300 disabled:opacity-50">Delete settings</button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-500/20 bg-dark-card p-5 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-black text-emerald-300">Manual payment review</h3>
+                  <p className="mt-1 text-[11px] text-gray-500">Approving activates VIP. QR display alone never confirms payment.</p>
+                </div>
+                <span className="font-mono text-xs text-gray-400">{pendingPayments.length} pending</span>
+              </div>
+              {pendingPayments.length === 0 ? <p className="py-4 text-xs text-gray-500">No pending payment submissions.</p> : pendingPayments.map((payment) => (
+                <div key={payment.transaction_id} className="grid gap-3 border-t border-white/10 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div className="min-w-0 text-xs">
+                    <p className="font-bold text-white">{payment.username || `User #${payment.user_id}`} · {payment.plan_title} · {Number(payment.amount_khr).toLocaleString()} ៛</p>
+                    <p className="mt-1 break-all font-mono text-gray-400">{payment.reference} · {payment.transaction_id}</p>
+                    {payment.proof_url && <a href={payment.proof_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-emerald-300 underline">Open proof</a>}
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => reviewManualPayment(payment.transaction_id, true)} disabled={paymentBusy} className="rounded-md bg-emerald-500 px-3 py-2 text-xs font-bold text-black disabled:opacity-50">Approve</button>
+                    <button onClick={() => reviewManualPayment(payment.transaction_id, false)} disabled={paymentBusy} className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-bold text-red-300 disabled:opacity-50">Decline</button>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Platform Info */}
