@@ -54,6 +54,11 @@ export function VideoPlayer({
   const hideControlsTimer = useRef<number | undefined>(undefined);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const isPlayingRef = useRef(isPlaying);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
@@ -77,6 +82,10 @@ export function VideoPlayer({
   const [speed, setSpeed] = useState(1);
   const [quality, setQuality] = useState('1080p Full HD');
   const [showSettings, setShowSettings] = useState(false);
+  const showSettingsRef = useRef(showSettings);
+  useEffect(() => {
+    showSettingsRef.current = showSettings;
+  }, [showSettings]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null);
@@ -298,14 +307,47 @@ export function VideoPlayer({
     return () => clearInterval(progressReportRef.current);
   }, [isPlaying, onProgress]);
 
-  // Auto-hide controls
+  // Auto-hide controls after 3 seconds of inactivity while playing
   const resetControlsTimer = useCallback(() => {
     setShowControls(true);
-    clearTimeout(hideControlsTimer.current);
-    hideControlsTimer.current = window.setTimeout(() => {
-      if (isPlaying) setShowControls(false);
-    }, 3500);
-  }, [isPlaying]);
+    if (hideControlsTimer.current) {
+      window.clearTimeout(hideControlsTimer.current);
+      hideControlsTimer.current = undefined;
+    }
+    // Auto-hide after 3 seconds if playing and settings menu isn't open
+    if (isPlayingRef.current && !showSettingsRef.current) {
+      hideControlsTimer.current = window.setTimeout(() => {
+        if (isPlayingRef.current && !showSettingsRef.current) {
+          setShowControls(false);
+        }
+      }, 3000);
+    }
+  }, []);
+
+  // When playback state changes, manage controls visibility and auto-hide timer
+  useEffect(() => {
+    if (isPlaying) {
+      resetControlsTimer();
+    } else {
+      setShowControls(true);
+      if (hideControlsTimer.current) {
+        window.clearTimeout(hideControlsTimer.current);
+        hideControlsTimer.current = undefined;
+      }
+    }
+    return () => {
+      if (hideControlsTimer.current) {
+        window.clearTimeout(hideControlsTimer.current);
+      }
+    };
+  }, [isPlaying, resetControlsTimer]);
+
+  // When settings menu is closed while playing, start 3s timer
+  useEffect(() => {
+    if (!showSettings && isPlaying) {
+      resetControlsTimer();
+    }
+  }, [showSettings, isPlaying, resetControlsTimer]);
 
   // Video event handlers
   const handleTimeUpdate = () => {
@@ -345,7 +387,38 @@ export function VideoPlayer({
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
-    if (isPlaying) video.pause(); else video.play();
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play().catch(() => {});
+      resetControlsTimer();
+    }
+  };
+
+  const handlePlayerTap = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    // If clicking on an interactive control button or slider, let its own handler handle it
+    if ((e.target as HTMLElement)?.closest('button, input, a, select, [role="button"]')) {
+      return;
+    }
+
+    if (isIframeEmbed) return;
+
+    if (!showControls) {
+      // Controls were hidden -> Reveal controls and start 3s timer
+      resetControlsTimer();
+    } else {
+      // Controls were visible -> If playing, tapping anywhere on player immediately hides them
+      if (isPlaying) {
+        setShowControls(false);
+        if (hideControlsTimer.current) {
+          window.clearTimeout(hideControlsTimer.current);
+          hideControlsTimer.current = undefined;
+        }
+      } else {
+        // If paused, tap resumes play
+        togglePlay();
+      }
+    }
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -624,7 +697,7 @@ export function VideoPlayer({
         isFullscreen || isPseudoFullscreen
           ? 'fixed inset-0 z-[99999] w-screen h-[100dvh] max-w-none rounded-none border-none shadow-none flex items-center justify-center bg-black'
           : 'w-full aspect-video rounded-xl sm:rounded-2xl border border-white/[0.08] shadow-2xl'
-      } ${cinemaMode ? 'cinema-active' : ''}`}
+      } ${cinemaMode ? 'cinema-active' : ''} ${!showControls && isPlaying ? 'cursor-none' : 'cursor-default'}`}
       style={isRotatedLandscape ? {
         transform: 'rotate(90deg)',
         transformOrigin: 'center center',
@@ -639,7 +712,18 @@ export function VideoPlayer({
       } : undefined}
       onMouseMove={resetControlsTimer}
       onMouseEnter={resetControlsTimer}
-      onClick={isIframeEmbed ? undefined : togglePlay}
+      onMouseLeave={() => {
+        if (isPlaying && !showSettings) {
+          setShowControls(false);
+          if (hideControlsTimer.current) {
+            window.clearTimeout(hideControlsTimer.current);
+            hideControlsTimer.current = undefined;
+          }
+        }
+      }}
+      onTouchStart={resetControlsTimer}
+      onTouchMove={resetControlsTimer}
+      onClick={handlePlayerTap}
       onDoubleClick={(e) => { e.stopPropagation(); cycleScaleMode(e); }}
     >
       {/* Video or Iframe Element */}
@@ -750,7 +834,9 @@ export function VideoPlayer({
       {showSkipIntro && (
         <button
           onClick={(e) => { e.stopPropagation(); skipIntro(); }}
-          className="absolute bottom-20 left-6 z-30 btn bg-black/80 hover:bg-brand-600 border border-brand-500/50 text-white text-xs px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 animate-slide-up shadow-xl"
+          className={`absolute bottom-20 left-6 z-30 btn bg-black/80 hover:bg-brand-600 border border-brand-500/50 text-white text-xs px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 shadow-xl transition-all duration-300 ${
+            showControls ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'
+          }`}
         >
           <FastForward className="w-4 h-4 text-brand-400" />
           រំលងផ្ដើមរឿង (85s)
@@ -860,10 +946,18 @@ export function VideoPlayer({
       {/* Controls Overlay (Hidden when playing YouTube/iframe to avoid duplicate controls) */}
       {!isIframeEmbed && (
       <div
-        className={`absolute inset-0 flex flex-col justify-between p-3 sm:p-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] px-[max(0.75rem,env(safe-area-inset-left))] bg-gradient-to-t from-black/90 via-transparent to-black/60 transition-opacity duration-300 pointer-events-none z-30 ${
-          showControls ? 'opacity-100' : 'opacity-0'
+        className={`absolute inset-0 flex flex-col justify-between p-3 sm:p-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] px-[max(0.75rem,env(safe-area-inset-left))] bg-gradient-to-t from-black/90 via-transparent to-black/60 transition-all duration-300 z-30 ${
+          showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && isPlaying) {
+            setShowControls(false);
+            if (hideControlsTimer.current) {
+              window.clearTimeout(hideControlsTimer.current);
+              hideControlsTimer.current = undefined;
+            }
+          }
+        }}
       >
         {/* Top Header Bar */}
         <div className="flex items-center justify-between pointer-events-auto gap-2">
