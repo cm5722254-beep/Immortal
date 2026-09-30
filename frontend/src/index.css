@@ -4,26 +4,22 @@
 
 @layer base {
   :root {
-    --bg-base: #080d1a;
-    --bg-card: #0d1526;
-    --bg-card-subtle: #111e35;
-    --border-subtle: rgba(255, 255, 255, 0.1);
-    --accent-primary: #ff4d6d;
-    --color-brand: 255 77 109;
-    --color-brand-light: 255 241 242;
-    --color-accent-red: 255 77 109;
-    --color-accent-rose: 251 113 133;
-    --color-accent-cyan: 56 189 248;
-    --color-accent-gold: 245 158 11;
+    --bg-base: #000000;
+    --bg-card: #0a0a0a;
+    --bg-card-subtle: #111111;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --accent-primary: #ffffff;
+    --color-brand: 255 255 255;
+    --color-brand-light: 240 240 240;
+    --color-accent-red: 255 69 58;
+    --color-accent-rose: 255 105 97;
+    --color-accent-cyan: 100 210 255;
+    --color-accent-gold: 255 214 10;
   }
 
   body {
-    background-color: #080d1a;
-    background-image: 
-      radial-gradient(at 15% 0%, rgba(255, 77, 109, 0.08) 0px, transparent 45%),
-      radial-gradient(at 85% 10%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(8, 13, 26, 0.9) 0px, transparent 60%),
-      radial-gradient(at 30% 60%, rgba(255, 77, 109, 0.04) 0px, transparent 40%);
+    background-color: #000000;
+    background-image: none;
     background-attachment: fixed;
     color: #ffffff;
     font-family: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -86,7 +82,7 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #080d1a;
+    background: #000000;
   }
   ::-webkit-scrollbar-thumb {
     background: rgba(255, 77, 109, 0.35);
@@ -197,28 +193,27 @@
   }
 
 
-  /* Neon glow utilities */
+  /* Soft ambient shadows (iOS style) */
   .glow-sm {
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
   }
   .glow-md {
-    box-shadow: 0 0 32px rgba(239, 68, 68, 0.5);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.15);
   }
   .glow-lg {
-    box-shadow: 0 0 54px rgba(239, 68, 68, 0.65);
+    box-shadow: 0 12px 32px rgba(239, 68, 68, 0.2);
   }
   .glow-red {
-    box-shadow: 0 0 30px rgba(255, 59, 48, 0.55);
+    box-shadow: 0 8px 24px rgba(255, 59, 48, 0.15);
   }
-
   .glow-cyan {
-    box-shadow: 0 0 28px rgba(56, 189, 248, 0.45);
+    box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
   }
   .glow-gold {
-    box-shadow: 0 0 30px rgba(245, 158, 11, 0.45);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
   }
   .glow-dragon {
-    box-shadow: 0 0 35px rgba(239, 68, 68, 0.4), 0 0 15px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.15), 0 4px 12px rgba(245, 158, 11, 0.1);
   }
 
   /* Text gradient */
@@ -531,21 +526,21 @@
   transform: scale(1.04);
 }
 
-/* Netflix / Cinema Card Scale & Hover Zoom */
+/* Clean iOS Card Scale & Hover Shadow */
 .netflix-card {
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease, z-index 0.35s ease;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
   will-change: transform;
 }
 @media (hover: hover) {
   .netflix-card:hover {
-    transform: scale(1.06) translateY(-4px);
+    transform: scale(1.02) translateY(-2px);
     z-index: 40;
-    box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.85), 0 0 24px rgba(255, 77, 109, 0.35);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.4), 0 4px 12px -2px rgba(255, 77, 109, 0.15);
   }
 }
 @media (hover: none) {
   .netflix-card:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
 }
 
@@ -737,14 +732,13 @@
 .soundwave-bar:nth-child(2) { animation-delay: 0.2s; }
 .soundwave-bar:nth-child(3) { animation-delay: 0.4s; }
 
-/* 3D tilt on hover utility */
+/* Smooth clean scale on hover (iOS style replacing 3D tilt) */
 .tilt-3d {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 @media (hover: hover) {
   .tilt-3d:hover {
-    transform: perspective(800px) rotateX(-4deg) rotateY(4deg) scale(1.03);
+    transform: scale(1.02);
   }
 }
 

@@ -99,7 +99,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
     : '🌟 រុករកបញ្ជីរឿងទាំងអស់';
 
   return (
-    <main className="min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-[#080d1a] text-gray-100">
+    <main className="min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-black text-gray-100">
       {/* Header */}
       <div className="mb-6">
         <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight mb-1">{title}</h1>
@@ -107,7 +107,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
       </div>
 
       {/* ── Responsive Khmer Filter Toolbar ── */}
-      <div className="mb-8 space-y-3 bg-[#0e1629]/90 p-3.5 sm:p-4 rounded-2xl border border-white/10 backdrop-blur-xl shadow-lg">
+      <div className="mb-8 space-y-3 bg-[#0a0a0a]/90 p-3.5 sm:p-4 rounded-2xl border border-white/5 backdrop-blur-xl shadow-lg">
         {/* Type selector (Only if not fixed by route) */}
         {!defaultType && !isFreeOnly && (
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
@@ -126,8 +126,8 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
                   onClick={() => updateFilter('type', t.id)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                     active
-                      ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-500/30'
-                      : 'bg-[#131d36] hover:bg-white/10 text-gray-300 border border-white/5'
+                      ? 'bg-gradient-to-r from-gray-800 to-gray-700 text-white shadow-md'
+                      : 'bg-[#111] hover:bg-white/10 text-gray-300 border border-white/5'
                   }`}
                 >
                   {t.label}
@@ -172,7 +172,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
             <select
               value={sort}
               onChange={(e) => updateFilter('sort', e.target.value)}
-              className="bg-[#131d36] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500 transition-colors cursor-pointer"
+              className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-gray-500 transition-colors cursor-pointer"
             >
               <option value="latest">ថ្មីៗចុងក្រោយ</option>
               <option value="popular">ពេញនិយមបំផុត</option>
@@ -188,7 +188,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
           <SkeletonCard count={18} />
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-20 bg-[#0e1629]/60 rounded-3xl border border-white/5">
+        <div className="text-center py-20 bg-[#0a0a0a]/60 rounded-3xl border border-white/5">
           <p className="text-gray-300 text-base font-bold">រកមិនឃើញរឿងឡើយ</p>
           <p className="text-gray-500 text-xs mt-1">សូមសាកល្បងជ្រើសរើសប្រភេទរឿង ឬលក្ខខណ្ឌផ្សេងទៀត</p>
         </div>

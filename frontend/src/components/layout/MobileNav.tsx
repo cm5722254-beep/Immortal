@@ -35,7 +35,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Mobile application navigation"
-      className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-[#0A0E17]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] shadow-[0_-8px_32px_rgba(0,0,0,0.85)] select-none"
+      className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-black/80 backdrop-blur-3xl border-t border-white/[0.04] px-2 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] select-none"
     >
       <div className="flex items-center justify-around max-w-lg mx-auto">
         {tabs.map(({ to, icon: Icon, label, activeMatches }) => {

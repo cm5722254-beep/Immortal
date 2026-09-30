@@ -59,7 +59,7 @@ function ContentManagerGuard({ children }: { children: React.ReactNode }) {
   const isAuthorized = canManageContent || isOwner || isAdmin || isStaff || user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.role === 'STAFF' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#080306] flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -74,7 +74,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   const isAuthorized = isAdmin || isOwner || user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#080306] flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -89,7 +89,7 @@ function OwnerGuard({ children }: { children: React.ReactNode }) {
   const isAuthorized = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#080306] flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -117,7 +117,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={`min-h-screen flex flex-col text-gray-100 ${
-      isTelegram ? 'bg-[#080d1a] tg-theme-wrapper' : isMobileApp ? 'bg-[#060a14] apk-wrapper' : 'bg-[#080d1a]'
+      isTelegram ? 'bg-black tg-theme-wrapper' : isMobileApp ? 'bg-black apk-wrapper' : 'bg-black'
     }`}>
       {/* Promo banner on Desktop Website */}
       {isWeb && (

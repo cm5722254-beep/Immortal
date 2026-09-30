@@ -448,7 +448,7 @@ export function WatchPage() {
 
 
             {/* Episode Meta Bar (Compact Native Layout) */}
-            <div className="mt-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0c1220]/90 border border-white/[0.08] backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+            <div className="mt-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0a0a0a]/90 border border-white/[0.08] backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-[#E50914] text-white">
@@ -502,9 +502,9 @@ export function WatchPage() {
           </div>
 
           {/* Right Dedicated Episode Drawer */}
-          <div className="lg:w-80 lg:max-h-[600px] flex flex-col rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl overflow-hidden shrink-0 shadow-xl">
+          <div className="lg:w-80 lg:max-h-[600px] flex flex-col rounded-2xl bg-black border border-white/10 backdrop-blur-xl overflow-hidden shrink-0 shadow-xl">
             {/* Header with Search & View Toggle */}
-            <div className="p-3.5 border-b border-white/10 bg-[#131d36]/60 space-y-2.5">
+            <div className="p-3.5 border-b border-white/10 bg-[#111] space-y-2.5">
               <div className="flex items-center justify-between">
                 <h3 className="font-display font-bold text-white text-xs sm:text-sm flex items-center gap-2">
                   <List className="w-4 h-4 text-[#E8452C]" /> បញ្ជីភាគទាំងអស់ ({episodes.length})
@@ -546,7 +546,7 @@ export function WatchPage() {
                   value={epSearch}
                   onChange={(e) => setEpSearch(e.target.value)}
                   placeholder="ស្វែងរកលេខភាគ..."
-                  className="w-full bg-[#111726] border border-[#1E283C] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#E8452C] transition-colors"
+                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 transition-colors"
                 />
               </div>
             </div>
@@ -573,7 +573,7 @@ export function WatchPage() {
                             ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30 scale-[1.02] border border-amber-400'
                             : isEpVip
                             ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
-                            : 'bg-[#1E283C] hover:bg-[#2A3750] text-gray-200 border border-white/5'
+                            : 'bg-[#111] hover:bg-[#222] text-gray-200 border border-white/5'
                         }`}
                         title={`ភាគ ${ep.episode_number}`}
                       >

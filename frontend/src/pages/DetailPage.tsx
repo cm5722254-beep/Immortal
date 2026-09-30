@@ -370,7 +370,7 @@ export function DetailPage() {
   if (isLoading) return <SkeletonDetail />;
   if (!anime) {
     return (
-      <div className="min-h-screen bg-[#080d1a] pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
+      <div className="min-h-screen bg-black pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
         <Film className="w-16 h-16 text-rose-500/50 mb-4 animate-pulse" />
         <h2 className="text-2xl font-black text-white mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ</h2>
         <p className="text-gray-400 text-sm max-w-md mb-6">
@@ -384,9 +384,9 @@ export function DetailPage() {
   }
 
   return (
-    <main className="min-h-screen pb-24 md:pb-16 bg-[#080d1a] text-gray-100 selection:bg-rose-500 selection:text-white">
+    <main className="min-h-screen pb-24 md:pb-16 bg-black text-gray-100 selection:bg-rose-500 selection:text-white">
       {/* ── 1. Full-Bleed Cinematic Hero Banner (Mobile & Desktop App Style) ── */}
-      <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#111726] via-[#0d1322] to-[#080d1a]">
+      <div className="relative w-full overflow-hidden bg-black">
         
         {/* Full-Bleed Backdrop Image */}
         <div className="relative aspect-[16/10] sm:aspect-[21/9] md:h-[420px] w-full overflow-hidden">
@@ -396,7 +396,7 @@ export function DetailPage() {
             className="w-full h-full object-cover object-top sm:object-center opacity-40 blur-xs scale-105"
           />
           {/* Cinema Gradients */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#080d1a] via-[#080d1a]/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent h-24" />
 
           {/* Floating Top App Action Bar (Mobile Back & Share) */}
@@ -559,7 +559,7 @@ export function DetailPage() {
 
                 {/* Dropdown Options */}
                 {showMyListDropdown && (
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-[#111726] border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in text-left">
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-[#111] border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in text-left">
                     {[
                       { status: 'WATCHING' as MyListStatus, label: '👁️ កំពុងមើល (Watching)' },
                       { status: 'PLAN_TO_WATCH' as MyListStatus, label: '⏳ គ្រោងមើល (Plan)' },
@@ -682,7 +682,7 @@ export function DetailPage() {
         {activeTab === 'episodes' && (
           <div className="space-y-4">
             {/* Episode Toolbar (Search + Range Selector + Sort + View Mode) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl shadow-lg">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0a0a0a]/90 border border-white/10 backdrop-blur-xl shadow-lg">
               {/* Left: Search input */}
               <div className="relative flex-1 max-w-sm">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -691,7 +691,7 @@ export function DetailPage() {
                   value={epSearch}
                   onChange={(e) => setEpSearch(e.target.value)}
                   placeholder="ស្វែងរកលេខភាគ (ឧ. 1, 12, 105)..."
-                  className="w-full bg-[#131d36] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 transition-colors"
+                  className="w-full bg-[#111] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/30 transition-colors"
                 />
               </div>
 

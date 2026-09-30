@@ -1,386 +1,208 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
-import { HeroSpotlightCarousel } from '../components/home/HeroSpotlightCarousel';
-import { HeroBanner } from '../components/home/HeroBanner';
-import { MiniAppHeroBanner } from '../components/home/MiniAppHeroBanner';
-import { AnimeCard } from '../components/home/AnimeCard';
-import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
-import { TrendingRankCarousel } from '../components/home/TrendingRankCarousel';
-import { QuickCategoryFilter, type CategoryFilterType } from '../components/home/QuickCategoryFilter';
-import { useUiPreferencesStore } from '../store/uiPreferencesStore';
-
-import { SkeletonCard } from '../components/common/SkeletonLoader';
+import { Link, useNavigate } from 'react-router-dom';
+import { Play, TrendingUp, Sparkles, Star, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { getLocalCatalogSync, loadCatalog, extractHomeData } from '../services/catalogService';
 import type { Anime, Banner, WatchHistoryItem } from '../types';
+import { triggerHaptic } from '../utils/telegram';
 
-interface SectionProps {
-  title: string;
-  icon?: React.ElementType;
-  link: string;
-  items: Anime[];
-  isLoading: boolean;
-}
+// A completely new, ultra-modern Bento Box / Magazine style card
+function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean }) {
+  const navigate = useNavigate();
+  const detailUrl = `/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DONGHUA' ? 'donghua' : anime.type === 'DRAMA' ? 'drama' : 'movie'}/${anime.slug}`;
+  const watchUrl = `/watch/${anime.slug}/1`;
 
-function ContentSection({ title, link, items, isLoading }: SectionProps) {
-  if (!isLoading && items.length === 0) return null;
+  const tagText = anime.status === 'COMPLETED' ? `ចប់ត្រឹម ${anime.episode_count || 16} ភាគ` : anime.episode_count ? `ភាគ ${anime.episode_count}` : 'ថ្មីៗ';
 
   return (
-    <section className="mb-6 sm:mb-8 relative group/row">
-      {/* ── Section Header ── */}
-      <div className="flex items-center justify-between mb-2.5 px-1">
-        <Link
-          to={link}
-          className="group/title inline-flex items-center gap-1.5 text-white hover:text-rose-400 transition-colors min-w-0"
-        >
-          <span className="w-1 h-3.5 rounded-full bg-rose-500 shrink-0" />
-          <h2 className="font-display font-bold text-sm sm:text-base text-white tracking-wide truncate">
-            {title}
-          </h2>
-        </Link>
-        <Link
-          to={link}
-          className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors inline-flex items-center gap-0.5 shrink-0 ml-2"
-        >
-          <span>ទាំងអស់</span>
-          <ChevronRight className="w-3 h-3" />
-        </Link>
-      </div>
-
-      {/* ── Responsive Container: 105px cards on Mobile, Grid on Desktop ── */}
-      {isLoading ? (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3.5">
-          <SkeletonCard count={7} />
+    <div 
+      onClick={() => {
+        triggerHaptic('light');
+        navigate(detailUrl);
+      }}
+      className={`group relative rounded-3xl overflow-hidden bg-[#0a0a0a] border border-white/5 cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:border-white/20 hover:shadow-2xl hover:shadow-white/10 ${isLarge ? 'aspect-[4/5] sm:aspect-[16/9] md:aspect-[4/3] lg:aspect-[16/9] col-span-2 row-span-2' : 'aspect-[3/4] col-span-1'}`}
+    >
+      <img
+        src={anime.poster_url || anime.banner_url || ''}
+        alt={anime.title}
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
+      
+      <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between z-10">
+        <div className="flex justify-between items-start">
+          <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full border border-white/10">
+            {tagText}
+          </span>
+          {!anime.is_free && (
+            <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-1 rounded-lg">
+              VIP
+            </span>
+          )}
         </div>
-      ) : (
-        <>
-          {/* Mobile Horizontal Snap Rail (Netflix/Bilibili clean style) */}
-          <div className="flex md:hidden gap-3 overflow-x-auto no-scrollbar pb-1.5 pt-1 snap-x scroll-smooth px-1">
-            {items.map((anime) => (
-              <div key={anime.id} className="w-[92px] sm:w-[104px] shrink-0 snap-start">
-                <AnimeCard anime={anime} />
-              </div>
-            ))}
+
+        <div>
+          <h3 className={`font-display font-black text-white leading-tight mb-2 group-hover:text-amber-300 transition-colors ${isLarge ? 'text-2xl sm:text-4xl' : 'text-sm sm:text-lg'}`}>
+            {anime.title}
+          </h3>
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs text-gray-400 font-medium mb-4">
+            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> {anime.rating || '9.5'}</span>
+            <span>•</span>
+            <span>{anime.year || '2024'}</span>
+            <span>•</span>
+            <span className="truncate">{anime.type === 'DONGHUA' ? 'រឿងចិន 3D' : anime.type === 'ANIME' ? 'រឿងជប៉ុន' : 'ភាពយន្ត'}</span>
           </div>
 
-          {/* Desktop Responsive Grid */}
-          <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4">
-            {items.map((anime) => (
-              <AnimeCard key={anime.id} anime={anime} />
-            ))}
-          </div>
-        </>
-      )}
-    </section>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(watchUrl);
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-white text-black font-bold py-2.5 sm:py-3 rounded-xl hover:bg-gray-200 transition-colors active:scale-95 text-xs sm:text-sm"
+          >
+            <Play className="w-4 h-4 fill-black" />
+            ចាក់ទស្សនា
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 export function HomePage() {
   const { isAuthenticated } = useAuthStore();
-  const { cleanMode } = useUiPreferencesStore();
   
-  // Initial instant synchronous state from local cache (0.001s)
   const initialData = (() => {
     const sync = getLocalCatalogSync();
-    if (sync && sync.anime && sync.anime.length > 0) {
-      return extractHomeData(sync);
-    }
+    if (sync && sync.anime && sync.anime.length > 0) return extractHomeData(sync);
     return null;
   })();
 
-  const [banners, setBanners] = useState<Banner[]>(initialData?.banners || []);
   const [forYouDonghua, setForYouDonghua] = useState<Anime[]>(initialData?.forYouDonghua || []);
   const [popularDonghua, setPopularDonghua] = useState<Anime[]>(initialData?.popularDonghua || []);
-  const [drama, setDrama] = useState<Anime[]>(initialData?.drama || []);
-  const [movies, setMovies] = useState<Anime[]>(initialData?.movies || []);
   const [animeList, setAnimeList] = useState<Anime[]>(initialData?.animeList || []);
-  const [history, setHistory] = useState<WatchHistoryItem[]>([]);
+  const [movies, setMovies] = useState<Anime[]>(initialData?.movies || []);
   const [isLoading, setIsLoading] = useState(!initialData);
-  const [activeFilter, setActiveFilter] = useState<CategoryFilterType>('ALL');
 
   useEffect(() => {
     let isMounted = true;
-
     const initData = async () => {
       try {
-        // 1. Fast static load from CDN (10ms)
         const catalog = await loadCatalog();
         if (isMounted && catalog && catalog.anime && catalog.anime.length > 0) {
           const extracted = extractHomeData(catalog);
-          setBanners(extracted.banners);
           setForYouDonghua(extracted.forYouDonghua);
           setPopularDonghua(extracted.popularDonghua);
-          setDrama(extracted.drama);
-          setMovies(extracted.movies);
           setAnimeList(extracted.animeList);
+          setMovies(extracted.movies);
           setIsLoading(false);
         }
 
-        // 2. Background live API refresh
-        const [donghuaRes, dramaRes, movieRes, animeRes, bannersRes] = await Promise.all([
-          api.get('/anime?type=DONGHUA&sort=popular&per_page=18').catch(() => null),
-          api.get('/anime?type=DRAMA&sort=popular&per_page=12').catch(() => null),
-          api.get('/anime?type=MOVIE&sort=popular&per_page=12').catch(() => null),
-          api.get('/anime?type=ANIME&sort=popular&per_page=12').catch(() => null),
-          api.get('/admin/banners').catch(() => null),
+        const [donghuaRes, animeRes, movieRes] = await Promise.all([
+          api.get('/anime?type=DONGHUA&sort=popular&per_page=12').catch(() => null),
+          api.get('/anime?type=ANIME&sort=popular&per_page=6').catch(() => null),
+          api.get('/anime?type=MOVIE&sort=popular&per_page=6').catch(() => null),
         ]);
 
         if (isMounted) {
           if (donghuaRes?.data?.items?.length) {
             const fetched = donghuaRes.data.items as Anime[];
-            setForYouDonghua(fetched.slice(0, 6));
-            setPopularDonghua(fetched.slice(6, 18));
+            setForYouDonghua(fetched.slice(0, 4));
+            setPopularDonghua(fetched.slice(4, 12));
           }
-          if (dramaRes?.data?.items?.length) setDrama(dramaRes.data.items);
-          if (movieRes?.data?.items?.length) setMovies(movieRes.data.items);
           if (animeRes?.data?.items?.length) setAnimeList(animeRes.data.items);
-          if (bannersRes?.data?.length) {
-            setBanners((bannersRes.data as Banner[]).filter((b) => b.is_active));
-          }
+          if (movieRes?.data?.items?.length) setMovies(movieRes.data.items);
           setIsLoading(false);
         }
-      } catch (err) {
-        console.error('Home load notice:', err);
-      } finally {
+      } catch (err) {} finally {
         if (isMounted) setIsLoading(false);
       }
     };
-
     initData();
     return () => { isMounted = false; };
   }, []);
 
-  // ── Load Watch History (Server if authenticated, LocalStorage for guests) ──
-  useEffect(() => {
-    let isSet = false;
-    if (isAuthenticated) {
-      api.get('/history')
-        .then((res) => {
-          if (Array.isArray(res.data) && res.data.length > 0) {
-            setHistory(res.data);
-            isSet = true;
-          }
-        })
-        .catch(() => {});
-    }
-
-    if (!isSet) {
-      try {
-        const raw = localStorage.getItem('local_watch_history');
-        if (raw) {
-          const list = JSON.parse(raw);
-          if (Array.isArray(list) && list.length > 0) {
-            const mapped: WatchHistoryItem[] = list.map((item: any, idx: number) => ({
-              id: idx + 1,
-              user_id: 0,
-              anime_id: 0,
-              episode_id: 0,
-              progress_seconds: item.progress_seconds || item.progress || 0,
-              duration_seconds: item.duration_seconds || item.duration || 1200,
-              last_watched_at: new Date(item.updated_at || Date.now()).toISOString(),
-              anime_title: item.anime_title || item.slug,
-              anime_slug: item.slug,
-              anime_poster: item.poster_url || `/posters/${item.slug}.jpg`,
-              episode_number: item.episode_number || 1,
-              episode_title: `ភាគ ${item.episode_number || 1}`,
-              episode_thumbnail: item.episode_thumbnail || item.poster_url || `/posters/${item.slug}.jpg`,
-            }));
-            setHistory(mapped);
-          }
-        }
-      } catch {}
-    }
-  }, [isAuthenticated]);
-
-  const handleClearHistory = () => {
-    localStorage.removeItem('local_watch_history');
-    setHistory([]);
-    if (isAuthenticated) {
-      api.delete('/history').catch(() => {});
-    }
-  };
-
-  const handleRemoveHistoryItem = (id: number | string) => {
-    setHistory((prev) => {
-      const updated = prev.filter((item) => item.id !== id);
-      try {
-        const raw = localStorage.getItem('local_watch_history');
-        if (raw) {
-          const list = JSON.parse(raw);
-          const filtered = list.filter((_: any, idx: number) => idx + 1 !== id);
-          localStorage.setItem('local_watch_history', JSON.stringify(filtered));
-        }
-      } catch {}
-      return updated;
-    });
-  };
-
-  // Combine all items for quick filtering
   const allCombined = useMemo(() => {
     const map = new Map<number, Anime>();
-    [...forYouDonghua, ...popularDonghua, ...animeList, ...movies, ...drama].forEach((a) => {
-      map.set(a.id, a);
-    });
+    [...forYouDonghua, ...popularDonghua, ...animeList, ...movies].forEach((a) => map.set(a.id, a));
     return Array.from(map.values());
-  }, [forYouDonghua, popularDonghua, animeList, movies, drama]);
+  }, [forYouDonghua, popularDonghua, animeList, movies]);
 
-  // Top 10 sorted by heat_score/popularity
-  const top10Trending = useMemo(() => {
-    return allCombined.slice().sort((a, b) => (b.heat_score || 0) - (a.heat_score || 0)).slice(0, 10);
-  }, [allCombined]);
+  const heroItem = forYouDonghua[0] || popularDonghua[0];
+  const bentoItems = popularDonghua.slice(0, 5); // Take 5 items for the bento grid
 
-  // Top Ultra 3D (Unreal Engine) Donghua list
-  const ultra3dDonghua = useMemo(() => {
-    const donghuaList = allCombined.filter((a) => a.type === 'DONGHUA' || a.country === 'China');
-    if (donghuaList.length === 0) return popularDonghua;
-    return donghuaList.slice(0, 14);
-  }, [allCombined, popularDonghua]);
-
-  // Filtered subset when filter is not ALL
-  const filteredItems = useMemo(() => {
-    if (activeFilter === 'ALL') return [];
-    if (activeFilter === 'ULTRA_3D') return ultra3dDonghua;
-    if (activeFilter === 'DONGHUA') return [...forYouDonghua, ...popularDonghua];
-    if (activeFilter === 'ANIME') return animeList;
-    if (activeFilter === 'MOVIE') return movies;
-    if (activeFilter === 'DRAMA') return drama;
-    if (activeFilter === 'VIP') return allCombined.filter((a) => !a.is_free);
-    return allCombined;
-  }, [activeFilter, ultra3dDonghua, forYouDonghua, popularDonghua, animeList, movies, drama, allCombined]);
+  if (isLoading) {
+    return <div className="min-h-screen bg-black flex items-center justify-center"><div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
-    <main className="min-h-screen pb-20 md:pb-12 text-gray-100">
-      {/* ── 1. Hero Banner: Mobile-First Cinema Spotlight on Mobile/Mini App OR 3D Rotating Carousel on Desktop ── */}
-      <div className="block md:hidden">
-        <MiniAppHeroBanner
-          banners={banners}
-          anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua}
-        />
-      </div>
+    <main className="min-h-screen bg-black text-gray-100 pb-24 font-sans selection:bg-white/20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10">
+        
+        {/* ── Giant Header ── */}
+        <header className="mb-8 sm:mb-12">
+          <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter mb-2">ស្វែងរកអានីមេ<br/>ដែលអ្នកចូលចិត្ត</h1>
+          <p className="text-gray-400 text-sm sm:text-base max-w-md">ទទួលបានបទពិសោធន៍ទស្សនាភាពយន្តលំដាប់ខ្ពស់ជាមួយគុណភាពច្បាស់ត្រជាក់ភ្នែក គ្មានពាណិជ្ជកម្ម។</p>
+        </header>
 
-      <div className="hidden md:block">
-        {cleanMode ? (
-          <HeroBanner
-            banners={banners}
-            anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua}
-          />
-        ) : (
-          <HeroSpotlightCarousel
-            banners={banners}
-            anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua}
-          />
-        )}
-      </div>
-
-      {/* ── 2. Content Container ── */}
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 mt-1 sm:mt-4">
-
-        {/* Quick Filter Pill Bar */}
-        <QuickCategoryFilter activeFilter={activeFilter} onSelect={setActiveFilter} />
-
-        {/* ── Continue Watching (works for both guests & logged in) ── */}
-        {history.length > 0 && activeFilter === 'ALL' && (
-          <div className="mb-6 sm:mb-8">
-            <ContinueWatchingSection
-              items={history}
-              onClear={handleClearHistory}
-              onRemoveItem={handleRemoveHistoryItem}
-            />
+        {/* ── Modern Bento Grid ── */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-400" />
+              កំពុងពេញនិយមខ្លាំង
+            </h2>
           </div>
-        )}
-
-        {/* ── Top 10 Trending Carousel (Netflix Style) ── */}
-        {activeFilter === 'ALL' && top10Trending.length > 0 && (
-          <TrendingRankCarousel items={top10Trending} isLoading={isLoading} />
-        )}
-
-        {/* ── If a specific category filter is chosen ── */}
-        {activeFilter !== 'ALL' ? (
-          <section className="mt-4 mb-12 animate-fade-in">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <h2 className="font-display font-bold text-sm sm:text-base text-white flex items-center gap-1.5">
-                <span className="w-1 h-3.5 rounded-full bg-rose-500 shrink-0" />
-                <span>
-                  {activeFilter === 'DONGHUA' && 'រឿងចិន 3D'}
-                  {activeFilter === 'ANIME' && 'Anime ជប៉ុន'}
-                  {activeFilter === 'MOVIE' && 'ភាពយន្តដុំ'}
-                  {activeFilter === 'DRAMA' && 'រឿងភាគ Drama'}
-                  {activeFilter === 'VIP' && 'សមាជិក VIP'}
-                </span>
-              </h2>
-              <span className="text-[11px] text-gray-400 font-medium">
-                {filteredItems.length} រឿង
-              </span>
-            </div>
-
-            {filteredItems.length === 0 ? (
-              <div className="text-center py-12 bg-[#0f1422] rounded-xl border border-white/[0.06]">
-                <p className="text-gray-400 text-xs">មិនទាន់មានទិន្នន័យក្នុងជម្រើសនេះនៅឡើយទេ។</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3.5">
-                {filteredItems.map((anime) => (
-                  <AnimeCard key={anime.id} anime={anime} />
-                ))}
-              </div>
-            )}
-          </section>
-        ) : (
-          /* ── Full Natural Feed (Clean, Native App Spacing) ── */
-          <div className="space-y-6 sm:space-y-8 mt-3">
-            {/* Top Donghua Section */}
-            <ContentSection
-              title="រឿងចិន 3D ពេញនិយម"
-              link="/donghua"
-              items={ultra3dDonghua}
-              isLoading={isLoading}
-            />
-
-            {/* Recommended For You */}
-            <ContentSection
-              title="រឿងណែនាំសម្រាប់អ្នក"
-              link="/explore"
-              items={forYouDonghua}
-              isLoading={isLoading}
-            />
-
-            {/* Popular Donghua */}
-            <ContentSection
-              title="រឿងចិន 3D ថ្មីៗ"
-              link="/donghua"
-              items={popularDonghua}
-              isLoading={isLoading}
-            />
-
-            {/* Japanese Anime Series */}
-            <ContentSection
-              title="Anime ជប៉ុន"
-              link="/anime"
-              items={animeList}
-              isLoading={isLoading}
-            />
-
-            {/* Movies */}
-            <ContentSection
-              title="ភាពយន្តដុំ"
-              link="/movies"
-              items={movies}
-              isLoading={isLoading}
-            />
-
-            {/* Chinese Drama Series */}
-            <ContentSection
-              title="រឿងភាគ Drama"
-              link="/drama"
-              items={drama}
-              isLoading={isLoading}
-            />
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 auto-rows-[200px] sm:auto-rows-[250px] lg:auto-rows-[300px]">
+            {heroItem && <BentoCard anime={heroItem} isLarge={true} />}
+            {bentoItems.map((anime, index) => (
+              <BentoCard key={anime.id} anime={anime} isLarge={false} />
+            ))}
           </div>
-        )}
+        </section>
+
+        {/* ── Anime List Grid (Minimalist) ── */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-rose-500" />
+              អានីមេជប៉ុនថ្មីៗ
+            </h2>
+            <Link to="/anime" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center">
+              មើលទាំងអស់ <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
+            {animeList.slice(0, 6).map((anime) => (
+              <BentoCard key={anime.id} anime={anime} isLarge={false} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── Movies Grid (Minimalist) ── */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              ភាពយន្តដុំល្បីៗ
+            </h2>
+            <Link to="/movies" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center">
+              មើលទាំងអស់ <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
+            {movies.slice(0, 6).map((anime) => (
+              <BentoCard key={anime.id} anime={anime} isLarge={false} />
+            ))}
+          </div>
+        </section>
+
       </div>
     </main>
   );
 }
 
+export default HomePage;

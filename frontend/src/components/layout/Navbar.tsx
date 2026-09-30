@@ -150,8 +150,8 @@ export function Navbar() {
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-500 select-none pt-[max(0rem,env(safe-area-inset-top))] ${
       isScrolled
-        ? 'bg-[#0A0E17]/95 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/60'
-        : 'bg-gradient-to-b from-[#0A0E17]/95 via-[#0A0E17]/60 to-transparent border-b border-transparent'
+        ? 'bg-black/80 backdrop-blur-3xl border-b border-white/[0.04]'
+        : 'bg-black/40 backdrop-blur-md border-b border-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
 
