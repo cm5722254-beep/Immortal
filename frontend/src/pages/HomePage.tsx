@@ -4,11 +4,15 @@ import {
   ChevronRight, Sparkles, Flame, Film, Tv, Video, Zap
 } from 'lucide-react';
 import { HeroSpotlightCarousel } from '../components/home/HeroSpotlightCarousel';
+import { HeroBanner } from '../components/home/HeroBanner';
+import { MiniAppHeroBanner } from '../components/home/MiniAppHeroBanner';
+import { MiniAppQuickHub } from '../components/home/MiniAppQuickHub';
 import { AnimeCard } from '../components/home/AnimeCard';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
 import { TrendingRankCarousel } from '../components/home/TrendingRankCarousel';
 import { QuickCategoryFilter, type CategoryFilterType } from '../components/home/QuickCategoryFilter';
 import { MovieTrailersSection } from '../components/home/MovieTrailersSection';
+import { useUiPreferencesStore } from '../store/uiPreferencesStore';
 
 import { SkeletonCard } from '../components/common/SkeletonLoader';
 import { useAuthStore } from '../store/authStore';
@@ -30,36 +34,52 @@ function ContentSection({ title, icon: Icon, link, items, isLoading }: SectionPr
   return (
     <section className="mb-10 relative group/row">
       {/* ── Section Header ── */}
-      <div className="flex items-center justify-between mb-3 px-1">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
         <Link
           to={link}
-          className="group/title inline-flex items-center gap-2 text-white hover:text-rose-400 transition-colors"
+          className="group/title inline-flex items-center gap-2 text-white hover:text-rose-400 transition-colors min-w-0"
         >
-          <h2 className="font-display font-bold text-lg sm:text-xl md:text-2xl text-white tracking-wide flex items-center gap-2">
+          <h2 className="font-display font-bold text-base sm:text-xl md:text-2xl text-white tracking-wide flex items-center gap-2 truncate">
             {Icon && (
-              <span className="w-6 h-6 rounded bg-rose-500/20 flex items-center justify-center text-rose-400 shadow-[0_0_10px_rgba(255,77,109,0.3)]">
+              <span className="w-6 h-6 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 shadow-[0_0_10px_rgba(255,77,109,0.3)] shrink-0">
                 <Icon className="w-3.5 h-3.5" />
               </span>
             )}
-            <span>{title}</span>
+            <span className="truncate">{title}</span>
           </h2>
-          <span className="text-xs font-semibold text-rose-400 opacity-0 group-hover/title:opacity-100 transition-all transform -translate-x-1 group-hover/title:translate-x-0 hidden sm:inline-flex items-center gap-0.5">
-            មើលទាំងអស់ <ChevronRight className="w-3.5 h-3.5" />
-          </span>
+        </Link>
+        <Link
+          to={link}
+          className="text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors inline-flex items-center gap-0.5 shrink-0 ml-2 py-1 px-2 rounded-lg hover:bg-rose-500/10"
+        >
+          <span>មើលទាំងអស់</span>
+          <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
-      {/* ── Netflix Row Container ── */}
+      {/* ── Responsive Container: Horizontal swipe on Mobile/Mini App, Grid on Desktop ── */}
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
           <SkeletonCard count={7} />
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
-          {items.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} />
-          ))}
-        </div>
+        <>
+          {/* Mobile Horizontal Snap Rail (Crunchyroll / Bilibili style) */}
+          <div className="flex md:hidden gap-3 overflow-x-auto no-scrollbar pb-2 pt-1 snap-x scroll-smooth">
+            {items.map((anime) => (
+              <div key={anime.id} className="w-[140px] shrink-0 snap-start">
+                <AnimeCard anime={anime} />
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Responsive Grid */}
+          <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
+            {items.map((anime) => (
+              <AnimeCard key={anime.id} anime={anime} />
+            ))}
+          </div>
+        </>
       )}
     </section>
   );
@@ -67,6 +87,7 @@ function ContentSection({ title, icon: Icon, link, items, isLoading }: SectionPr
 
 export function HomePage() {
   const { isAuthenticated } = useAuthStore();
+  const { cleanMode } = useUiPreferencesStore();
   
   // Initial instant synchronous state from local cache (0.001s)
   const initialData = (() => {
@@ -239,11 +260,33 @@ export function HomePage() {
 
   return (
     <main className="min-h-screen pb-20 md:pb-12 text-gray-100">
-      {/* ── 1. 3D Rotating Circular Carousel Banner (BANNER 3D វិលជុំវិញ) ── */}
-      <HeroSpotlightCarousel banners={banners} anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua} />
+      {/* ── 1. Hero Banner: Mobile-First Cinema Spotlight on Mobile/Mini App OR 3D Rotating Carousel on Desktop ── */}
+      <div className="block md:hidden">
+        <MiniAppHeroBanner
+          banners={banners}
+          anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua}
+        />
+        <div className="px-3 pt-2">
+          <MiniAppQuickHub />
+        </div>
+      </div>
+
+      <div className="hidden md:block">
+        {cleanMode ? (
+          <HeroBanner
+            banners={banners}
+            anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua}
+          />
+        ) : (
+          <HeroSpotlightCarousel
+            banners={banners}
+            anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua}
+          />
+        )}
+      </div>
 
       {/* ── 2. Content Container ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-2 sm:mt-6">
 
         {/* Quick Filter Pill Bar */}
         <QuickCategoryFilter activeFilter={activeFilter} onSelect={setActiveFilter} />
@@ -296,17 +339,19 @@ export function HomePage() {
         ) : (
           /* ── Full Natural Feed ── */
           <div className="space-y-12 mt-6">
-            {/* Top Ultra 3D Unreal Engine Section */}
+            {/* Top Donghua Section */}
             <ContentSection
-              title="⚡ កំពូលរឿង Ultra 3D (Unreal Engine 5) • 4K 60FPS"
-              icon={Zap}
+              title={cleanMode ? "រឿងចិន 3D ពេញនិយម (Donghua)" : "⚡ កំពូលរឿង Ultra 3D (Unreal Engine 5) • 4K 60FPS"}
+              icon={cleanMode ? Flame : Zap}
               link="/donghua"
               items={ultra3dDonghua}
               isLoading={isLoading}
             />
 
-            {/* 🎬 New Movie & Donghua Trailers Showcase Section */}
-            <MovieTrailersSection items={ultra3dDonghua.length > 0 ? ultra3dDonghua : popularDonghua} />
+            {/* 🎬 Trailers Showcase (Only in full mode) */}
+            {!cleanMode && (
+              <MovieTrailersSection items={ultra3dDonghua.length > 0 ? ultra3dDonghua : popularDonghua} />
+            )}
 
             {/* Recommended For You */}
             <ContentSection

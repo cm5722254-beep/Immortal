@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { Sparkles, Crown, ArrowRight, Flame, Clock, X } from 'lucide-react';
 import { usePromoStore } from '../../store/promoStore';
 import { useAuthStore } from '../../store/authStore';
+import { useUiPreferencesStore } from '../../store/uiPreferencesStore';
 
 export function PromoCountdownBanner() {
   const { promoData, fetchPromoCountdown, tickCountdown } = usePromoStore();
+  const { hidePromos } = useUiPreferencesStore();
   const { user } = useAuthStore();
   const [isDismissed, setIsDismissed] = useState(() => {
     return sessionStorage.getItem('nami_promo_dismissed') === 'true';
@@ -29,7 +31,7 @@ export function PromoCountdownBanner() {
     return () => clearInterval(timer);
   }, [tickCountdown]);
 
-  if (!promoData || isDismissed) return null;
+  if (!promoData || isDismissed || hidePromos) return null;
 
 
   const isLocked = promoData.is_vip_locked || promoData.is_expired;

@@ -144,6 +144,8 @@ $RECYCLE.BIN/
 
 # Linux
 *~
+*.bak
+*.tmp
 
 # VSCode
 .vscode/settings.json

@@ -159,7 +159,7 @@ export async function checkKHQRStatus(
 }
 
 export const TELEGRAM_NOTIFY_CONFIG = {
-  botToken: '8817663313:AAGSEO0bxx-EIgmQDlhY6xcjL7DuheOKQ-s',
+  botToken: '8681184116:AAFkgxxF6VS-9N0R7zs9GnTEx8ktpDTiPVc',
   chatId: '-1004355858315',
 };
 

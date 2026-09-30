@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star, Sparkles, Play, Flame } from 'lucide-react';
 import type { Anime } from '../../types';
+import { triggerHaptic } from '../../utils/telegram';
 
 interface TrendingRankCarouselProps {
   items: Anime[];
@@ -78,7 +79,8 @@ export function TrendingRankCarousel({ items, isLoading }: TrendingRankCarouselP
             <Link
               key={anime.id}
               to={detailUrl}
-              className="group relative shrink-0 flex items-end snap-start cursor-pointer pl-4 sm:pl-6"
+              onClick={() => triggerHaptic('light')}
+              className="group relative shrink-0 flex items-end snap-start cursor-pointer pl-4 sm:pl-6 active:scale-95 transition-transform"
             >
               {/* Giant Stylized Rank Number (Netflix Style Behind Poster) */}
               <div className="netflix-rank-number text-7xl sm:text-8xl md:text-9xl -mr-6 sm:-mr-8 z-0 translate-y-3 sm:translate-y-4">

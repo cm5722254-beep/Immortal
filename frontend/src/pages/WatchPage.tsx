@@ -13,6 +13,7 @@ import { loadCatalog, extractAnimeDetail } from '../services/catalogService';
 import type { Anime, Episode, DanmakuItem } from '../types';
 import { downloadService } from '../services/downloadService';
 import { isYouTubeUrl, isFacebookUrl } from '../utils/youtube';
+import { triggerHaptic } from '../utils/telegram';
 
 export function WatchPage() {
   const { slug, episodeNumber } = useParams<{ slug: string; episodeNumber: string }>();
@@ -40,9 +41,11 @@ export function WatchPage() {
     fetchPromoCountdown();
   }, [fetchPromoCountdown]);
 
-  const isVipUser = !!user && (user.role === 'ADMIN' || user.is_vip_active || user.is_vip);
+  // ✅ VIP: Admin, Owner, STAFF, is_vip_active, is_vip => always unlocked
+  const isVipUser = isAdmin || isOwner || !!user && (user.role === 'ADMIN' || user.role === 'OWNER' || user.role === 'STAFF' || user.is_vip_active === true || user.is_vip === true);
   const isGlobalVipLocked = !!promoData && (promoData.is_vip_locked || promoData.is_expired);
-  const isCurrentEpVip = currentEp?.is_vip || (currentEp as any)?.is_vip_only || currentEp?.is_free === false;
+  // ✅ Only treat episode as VIP if is_free is explicitly false (not null/undefined)
+  const isCurrentEpVip = currentEp?.is_vip === true || (currentEp as any)?.is_vip_only === true || (currentEp?.is_free !== null && currentEp?.is_free !== undefined && currentEp?.is_free === false);
   const isLocked = (isGlobalVipLocked || isCurrentEpVip) && !isVipUser;
 
   // 🍿 Movie Pay-Per-View check ($1.00)
@@ -244,6 +247,7 @@ export function WatchPage() {
   }, [isAuthenticated, anime, currentEp, slug]);
 
   const goToEp = (epNumber: number) => {
+    triggerHaptic('light');
     navigate(`/watch/${slug}/${epNumber}`);
   };
 
@@ -275,7 +279,7 @@ export function WatchPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#141414] text-gray-100 pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6">
+    <main className="min-h-screen bg-[#080d1a] text-gray-100 pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-5">
           {/* Main Stream Area */}
@@ -444,7 +448,7 @@ export function WatchPage() {
 
 
             {/* Episode Meta Bar */}
-            <div className="mt-4 p-4 mx-2 sm:mx-0 rounded-2xl bg-[#181818] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+            <div className="mt-4 p-4 mx-2 sm:mx-0 rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#E50914] text-white">
@@ -523,9 +527,9 @@ export function WatchPage() {
           </div>
 
           {/* Right Dedicated Episode Drawer */}
-          <div className="lg:w-80 lg:max-h-[600px] flex flex-col rounded-2xl bg-[#111726] border border-[#1E283C] overflow-hidden shrink-0 shadow-lg">
+          <div className="lg:w-80 lg:max-h-[600px] flex flex-col rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl overflow-hidden shrink-0 shadow-xl">
             {/* Header with Search & View Toggle */}
-            <div className="p-3.5 border-b border-[#1E283C] bg-[#161F33]/60 space-y-2.5">
+            <div className="p-3.5 border-b border-white/10 bg-[#131d36]/60 space-y-2.5">
               <div className="flex items-center justify-between">
                 <h3 className="font-display font-bold text-white text-xs sm:text-sm flex items-center gap-2">
                   <List className="w-4 h-4 text-[#E8452C]" /> បញ្ជីភាគទាំងអស់ ({episodes.length})
@@ -583,7 +587,7 @@ export function WatchPage() {
                 <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-1.5 p-1">
                   {filteredEpisodes.map((ep) => {
                     const isActive = ep.episode_number === epNum;
-                    const isEpVip = ep.is_vip || (ep as any).is_vip_only || ep.is_free === false;
+                    const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
 
                     return (
                       <button
@@ -612,7 +616,7 @@ export function WatchPage() {
                 /* Detailed List View */
                 filteredEpisodes.map((ep) => {
                   const isActive = ep.episode_number === epNum;
-                  const isEpVip = ep.is_vip || (ep as any).is_vip_only || ep.is_free === false;
+                  const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
                   return (
                     <div
                       key={ep.id}

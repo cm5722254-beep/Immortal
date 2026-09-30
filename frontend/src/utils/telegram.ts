@@ -119,6 +119,19 @@ export function requestTelegramFullscreen() {
   } catch {}
 }
 
+export function setTelegramBackButton(visible: boolean, onClick?: () => void) {
+  try {
+    if (typeof window === 'undefined' || !window.Telegram?.WebApp?.BackButton) return;
+    const bb = window.Telegram.WebApp.BackButton;
+    if (visible && onClick) {
+      bb.show();
+      bb.onClick(onClick);
+    } else {
+      bb.hide();
+    }
+  } catch {}
+}
+
 export function initTelegramWebApp() {
   if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
     return;
@@ -139,9 +152,9 @@ export function initTelegramWebApp() {
     // Disable vertical pull-to-close gestures so users can freely scroll and rotate without closing
     tg.disableVerticalSwipes?.();
 
-    // Configure Netflix dark theme colors
-    tg.setHeaderColor('#141414');
-    tg.setBackgroundColor('#141414');
+    // Configure Anime App Obsidian cinema dark theme colors
+    tg.setHeaderColor('#0A0E17');
+    tg.setBackgroundColor('#0A0E17');
 
     // Prevent accidental swipe down closure
     tg.enableClosingConfirmation();
@@ -149,3 +162,4 @@ export function initTelegramWebApp() {
     console.warn('Telegram WebApp initialization error:', e);
   }
 }
+

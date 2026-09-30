@@ -78,19 +78,19 @@ def _get_base_url() -> str:
 
 async def handle_welcome_message(chat_id: str, first_name: str = ""):
     """Send welcoming greeting when user presses /start with Mini App launch button."""
-    web_url = "https://namianime.vercel.app"
+    web_url = os.getenv("TELEGRAM_MINI_APP_URL") or getattr(settings, "TELEGRAM_MINI_APP_URL", "https://namianime.vercel.app") or "https://namianime.vercel.app"
     name_str = f" <b>{first_name}</b>" if first_name else ""
 
     caption = (
-        f"✨ <b>សូមស្វាគមន៍មកកាន់ NAMI ANIME (MER DONGHUA)!</b> ✨\n\n"
+        f"✨ <b>សូមស្វាគមន៍មកកាន់ APPFLIX — WatchFlix Anime!</b> ✨\n\n"
         f"🎉 <b>សួស្តី{name_str}!</b>\n"
-        f"សូមរីករាយទស្សនារឿងចិន Donghua 3D និង Anime ជប៉ុនកម្រិតច្បាស់ <b>4K Ultra HD</b> សំឡេង & អក្សរខ្មែរ ដោយផ្ទាល់ក្នុង Telegram ដោយសេរី!\n\n"
+        f"សូមរីករាយទស្សនារឿងចិន Donghua 3D និង Anime ជប៉ុនកម្រិតច្បាស់ <b>4K Ultra HD</b> សំឡេង & អក្សរខ្មែរ ដោយផ្ទាល់ក្នុង Telegram Mini App ដោយសេរី!\n\n"
         f"🔥 <b>លក្ខណៈពិសេស៖</b>\n"
-        f"• ⚡️ វីដេអូច្បាស់កម្រិត 4K UHD & 1080p លឿនមិនទាក់\n"
+        f"• ⚡️ វីដេអូច្បាស់កម្រិត 4K UHD & 1080p ល្បឿនលឿនមិនទាក់\n"
         f"• 🎙️ បកប្រែ និងបញ្ចូលសំឡេងខ្មែរ ១០០%\n"
         f"• 💬 Live Danmaku Comments អណ្តែតលើវីដេអូ\n"
         f"• 🍿 ភាពយន្តដុំ និងរឿងភាគចេញថ្មីៗរាល់ថ្ងៃ\n\n"
-        f"👇 <b>សូមជ្រើសរើសជម្រើសខាងក្រោមដើម្បីចូលទស្សនា៖</b>"
+        f"👇 <b>សូមចុចប៊ូតុងខាងក្រោមដើម្បីចូលទស្សនា Mini App៖</b>"
     )
 
     keyboard = {
@@ -195,7 +195,7 @@ async def start_telegram_bot_polling():
 
 
 def _send_telegram_photo_multipart(chat_id: str, photo_url: str, caption: str, reply_markup: Optional[dict] = None) -> dict:
-    token = getattr(settings, "TELEGRAM_BOT_TOKEN", "8854922605:AAFttXelbYxhvvnv-i2BwGJwWmQoG2eZfRc")
+    token = getattr(settings, "TELEGRAM_BOT_TOKEN", "8681184116:AAFkgxxF6VS-9N0R7zs9GnTEx8ktpDTiPVc")
     
     # 1. Download photo bytes if http or read from local disk if file path
     img_bytes = None

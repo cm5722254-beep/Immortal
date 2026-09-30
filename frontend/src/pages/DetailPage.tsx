@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Play, Bookmark, Share2, MessageSquare, ArrowLeft,
-  Star, Check, Sparkles, Crown, Clock, Film,
-  Search, ArrowDownUp, Flame, Info, Tv, Send, ThumbsUp, ListPlus
+  Star, Check, Sparkles, Crown, Film,
+  Search, ArrowDownUp, Info, Send, ThumbsUp, ListPlus,
+  LayoutGrid, List, X
 } from 'lucide-react';
+import { triggerHaptic } from '../utils/telegram';
 import { SkeletonDetail } from '../components/common/SkeletonLoader';
 import { StreamingAvailabilityHub } from '../components/common/StreamingAvailabilityHub';
 import { TrailerModal } from '../components/common/TrailerModal';
@@ -51,6 +53,10 @@ export function DetailPage() {
   const [epSortOrder, setEpSortOrder] = useState<'asc' | 'desc'>('asc');
   const [epSearch, setEpSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'episodes' | 'story' | 'comments' | 'related'>('episodes');
+  const [selectedRange, setSelectedRange] = useState(0);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const RANGE_SIZE = 30;
 
   const fetchData = useCallback(async () => {
     if (!slug) return;
@@ -316,34 +322,20 @@ export function DetailPage() {
     }, 1500);
   };
 
-  if (isLoading) return <SkeletonDetail />;
-  if (!anime) {
-    return (
-      <div className="min-h-screen bg-[#141414] pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
-        <Film className="w-16 h-16 text-rose-500/50 mb-4 animate-pulse" />
-        <h2 className="text-2xl font-black text-white mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ</h2>
-        <p className="text-gray-400 text-sm max-w-md mb-6">
-          រឿងដែលលោកអ្នកកំពុងស្វែងរកប្រហែលជាត្រូវបានផ្លាស់ប្តូរតំណភ្ជាប់ ឬមិនទាន់បានដាក់បញ្ចូល។
-        </p>
-        <Link to="/search" className="py-3 px-6 rounded-2xl bg-[#E50914] hover:bg-[#b80710] text-white font-bold text-sm transition shadow-lg">
-          ស្វែងរករឿងផ្សេងៗ
-        </Link>
-      </div>
-    );
-  }
-
-  // Filter & sort episodes
-  const filteredEpisodes = episodes
-    .filter((ep) => {
-      if (!epSearch.trim()) return true;
-      const numMatch = ep.episode_number.toString().includes(epSearch.trim());
-      const titleMatch = (ep.title || '').toLowerCase().includes(epSearch.toLowerCase());
-      return numMatch || titleMatch;
-    })
-    .sort((a, b) => {
-      if (epSortOrder === 'asc') return a.episode_number - b.episode_number;
-      return b.episode_number - a.episode_number;
-    });
+  // Filter & sort episodes (must be before early returns to satisfy React rules of hooks)
+  const filteredEpisodes = useMemo(() => {
+    return episodes
+      .filter((ep) => {
+        if (!epSearch.trim()) return true;
+        const numMatch = ep.episode_number.toString().includes(epSearch.trim());
+        const titleMatch = (ep.title || '').toLowerCase().includes(epSearch.toLowerCase());
+        return numMatch || titleMatch;
+      })
+      .sort((a, b) => {
+        if (epSortOrder === 'asc') return a.episode_number - b.episode_number;
+        return b.episode_number - a.episode_number;
+      });
+  }, [episodes, epSearch, epSortOrder]);
 
   const firstEpNum = episodes.length > 0
     ? Math.min(...episodes.map((e) => e.episode_number))
@@ -353,307 +345,283 @@ export function DetailPage() {
     ? Math.max(...episodes.map((e) => e.episode_number))
     : 1;
 
+  const totalEpisodesCount = filteredEpisodes.length;
+  const rangeChunks = useMemo(() => {
+    if (totalEpisodesCount <= RANGE_SIZE) return [];
+    const chunks: { start: number; end: number; label: string }[] = [];
+    for (let i = 0; i < totalEpisodesCount; i += RANGE_SIZE) {
+      const start = i + 1;
+      const end = Math.min(i + RANGE_SIZE, totalEpisodesCount);
+      chunks.push({ start, end, label: `ភាគ ${start} - ${end}` });
+    }
+    return chunks;
+  }, [totalEpisodesCount]);
+
+  const displayedEpisodes = useMemo(() => {
+    if (rangeChunks.length === 0 || epSearch.trim()) return filteredEpisodes;
+    const startIdx = selectedRange * RANGE_SIZE;
+    return filteredEpisodes.slice(startIdx, startIdx + RANGE_SIZE);
+  }, [filteredEpisodes, rangeChunks, selectedRange, epSearch]);
+
+  const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
+  const userUnlockedMovies = user?.unlocked_movies || [];
+  const hasMovieAccess = isAdministrator || movieUnlocked || (anime?.slug ? (isMoviePurchased(anime.slug) || userUnlockedMovies.includes(anime.slug)) : false);
+
+  if (isLoading) return <SkeletonDetail />;
+  if (!anime) {
+    return (
+      <div className="min-h-screen bg-[#080d1a] pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
+        <Film className="w-16 h-16 text-rose-500/50 mb-4 animate-pulse" />
+        <h2 className="text-2xl font-black text-white mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ</h2>
+        <p className="text-gray-400 text-sm max-w-md mb-6">
+          រឿងដែលលោកអ្នកកំពុងស្វែងរកប្រហែលជាត្រូវបានផ្លាស់ប្តូរតំណភ្ជាប់ ឬមិនទាន់បានដាក់បញ្ចូល។
+        </p>
+        <Link to="/search" className="py-3 px-6 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm transition shadow-lg">
+          ស្វែងរករឿងផ្សេងៗ
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen pb-24 md:pb-16 bg-[#080d1a] text-gray-100 selection:bg-rose-500 selection:text-white">
-      {/* ── 1. Full-Bleed Cinematic Hero Banner with Poster & Title ── */}
-      <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#111726] via-[#0d1322] to-[#080d1a] pt-16 md:pt-20">
-        {/* Background Backdrop Image */}
-        <div className="absolute inset-0 z-0 opacity-25 md:opacity-30 blur-sm scale-105 pointer-events-none">
+      {/* ── 1. Full-Bleed Cinematic Hero Banner (Mobile & Desktop App Style) ── */}
+      <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#111726] via-[#0d1322] to-[#080d1a]">
+        
+        {/* Full-Bleed Backdrop Image */}
+        <div className="relative aspect-[16/10] sm:aspect-[21/9] md:h-[420px] w-full overflow-hidden">
           <img
             src={anime.banner_url || anime.poster_url}
             alt=""
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-top sm:object-center opacity-40 blur-xs scale-105"
           />
+          {/* Cinema Gradients */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#080d1a] via-[#080d1a]/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent h-24" />
+
+          {/* Floating Top App Action Bar (Mobile Back & Share) */}
+          <div className="absolute top-3 inset-x-3 sm:inset-x-6 flex items-center justify-between z-30 pt-[max(0rem,env(safe-area-inset-top))]">
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                navigate(-1);
+              }}
+              aria-label="Go back"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-all active:scale-95 shadow-lg cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 text-rose-400" />
+              <span>ត្រឡប់</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  toggleFavorite();
+                }}
+                className={`w-8 h-8 rounded-full border flex items-center justify-center backdrop-blur-md transition-all active:scale-90 cursor-pointer ${
+                  isFav
+                    ? 'bg-rose-500/30 border-rose-400 text-rose-400 shadow-[0_0_12px_rgba(255,77,109,0.5)]'
+                    : 'bg-black/60 border-white/20 text-white'
+                }`}
+                title="Bookmark"
+              >
+                <Bookmark className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+              </button>
+
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  share();
+                }}
+                className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 border border-white/20 text-white flex items-center justify-center backdrop-blur-md transition-all active:scale-90 cursor-pointer"
+                title="Share"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Ambient Top & Bottom Vignette Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#080d1a] via-[#080d1a]/85 to-transparent z-0 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#080d1a] via-[#080d1a]/75 to-transparent z-0 pointer-events-none" />
-
-        {/* Back Arrow Floating Action */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 pt-4 pb-2">
-          <button
-            onClick={() => navigate(-1)}
-            aria-label="Go back"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-rose-500/20 backdrop-blur-md text-white text-xs font-semibold border border-white/10 hover:border-rose-400/40 transition-all hover:scale-105 active:scale-95 shadow-lg"
-          >
-            <ArrowLeft className="w-4 h-4 text-rose-400" /> ត្រឡប់ក្រោយ
-          </button>
-        </div>
-
-        {/* Hero Content Container */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-6 md:py-10">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-10">
-            {/* Left: Premium Glossy Poster Card */}
-            <div className="w-48 sm:w-56 md:w-64 lg:w-72 shrink-0 group">
-              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] border-2 border-white/15 group-hover:border-rose-400/60 transition-all duration-300 bg-[#0d1526]">
+        {/* ── Content Card & Metadata Section (Asymmetrical Mobile / Side-by-side Desktop) ── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-20 sm:-mt-24 pb-4">
+          <div className="flex flex-row items-end gap-3.5 sm:gap-6">
+            {/* Poster Card */}
+            <div className="w-28 sm:w-40 md:w-52 shrink-0">
+              <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.9)] border-2 border-white/20 bg-[#0d1526]">
                 <img
                   src={anime.poster_url || anime.banner_url}
                   alt={anime.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover"
                 />
-
-                {/* Rating Badge Overlay */}
-                <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-rose-500/40 text-rose-300 text-xs font-black shadow-lg">
-                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                  <span>{(anime.average_rating || 9.8).toFixed(1)}</span>
-                </div>
-
-                {/* Type Badge Overlay */}
-                <div className="absolute top-3 right-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-md shadow-rose-500/30">
-                  {anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}
-                </div>
-
-                {/* HD / 4K Tag at bottom */}
-                <div className="absolute bottom-3 inset-x-3 flex items-center justify-between pointer-events-none">
-                  <span className="px-2 py-0.5 rounded bg-black/80 backdrop-blur-md text-[10px] font-bold text-rose-300 border border-rose-500/30">
-                    4K Ultra HD
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/80 backdrop-blur-md text-[10px] font-bold text-white">
-                    {anime.status === 'COMPLETED' ? 'ចប់ជាស្ថាពរ' : 'កំពុងចាក់ផ្សាយ'}
+                {/* 4K Badge */}
+                <div className="absolute bottom-1.5 inset-x-1.5 flex items-center justify-between pointer-events-none">
+                  <span className="px-1.5 py-0.2 rounded bg-black/80 backdrop-blur-md text-[8px] sm:text-[9px] font-black text-rose-300 border border-rose-500/40">
+                    4K UHD
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Right: Rich Series Title & Metadata Section */}
-            <div className="flex-1 text-center md:text-left space-y-4">
-              {/* Breadcrumb / Tag row */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 text-xs">
-                <span className="text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Flame className="w-4 h-4 fill-rose-400" /> រឿងល្បីពេញនិយម
+            {/* Title & Key Meta on the Right */}
+            <div className="flex-1 min-w-0 pb-1 space-y-1 sm:space-y-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/25 border border-rose-400/40 text-rose-300">
+                  {anime.type === 'ANIME' ? '🇯🇵 Anime ជប៉ុន' : anime.type === 'MOVIE' ? '🍿 ភាពយន្តដុំ' : '🐉 Donghua 3D'}
                 </span>
-                <span className="text-gray-500">•</span>
-                <span className="text-gray-300 font-semibold">{anime.country === 'China' ? 'ប្រទេសចិន' : anime.country === 'Japan' ? 'ប្រទេសជប៉ុន' : (anime.country || 'ចិន')}</span>
-                <span className="text-gray-500">•</span>
-                <span className="text-gray-300 font-semibold">ឆ្នាំ {anime.year || 2024}</span>
-                {anime.studio && (
-                  <>
-                    <span className="text-gray-500">•</span>
-                    <span className="text-gray-400">{anime.studio}</span>
-                  </>
-                )}
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center gap-1">
+                  <Star className="w-2.5 h-2.5 fill-amber-400" /> {(anime.average_rating || 9.8).toFixed(1)}
+                </span>
               </div>
 
-              {/* Main Title */}
-              <h1 className="font-display font-black text-2xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-tight drop-shadow-lg">
+              <h1 className="font-display font-black text-lg sm:text-2xl md:text-3xl text-white tracking-tight leading-tight line-clamp-2 drop-shadow-md">
                 {anime.title}
               </h1>
 
-              {/* Alt Title & Season */}
               {anime.alt_title && (
-                <p className="text-sm sm:text-base text-gray-400 font-medium italic">
+                <p className="text-xs text-gray-400 line-clamp-1 italic">
                   {anime.alt_title}
                 </p>
               )}
 
-              {/* Badges & Meta Chips */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
-                {anime.type === 'MOVIE' && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-rose-500/25 to-pink-500/25 border border-rose-500/50 text-rose-300 text-xs font-black shadow-sm">
-                    🍿 Movie ($1.00)
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold shadow-sm">
-                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" /> {(anime.average_rating || 9.8).toFixed(1)} ពិន្ទុ
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 border border-white/10 text-gray-200 text-xs font-semibold">
-                  <Film className="w-3.5 h-3.5 text-cyan-400" /> {anime.episode_count || episodes.length} ភាគសរុប
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 border border-white/10 text-gray-200 text-xs font-semibold">
-                  <Tv className="w-3.5 h-3.5 text-purple-400" /> សំឡេង & អក្សរខ្មែរ
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 border border-white/10 text-gray-200 text-xs font-semibold">
-                  <Clock className="w-3.5 h-3.5 text-emerald-400" /> ~20-25 នាទី/ភាគ
-                </span>
+              <div className="flex items-center gap-2 text-[11px] text-gray-300 font-medium flex-wrap pt-0.5">
+                <span>{anime.year || 2024}</span>
+                <span>•</span>
+                <span>{anime.episode_count || episodes.length} ភាគ</span>
+                <span>•</span>
+                <span className="text-rose-300 font-bold">សំឡេងខ្មែរ</span>
               </div>
+            </div>
+          </div>
 
-              {/* Genre Pills */}
-              {anime.genres && anime.genres.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 pt-1">
-                  {anime.genres.map((g) => (
-                    <Link
-                      key={g.id}
-                      to={`/explore?genre=${g.slug}`}
-                      className="px-3 py-1 rounded-full text-xs font-semibold bg-[#161f30] hover:bg-gradient-to-r hover:from-rose-500 hover:to-pink-500 hover:text-white text-gray-300 border border-white/10 transition-all shadow-sm"
-                    >
-                      {g.name}
-                    </Link>
-                  ))}
-                </div>
+          {/* ── Primary Action Buttons Bar (Sleek Global App Style) ── */}
+          <div className="mt-4 pt-2 border-t border-white/[0.08] space-y-3">
+            {/* Primary Watch / Movie CTA */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {anime.type === 'MOVIE' && !hasMovieAccess ? (
+                <a
+                  href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(255,77,109,0.35)] active:scale-95 transition-all"
+                >
+                  <Send className="w-4 h-4" /> ទិញទស្សនា Movie ($1.00) តាម Telegram
+                </a>
+              ) : (
+                <Link
+                  to={`/watch/${anime.slug}/${firstEpNum}`}
+                  onClick={() => triggerHaptic('medium')}
+                  className="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(255,77,109,0.4)] active:scale-95 transition-all select-none"
+                >
+                  <Play className="w-4 h-4 fill-white stroke-[2.5]" />
+                  <span>
+                    {anime.type === 'MOVIE'
+                      ? (isAdministrator ? 'ចាក់ទស្សនា (Admin Access)' : 'ចាក់ទស្សនា Movie')
+                      : 'ចាក់ទស្សនា ភាគ ១'}
+                  </span>
+                </Link>
               )}
 
-              {/* ── 5-Star Interactive Rating Widget Bar ── */}
-              <div className="pt-2">
-                <div className="inline-flex flex-col sm:flex-row items-center gap-3 bg-[#111a2e]/90 border border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-md">
-                  <span className="text-xs font-bold text-gray-300">
-                    {userRating > 0 ? `ពិន្ទុរបស់អ្នក (${userRating}/5)៖` : 'ដាក់ពិន្ទុរឿងនេះ៖'}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
+              {latestEpNum > 1 && (
+                <Link
+                  to={`/watch/${anime.slug}/${latestEpNum}`}
+                  onClick={() => triggerHaptic('light')}
+                  className="py-3 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-white/15 transition active:scale-95 select-none shrink-0"
+                  title={`ភាគចុងក្រោយ (ភាគ ${latestEpNum})`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+                  <span>ភាគ {latestEpNum}</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Quick Action Icon Pills Row (Compact & Non-Cluttering) */}
+            <div className="flex items-center justify-between sm:justify-start gap-2 pt-1 text-xs">
+              {/* My List */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowMyListDropdown(!showMyListDropdown);
+                }}
+                className={`flex-1 sm:flex-initial py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold transition-all active:scale-95 cursor-pointer relative ${
+                  myListStatus !== 'NONE'
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
+                }`}
+              >
+                <ListPlus className="w-3.5 h-3.5 text-rose-400" />
+                <span>
+                  {myListStatus === 'WATCHING' ? 'កំពុងមើល' :
+                   myListStatus === 'PLAN_TO_WATCH' ? 'គ្រោងមើល' :
+                   myListStatus === 'COMPLETED' ? 'ចប់' :
+                   myListStatus === 'FAVORITE' ? 'រក្សាទុក' : '+ បញ្ជីខ្ញុំ'}
+                </span>
+
+                {/* Dropdown Options */}
+                {showMyListDropdown && (
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-[#111726] border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in text-left">
+                    {[
+                      { status: 'WATCHING' as MyListStatus, label: '👁️ កំពុងមើល (Watching)' },
+                      { status: 'PLAN_TO_WATCH' as MyListStatus, label: '⏳ គ្រោងមើល (Plan)' },
+                      { status: 'COMPLETED' as MyListStatus, label: '✅ មើលចប់ (Completed)' },
+                      { status: 'FAVORITE' as MyListStatus, label: '💖 ចូលចិត្ត (Favorite)' },
+                      { status: 'NONE' as MyListStatus, label: '❌ ដកចេញពីបញ្ជី' },
+                    ].map((item) => (
                       <button
-                        key={star}
-                        onClick={() => handleRate(star)}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        className="p-1 hover:scale-125 active:scale-95 transition-transform cursor-pointer"
-                        title={`ដាក់ពិន្ទុ ${star} ផ្កាយ`}
+                        key={item.status}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetMyList(item.status);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                          myListStatus === item.status
+                            ? 'bg-rose-500 text-white'
+                            : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                        }`}
                       >
-                        <Star
-                          className={`w-5 h-5 transition-colors ${
-                            (hoverRating || userRating) >= star
-                              ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                              : 'text-gray-500 hover:text-gray-300'
-                          }`}
-                        />
+                        <span>{item.label}</span>
+                        {myListStatus === item.status && <Check className="w-3.5 h-3.5" />}
                       </button>
                     ))}
                   </div>
-                  {userRating > 0 && (
-                    <span className="text-xs text-amber-400 font-bold bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
-                      បានដាក់រួច
-                    </span>
-                  )}
-                </div>
-                {ratingToast && (
-                  <p className="text-xs text-amber-300 font-bold mt-1.5 animate-fade-in flex items-center justify-center md:justify-start gap-1">
-                    <Check className="w-3.5 h-3.5 text-emerald-400" /> {ratingToast}
-                  </p>
                 )}
-              </div>
+              </button>
 
-              {/* Primary Action Buttons Bar */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-2">
-                {/* Watch / Buy Primary CTA */}
-                {(() => {
-                  const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
-                  const userUnlockedMovies = user?.unlocked_movies || [];
-                  const hasMovieAccess = isAdministrator || movieUnlocked || (anime.slug ? (isMoviePurchased(anime.slug) || userUnlockedMovies.includes(anime.slug)) : false);
+              {/* Trailer */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowTrailerModal(true);
+                }}
+                className="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 flex items-center justify-center gap-1.5 font-bold transition active:scale-95 cursor-pointer"
+              >
+                <Film className="w-3.5 h-3.5 text-rose-400" />
+                <span>ឈុតខ្លី</span>
+              </button>
 
-                  if (anime.type === 'MOVIE' && !hasMovieAccess) {
-                    return (
-                      <a
-                        href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(255,77,109,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
-                      >
-                        <Send className="w-5 h-5 stroke-[2.5]" /> ទិញទស្សនា Movie ($1.00) តាម Telegram
-                      </a>
-                    );
-                  }
+              {/* Rating */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowRatingModal(true);
+                }}
+                className="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-amber-300 border border-white/10 flex items-center justify-center gap-1.5 font-bold transition active:scale-95 cursor-pointer"
+              >
+                <Star className="w-3.5 h-3.5 fill-amber-400" />
+                <span>{userRating > 0 ? `${userRating}★` : 'ដាក់ពិន្ទុ'}</span>
+              </button>
 
-                  return (
-                    <Link
-                      to={`/watch/${anime.slug}/${firstEpNum}`}
-                      className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(255,77,109,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all w-full sm:w-auto"
-                    >
-                      <Play className="w-5 h-5 fill-white stroke-[2.5]" /> {
-                        anime.type === 'MOVIE'
-                          ? (isAdministrator ? '▶ ចាក់ទស្សនា (Admin Access)' : '▶ ចាក់ទស្សនា (បានទិញរួច)')
-                          : 'ទស្សនាភាគ ១'
-                      }
-                    </Link>
-                  );
-                })()}
-
-                {/* Latest Episode Button (if more than 1 ep) */}
-                {latestEpNum > 1 && (
-                  <Link
-                    to={`/watch/${anime.slug}/${latestEpNum}`}
-                    className="py-3.5 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs md:text-sm border border-white/15 hover:border-rose-500/50 transition flex items-center justify-center gap-2 w-full sm:w-auto"
-                  >
-                    <Sparkles className="w-4 h-4 text-rose-400" /> ភាគចុងក្រោយ (ភាគ {latestEpNum})
-                  </Link>
-                )}
-
-                {/* Watch Trailer Button */}
-                <button
-                  onClick={() => setShowTrailerModal(true)}
-                  className="py-3.5 px-5 rounded-2xl bg-gradient-to-r from-rose-600/25 to-pink-600/25 hover:from-rose-600/40 hover:to-pink-600/40 text-rose-300 hover:text-white font-bold text-xs md:text-sm border border-rose-500/50 hover:border-rose-400 transition flex items-center justify-center gap-2 shadow-lg shadow-rose-500/15 active:scale-95 cursor-pointer w-full sm:w-auto"
-                  title="ទស្សនាវីដេអូឈុតខ្លីផ្លូវការ"
-                >
-                  <Film className="w-4 h-4 text-rose-400" />
-                  <span>មើលឈុតខ្លី (Trailer)</span>
-                </button>
-
-                {/* My List Multi-Category Dropdown */}
-                <div className="relative w-full sm:w-auto">
-                  <button
-                    onClick={() => setShowMyListDropdown(!showMyListDropdown)}
-                    className={`py-3.5 px-5 rounded-2xl border transition-all flex items-center justify-center gap-2 text-xs md:text-sm font-bold w-full sm:w-auto cursor-pointer ${
-                      myListStatus !== 'NONE'
-                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-lg shadow-rose-500/20'
-                        : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/15'
-                    }`}
-                  >
-                    <ListPlus className="w-4 h-4 text-rose-400" />
-                    <span>
-                      {myListStatus === 'WATCHING' ? 'កំពុងមើល' :
-                       myListStatus === 'PLAN_TO_WATCH' ? 'គ្រោងមើល' :
-                       myListStatus === 'COMPLETED' ? 'មើលចប់ហើយ' :
-                       myListStatus === 'FAVORITE' ? 'បានរក្សាទុក' : 'បញ្ចូលក្នុងបញ្ជី'}
-                    </span>
-                  </button>
-
-                  {/* Dropdown Options */}
-                  {showMyListDropdown && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-[#111726] border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
-                      {[
-                        { status: 'WATCHING' as MyListStatus, label: '👁️ កំពុងមើល (Watching)' },
-                        { status: 'PLAN_TO_WATCH' as MyListStatus, label: '⏳ គ្រោងមើល (Plan)' },
-                        { status: 'COMPLETED' as MyListStatus, label: '✅ មើលចប់ (Completed)' },
-                        { status: 'FAVORITE' as MyListStatus, label: '💖 ចូលចិត្ត (Favorite)' },
-                        { status: 'NONE' as MyListStatus, label: '❌ ដកចេញពីបញ្ជី' },
-                      ].map((item) => (
-                        <button
-                          key={item.status}
-                          onClick={() => handleSetMyList(item.status)}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                            myListStatus === item.status
-                              ? 'bg-rose-500 text-white'
-                              : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                          }`}
-                        >
-                          <span>{item.label}</span>
-                          {myListStatus === item.status && <Check className="w-3.5 h-3.5" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Quick Bookmark Toggle */}
-                <button
-                  onClick={toggleFavorite}
-                  className={`p-3.5 rounded-2xl border transition-all flex items-center justify-center gap-2 text-xs md:text-sm font-bold cursor-pointer ${
-                    isFav
-                      ? 'bg-red-500/20 text-red-400 border-red-500/40 shadow-lg shadow-red-500/20'
-                      : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/15'
-                  }`}
-                  title={isFav ? 'ដកចេញពីចំណូលចិត្ត' : 'ដាក់ក្នុងចំណូលចិត្ត'}
-                >
-                  <Bookmark className={`w-4 h-4 ${isFav ? 'fill-red-400 text-red-400' : ''}`} />
-                </button>
-
-                {/* Share Button */}
-                <button
-                  onClick={share}
-                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 transition flex items-center justify-center gap-2 text-xs md:text-sm font-bold cursor-pointer"
-                  title="Share"
-                >
-                  <Share2 className="w-4 h-4" />
-                </button>
-
-                {/* Feedback Modal Trigger */}
-                <button
-                  onClick={() => setShowFeedbackModal(true)}
-                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 transition flex items-center justify-center gap-2 text-xs md:text-sm font-bold cursor-pointer"
-                  title="Report or Feedback"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Comments tab shortcut */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setActiveTab('comments');
+                }}
+                className="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 flex items-center justify-center gap-1.5 font-bold transition active:scale-95 cursor-pointer"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
+                <span>{commentsCount}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -712,9 +680,9 @@ export function DetailPage() {
 
         {/* ── TAB 1: EPISODES CONTENT ── */}
         {activeTab === 'episodes' && (
-          <div className="space-y-6">
-            {/* Episode Toolbar (Search + Sort + View Mode) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl shadow-lg">
+          <div className="space-y-4">
+            {/* Episode Toolbar (Search + Range Selector + Sort + View Mode) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl shadow-lg">
               {/* Left: Search input */}
               <div className="relative flex-1 max-w-sm">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -722,55 +690,152 @@ export function DetailPage() {
                   type="text"
                   value={epSearch}
                   onChange={(e) => setEpSearch(e.target.value)}
-                  placeholder="ស្វែងរកលេខភាគ..."
+                  placeholder="ស្វែងរកលេខភាគ (ឧ. 1, 12, 105)..."
                   className="w-full bg-[#131d36] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 transition-colors"
                 />
               </div>
 
               {/* Right: Sort Order & View Mode Toggles */}
-              <div className="flex items-center gap-2 justify-end">
+              <div className="flex items-center gap-2 justify-end flex-wrap">
                 <button
-                  onClick={() => setEpSortOrder((prev) => prev === 'asc' ? 'desc' : 'asc')}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setEpSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+                  }}
                   className="px-3 py-2 rounded-xl bg-[#131d36] hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                   title="Toggle episode order"
                 >
                   <ArrowDownUp className="w-3.5 h-3.5 text-rose-400" />
                   <span>{epSortOrder === 'asc' ? 'ភាគ 1 ➔ ចុងក្រោយ' : 'ភាគចុងក្រោយ ➔ 1'}</span>
                 </button>
+
+                {/* View Mode Toggle (Grid / List) */}
+                <div className="flex items-center bg-[#131d36] p-0.5 rounded-xl border border-white/10">
+                  <button
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setViewMode('grid');
+                    }}
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${
+                      viewMode === 'grid' ? 'bg-rose-500 text-white shadow' : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setViewMode('list');
+                    }}
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${
+                      viewMode === 'list' ? 'bg-rose-500 text-white shadow' : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="List View"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
 
+            {/* Range Selector Chips (Crunchyroll / Bilibili Style when > 30 episodes) */}
+            {rangeChunks.length > 0 && !epSearch.trim() && (
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+                {rangeChunks.map((chunk, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setSelectedRange(idx);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black shrink-0 transition-all cursor-pointer ${
+                      selectedRange === idx
+                        ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-500/25 ring-1 ring-white/20'
+                        : 'bg-[#10192e] text-gray-400 hover:text-white border border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {chunk.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Episodes List Display */}
-            {filteredEpisodes.length === 0 ? (
+            {displayedEpisodes.length === 0 ? (
               <div className="text-center py-16 bg-[#0e1629]/60 rounded-3xl border border-white/5 space-y-2">
                 <Film className="w-10 h-10 text-gray-500 mx-auto" />
                 <p className="text-gray-400 text-sm font-semibold">រកមិនឃើញភាគដែលស្វែងរកឡើយ</p>
                 <p className="text-gray-500 text-xs">សូមសាកល្បងស្វែងរកលេខភាគផ្សេងទៀត។</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
-                {filteredEpisodes.map((ep) => {
-                  const isEpVip = ep.is_vip || (ep as any).is_vip_only || ep.is_free === false;
+            ) : viewMode === 'grid' ? (
+              /* Sleek Compact Number Grid (5 per row on mobile, up to 10 on desktop) */
+              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-2.5">
+                {displayedEpisodes.map((ep) => {
+                  const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
 
                   return (
                     <Link
                       key={ep.id}
                       to={`/watch/${anime.slug}/${ep.episode_number}`}
-                      className="group relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl bg-[#10192e] border border-white/10 hover:border-rose-400 hover:bg-gradient-to-r hover:from-rose-600 hover:to-pink-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-rose-500/25 hover:scale-105 active:scale-95 cursor-pointer select-none"
+                      onClick={() => triggerHaptic('light')}
+                      className="group relative aspect-square flex flex-col items-center justify-center rounded-xl bg-[#10192e]/90 hover:bg-gradient-to-br hover:from-rose-600 hover:to-pink-600 border border-white/10 hover:border-rose-400/50 text-white transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-rose-500/25 hover:scale-105 active:scale-95 cursor-pointer select-none"
                     >
+                      {/* VIP Crown Indicator */}
                       {isEpVip && (
-                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-black flex items-center justify-center shadow">
-                          <Crown className="w-2.5 h-2.5 fill-black" />
+                        <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center shadow">
+                          <Crown className="w-2 h-2 text-black fill-black" />
                         </div>
                       )}
-                      <span className="text-xs sm:text-sm font-black tracking-tight group-hover:text-white">
-                        ភាគ {ep.episode_number}
+
+                      <span className="font-display font-black text-sm sm:text-base group-hover:text-white transition-colors">
+                        {ep.episode_number}
                       </span>
-                      <span className={`text-[9px] font-bold mt-1 px-1.5 py-0.2 rounded ${
-                        isEpVip ? 'bg-amber-500/20 text-amber-300 group-hover:bg-black/30 group-hover:text-white' : 'bg-emerald-500/20 text-emerald-300 group-hover:bg-black/30 group-hover:text-white'
-                      }`}>
-                        {isEpVip ? 'VIP' : 'ឥតគិតថ្លៃ'}
-                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              /* List Mode with Episode Name & Quick Play */
+              <div className="space-y-2">
+                {displayedEpisodes.map((ep) => {
+                  const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
+
+                  return (
+                    <Link
+                      key={ep.id}
+                      to={`/watch/${anime.slug}/${ep.episode_number}`}
+                      onClick={() => triggerHaptic('light')}
+                      className="group flex items-center justify-between p-3 rounded-2xl bg-[#10192e]/90 hover:bg-[#15203a] border border-white/10 hover:border-rose-500/40 transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-black text-sm text-white group-hover:bg-rose-500 group-hover:text-white group-hover:border-rose-400 transition-colors shrink-0">
+                          {ep.episode_number}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-rose-300 transition-colors">
+                            {ep.title || `ភាគទី ${ep.episode_number}`}
+                          </p>
+                          <p className="text-[11px] text-gray-400">
+                            {anime.title} • {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)} នាទី` : 'សំឡេងខ្មែរ'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isEpVip ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+                            <Crown className="w-2.5 h-2.5 fill-amber-400" /> VIP
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/5 text-gray-400 border border-white/10">
+                            ឥតគិតថ្លៃ
+                          </span>
+                        )}
+                        <div className="w-8 h-8 rounded-full bg-rose-500/20 group-hover:bg-rose-500 text-rose-400 group-hover:text-white flex items-center justify-center transition-colors">
+                          <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                        </div>
+                      </div>
                     </Link>
                   );
                 })}
@@ -1011,6 +1076,65 @@ export function DetailPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Interactive Rating Modal ── */}
+      {showRatingModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="w-full max-w-sm bg-[#111726] border border-white/15 rounded-3xl p-6 space-y-5 shadow-2xl text-center animate-scale-in">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <h3 className="font-display font-black text-base text-white">ដាក់ពិន្ទុរឿងនេះ</h3>
+              <button
+                onClick={() => setShowRatingModal(false)}
+                className="w-7 h-7 rounded-full bg-white/10 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs text-gray-300 font-medium">តើអ្នកយល់យ៉ាងណាដែរចំពោះរឿងនេះ?</p>
+              <div className="flex items-center justify-center gap-2 py-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      handleRate(star);
+                      setShowRatingModal(false);
+                    }}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1.5 transition-transform hover:scale-125 active:scale-95 cursor-pointer"
+                    title={`ដាក់ពិន្ទុ ${star} ផ្កាយ`}
+                  >
+                    <Star
+                      className={`w-8 h-8 transition-colors ${
+                        (hoverRating || userRating) >= star
+                          ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                          : 'text-gray-600 hover:text-gray-400'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs font-bold text-amber-400 h-4">
+                {(hoverRating || userRating) === 5 ? '🌟 ល្អឥតខ្ចោះ (5/5)' :
+                 (hoverRating || userRating) === 4 ? '✨ ល្អណាស់ (4/5)' :
+                 (hoverRating || userRating) === 3 ? '👍 មធ្យម (3/5)' :
+                 (hoverRating || userRating) === 2 ? '😐 ធម្មតា (2/5)' :
+                 (hoverRating || userRating) === 1 ? '👎 មិនសូវល្អ (1/5)' : 'សូមចុចផ្កាយដើម្បីដាក់ពិន្ទុ'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Rating Toast */}
+      {ratingToast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-emerald-500 text-white font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
+          <Check className="w-4 h-4" /> {ratingToast}
         </div>
       )}
 

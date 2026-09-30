@@ -5,25 +5,16 @@ from app.models.user import UserRole
 
 
 class RegisterRequest(BaseModel):
-    username: str
-    email: EmailStr
+    username: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
     password: str
-
-    @field_validator("username")
-    @classmethod
-    def username_valid(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            raise ValueError("Username is required")
-        if len(v) < 3 or len(v) > 50:
-            raise ValueError("Username must be 3–50 characters")
-        return v
 
     @field_validator("password")
     @classmethod
     def password_min_length(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters")
+        if len(v) < 6:
+            raise ValueError("ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៦ តួអក្សរ")
         return v
 
 

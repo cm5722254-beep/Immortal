@@ -42,6 +42,17 @@
     -webkit-touch-callout: none;
   }
 
+  /* Prevent Khmer vowels/subscripts from clipping & overlapping */
+  h1, h2, h3, h4, h5, h6, .font-display {
+    line-height: 1.35 !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  p, span, label, a {
+    overflow-wrap: break-word;
+  }
+
 
   /* Prevent dragging images and videos */
   img, video {
@@ -802,3 +813,31 @@
   filter: drop-shadow(0 0 16px rgba(255, 77, 109, 0.6));
   transform: scale(1.05);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CLEAN & MINIMALIST UI MODE (របៀបសាមញ្ញ មិនរញេរញៃ)
+   ═══════════════════════════════════════════════════════════════════ */
+.clean-ui-mode .animate-pulse {
+  animation: none !important;
+}
+
+.clean-ui-mode .ue5-lumen,
+.clean-ui-mode .ue5-aura-border {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.clean-ui-mode .tilt-3d {
+  transform: none !important;
+}
+
+/* Reduce Motion Mode */
+.reduce-motion-mode *,
+.reduce-motion-mode *::before,
+.reduce-motion-mode *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+

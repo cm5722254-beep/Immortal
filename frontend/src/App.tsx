@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { MobileNav } from './components/layout/MobileNav';
@@ -14,7 +14,8 @@ import { useAuthStore } from './store/authStore';
 import { useThemeStore } from './store/themeStore';
 import { useSystemUpdateStore } from './store/systemUpdateStore';
 import { initSecurityProtection } from './utils/security';
-import { initTelegramWebApp, getTelegramUser, getTelegramInitData } from './utils/telegram';
+import { initTelegramWebApp, getTelegramUser, getTelegramInitData, setTelegramBackButton, triggerHaptic } from './utils/telegram';
+import { usePlatform } from './utils/platform';
 
 // ─── 🚀 Fast Code-Splitted Pages (Lazy-Loaded) ───
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -102,6 +103,7 @@ function OwnerGuard({ children }: { children: React.ReactNode }) {
 function PublicLayout({ children }: { children: React.ReactNode }) {
   const { config } = useSystemUpdateStore();
   const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
+  const { isWeb, isTelegram, isMobileApp } = usePlatform();
   const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active || user?.is_vip;
 
   // 🔒 Website Maintenance Lock: If enabled, check if VIP only or full lock
@@ -114,17 +116,55 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <PromoCountdownBanner />
+    <div className={`min-h-screen flex flex-col text-gray-100 ${
+      isTelegram ? 'bg-[#080d1a] tg-theme-wrapper' : isMobileApp ? 'bg-[#060a14] apk-wrapper' : 'bg-[#080d1a]'
+    }`}>
+      {/* Promo banner on Desktop Website */}
+      {isWeb && (
+        <div className="hidden md:block">
+          <PromoCountdownBanner />
+        </div>
+      )}
+
+      {/* Main Navigation Bar */}
       <Navbar />
-      <div className="flex-1 pb-16 sm:pb-20 md:pb-0">
+
+      <div className={`flex-1 ${isWeb ? 'pb-24 md:pb-0' : 'pb-20'}`}>
         {children}
       </div>
-      <ContactDeveloperButton />
-      <Footer />
+
+      {/* Desktop Website Footer (Hidden inside Telegram Mini App and Android APK) */}
+      {isWeb && (
+        <div className="hidden md:block">
+          <ContactDeveloperButton />
+          <Footer />
+        </div>
+      )}
+
+      {/* Bottom Dock Navigation for Mobile / Telegram / APK */}
       <MobileNav />
     </div>
   );
+}
+
+// 📱 Telegram Native BackButton Handler
+function TelegramBackButtonHandler() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const isRoot = location.pathname === '/';
+    if (!isRoot) {
+      setTelegramBackButton(true, () => {
+        triggerHaptic('light');
+        navigate(-1);
+      });
+    } else {
+      setTelegramBackButton(false);
+    }
+  }, [location.pathname, navigate]);
+
+  return null;
 }
 
 // Layout wrapper for watch page with Maintenance Lock
@@ -218,6 +258,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <TelegramBackButtonHandler />
       <ConfirmDialog />
       <PwaInstallPrompt />
       <SystemUpdateModal />

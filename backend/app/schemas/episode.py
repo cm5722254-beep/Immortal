@@ -40,6 +40,8 @@ class EpisodeRead(BaseModel):
     duration_seconds: int
     is_published: bool
     is_free: bool = False
+    is_vip: bool = False
+    is_vip_only: bool = False
     view_count: int
     created_at: datetime
     updated_at: Optional[datetime] = None

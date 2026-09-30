@@ -1,4 +1,6 @@
 from typing import Optional, List
+import re
+import random
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,21 +19,57 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    phone = None
+    if data.phone_number and data.phone_number.strip():
+        raw_phone = re.sub(r"[^\d+]", "", data.phone_number.strip())
+        if len(raw_phone) < 8:
+            raise HTTPException(status_code=400, detail="លេខទូរសព្ទមិនត្រឹមត្រូវទេ (យ៉ាងតិច ៨ ខ្ទង់)")
+        phone = raw_phone
+        if not phone.startswith("+"):
+            if phone.startswith("0"):
+                phone = "+855" + phone[1:]
+            else:
+                phone = "+855" + phone
+
+        # Check duplicate phone
+        phone_result = await db.execute(
+            select(User).where((User.phone_number == phone) | (User.phone_number == raw_phone))
+        )
+        if phone_result.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="លេខទូរសព្ទនេះត្រូវបានចុះឈ្មោះរួចហើយ")
+
+    # Generate or validate email
+    clean_digits = re.sub(r"\D", "", phone) if phone else str(random.randint(100000, 999999))
+    email = data.email.strip() if data.email and data.email.strip() else f"phone_{clean_digits}@namianime.com"
+
     # Check duplicate email
-    result = await db.execute(select(User).where(User.email == data.email))
+    result = await db.execute(select(User).where(func.lower(User.email) == email.lower()))
     if result.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Email ឬលេខទូរសព្ទនេះត្រូវបានចុះឈ្មោះរួចហើយ")
+
+    # Generate or validate username
+    if data.username and data.username.strip():
+        username = data.username.strip()
+    elif phone:
+        username = f"user_{clean_digits[-6:]}"
+    else:
+        username = f"user_{clean_digits}"
 
     # Check duplicate username
-    result = await db.execute(select(User).where(User.username == data.username))
-    if result.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Username already taken")
+    username_result = await db.execute(select(User).where(func.lower(User.username) == username.lower()))
+    if username_result.scalar_one_or_none():
+        if data.username and data.username.strip():
+            raise HTTPException(status_code=400, detail="ឈ្មោះ Username នេះមានគេប្រើរួចហើយ")
+        else:
+            username = f"{username}_{random.randint(100, 999)}"
 
     user = User(
-        username=data.username,
-        email=data.email,
+        username=username,
+        email=email,
+        phone_number=phone,
         password_hash=hash_password(data.password),
         role=UserRole.USER,
+        login_source="phone" if phone else "email",
     )
     db.add(user)
     await db.commit()
@@ -48,17 +86,30 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/login", response_model=AuthResponse)
 async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     input_str = data.email.strip()
+
+    # Support multiple formats for phone number (e.g. 012345678, +85512345678, phone_xxx@...)
+    phone_candidates = [input_str]
+    clean_digits = re.sub(r"\D", "", input_str)
+    if input_str.startswith("0") and len(input_str) >= 8:
+        phone_candidates.append("+855" + input_str[1:])
+    elif input_str.startswith("+855"):
+        phone_candidates.append("0" + input_str[4:])
+    if clean_digits:
+        phone_candidates.append(f"+{clean_digits}")
+        phone_candidates.append(f"phone_{clean_digits}@namianime.com")
+
     result = await db.execute(
         select(User).where(
             (func.lower(User.email) == input_str.lower())
             | (func.lower(User.username) == input_str.lower())
-            | (User.phone_number == input_str)
+            | (User.phone_number.in_(phone_candidates))
+            | (User.email.in_(phone_candidates))
         )
     )
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Email/Username ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ")
+        raise HTTPException(status_code=401, detail="លេខទូរសព្ទ/Email ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវឡើយ")
 
     if not user.is_active and user.email != "cm5722254@gmail.com":
         raise HTTPException(status_code=403, detail="Account is disabled")

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play, Plus, Check, Star, Film } from 'lucide-react';
 import type { Anime } from '../../types';
+import { useUiPreferencesStore } from '../../store/uiPreferencesStore';
+import { triggerHaptic } from '../../utils/telegram';
 
 interface AnimeCardProps {
   anime: Anime;
@@ -13,6 +15,7 @@ interface AnimeCardProps {
 export function AnimeCard({
   anime,
 }: AnimeCardProps) {
+  const { cleanMode } = useUiPreferencesStore();
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(() => {
@@ -76,10 +79,11 @@ export function AnimeCard({
   };
 
   return (
-    <div className="group relative flex flex-col select-none netflix-card tilt-3d">
+    <div className="group relative flex flex-col select-none netflix-card tilt-3d active:scale-[0.98] transition-transform duration-150">
       <Link
         to={detailUrl}
-        className="relative block aspect-[2/3] sm:aspect-[3/4] rounded-lg overflow-hidden bg-[#181818] border border-white/[0.08] group-hover:border-rose-400/60 transition-all duration-300 shadow-md group-hover:shadow-[0_16px_36px_rgba(255,77,109,0.28)]"
+        onClick={() => triggerHaptic('light')}
+        className="relative block aspect-[2/3] sm:aspect-[3/4] rounded-xl overflow-hidden bg-[#121622] border border-white/[0.08] group-hover:border-rose-400/60 transition-all duration-300 shadow-md group-hover:shadow-[0_16px_36px_rgba(255,77,109,0.25)]"
       >
         {/* Poster Image or Fallback */}
         {imgSrc && !imageError ? (
@@ -104,42 +108,44 @@ export function AnimeCard({
         {/* Netflix Vignette Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 pointer-events-none" />
 
+        {/* Badges on Poster */}
         {/* Top-Left: Star Rating Pill */}
         <div className="absolute top-2 left-2 z-10 pointer-events-none">
-          <span className="inline-flex items-center gap-1 bg-black/75 backdrop-blur-md border border-white/15 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow">
-            <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+          <span className="inline-flex items-center gap-1 bg-black/75 backdrop-blur-md border border-amber-500/30 text-amber-300 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+            <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
             <span>{rating}</span>
           </span>
         </div>
 
-        {/* Top-Right: Ultra 3D & VIP Badges */}
-        <div className="absolute top-2 right-2 z-10 pointer-events-none flex flex-col items-end gap-1">
-          {anime.type === 'DONGHUA' && (
-            <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(255,77,109,0.7)] animate-pulse">
-              ⚡ ULTRA 3D
+        {/* Top-Right: Language / Format or VIP Badge (Minimal in Clean Mode) */}
+        {!cleanMode && (
+          <div className="absolute top-2 right-2 z-10 pointer-events-none flex items-center gap-1">
+            {!anime.is_free && (
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-yellow-500 text-black shadow-sm">
+                VIP
+              </span>
+            )}
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md shadow-sm border ${
+              anime.country === 'Japan' || anime.type === 'ANIME'
+                ? 'bg-sky-500/25 text-sky-200 border-sky-400/40'
+                : anime.type === 'MOVIE'
+                ? 'bg-purple-500/25 text-purple-200 border-purple-400/40'
+                : 'bg-amber-500/25 text-amber-200 border-amber-400/40'
+            }`}>
+              {anime.country === 'Japan' || anime.type === 'ANIME' ? 'Sub' : anime.type === 'MOVIE' ? 'ភាពយន្ត' : 'Dub'}
             </span>
-          )}
-          {anime.type === 'MOVIE' ? (
-            <span className="bg-gradient-to-r from-sky-500 to-blue-500 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded shadow">
-              🍿 ភាពយន្ត
-            </span>
-          ) : anime.is_free ? (
-            <span className="bg-emerald-600/90 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded shadow">
-              ឥតគិតថ្លៃ
-            </span>
-          ) : (
-            <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(255,77,109,0.5)]">
-              4K VIP
-            </span>
-          )}
-          {/* Dub vs Sub Badge */}
-          <span className="bg-amber-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow">
-            {anime.country === 'Japan' || anime.type === 'ANIME' ? 'អក្សររត់ខ្មែរ (Sub)' : 'និយាយខ្មែរ (Dub)'}
+          </div>
+        )}
+
+        {/* Bottom-Left on Poster: Clean Episode Status */}
+        <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
+          <span className="bg-black/80 backdrop-blur-md border border-white/20 text-gray-200 text-[9.5px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+            {tagText}
           </span>
         </div>
 
-        {/* Hover Action Layer: Play & Add to List Buttons appear on Hover */}
-        <div className="absolute inset-0 z-20 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/95 via-black/50 to-transparent">
+        {/* Hover Action Layer: Play & Add to List Buttons appear on Hover (Desktop) */}
+        <div className="absolute inset-0 z-20 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/95 via-black/50 to-transparent hidden sm:flex">
           {/* Quick Action Icons */}
           <div className="flex items-center gap-2 mb-2">
             {/* Play Button */}
@@ -178,12 +184,12 @@ export function AnimeCard({
       <div className="pt-2 px-0.5 space-y-0.5">
         <Link
           to={detailUrl}
-          className="block font-display font-bold text-xs sm:text-sm text-white line-clamp-1 group-hover:text-rose-400 transition-colors leading-snug"
+          className="block font-display font-bold text-xs sm:text-sm text-gray-100 line-clamp-1 group-hover:text-rose-400 transition-colors leading-snug py-0.5"
           title={anime.title}
         >
           {anime.title}
         </Link>
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium">
+        <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] text-gray-400 font-medium leading-tight truncate">
           <span>{anime.year || '2024'}</span>
           <span>•</span>
           <span>{anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្ត' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}</span>

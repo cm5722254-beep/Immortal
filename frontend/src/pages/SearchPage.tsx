@@ -215,7 +215,7 @@ export function SearchPage() {
   const hasActiveFilters = contentType !== 'ALL' || language !== 'ALL' || status !== 'ALL' || sortBy !== 'LATEST';
 
   return (
-    <main className="min-h-screen pb-24 md:pb-16 bg-[#141414] text-gray-100 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
+    <main className="min-h-screen pb-24 md:pb-16 bg-[#080d1a] text-gray-100 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
       {/* ── Page Title ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>

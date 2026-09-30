@@ -14,6 +14,7 @@ interface AuthState {
   setUser: (user: User | null) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
+  registerWithPhone: (phoneNumber: string, password: string, username?: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   loginWithTelegram: (tgUser: {
     id: number;
@@ -184,6 +185,38 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const res = await api.post('/auth/register', { username, email, password });
+      const { access_token, refresh_token, user } = res.data;
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
+      const isOwnerEmail = user?.email?.toLowerCase() === 'cm5722254@gmail.com';
+      const cleanUser = {
+        ...user,
+        role: isOwnerEmail ? 'OWNER' : user?.role,
+      };
+      localStorage.setItem('nami_cached_user', JSON.stringify(cleanUser));
+      const { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser } = checkRoles(cleanUser);
+      set({
+        user: cleanUser,
+        isAuthenticated: true,
+        isOwner: isOwnerUser,
+        isAdmin: isAdminUser,
+        isStaff: isStaffUser,
+        canManageContent: canManage,
+        isVip: isVipUser,
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  registerWithPhone: async (phoneNumber: string, password: string, username?: string) => {
+    set({ isLoading: true });
+    try {
+      const res = await api.post('/auth/register', {
+        phone_number: phoneNumber,
+        password,
+        username: username?.trim() || undefined,
+      });
       const { access_token, refresh_token, user } = res.data;
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);

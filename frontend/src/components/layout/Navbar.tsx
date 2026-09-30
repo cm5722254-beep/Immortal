@@ -148,17 +148,22 @@ export function Navbar() {
   // 🌐 NETFLIX CINEMA NAVBAR (Transparent at Top, Solid on Scroll)
   // ─────────────────────────────────────────────────────────────
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all duration-500 select-none ${
+    <header className={`sticky top-0 z-50 w-full transition-all duration-500 select-none pt-[max(0rem,env(safe-area-inset-top))] ${
       isScrolled
-        ? 'bg-[#141414]/95 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/60'
-        : 'bg-gradient-to-b from-[#141414]/95 via-[#141414]/60 to-transparent border-b border-transparent'
+        ? 'bg-[#0A0E17]/95 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/60'
+        : 'bg-gradient-to-b from-[#0A0E17]/95 via-[#0A0E17]/60 to-transparent border-b border-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
 
         {/* ── Left Brand / Logo & Navigation ── */}
         <div className="flex items-center gap-3 lg:gap-6 shrink-0 min-w-0">
-          <div className="md:hidden shrink-0">
+          <div className="md:hidden flex items-center gap-2 shrink-0">
             <Logo size="sm" showWordmark={false} />
+            {location.pathname !== '/' && (
+              <span className="text-xs font-bold text-gray-200 border-l border-white/20 pl-2 max-w-[120px] truncate">
+                {pageTitle}
+              </span>
+            )}
           </div>
           <div className="hidden md:block shrink-0">
             <Logo size="md" showWordmark={true} />
@@ -191,15 +196,17 @@ export function Navbar() {
           </nav>
         </div>
 
-        {/* ── Center: Dynamic Page Title (Mobile View Only) ── */}
-        <div className="flex-1 md:hidden text-center truncate px-2">
-          <span className="font-display font-bold text-sm text-white tracking-wide">
-            {pageTitle}
-          </span>
-        </div>
-
         {/* ── Right Actions ── */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
+          {/* Quick Search Button (Mobile only) */}
+          <Link
+            to="/search"
+            className="sm:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-colors active:scale-95 shrink-0"
+            aria-label="ស្វែងរក"
+          >
+            <Search className="w-5 h-5 text-gray-200" />
+          </Link>
+
           {/* Search Pill Bar (Desktop & Tablet) */}
           <form
             onSubmit={handleSearchSubmit}
@@ -215,15 +222,6 @@ export function Navbar() {
             />
           </form>
 
-          {/* Search Icon (Mobile) */}
-          <button
-            onClick={() => navigate('/search')}
-            className="sm:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors shrink-0"
-            aria-label="ស្វែងរក"
-          >
-            <Search className="w-5 h-5" />
-          </button>
-
           {/* VIP Upgrade Button */}
           <Link
             to="/vip"
@@ -234,20 +232,20 @@ export function Navbar() {
             <span className="whitespace-nowrap font-extrabold text-[11px] sm:text-xs">VIP</span>
           </Link>
 
-          {/* Telegram Channel Direct Link */}
+          {/* Telegram Channel Direct Link (Desktop only) */}
           <a
             href="https://t.me/animekhnotocation"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold bg-[#0088cc]/20 hover:bg-[#0088cc]/35 text-[#29b6f6] border border-[#0088cc]/40 hover:border-[#0088cc] shadow-sm hover:scale-105 active:scale-95 transition-all group shrink-0"
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold bg-[#0088cc]/20 hover:bg-[#0088cc]/35 text-[#29b6f6] border border-[#0088cc]/40 hover:border-[#0088cc] shadow-sm hover:scale-105 active:scale-95 transition-all group shrink-0"
             title="ចូលរួម Telegram Channel ដើម្បីទទួលដំណឹងភាគថ្មីៗ"
           >
             <Send className="w-3.5 h-3.5 fill-[#29b6f6] shrink-0" />
-            <span className="hidden sm:inline whitespace-nowrap font-extrabold text-[11px] sm:text-xs">Telegram</span>
+            <span className="whitespace-nowrap font-extrabold text-[11px] sm:text-xs">Telegram</span>
           </a>
 
-            {/* Notification Bell */}
-            <div className="relative shrink-0" ref={notifRef}>
+          {/* Notification Bell */}
+          <div className="relative shrink-0" ref={notifRef}>
               <button
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
                 className="relative p-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors active:scale-95 shrink-0"

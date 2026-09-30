@@ -259,7 +259,19 @@ export function AdminOwnerPage() {
       if (!e?.response) {
         showError(`CSV export cannot reach the backend at ${api.defaults.baseURL}. Start the backend API, then retry.`);
       } else {
-        showError(e?.response?.data?.detail || `CSV export failed (HTTP ${e.response.status}).`);
+        let msg = `CSV export failed (HTTP ${e.response.status}).`;
+        if (e.response.data instanceof Blob) {
+          try {
+            const text = await e.response.data.text();
+            const parsed = JSON.parse(text);
+            if (parsed.detail) {
+              msg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail);
+            }
+          } catch {}
+        } else if (e.response.data?.detail) {
+          msg = typeof e.response.data.detail === 'string' ? e.response.data.detail : JSON.stringify(e.response.data.detail);
+        }
+        showError(msg);
       }
     } finally {
       setVideoCsvBusy(false);

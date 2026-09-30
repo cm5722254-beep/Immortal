@@ -5,6 +5,7 @@ import { SkeletonCard } from '../components/common/SkeletonLoader';
 import api from '../services/api';
 import { loadCatalog } from '../services/catalogService';
 import type { Anime, PaginatedResponse, AnimeType } from '../types';
+import { triggerHaptic } from '../utils/telegram';
 
 interface ExplorePageProps {
   defaultType?: AnimeType;
@@ -26,6 +27,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
   const access = isFreeOnly ? 'free' : (searchParams.get('access') || '');
 
   const updateFilter = (key: string, value: string) => {
+    triggerHaptic('light');
     const next = new URLSearchParams(searchParams);
     if (!value || value === 'ALL') {
       next.delete(key);
@@ -97,15 +99,15 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
     : '🌟 រុករកបញ្ជីរឿងទាំងអស់';
 
   return (
-    <main className="min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-[#141414] text-gray-100">
+    <main className="min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-[#080d1a] text-gray-100">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-display font-black text-2xl sm:text-3xl text-white mb-1">{title}</h1>
+        <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight mb-1">{title}</h1>
         <p className="text-gray-400 text-xs sm:text-sm">សរុប {total.toLocaleString()} រឿង</p>
       </div>
 
       {/* ── Responsive Khmer Filter Toolbar ── */}
-      <div className="mb-8 space-y-3 bg-[#111726]/80 p-3.5 sm:p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+      <div className="mb-8 space-y-3 bg-[#0e1629]/90 p-3.5 sm:p-4 rounded-2xl border border-white/10 backdrop-blur-xl shadow-lg">
         {/* Type selector (Only if not fixed by route) */}
         {!defaultType && !isFreeOnly && (
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
@@ -122,10 +124,10 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
                 <button
                   key={t.id}
                   onClick={() => updateFilter('type', t.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                     active
-                      ? 'bg-[#E50914] text-white shadow-md shadow-red-600/30'
-                      : 'bg-[#182033] hover:bg-white/10 text-gray-300'
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-500/30'
+                      : 'bg-[#131d36] hover:bg-white/10 text-gray-300 border border-white/5'
                   }`}
                 >
                   {t.label}
@@ -151,10 +153,10 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
                   <button
                     key={a.id}
                     onClick={() => updateFilter('access', a.id)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                       active
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                        : 'bg-[#182033] hover:bg-white/10 text-gray-300 border border-transparent'
+                        ? 'bg-amber-500/25 text-amber-300 border border-amber-400/50 shadow'
+                        : 'bg-[#131d36] hover:bg-white/10 text-gray-300 border border-white/5'
                     }`}
                   >
                     {a.label}
@@ -170,7 +172,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
             <select
               value={sort}
               onChange={(e) => updateFilter('sort', e.target.value)}
-              className="bg-[#182033] border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#E50914]"
+              className="bg-[#131d36] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500 transition-colors cursor-pointer"
             >
               <option value="latest">ថ្មីៗចុងក្រោយ</option>
               <option value="popular">ពេញនិយមបំផុត</option>
@@ -186,7 +188,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
           <SkeletonCard count={18} />
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-20 bg-[#111726]/40 rounded-3xl border border-white/5">
+        <div className="text-center py-20 bg-[#0e1629]/60 rounded-3xl border border-white/5">
           <p className="text-gray-300 text-base font-bold">រកមិនឃើញរឿងឡើយ</p>
           <p className="text-gray-500 text-xs mt-1">សូមសាកល្បងជ្រើសរើសប្រភេទរឿង ឬលក្ខខណ្ឌផ្សេងទៀត</p>
         </div>
@@ -202,29 +204,38 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
       {pages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-10">
           <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => {
+              triggerHaptic('light');
+              setPage((p) => Math.max(1, p - 1));
+            }}
             disabled={page === 1}
-            className="px-3.5 py-2 rounded-xl bg-[#1e1e1e] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-[#0e1629] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-white/10"
           >
             ← ថយក្រោយ
           </button>
           {Array.from({ length: Math.min(pages, 7) }, (_, i) => i + 1).map((p) => (
             <button
               key={p}
-              onClick={() => setPage(p)}
-              className={`w-9 h-9 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              onClick={() => {
+                triggerHaptic('light');
+                setPage(p);
+              }}
+              className={`w-9 h-9 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 p === page
-                  ? 'bg-[#E50914] text-white shadow-lg shadow-red-600/40'
-                  : 'bg-[#1e1e1e] hover:bg-white/10 text-gray-300'
+                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/40 ring-1 ring-white/20'
+                  : 'bg-[#0e1629] hover:bg-white/10 text-gray-300 border border-white/10'
               }`}
             >
               {p}
             </button>
           ))}
           <button
-            onClick={() => setPage((p) => Math.min(pages, p + 1))}
+            onClick={() => {
+              triggerHaptic('light');
+              setPage((p) => Math.min(pages, p + 1));
+            }}
             disabled={page === pages}
-            className="px-3.5 py-2 rounded-xl bg-[#1e1e1e] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-[#0e1629] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-white/10"
           >
             បន្ទាប់ →
           </button>

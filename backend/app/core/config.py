@@ -58,12 +58,13 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL", "")
     REDIS_CACHE_ENABLED: bool = os.getenv("REDIS_CACHE_ENABLED", "true").lower() in ("true", "1", "yes")
 
-    # Telegram Bot
-    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    # Telegram Bot & Mini App
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "8681184116:AAFkgxxF6VS-9N0R7zs9GnTEx8ktpDTiPVc")
+    TELEGRAM_BOT_USERNAME: str = os.getenv("TELEGRAM_BOT_USERNAME", "animeflickh_bot")
     TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "")
     TELEGRAM_NOTIFY_ENABLED: bool = True
-    TELEGRAM_NOTIFY_GROUP_URL: str = os.getenv("TELEGRAM_NOTIFY_GROUP_URL", "")
-    TELEGRAM_PAY_BOT_TOKEN: str = os.getenv("TELEGRAM_PAY_BOT_TOKEN", "")
+    TELEGRAM_NOTIFY_GROUP_URL: str = os.getenv("TELEGRAM_NOTIFY_GROUP_URL", "https://t.me/animeflickh_bot")
+    TELEGRAM_PAY_BOT_TOKEN: str = os.getenv("TELEGRAM_PAY_BOT_TOKEN", "8681184116:AAFkgxxF6VS-9N0R7zs9GnTEx8ktpDTiPVc")
     TELEGRAM_PAY_GROUP_CHAT_ID: str = os.getenv("TELEGRAM_PAY_GROUP_CHAT_ID", "")
 
     # ACLEDA / Bakong Payment

@@ -126,7 +126,9 @@ async def export_all_data_to_dict() -> Dict[str, Any]:
                 "duration_seconds": e.duration_seconds or 1440,
                 "thumbnail_url": e.thumbnail_url or "",
                 "is_published": e.is_published,
-                "is_vip_only": getattr(e, "is_vip_only", False),
+                "is_free": bool(e.is_free),
+                "is_vip": not bool(e.is_free),
+                "is_vip_only": not bool(e.is_free),
                 "view_count": e.view_count or 0,
                 "created_at": _serialize_datetime(e.created_at),
             })

@@ -24,3 +24,11 @@ class Episode(Base):
     # Relationships
     anime = relationship("Anime", back_populates="episodes")
     watch_history = relationship("WatchHistory", back_populates="episode", cascade="all, delete-orphan")
+
+    @property
+    def is_vip(self) -> bool:
+        return not bool(self.is_free)
+
+    @property
+    def is_vip_only(self) -> bool:
+        return not bool(self.is_free)

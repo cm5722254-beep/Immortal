@@ -39,15 +39,15 @@ export function Footer() {
                   <span>Channel</span>
                 </a>
                 <a
-                  href="https://t.me/animekhanddonghuabot"
+                  href="https://t.me/animeflickh_bot"
                   target="_blank"
                   rel="noreferrer"
                   className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-600 text-gray-300 hover:text-white border border-white/15 flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm"
                   aria-label="Telegram Anime Bot"
-                  title="Telegram Bot (@animekhanddonghuabot)"
+                  title="Telegram Bot (@animeflickh_bot)"
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  <span>Anime Bot</span>
+                  <span>Anime Bot (@animeflickh_bot)</span>
                 </a>
               </div>
             </div>

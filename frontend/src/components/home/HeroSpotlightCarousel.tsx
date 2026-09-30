@@ -76,14 +76,14 @@ export function HeroSpotlightCarousel({ banners, anime }: HeroSpotlightCarouselP
   const ringItems = items.slice(0, RING_COUNT);
   const theta = 360 / RING_COUNT;
   
-  // Dynamically calculate 3D radius based on viewport width
+  // Dynamically calculate 3D radius based on viewport width for balanced perspective
   const radius = windowWidth < 380 
-    ? 125 
+    ? 105 
     : windowWidth < 480 
-      ? 145 
+      ? 120 
       : windowWidth < 768 
-        ? 195 
-        : 260;
+        ? 165 
+        : 245;
 
   // Auto-rotation timer
   useEffect(() => {
@@ -182,26 +182,26 @@ export function HeroSpotlightCarousel({ banners, anime }: HeroSpotlightCarouselP
       </div>
 
       {/* ── 2. Content & 3D Rotating Circle Section ── */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full z-20 pt-16 pb-12">
-        <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-8 lg:gap-12">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full z-20 pt-16 sm:pt-20 pb-10 sm:pb-12">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 lg:gap-12">
           
-          {/* Left Column: Movie Info & Actions (Netflix style) */}
-          <div className="max-w-xl space-y-4 text-center lg:text-left">
-            {/* Netflix Top 10 Ribbon with Ultra 3D Badge */}
+          {/* Left Column: Movie Info & Actions (Clean Netflix style) */}
+          <div className="w-full max-w-xl space-y-3 sm:space-y-4 text-center lg:text-left">
+            {/* Top Ribbon & Badges */}
             <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-2">
-              <span className="flex items-center justify-center w-7 h-7 rounded bg-gradient-to-tr from-rose-600 to-pink-500 text-white font-black text-xs shadow-lg shadow-rose-600/40">
+              <span className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-tr from-rose-600 to-pink-500 text-white font-black text-[11px] sm:text-xs shadow-md shadow-rose-600/40">
                 TOP
               </span>
               <span className="font-bold text-xs sm:text-sm tracking-wider uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                #{activeIndex + 1} ពេញនិយមបំផុត
+                #{activeIndex + 1} ពេញនិយម
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-rose-500/25 via-pink-500/20 to-rose-500/25 border border-rose-400/50 text-rose-300 shadow-[0_0_12px_rgba(255,77,109,0.35)]">
-                ⚡ UNREAL ENGINE 5 • ULTRA 3D
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 border border-rose-400/40 text-rose-300 shadow-[0_0_10px_rgba(255,77,109,0.3)]">
+                ⚡ ULTRA 3D • UE5
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="font-display font-black text-2xl sm:text-4xl md:text-5xl lg:text-5xl text-white tracking-tight leading-[1.1] drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] line-clamp-2">
+            <h1 className="font-display font-black text-xl sm:text-3xl md:text-4xl lg:text-5xl text-white tracking-tight leading-[1.2] drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] line-clamp-2">
               {current.title}
             </h1>
 
@@ -212,58 +212,56 @@ export function HeroSpotlightCarousel({ banners, anime }: HeroSpotlightCarouselP
               </p>
             )}
 
-            {/* Netflix Metadata Row */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-white/90 drop-shadow">
-              <span className="text-[#46d369] font-black">ត្រូវចិត្ត 98%</span>
-              <span className="text-yellow-400 font-bold">★ {rating}</span>
-              <span className="text-gray-400">•</span>
+            {/* Netflix Metadata Row - Clean & Non-Cluttered */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-2.5 text-xs sm:text-sm font-bold text-white/90 drop-shadow">
+              <span className="text-[#46d369] font-black text-xs sm:text-sm">ត្រូវចិត្ត 98%</span>
+              <span className="text-yellow-400 font-bold flex items-center gap-1">★ {rating}</span>
+              <span className="text-gray-400 hidden xs:inline">•</span>
               <span>{current.year || 2024}</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-white/40 bg-black/40 backdrop-blur-md">13+</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-rose-400/50 bg-rose-500/15 text-rose-300 backdrop-blur-md">កម្រិត 4K UHD</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-sky-400/50 bg-sky-500/15 text-sky-300 backdrop-blur-md">60 FPS 3D</span>
-              <span className="text-gray-400">•</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-rose-400/40 bg-rose-500/15 text-rose-300 backdrop-blur-md">4K UHD</span>
+              <span className="text-gray-400 hidden xs:inline">•</span>
               <span className="text-gray-300 font-medium">{current.episode_count ? `${current.episode_count} ភាគ` : 'ភាគថ្មីៗ'}</span>
             </div>
 
             {/* Description */}
-            <p className="text-gray-200 text-xs sm:text-sm leading-relaxed line-clamp-3 max-w-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mx-auto lg:mx-0">
+            <p className="text-gray-200 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3 max-w-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mx-auto lg:mx-0">
               {current.description || `ទស្សនារឿង ${current.title} កម្រិត 4K UHD Ultra HD លើ ទស្សនារឿង គ្មានការរំខានដោយពាណិជ្ជកម្ម។`}
             </p>
 
-            {/* Netflix Action Buttons */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+            {/* Action Buttons - Prominent & Touch-Friendly */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-1 sm:pt-2">
               <button
                 onClick={() => navigate(watchUrl)}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black py-2.5 sm:py-3 px-6 sm:px-7 rounded-xl shadow-lg shadow-rose-500/35 hover:scale-105 active:scale-95 transition-all cursor-pointer select-none"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black py-2.5 sm:py-3 px-5 sm:px-7 rounded-xl shadow-lg shadow-rose-500/35 hover:scale-105 active:scale-95 transition-all cursor-pointer select-none"
               >
-                <Play className="w-5 h-5 fill-white text-white" />
-                <span className="text-sm sm:text-base font-bold">ចាក់ទស្សនា</span>
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white" />
+                <span className="text-xs sm:text-base font-bold">ចាក់ទស្សនា</span>
               </button>
 
               <Link
                 to={detailUrl}
-                className="netflix-btn-info cursor-pointer hover:border-rose-500/40 hover:text-rose-200"
+                className="netflix-btn-info cursor-pointer hover:border-rose-500/40 hover:text-rose-200 py-2 sm:py-2.5 px-3.5 sm:px-4 text-xs sm:text-sm"
               >
-                <Info className="w-5 h-5 text-rose-400" />
-                <span className="text-sm sm:text-base font-semibold">ព័ត៌មានបន្ថែម</span>
+                <Info className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+                <span className="font-semibold">ព័ត៌មានបន្ថែម</span>
               </Link>
 
               <button
                 onClick={toggleBookmark}
-                className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-200 cursor-pointer ${
+                className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition-all duration-200 cursor-pointer ${
                   isBookmarked
                     ? 'border-emerald-400 bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]'
                     : 'border-white/40 bg-black/40 hover:border-rose-400 text-white hover:bg-rose-500/10'
                 }`}
                 title={isBookmarked ? 'បានបញ្ចូលក្នុងបញ្ជី' : 'បញ្ចូលក្នុងបញ្ជីខ្ញុំ'}
               >
-                {isBookmarked ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                {isBookmarked ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
             </div>
           </div>
 
           {/* ── Right Column: 3D ROTATING CIRCULAR CAROUSEL (BANNER 3D វិលជុំវិញ) ── */}
-          <div className="relative w-full max-w-[360px] sm:max-w-[440px] lg:max-w-[500px] h-[340px] sm:h-[390px] md:h-[430px] flex items-center justify-center scene-3d py-4">
+          <div className="relative w-full max-w-[320px] sm:max-w-[420px] lg:max-w-[480px] h-[280px] sm:h-[360px] md:h-[400px] flex items-center justify-center scene-3d py-2 sm:py-4">
             
             {/* Top 360° 3D Rotating Badge */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 pointer-events-none">

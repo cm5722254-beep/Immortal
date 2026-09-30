@@ -65,12 +65,12 @@ export function AdminTelegramPage() {
             </a>
 
             <a
-              href="https://t.me/namianime_bot"
+              href="https://t.me/animeflickh_bot"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary text-xs"
+              className="btn-secondary text-xs flex items-center gap-1.5"
             >
-              <ExternalLink className="w-3.5 h-3.5" /> Open Bot
+              <ExternalLink className="w-3.5 h-3.5 text-cyan-400" /> Open Bot (@animeflickh_bot)
             </a>
             <button
               onClick={fetchStatus}
@@ -105,8 +105,8 @@ export function AdminTelegramPage() {
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Online
               </span>
             </div>
-            <p className="font-display font-black text-xl text-white">@{status?.bot_info?.username || 'namianime_bot'}</p>
-            <p className="text-xs text-gray-400 mt-1">First Name: {status?.bot_info?.first_name || 'ទស្សនារឿង'}</p>
+            <p className="font-display font-black text-xl text-white">@{status?.bot_info?.username || 'animeflickh_bot'}</p>
+            <p className="text-xs text-gray-400 mt-1">First Name: {status?.bot_info?.first_name || 'APPFLIX'}</p>
           </div>
 
           <div className="card p-5 bg-gradient-to-br from-purple-950/40 to-dark-card border-purple-500/30">
@@ -136,7 +136,7 @@ export function AdminTelegramPage() {
             <Send className="w-5 h-5 text-brand-400" /> Test Dispatch
           </h2>
           <p className="text-gray-400 text-sm mb-4">
-            Click below to dispatch a sample anime announcement to your Telegram bot. Anyone who has started chat with <b>@namianime_bot</b> or added it to their channel will receive this notification.
+            Click below to dispatch a sample anime announcement to your Telegram bot. Anyone who has started chat with <b>@animeflickh_bot</b> or added it to their channel will receive this notification.
           </p>
           <button
             onClick={sendTestNotification}

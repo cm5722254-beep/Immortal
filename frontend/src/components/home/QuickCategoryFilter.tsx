@@ -1,5 +1,6 @@
 import React from 'react';
 import { Flame, Film, Tv, Video, Sparkles, Crown, Zap } from 'lucide-react';
+import { triggerHaptic } from '../../utils/telegram';
 
 export type CategoryFilterType = 'ALL' | 'ULTRA_3D' | 'DONGHUA' | 'ANIME' | 'MOVIE' | 'DRAMA' | 'VIP';
 
@@ -20,7 +21,7 @@ const FILTERS: { id: CategoryFilterType; label: string; icon: React.ElementType;
 
 export function QuickCategoryFilter({ activeFilter, onSelect }: QuickCategoryFilterProps) {
   return (
-    <div className="w-full overflow-x-auto no-scrollbar py-2 my-4">
+    <div className="w-full overflow-x-auto no-scrollbar py-2 my-3">
       <div className="flex items-center gap-2 min-w-max px-1">
         {FILTERS.map((f) => {
           const Icon = f.icon;
@@ -28,7 +29,10 @@ export function QuickCategoryFilter({ activeFilter, onSelect }: QuickCategoryFil
           return (
             <button
               key={f.id}
-              onClick={() => onSelect(f.id)}
+              onClick={() => {
+                triggerHaptic('light');
+                onSelect(f.id);
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 select-none cursor-pointer ${
                 isActive
                   ? f.special
