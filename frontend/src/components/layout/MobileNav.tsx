@@ -67,8 +67,8 @@ export function MobileNav() {
                     active ? 'bg-rose-500/15 text-rose-400 shadow-[0_0_14px_rgba(255,77,109,0.35)]' : ''
                   }`}>
                     <Icon
-                      strokeWidth={active ? 2.5 : 1.8}
-                      className={`w-5 h-5 transition-transform duration-300 ${
+                      strokeWidth={active ? 2.2 : 1.8}
+                      className={`w-[18px] h-[18px] transition-transform duration-300 ${
                         active
                           ? 'text-rose-400 scale-110 drop-shadow-[0_0_10px_rgba(255,77,109,0.7)]'
                           : 'text-gray-400 group-hover:text-gray-200'
@@ -91,7 +91,7 @@ export function MobileNav() {
               </div>
 
               <span
-                className={`text-[10px] mt-1 font-bold leading-none tracking-tight transition-colors truncate max-w-[68px] ${
+                className={`text-[9px] mt-1 font-bold leading-none tracking-tight transition-colors truncate max-w-[68px] ${
                   active
                     ? 'text-rose-300 font-black'
                     : 'text-gray-400 group-hover:text-gray-300'

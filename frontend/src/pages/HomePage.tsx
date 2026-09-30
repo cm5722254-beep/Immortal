@@ -1,17 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ChevronRight, Sparkles, Flame, Film, Tv, Video, Zap
-} from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { HeroSpotlightCarousel } from '../components/home/HeroSpotlightCarousel';
 import { HeroBanner } from '../components/home/HeroBanner';
 import { MiniAppHeroBanner } from '../components/home/MiniAppHeroBanner';
-import { MiniAppQuickHub } from '../components/home/MiniAppQuickHub';
 import { AnimeCard } from '../components/home/AnimeCard';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
 import { TrendingRankCarousel } from '../components/home/TrendingRankCarousel';
 import { QuickCategoryFilter, type CategoryFilterType } from '../components/home/QuickCategoryFilter';
-import { MovieTrailersSection } from '../components/home/MovieTrailersSection';
 import { useUiPreferencesStore } from '../store/uiPreferencesStore';
 
 import { SkeletonCard } from '../components/common/SkeletonLoader';
@@ -28,53 +24,49 @@ interface SectionProps {
   isLoading: boolean;
 }
 
-function ContentSection({ title, icon: Icon, link, items, isLoading }: SectionProps) {
+function ContentSection({ title, link, items, isLoading }: SectionProps) {
   if (!isLoading && items.length === 0) return null;
 
   return (
-    <section className="mb-10 relative group/row">
+    <section className="mb-6 sm:mb-8 relative group/row">
       {/* ── Section Header ── */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
+      <div className="flex items-center justify-between mb-2.5 px-1">
         <Link
           to={link}
-          className="group/title inline-flex items-center gap-2 text-white hover:text-rose-400 transition-colors min-w-0"
+          className="group/title inline-flex items-center gap-1.5 text-white hover:text-rose-400 transition-colors min-w-0"
         >
-          <h2 className="font-display font-bold text-base sm:text-xl md:text-2xl text-white tracking-wide flex items-center gap-2 truncate">
-            {Icon && (
-              <span className="w-6 h-6 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 shadow-[0_0_10px_rgba(255,77,109,0.3)] shrink-0">
-                <Icon className="w-3.5 h-3.5" />
-              </span>
-            )}
-            <span className="truncate">{title}</span>
+          <span className="w-1 h-3.5 rounded-full bg-rose-500 shrink-0" />
+          <h2 className="font-display font-bold text-sm sm:text-base text-white tracking-wide truncate">
+            {title}
           </h2>
         </Link>
         <Link
           to={link}
-          className="text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors inline-flex items-center gap-0.5 shrink-0 ml-2 py-1 px-2 rounded-lg hover:bg-rose-500/10"
+          className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors inline-flex items-center gap-0.5 shrink-0 ml-2"
         >
-          <span>មើលទាំងអស់</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <span>ទាំងអស់</span>
+          <ChevronRight className="w-3 h-3" />
         </Link>
       </div>
 
-      {/* ── Responsive Container: Horizontal swipe on Mobile/Mini App, Grid on Desktop ── */}
+      {/* ── Responsive Container: 105px cards on Mobile, Grid on Desktop ── */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3.5">
           <SkeletonCard count={7} />
         </div>
       ) : (
         <>
-          {/* Mobile Horizontal Snap Rail (Crunchyroll / Bilibili style) */}
-          <div className="flex md:hidden gap-3 overflow-x-auto no-scrollbar pb-2 pt-1 snap-x scroll-smooth">
+          {/* Mobile Horizontal Snap Rail (Netflix/Bilibili clean style) */}
+          <div className="flex md:hidden gap-3 overflow-x-auto no-scrollbar pb-1.5 pt-1 snap-x scroll-smooth px-1">
             {items.map((anime) => (
-              <div key={anime.id} className="w-[140px] shrink-0 snap-start">
+              <div key={anime.id} className="w-[92px] sm:w-[104px] shrink-0 snap-start">
                 <AnimeCard anime={anime} />
               </div>
             ))}
           </div>
 
           {/* Desktop Responsive Grid */}
-          <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
+          <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4">
             {items.map((anime) => (
               <AnimeCard key={anime.id} anime={anime} />
             ))}
@@ -266,9 +258,6 @@ export function HomePage() {
           banners={banners}
           anime={forYouDonghua.length > 0 ? forYouDonghua : popularDonghua}
         />
-        <div className="px-3 pt-2">
-          <MiniAppQuickHub />
-        </div>
       </div>
 
       <div className="hidden md:block">
@@ -286,14 +275,14 @@ export function HomePage() {
       </div>
 
       {/* ── 2. Content Container ── */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-2 sm:mt-6">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 mt-1 sm:mt-4">
 
         {/* Quick Filter Pill Bar */}
         <QuickCategoryFilter activeFilter={activeFilter} onSelect={setActiveFilter} />
 
         {/* ── Continue Watching (works for both guests & logged in) ── */}
         {history.length > 0 && activeFilter === 'ALL' && (
-          <div className="mb-10">
+          <div className="mb-6 sm:mb-8">
             <ContinueWatchingSection
               items={history}
               onClear={handleClearHistory}
@@ -302,34 +291,36 @@ export function HomePage() {
           </div>
         )}
 
-        {/* ── Top 10 Trending Carousel (Netflix Style with Giant Rank Digits) ── */}
+        {/* ── Top 10 Trending Carousel (Netflix Style) ── */}
         {activeFilter === 'ALL' && top10Trending.length > 0 && (
           <TrendingRankCarousel items={top10Trending} isLoading={isLoading} />
         )}
 
         {/* ── If a specific category filter is chosen ── */}
         {activeFilter !== 'ALL' ? (
-          <section className="mt-6 mb-16 animate-fade-in">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="font-display font-bold text-xl text-white flex items-center gap-2">
-                {activeFilter === 'ULTRA_3D' && '⚡ កំពូលរឿង Ultra 3D (Unreal Engine 5)'}
-                {activeFilter === 'DONGHUA' && '🇨🇳 រឿងចិន 3D (Donghua)'}
-                {activeFilter === 'ANIME' && '🇯🇵 រឿងជប៉ុន (Anime)'}
-                {activeFilter === 'MOVIE' && '🍿 ភាពយន្តដុំ (Movies)'}
-                {activeFilter === 'DRAMA' && '📺 រឿងភាគ (Drama)'}
-                {activeFilter === 'VIP' && '⭐ កម្រិត Ultra HD VIP 4K'}
+          <section className="mt-4 mb-12 animate-fade-in">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="font-display font-bold text-sm sm:text-base text-white flex items-center gap-1.5">
+                <span className="w-1 h-3.5 rounded-full bg-rose-500 shrink-0" />
+                <span>
+                  {activeFilter === 'DONGHUA' && 'រឿងចិន 3D'}
+                  {activeFilter === 'ANIME' && 'Anime ជប៉ុន'}
+                  {activeFilter === 'MOVIE' && 'ភាពយន្តដុំ'}
+                  {activeFilter === 'DRAMA' && 'រឿងភាគ Drama'}
+                  {activeFilter === 'VIP' && 'សមាជិក VIP'}
+                </span>
               </h2>
-              <span className="text-xs text-rose-300 font-bold bg-[#131926] px-3 py-1 rounded-full border border-rose-500/30 shadow-[0_0_10px_rgba(255,77,109,0.2)]">
+              <span className="text-[11px] text-gray-400 font-medium">
                 {filteredItems.length} រឿង
               </span>
             </div>
 
             {filteredItems.length === 0 ? (
-              <div className="text-center py-16 bg-[#0f1422] rounded-2xl border border-white/[0.08]">
-                <p className="text-gray-400 text-sm">មិនទាន់មានទិន្នន័យក្នុងជម្រើសនេះនៅឡើយទេ។</p>
+              <div className="text-center py-12 bg-[#0f1422] rounded-xl border border-white/[0.06]">
+                <p className="text-gray-400 text-xs">មិនទាន់មានទិន្នន័យក្នុងជម្រើសនេះនៅឡើយទេ។</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-4.5">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3.5">
                 {filteredItems.map((anime) => (
                   <AnimeCard key={anime.id} anime={anime} />
                 ))}
@@ -337,26 +328,19 @@ export function HomePage() {
             )}
           </section>
         ) : (
-          /* ── Full Natural Feed ── */
-          <div className="space-y-12 mt-6">
+          /* ── Full Natural Feed (Clean, Native App Spacing) ── */
+          <div className="space-y-6 sm:space-y-8 mt-3">
             {/* Top Donghua Section */}
             <ContentSection
-              title={cleanMode ? "រឿងចិន 3D ពេញនិយម (Donghua)" : "⚡ កំពូលរឿង Ultra 3D (Unreal Engine 5) • 4K 60FPS"}
-              icon={cleanMode ? Flame : Zap}
+              title="រឿងចិន 3D ពេញនិយម"
               link="/donghua"
               items={ultra3dDonghua}
               isLoading={isLoading}
             />
 
-            {/* 🎬 Trailers Showcase (Only in full mode) */}
-            {!cleanMode && (
-              <MovieTrailersSection items={ultra3dDonghua.length > 0 ? ultra3dDonghua : popularDonghua} />
-            )}
-
             {/* Recommended For You */}
             <ContentSection
               title="រឿងណែនាំសម្រាប់អ្នក"
-              icon={Sparkles}
               link="/explore"
               items={forYouDonghua}
               isLoading={isLoading}
@@ -364,8 +348,7 @@ export function HomePage() {
 
             {/* Popular Donghua */}
             <ContentSection
-              title="រឿងចិនកំពុងពេញនិយម (Donghua)"
-              icon={Flame}
+              title="រឿងចិន 3D ថ្មីៗ"
               link="/donghua"
               items={popularDonghua}
               isLoading={isLoading}
@@ -373,28 +356,25 @@ export function HomePage() {
 
             {/* Japanese Anime Series */}
             <ContentSection
-              title="រឿងជប៉ុនកំពូលទស្សនា (Anime)"
-              icon={Film}
+              title="Anime ជប៉ុន"
               link="/anime"
               items={animeList}
               isLoading={isLoading}
             />
 
-            {/* Chinese Drama Series */}
+            {/* Movies */}
             <ContentSection
-              title="រឿងភាគមនោសញ្ចេតនា (Drama)"
-              icon={Tv}
-              link="/drama"
-              items={drama}
+              title="ភាពយន្តដុំ"
+              link="/movies"
+              items={movies}
               isLoading={isLoading}
             />
 
-            {/* Movies */}
+            {/* Chinese Drama Series */}
             <ContentSection
-              title="ភាពយន្តដុំពិសេស (Movies)"
-              icon={Video}
-              link="/movies"
-              items={movies}
+              title="រឿងភាគ Drama"
+              link="/drama"
+              items={drama}
               isLoading={isLoading}
             />
           </div>

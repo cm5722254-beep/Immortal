@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Play, Info, Plus, Check, Star, Sparkles } from 'lucide-react';
+import { Play, Info, Plus, Check, Star } from 'lucide-react';
 import type { Banner, Anime } from '../../types';
 import { triggerHaptic } from '../../utils/telegram';
 import api from '../../services/api';
@@ -128,103 +128,91 @@ export function MiniAppHeroBanner({ banners, anime }: MiniAppHeroBannerProps) {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      {/* ── 1. Full-Bleed Cinema Backdrop ── */}
-      <div className="relative aspect-[16/11] sm:aspect-[16/9] w-full overflow-hidden">
+      {/* ── 1. Full-Bleed Cinema Backdrop with Smooth Vignette ── */}
+      <div className="relative aspect-[16/10] max-h-[290px] w-full overflow-hidden">
         <img
           key={current.id}
           src={bgImage}
           alt={current.title}
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-top sm:object-center scale-105 transition-all duration-700 ease-out animate-fade-in"
+          className="w-full h-full object-cover object-top sm:object-center transition-all duration-700 ease-out"
           onError={(e) => {
             e.currentTarget.src = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80';
           }}
         />
 
-        {/* Ambient Gradients (Top, Bottom & Vignette) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#080d1a] via-[#080d1a]/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#080d1a]/80 via-transparent to-transparent h-20" />
-        <div className="absolute inset-0 bg-radial-gradient from-transparent to-[#080d1a]/60 pointer-events-none" />
+        {/* Ambient Gradients - seamlessly blend into background */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080d1a] via-[#080d1a]/40 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-[#080d1a]/60 to-transparent pointer-events-none" />
 
-        {/* Floating Rank Badge Top Right */}
-        <div className="absolute top-3 right-3 z-10">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/70 backdrop-blur-md border border-rose-500/40 text-rose-300 shadow-lg shadow-rose-500/20">
-            <Sparkles className="w-3 h-3 text-rose-400" />
-            <span>TOP #{activeIndex + 1}</span>
+        {/* Minimalist Rank Badge */}
+        <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-black/60 backdrop-blur-md border border-white/15 text-gray-200 shadow-sm">
+            TOP #{activeIndex + 1}
           </span>
         </div>
       </div>
 
-      {/* ── 2. Movie Info & Primary Actions ── */}
-      <div className="relative px-4 pt-1 pb-4 -mt-16 z-20 space-y-3">
-        {/* Genre & Quality Tags */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-bold">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/25 border border-rose-400/40 text-rose-200 backdrop-blur-md">
-            {current.type === 'ANIME' ? '🇯🇵 Anime ជប៉ុន' : current.type === 'MOVIE' ? '🍿 ភាពយន្តដុំ' : '🐉 Donghua 3D'}
+      {/* ── 2. Movie Info & Primary Actions (Compact Native App Layout) ── */}
+      <div className="relative px-4 pb-3 -mt-14 z-20 space-y-2 text-center">
+        {/* Title */}
+        <h1 className="font-display font-bold text-base sm:text-lg text-white tracking-tight leading-snug drop-shadow-md truncate max-w-xs mx-auto">
+          {current.title}
+        </h1>
+
+        {/* Clean, Subtle Meta Line */}
+        <div className="flex items-center justify-center gap-2 text-[11px] text-gray-300 font-medium">
+          <span className="text-rose-400 font-semibold">
+            {current.type === 'ANIME' ? 'Anime ជប៉ុន' : current.type === 'MOVIE' ? 'ភាពយន្តដុំ' : 'រឿងចិន 3D'}
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 backdrop-blur-md flex items-center gap-1">
-            <Star className="w-2.5 h-2.5 fill-amber-400" /> {(current.average_rating || 9.8).toFixed(1)}
-          </span>
-          <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-gray-200 border border-white/15 text-[10px]">
-            4K UHD
-          </span>
-          <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-gray-200 border border-white/15 text-[10px]">
-            {current.episode_count ? `${current.episode_count} ភាគ` : 'ភាគថ្មីៗ'}
+          <span className="text-white/30">•</span>
+          <span>{current.episode_count ? `${current.episode_count} ភាគ` : 'ភាគថ្មីៗ'}</span>
+          <span className="text-white/30">•</span>
+          <span className="text-amber-400 font-semibold flex items-center gap-0.5">
+            <Star className="w-2.5 h-2.5 fill-current" /> {(current.average_rating || 9.8).toFixed(1)}
           </span>
         </div>
 
-        {/* Main Title */}
-        <div className="text-center px-2">
-          <h1 className="font-display font-black text-xl sm:text-2xl text-white tracking-tight leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] line-clamp-2">
-            {current.title}
-          </h1>
-          {current.alt_title && (
-            <p className="text-xs text-gray-400 line-clamp-1 mt-0.5 font-medium">
-              {current.alt_title}
-            </p>
-          )}
-        </div>
-
-        {/* Prominent Action Buttons */}
-        <div className="flex items-center justify-center gap-3 pt-1">
+        {/* Sleek Action Buttons */}
+        <div className="flex items-center justify-center gap-2.5 pt-0.5">
           {/* Primary Play Button */}
           <button
             onClick={() => {
               triggerHaptic('medium');
               navigate(watchUrl);
             }}
-            className="flex-1 max-w-[200px] py-2.5 px-5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(255,77,109,0.45)] active:scale-95 transition-all cursor-pointer"
+            className="py-1.5 px-5 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-rose-600/30 active:scale-95 transition-all cursor-pointer"
           >
-            <Play className="w-4 h-4 fill-white text-white" />
-            <span>ចាក់ទស្សនាឥឡូវនេះ</span>
+            <Play className="w-3.5 h-3.5 fill-white text-white" />
+            <span>ចាក់ទស្សនា</span>
           </button>
 
           {/* Add to My List */}
           <button
             onClick={toggleBookmark}
-            className={`w-10 h-10 rounded-2xl border flex items-center justify-center transition-all cursor-pointer active:scale-90 ${
+            className={`py-1.5 px-3.5 rounded-full border text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 ${
               isBookmarked
-                ? 'bg-emerald-500/20 border-emerald-400/60 text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]'
-                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-400'
+                : 'bg-white/10 hover:bg-white/15 border-white/15 text-white'
             }`}
-            title={isBookmarked ? 'បានបញ្ចូល' : 'បញ្ចូលក្នុងបញ្ជី'}
           >
-            {isBookmarked ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {isBookmarked ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Plus className="w-3.5 h-3.5" />}
+            <span>{isBookmarked ? 'បានបញ្ចូល' : 'បញ្ជីខ្ញុំ'}</span>
           </button>
 
           {/* Info Details */}
           <Link
             to={detailUrl}
             onClick={() => triggerHaptic('light')}
-            className="w-10 h-10 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-90"
+            className="p-1.5 rounded-full border border-white/15 bg-white/10 hover:bg-white/15 text-gray-300 hover:text-white flex items-center justify-center transition-all active:scale-90"
             title="ព័ត៌មានលម្អិត"
           >
-            <Info className="w-4 h-4 text-gray-200" />
+            <Info className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* Animated Dot Indicators */}
-        <div className="flex items-center justify-center gap-1.5 pt-2">
+        {/* Minimal Subtle Dot Indicators */}
+        <div className="flex items-center justify-center gap-1 pt-1.5">
           {items.map((_, idx) => (
             <button
               key={idx}
@@ -232,12 +220,12 @@ export function MiniAppHeroBanner({ banners, anime }: MiniAppHeroBannerProps) {
                 triggerHaptic('light');
                 setActiveIndex(idx);
               }}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
+              className={`transition-all duration-200 rounded-full cursor-pointer ${
                 idx === activeIndex
-                  ? 'w-6 h-1.5 bg-gradient-to-r from-rose-500 to-pink-500 shadow-[0_0_8px_#ff4d6d]'
-                  : 'w-1.5 h-1.5 bg-white/30 hover:bg-white/60'
+                  ? 'w-4 h-1 bg-rose-500 rounded-full'
+                  : 'w-1 h-1 bg-white/25 hover:bg-white/50'
               }`}
-              aria-label={`Go to slide ${idx + 1}`}
+              aria-label={`Slide ${idx + 1}`}
             />
           ))}
         </div>

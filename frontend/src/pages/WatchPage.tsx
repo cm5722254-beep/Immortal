@@ -447,81 +447,56 @@ export function WatchPage() {
             )}
 
 
-            {/* Episode Meta Bar */}
-            <div className="mt-4 p-4 mx-2 sm:mx-0 rounded-2xl bg-[#0e1629]/90 border border-white/10 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#E50914] text-white">
+            {/* Episode Meta Bar (Compact Native Layout) */}
+            <div className="mt-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0c1220]/90 border border-white/[0.08] backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                  <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-[#E50914] text-white">
                     ភាគ {currentEp.episode_number}
                   </span>
-                  {isYouTubeUrl(currentEp?.video_url) ? (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-600/20 text-red-400 border border-red-500/40 flex items-center gap-1.5 shadow-sm">
-                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                      </svg>
-                      ម៉ាស៊ីនបម្រើ YouTube
-                    </span>
-                  ) : isFacebookUrl(currentEp?.video_url) ? (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-500/40 flex items-center gap-1.5 shadow-sm">
-                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
-                      ម៉ាស៊ីនបម្រើ Facebook
+                  {offlineVideoUrl ? (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                      បានទាញយក
                     </span>
                   ) : (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                      <Users className="w-3 h-3" /> {liveViewers} នាក់កំពុងមើល
-                    </span>
-                  )}
-                  {offlineVideoUrl && (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                      បានទាញយក
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                      <Users className="w-3 h-3" /> {liveViewers} នាក់
                     </span>
                   )}
                 </div>
-                <h1 className="font-display font-black text-base sm:text-xl text-white tracking-tight">
+                <h1 className="font-display font-bold text-sm sm:text-base md:text-lg text-white tracking-tight truncate">
                   {anime?.title} — ភាគ {currentEp.episode_number}
                 </h1>
                 {anime?.alt_title && (
-                  <p className="text-xs text-gray-400 mt-0.5">{anime.alt_title}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5 truncate">{anime.alt_title}</p>
                 )}
               </div>
 
               {/* Prev / Next Controls */}
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end pt-1 sm:pt-0 border-t sm:border-t-0 border-white/[0.06]">
                 <button
                   onClick={() => prevEp && goToEp(prevEp.episode_number)}
                   disabled={!prevEp}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#1E283C] hover:bg-[#25324C] text-gray-200 hover:text-white border border-[#2A3750] disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center gap-1"
+                  className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1a2336] hover:bg-[#222e46] text-gray-200 hover:text-white border border-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1"
                 >
-                  <ChevronLeft className="w-4 h-4" /> ភាគមុន
+                  <ChevronLeft className="w-3.5 h-3.5" /> ភាគមុន
                 </button>
                 <button
                   onClick={() => nextEp && goToEp(nextEp.episode_number)}
                   disabled={!nextEp}
-                  className="btn-primary text-xs py-2 px-4 disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1"
+                  className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 shadow-md shadow-rose-600/30"
                 >
-                  ភាគបន្ទាប់ <ChevronRight className="w-4 h-4" />
+                  ភាគបន្ទាប់ <ChevronRight className="w-3.5 h-3.5" />
                 </button>
                 {anime && (
                   <Link
                     to={`/donghua/${anime.slug}`}
-                    className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-[#1E283C] transition-colors"
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 transition-colors"
                     title="ព័ត៌មានរឿង"
                   >
                     <Info className="w-4 h-4" />
                   </Link>
                 )}
-                <a
-                  href="https://t.me/animekhnotocation"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-2 rounded-xl text-xs font-bold bg-[#0088cc]/20 hover:bg-[#0088cc] text-[#29b6f6] hover:text-white border border-[#0088cc]/40 transition-all flex items-center gap-1.5 shadow-sm"
-                  title="ចូលរួម Telegram Channel ទទួលដំណឹងភាគថ្មីៗ"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Telegram Channel</span>
-                </a>
               </div>
             </div>
           </div>
