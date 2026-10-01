@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sparkles, CheckCircle2, AlertTriangle, Play, Smartphone,
-  Lock, Eye, EyeOff, User, UserPlus, ArrowLeft, X
+  Lock, Eye, EyeOff, User, UserPlus, ArrowLeft, X, Plus
 } from 'lucide-react';
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
 import { useAuthStore } from '../store/authStore';
@@ -72,18 +72,18 @@ export function RegisterPage() {
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/[0.06] px-5 text-white/70">
             <button type="button" onClick={() => navigate('/login', { state: { from }, replace: true })} aria-label={t('Back')} className="p-1"><ArrowLeft className="h-5 w-5" /></button>
-            <span className="text-[15px] font-medium">{t('Create account')}</span>
+            <span className="text-[15px] font-medium">{t('Switch accounts')}</span>
           </header>
-          <div className="flex flex-1 items-center justify-center pb-4">
-            <div className="flex items-center gap-3 opacity-35">
-              <img src="/logo.png" alt="" className="h-11 w-11 rounded-full object-cover" />
-              <span className="font-display text-xl font-black">Huang+</span>
-            </div>
+          <div className="flex flex-1 flex-col px-5 pt-5">
+            <button type="button" onClick={() => setRegisterMethod('phone')} className="flex items-center gap-4 py-3 text-left text-white/70">
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.06]"><Plus className="h-6 w-6" /></span>
+              <span className="text-sm">{t('Add account')}</span>
+            </button>
           </div>
         </div>
 
-        <section className="relative z-20 max-h-[90dvh] shrink-0 overflow-y-auto rounded-t-[24px] border-t border-white/[0.08] bg-[#15161b] px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_60px_rgba(0,0,0,.6)]">
-          <div className="mb-4 flex items-center justify-between">
+        <section className="relative z-20 max-h-[88dvh] shrink-0 overflow-y-auto rounded-t-[24px] border-t border-white/[0.08] bg-[#15161b] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_60px_rgba(0,0,0,.6)]">
+          <div className="mb-5 flex items-center justify-between">
             <button type="button" onClick={() => navigate('/login', { state: { from }, replace: true })} aria-label={t('Back')} className="p-1 text-white/70"><ArrowLeft className="h-5 w-5" /></button>
             <h1 className="text-center text-base font-bold">{t('Create your account')}</h1>
             <button type="button" onClick={() => navigate(from, { replace: true })} aria-label={t('Close')} className="p-1 text-white/60"><X className="h-5 w-5" /></button>
@@ -103,10 +103,11 @@ export function RegisterPage() {
             <label className="block text-xs text-white/65">{t('Username (optional)')}<span className="mt-1.5 flex h-12 items-center rounded-lg border-b border-white/15"><input type="text" value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder={t('e.g. Sokha 3D')} autoComplete="nickname" className="w-full bg-transparent px-1 text-sm text-white outline-none placeholder:text-white/35" /></span></label>
             <label className="block text-xs text-white/65">{t('Password (at least 6 characters)')}<span className="mt-1.5 flex h-12 items-center rounded-lg border-b border-white/15"><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Create a password')} autoComplete="new-password" required className="w-full bg-transparent px-1 text-sm text-white outline-none placeholder:text-white/35" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="px-2 text-white/60">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
             <label className="block text-xs text-white/65">{t('Confirm your password')}<span className="mt-1.5 flex h-12 items-center rounded-lg border-b border-white/15"><input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder={t('Re-enter your password')} autoComplete="new-password" required className="w-full bg-transparent px-1 text-sm text-white outline-none placeholder:text-white/35" /></span></label>
-            <button type="submit" disabled={isLoading} className="flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 text-base font-bold disabled:opacity-50">{isLoading ? t('Creating account…') : <><UserPlus className="h-5 w-5" />{t('Create account')}</>}</button>
+            <button type="submit" disabled={isLoading} className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-base font-bold shadow-lg shadow-rose-500/25 disabled:opacity-50">{isLoading ? t('Creating account…') : <><UserPlus className="h-5 w-5" />{t('Create account')}</>}</button>
           </form> : <div className="flex justify-center py-5"><GoogleSignInButton text="signup_with" onSuccess={() => navigate(from, { replace: true })} onError={setError} /></div>}
 
-          <p className="mt-5 border-t border-white/[0.08] pt-4 text-center text-sm text-white/60">{t('Already have an account?')} <Link to="/login" state={{ from }} className="font-bold text-rose-400">{t('Sign in')}</Link></p>
+          <p className="mt-5 text-center text-[11px] leading-5 text-white/45">{t('Login indicates you agree to the')} <span className="text-emerald-400">{t('Terms of Service')}</span> {t('and')} <span className="text-emerald-400">{t('Privacy Policy')}</span>.</p>
+          <p className="-mx-5 mt-4 border-t border-white/[0.08] pt-4 text-center text-sm text-white/60">{t('Already have an account?')} <Link to="/login" state={{ from }} className="font-bold text-rose-400">{t('Sign in')}</Link></p>
         </section>
       </main>
     );

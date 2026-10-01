@@ -443,7 +443,7 @@ function TelegramMiniLogin({
         </div>
       </div>
 
-      <section className="relative z-20 max-h-[76dvh] shrink-0 overflow-y-auto rounded-t-[24px] border-t border-white/[0.08] bg-[#15161b] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_60px_rgba(0,0,0,.6)]">
+      <section className="relative z-20 max-h-[88dvh] shrink-0 overflow-y-auto rounded-t-[24px] border-t border-white/[0.08] bg-[#15161b] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_60px_rgba(0,0,0,.6)]">
         <div className="mb-5 flex items-center justify-between">
           <button type="button" onClick={() => screen === 'methods' ? close() : (setError(''), setScreen('methods'))} aria-label={t('Back')} className="p-1 text-white/70">
             {screen === 'methods' ? <span className="block h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
@@ -466,7 +466,7 @@ function TelegramMiniLogin({
           <label className="block border-b border-white/10 pb-3"><span className="sr-only">{t('Phone number')}</span><input type="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder={t('Email or mobile number')} autoComplete="username" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /></label>
           <label className="flex items-center border-b border-white/10 pb-3"><span className="sr-only">{t('Password')}</span><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Enter password')} autoComplete="current-password" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="text-white/60">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></label>
           <button type="button" className="block w-full py-2 text-center text-sm text-white/80">{t('Recover password')}</button>
-          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="h-14 w-full rounded-lg bg-[#0c6532] text-base font-semibold text-[#071d10] disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
+          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="h-14 w-full rounded-xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-base font-bold text-white shadow-lg shadow-rose-500/25 disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
         </form>}
 
         {screen === 'phone' && <PhoneAuthForm onSuccess={() => navigate(from, { replace: true })} />}
