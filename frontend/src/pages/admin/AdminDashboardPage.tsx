@@ -5,7 +5,7 @@ import {
   ArrowUpRight, Flame, Clock, Lock, Unlock, RotateCcw,
   Globe, Smartphone, Bot, Tv,
   ShieldCheck, Layers, ChevronRight, CheckCircle2,
-  Bell, Settings2, Save, UserX, Search, CheckSquare, Square, X, Shield, Check, Crown
+  Bell, Settings2, Save, UserX, Search, CheckSquare, Square, X, Shield, Check, Crown, Activity
 } from 'lucide-react';
 
 import { AdminLayout } from './AdminLayout';
@@ -450,6 +450,12 @@ export function AdminDashboardPage() {
                     className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white text-xs font-medium transition-colors flex items-center gap-1.5"
                   >
                     <Layers className="w-3 h-3 text-emerald-400" /> Episodes
+                  </Link>
+                  <Link
+                    to="/admin/stream-health"
+                    className="col-span-2 px-2.5 py-1.5 rounded-lg bg-sky-500/[0.06] hover:bg-sky-500/[0.12] text-sky-200 hover:text-white text-xs font-medium transition-colors flex items-center gap-1.5"
+                  >
+                    <Activity className="w-3 h-3 text-sky-300" /> Stream health · Missing video links
                   </Link>
                 </div>
               </div>

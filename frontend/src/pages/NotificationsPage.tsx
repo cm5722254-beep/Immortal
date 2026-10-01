@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Bell, Film, Crown, Send, CheckCheck,
+  ArrowLeft, Bell, Film, Crown, Send, CheckCheck, Heart,
   Flame, Clock, ChevronRight
 } from 'lucide-react';
 
 import api from '../services/api';
+import { useAuthStore } from '../store/authStore';
 
 interface NotificationItem {
   id: string;
@@ -19,11 +20,21 @@ interface NotificationItem {
   category?: string;
 }
 
+function formatNotificationTime(value: string) {
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return value;
+  const minutes = Math.floor((Date.now() - timestamp) / 60000);
+  const unit = minutes < 60 ? 'minute' : minutes < 1440 ? 'hour' : 'day';
+  const amount = unit === 'minute' ? Math.max(1, minutes) : unit === 'hour' ? Math.floor(minutes / 60) : Math.floor(minutes / 1440);
+  return new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }).format(-amount, unit);
+}
+
 export function NotificationsPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [notifTab, setNotifTab] = useState<'all' | 'episode' | 'vip' | 'unread'>('all');
+  const [notifTab, setNotifTab] = useState<'all' | 'episode' | 'vip' | 'unread' | 'following'>('all');
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('mer_read_notifs') || '[]');
@@ -33,15 +44,18 @@ export function NotificationsPage() {
   });
 
   useEffect(() => {
-    api.get('/notifications')
-      .then((res) => {
-        if (Array.isArray(res.data)) {
-          setNotifications(res.data);
-        }
+    Promise.all([
+      api.get('/notifications').catch(() => ({ data: [] })),
+      isAuthenticated ? api.get('/notifications/following').catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+    ])
+      .then(([general, following]) => {
+        const generalItems = Array.isArray(general.data) ? general.data : [];
+        const followingItems = Array.isArray(following.data) ? following.data : [];
+        setNotifications([...followingItems, ...generalItems]);
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [isAuthenticated]);
 
   const handleNotifClick = (n: NotificationItem) => {
     if (!readNotifIds.includes(n.id)) {
@@ -65,9 +79,11 @@ export function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !readNotifIds.includes(n.id)).length;
   const episodeCount = notifications.filter((n) => n.icon === 'episode' || n.category === 'episode').length;
   const systemCount = notifications.filter((n) => n.icon === 'vip' || n.icon === 'system' || n.category === 'vip' || n.category === 'system').length;
+  const followingCount = notifications.filter((n) => n.category === 'following').length;
 
   const filteredNotifications = notifications.filter((n) => {
     const isUnread = !readNotifIds.includes(n.id);
+    if (notifTab === 'following') return n.category === 'following';
     if (notifTab === 'unread') return isUnread;
     if (notifTab === 'episode') return n.icon === 'episode' || n.category === 'episode';
     if (notifTab === 'vip') return n.icon === 'vip' || n.icon === 'system' || n.category === 'vip' || n.category === 'system';
@@ -75,7 +91,7 @@ export function NotificationsPage() {
   });
 
   return (
-    <main className="min-h-screen pb-24 md:pb-12 text-gray-100 px-3 sm:px-4 py-6 sm:py-8 max-w-3xl mx-auto animate-fade-in">
+    <main className="mini-notifications-page min-h-screen pb-24 md:pb-12 text-gray-100 px-3 sm:px-4 py-6 sm:py-8 max-w-3xl mx-auto animate-fade-in">
       {/* ── Top Header ── */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-rose-500/20">
         <div className="flex items-center gap-3">
@@ -133,6 +149,16 @@ export function NotificationsPage() {
           <Flame className="w-3.5 h-3.5 text-amber-400" />
           ភាគថ្មី ({episodeCount})
         </button>
+        {isAuthenticated && <button
+          onClick={() => setNotifTab('following')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            notifTab === 'following'
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25'
+              : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/5'
+          }`}
+        >
+          <Heart className="w-3.5 h-3.5 text-emerald-300" /> New from My List ({followingCount})
+        </button>}
         <button
           onClick={() => setNotifTab('vip')}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
@@ -260,7 +286,7 @@ export function NotificationsPage() {
                     )}
                     <span className="text-[11px] text-gray-400 font-mono flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-gray-500" />
-                      {item.time}
+                      {formatNotificationTime(item.time)}
                     </span>
                   </div>
 

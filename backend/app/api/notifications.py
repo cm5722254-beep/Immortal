@@ -8,6 +8,9 @@ from pydantic import BaseModel
 from app.core.database import get_db
 from app.models.episode import Episode
 from app.models.anime import Anime
+from app.models.favorite import Favorite
+from app.dependencies.auth import require_user
+from app.models.user import User
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -117,3 +120,36 @@ async def get_notifications(db: AsyncSession = Depends(get_db)):
         )
 
     return notifications
+
+
+@router.get("/following", response_model=List[NotificationItem])
+async def get_following_notifications(
+    current_user: User = Depends(require_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return new episodes from series the signed-in user saved to My List."""
+    result = await db.execute(
+        select(Episode, Anime)
+        .join(Anime, Episode.anime_id == Anime.id)
+        .join(Favorite, Favorite.anime_id == Anime.id)
+        .where(Favorite.user_id == current_user.id, Episode.is_published == True)
+        .order_by(Episode.created_at.desc(), Episode.id.desc())
+        .limit(40)
+    )
+    items: List[NotificationItem] = []
+    for episode, anime in result.all():
+        title = episode.title or f"Episode {episode.episode_number}"
+        poster = episode.thumbnail_url or anime.poster_url or anime.banner_url
+        items.append(NotificationItem(
+            id=f"follow-episode-{episode.id}",
+            icon="episode",
+            category="following",
+            tag=f"Episode {episode.episode_number}",
+            title=f"New episode · {anime.title}",
+            subtitle=title,
+            time=episode.created_at.isoformat() if episode.created_at else "Recently added",
+            link=f"/watch/{anime.slug}/{episode.episode_number}",
+            avatarUrl=poster,
+            isUnread=True,
+        ))
+    return items

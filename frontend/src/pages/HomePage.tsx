@@ -3,10 +3,34 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Play, Star, ChevronRight, Search, Bookmark, ChevronLeft } from 'lucide-react';
 import api from '../services/api';
 import { getLocalCatalogSync, loadCatalog, extractHomeData } from '../services/catalogService';
-import type { Anime } from '../types';
+import type { Anime, WatchHistoryItem } from '../types';
 import { triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
 import { AnimeCard } from '../components/home/AnimeCard';
+import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
+import { useAuthStore } from '../store/authStore';
+
+function getLocalContinueHistory(): WatchHistoryItem[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem('local_watch_history') || '[]') as Array<Record<string, any>>;
+    return raw.slice(0, 12).map((item, index) => ({
+      id: Number(item.updated_at) || index,
+      user_id: 0,
+      anime_id: 0,
+      episode_id: 0,
+      progress_seconds: Number(item.progress_seconds) || 0,
+      duration_seconds: Number(item.duration_seconds) || 0,
+      last_watched_at: new Date(Number(item.updated_at) || Date.now()).toISOString(),
+      anime_title: String(item.anime_title || 'Continue watching'),
+      anime_slug: String(item.slug || ''),
+      anime_poster: String(item.poster_url || ''),
+      episode_number: Number(item.episode_number) || 1,
+      episode_thumbnail: String(item.thumbnail_url || ''),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 // A completely new, ultra-modern Bento Box / Magazine style card
 function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean }) {
@@ -74,6 +98,7 @@ function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean
 export function HomePage() {
   void BentoCard;
   const { isTelegram, isMobileApp } = usePlatform();
+  const { isAuthenticated } = useAuthStore();
 
   const initialData = (() => {
     const sync = getLocalCatalogSync();
@@ -87,6 +112,26 @@ export function HomePage() {
   const [movies, setMovies] = useState<Anime[]>(initialData?.movies || []);
   const [isLoading, setIsLoading] = useState(!initialData);
   const [heroIndex, setHeroIndex] = useState(0);
+  const [continueItems, setContinueItems] = useState<WatchHistoryItem[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const loadContinue = async () => {
+      let history = getLocalContinueHistory();
+      if (isAuthenticated) {
+        try {
+          const response = await api.get('/history');
+          if (Array.isArray(response.data)) history = response.data;
+        } catch { /* retain this device's local progress as a fallback */ }
+      }
+      const incomplete = history
+        .filter((item) => item.progress_seconds > 0 && (!item.duration_seconds || item.progress_seconds < item.duration_seconds * 0.95))
+        .slice(0, 12);
+      if (active) setContinueItems(incomplete);
+    };
+    void loadContinue();
+    return () => { active = false; };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     let isMounted = true;
@@ -135,7 +180,6 @@ export function HomePage() {
 
   if (isTelegram || isMobileApp) {
     const miniSections = [
-      { title: 'Continue watching', items: forYouDonghua },
       { title: 'Popular anime', items: animeList },
       { title: 'Donghua for you', items: popularDonghua },
       { title: 'Movies & drama', items: movies },
@@ -169,6 +213,7 @@ export function HomePage() {
           </section>
         )}
         <div className="mini-home-sections">
+          <ContinueWatchingSection items={continueItems} />
           {miniSections.map((section) => (
             <section key={section.title} className="mini-shelf">
               <div className="mini-shelf-heading"><h2>{section.title}</h2><Link to="/explore">More <ChevronRight className="w-4 h-4" /></Link></div>
@@ -204,6 +249,7 @@ export function HomePage() {
         {heroItems.length > 1 && <><button className="website-hero-arrow prev" onClick={() => setHeroIndex((heroIndex - 1 + heroItems.length) % heroItems.length)} aria-label="Previous"><ChevronLeft /></button><button className="website-hero-arrow next" onClick={() => setHeroIndex((heroIndex + 1) % heroItems.length)} aria-label="Next"><ChevronRight /></button><div className="website-hero-dots">{heroItems.map((item, index) => <button key={item.id} onClick={() => setHeroIndex(index)} className={index === heroIndex ? 'active' : ''} aria-label={`Show ${item.title}`} />)}</div></>}
       </section>}
       <div className="website-home-content">
+        <ContinueWatchingSection items={continueItems} />
         {[
           { title: 'Popular on Huang Anime', items: [...popularDonghua, ...animeList], to: '/explore' },
           { title: 'Trending Chinese Animation', items: popularDonghua, to: '/donghua' },

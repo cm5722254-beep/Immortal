@@ -563,10 +563,10 @@ export function DetailPage() {
                 {showMyListDropdown && (
                   <div className="absolute top-full left-0 mt-2 w-48 bg-[#111] border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in text-left">
                     {[
-                      { status: 'WATCHING' as MyListStatus, label: '👁️ កំពុងមើល (Watching)' },
+                      { status: 'WATCHING' as MyListStatus, label: '👁️ កំពុងមើល · Follow updates' },
                       { status: 'PLAN_TO_WATCH' as MyListStatus, label: '⏳ គ្រោងមើល (Plan)' },
                       { status: 'COMPLETED' as MyListStatus, label: '✅ មើលចប់ (Completed)' },
-                      { status: 'FAVORITE' as MyListStatus, label: '💖 ចូលចិត្ត (Favorite)' },
+                      { status: 'FAVORITE' as MyListStatus, label: '💖 ចូលចិត្ត · Follow updates' },
                       { status: 'NONE' as MyListStatus, label: '❌ ដកចេញពីបញ្ជី' },
                     ].map((item) => (
                       <button

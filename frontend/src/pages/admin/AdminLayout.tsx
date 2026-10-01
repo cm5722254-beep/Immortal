@@ -5,7 +5,7 @@ import {
   Image, Settings, LogOut, Shield, Menu, ChevronRight, Send,
   Tv, Clapperboard, Palette, Database, Key,
   Globe, Smartphone, Bot, ChevronDown, ChevronUp,
-  Layers, Zap, Bell, Package, QrCode, Crown, ShieldCheck, Lock, Terminal, X, Rocket, FolderDown
+  Layers, Zap, Bell, Package, QrCode, Crown, ShieldCheck, Lock, Terminal, X, Rocket, FolderDown, Activity
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useSystemUpdateStore } from '../../store/systemUpdateStore';
@@ -352,6 +352,14 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
               title="Download videos to a computer folder"
             >
               <FolderDown className="h-3.5 w-3.5" /> Downloads
+            </Link>
+
+            <Link
+              to="/admin/stream-health"
+              className="hidden xl:flex items-center gap-1 rounded-lg bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold text-sky-300 hover:bg-sky-500/20 transition"
+              title="Check episode stream links"
+            >
+              <Activity className="h-3.5 w-3.5" /> Stream health
             </Link>
 
             {isOwner ? (

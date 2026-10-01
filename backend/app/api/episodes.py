@@ -10,8 +10,57 @@ from app.models.episode import Episode
 from app.models.user import User
 from app.schemas.episode import EpisodeCreate, EpisodeUpdate, EpisodeRead
 from typing import List
+from urllib.parse import urlparse
 
 router = APIRouter(tags=["Episodes"])
+
+
+@router.get("/admin/stream-health")
+async def get_stream_health(
+    staff: User = Depends(require_staff_or_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Summarize episode stream links and return entries that need admin attention."""
+    result = await db.execute(
+        select(Episode, Anime.title, Anime.slug)
+        .join(Anime, Anime.id == Episode.anime_id)
+        .order_by(Anime.title.asc(), Episode.episode_number.asc())
+    )
+    rows = result.all()
+    issues = []
+    missing = 0
+    invalid = 0
+    for episode, anime_title, anime_slug in rows:
+        raw_url = (episode.video_url or "").strip()
+        issue = None
+        if not raw_url:
+            missing += 1
+            issue = "Missing stream URL"
+        else:
+            try:
+                parsed = urlparse(raw_url)
+                if parsed.scheme not in ("http", "https") or not parsed.netloc:
+                    raise ValueError("Invalid URL")
+            except Exception:
+                invalid += 1
+                issue = "Invalid stream URL"
+        if issue:
+            issues.append({
+                "episode_id": episode.id,
+                "anime_title": anime_title,
+                "anime_slug": anime_slug,
+                "episode_number": episode.episode_number,
+                "episode_title": episode.title,
+                "is_published": episode.is_published,
+                "issue": issue,
+            })
+    return {
+        "total_episodes": len(rows),
+        "healthy": len(rows) - missing - invalid,
+        "missing": missing,
+        "invalid": invalid,
+        "issues": issues,
+    }
 
 
 @router.get("/anime/{anime_id_or_slug}/episodes", response_model=List[EpisodeRead])
@@ -346,5 +395,4 @@ async def batch_broadcast_episodes_to_telegram(
         "sent_count": len(episodes_list),
         "message": f"⚡ បានបញ្ជូន {len(episodes_list)} ភាគដែលបានជ្រើសរើស ចូល Telegram Group ភ្លាមៗ!"
     }
-
 
