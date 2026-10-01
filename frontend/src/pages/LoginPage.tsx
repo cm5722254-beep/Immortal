@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Sparkles, AlertTriangle, Play, Smartphone,
+  Sparkles, AlertTriangle, Play, Smartphone, Send,
   Lock, Eye, EyeOff, ArrowLeft, X, KeyRound, Plus
 } from 'lucide-react';
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
 import { PhoneAuthForm } from '../components/common/PhoneAuthForm';
 import { useAuthStore } from '../store/authStore';
-import { triggerHaptic } from '../utils/telegram';
+import { getTelegramInitData, getTelegramUser, triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
 import { translate, useLanguageStore } from '../store/languageStore';
 
@@ -19,7 +19,7 @@ export function LoginPage() {
   const location = useLocation();
   const from = (location.state as any)?.from || '/';
 
-  const { login, isLoading } = useAuthStore();
+  const { login, loginWithTelegram, isLoading } = useAuthStore();
 
   const [loginMethod, setLoginMethod] = useState<'phone' | 'google'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -56,6 +56,26 @@ export function LoginPage() {
         : (d?.msg || err?.message || t('លេខទូរសព្ទ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវឡើយ'));
       setError(msg);
     }
+  };
+
+  const handleTelegramLogin = async () => {
+    const tgUser = getTelegramUser();
+    const initData = getTelegramInitData();
+    if (!initData) {
+      setError(t('Open this mini app from Telegram to sign in.'));
+      return;
+    }
+    setError('');
+    await loginWithTelegram({
+      id: tgUser?.id,
+      first_name: tgUser?.first_name,
+      last_name: tgUser?.last_name,
+      username: tgUser?.username,
+      photo_url: tgUser?.photo_url,
+      init_data: initData,
+    });
+    if (useAuthStore.getState().isAuthenticated) navigate(from, { replace: true });
+    else setError(t('Telegram sign-in failed. Please try again.'));
   };
 
 
@@ -106,6 +126,7 @@ export function LoginPage() {
         setError={setError}
         isLoading={isLoading}
         onPasswordLogin={handlePhoneLogin}
+        onTelegramLogin={handleTelegramLogin}
       />
     );
   }
@@ -335,7 +356,7 @@ export function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-lime-400 via-lime-500 to-green-600 hover:from-lime-500 hover:to-green-600 text-white font-black text-sm py-3.5 rounded-2xl shadow-lg shadow-lime-500/25 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer pt-3"
+                className="w-full bg-gradient-to-r from-lime-400 via-lime-500 to-green-600 hover:from-lime-500 hover:to-green-600 text-white font-black text-sm py-3 rounded-xl shadow-lg shadow-lime-500/25 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -415,11 +436,12 @@ type TelegramMiniLoginProps = {
   setError: (value: string) => void;
   isLoading: boolean;
   onPasswordLogin: (event: React.FormEvent) => Promise<void>;
+  onTelegramLogin: () => Promise<void>;
 };
 
 function TelegramMiniLogin({
   from, navigate, phoneNumber, setPhoneNumber, password, setPassword,
-  showPassword, setShowPassword, error, setError, isLoading, onPasswordLogin,
+  showPassword, setShowPassword, error, setError, isLoading, onPasswordLogin, onTelegramLogin,
 }: TelegramMiniLoginProps) {
   const [screen, setScreen] = useState<'methods' | 'password' | 'phone'>('methods');
   const language = useLanguageStore((state) => state.language);
@@ -457,16 +479,14 @@ function TelegramMiniLogin({
         {screen === 'methods' && <div className="space-y-3">
           <button type="button" onClick={() => { setError(''); setScreen('password'); }} className="flex h-14 w-full items-center gap-4 rounded-lg bg-[#25262c] px-4 text-left text-[15px] font-semibold"><KeyRound className="h-5 w-5 text-white/70" />{t('Log in with password')}</button>
           <button type="button" onClick={() => { setError(''); setScreen('phone'); }} className="flex h-14 w-full items-center gap-4 rounded-lg bg-[#25262c] px-4 text-left text-[15px] font-semibold"><Smartphone className="h-5 w-5 text-white/70" />{t('Log in with mobile number')}</button>
-          <div className="flex justify-center py-2">
-            <GoogleSignInButton text="continue_with" onSuccess={() => navigate(from, { replace: true })} onError={setError} />
-          </div>
+          <button type="button" onClick={() => { void onTelegramLogin(); }} className="flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#229ed9] text-sm font-semibold text-white shadow-lg shadow-sky-500/20 active:scale-[0.99]"><Send className="h-4 w-4" />{t('Continue with Telegram')}</button>
         </div>}
 
         {screen === 'password' && <form onSubmit={onPasswordLogin} className="space-y-4">
           <label className="block border-b border-white/10 pb-3"><span className="sr-only">{t('Phone number')}</span><input type="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder={t('Email or mobile number')} autoComplete="username" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /></label>
           <label className="flex items-center border-b border-white/10 pb-3"><span className="sr-only">{t('Password')}</span><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Enter password')} autoComplete="current-password" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="text-white/60">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></label>
           <button type="button" className="block w-full py-2 text-center text-sm text-white/80">{t('Recover password')}</button>
-          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="h-14 w-full rounded-2xl bg-gradient-to-r from-lime-400 via-lime-500 to-green-600 text-base font-bold text-white shadow-lg shadow-lime-500/25 transition-transform active:scale-[0.99] disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
+          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="h-12 w-full rounded-xl bg-gradient-to-r from-lime-400 via-lime-500 to-green-600 text-sm font-bold text-white shadow-lg shadow-lime-500/25 transition-transform active:scale-[0.99] disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
         </form>}
 
         {screen === 'phone' && <PhoneAuthForm onSuccess={() => navigate(from, { replace: true })} />}

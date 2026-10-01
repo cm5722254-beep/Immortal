@@ -10,7 +10,7 @@ declare global {
     google?: {
       accounts: {
         id: {
-          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select?: boolean }) => void;
+          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select?: boolean; ux_mode?: 'popup' | 'redirect' }) => void;
           renderButton: (parent: HTMLElement, options: Record<string, any>) => void;
           prompt: () => void;
         };
@@ -106,6 +106,7 @@ export function GoogleSignInButton({
 
       window.google.accounts.id.initialize({
         client_id: clientId,
+        ux_mode: 'popup',
         callback: async (response) => {
           if (response.credential) {
             try {
@@ -119,6 +120,8 @@ export function GoogleSignInButton({
               setLoading(false);
               setStatusText('');
             }
+          } else {
+            onError?.(t('Google sign-in did not return an account. Please try again.'));
           }
         },
       });
@@ -128,11 +131,12 @@ export function GoogleSignInButton({
         window.google.accounts.id.renderButton(btnRef.current, {
           type: 'standard',
           theme: 'filled_black',
-          size: 'large',
+          size: 'medium',
           text: text,
-          shape: 'pill',
+          shape: 'rectangular',
           logo_alignment: 'left',
-          width: 320,
+          width: 260,
+          ux_mode: 'popup',
           locale: language === 'km' ? 'km' : 'en',
         });
       }
@@ -146,7 +150,7 @@ export function GoogleSignInButton({
           type="button"
           disabled={loading}
           onClick={handleNativeGoogleSignIn}
-          className="w-full max-w-[320px] flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-bold rounded-full py-3 px-5 transition-all duration-200 shadow-lg border border-gray-300 active:scale-95 disabled:opacity-60"
+          className="w-full max-w-[260px] flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-bold rounded-xl py-2.5 px-4 transition-all duration-200 shadow-lg border border-gray-300 active:scale-95 disabled:opacity-60"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
@@ -187,7 +191,7 @@ export function GoogleSignInButton({
         <button
           type="button"
           onClick={() => onError?.('Google Client ID is not configured yet.')}
-          className="w-full max-w-[320px] flex items-center justify-center gap-3 bg-dark-card border border-dark-border rounded-xl py-2.5 px-4 text-sm font-semibold text-gray-200"
+          className="w-full max-w-[260px] flex items-center justify-center gap-3 bg-dark-card border border-dark-border rounded-xl py-2.5 px-4 text-sm font-semibold text-gray-200"
         >
           {t('Continue with Google')}
         </button>

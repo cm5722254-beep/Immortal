@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Sparkles, CheckCircle2, AlertTriangle, Play, Smartphone,
+  Sparkles, CheckCircle2, AlertTriangle, Play, Smartphone, Send,
   Lock, Eye, EyeOff, User, UserPlus, ArrowLeft, X, Plus
 } from 'lucide-react';
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
 import { useAuthStore } from '../store/authStore';
-import { triggerHaptic } from '../utils/telegram';
+import { getTelegramInitData, getTelegramUser, triggerHaptic } from '../utils/telegram';
 import { translate, useLanguageStore } from '../store/languageStore';
 import { usePlatform } from '../utils/platform';
 
@@ -18,7 +18,7 @@ export function RegisterPage() {
   const location = useLocation();
   const from = (location.state as any)?.from || '/';
 
-  const { registerWithPhone, isLoading } = useAuthStore();
+  const { registerWithPhone, loginWithTelegram, isLoading } = useAuthStore();
 
   const [registerMethod, setRegisterMethod] = useState<'phone' | 'google'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -65,6 +65,26 @@ export function RegisterPage() {
     }
   };
 
+  const handleTelegramRegister = async () => {
+    const tgUser = getTelegramUser();
+    const initData = getTelegramInitData();
+    if (!initData) {
+      setError(t('Open this mini app from Telegram to create an account.'));
+      return;
+    }
+    setError('');
+    await loginWithTelegram({
+      id: tgUser?.id,
+      first_name: tgUser?.first_name,
+      last_name: tgUser?.last_name,
+      username: tgUser?.username,
+      photo_url: tgUser?.photo_url,
+      init_data: initData,
+    });
+    if (useAuthStore.getState().isAuthenticated) navigate(from, { replace: true });
+    else setError(t('Telegram registration failed. Please try again.'));
+  };
+
   if (isTelegram) {
     return (
       <main className="fixed inset-0 z-[100] flex flex-col justify-end overflow-hidden bg-[#07080b] text-white">
@@ -93,7 +113,7 @@ export function RegisterPage() {
 
           <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-[#090a0e] p-1">
             <button type="button" onClick={() => { setRegisterMethod('phone'); setError(''); }} className={`flex h-11 items-center justify-center gap-2 rounded-md text-sm font-semibold ${registerMethod === 'phone' ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white' : 'text-white/55'}`}><Smartphone className="h-4 w-4" />{t('Phone number')}</button>
-            <button type="button" onClick={() => { setRegisterMethod('google'); setError(''); }} className={`flex h-11 items-center justify-center gap-2 rounded-md text-sm font-semibold ${registerMethod === 'google' ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white' : 'text-white/55'}`}><Play className="h-4 w-4" />Google</button>
+            <button type="button" onClick={() => { setRegisterMethod('google'); setError(''); }} className={`flex h-11 items-center justify-center gap-2 rounded-md text-sm font-semibold ${registerMethod === 'google' ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white' : 'text-white/55'}`}><Send className="h-4 w-4" />Telegram</button>
           </div>
 
           {error && <div role="alert" className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-center text-xs text-red-300">{error}</div>}
@@ -103,8 +123,8 @@ export function RegisterPage() {
             <label className="block text-xs text-white/65">{t('Username (optional)')}<span className="mt-1.5 flex h-12 items-center rounded-lg border-b border-white/15"><input type="text" value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder={t('e.g. Sokha 3D')} autoComplete="nickname" className="w-full bg-transparent px-1 text-sm text-white outline-none placeholder:text-white/35" /></span></label>
             <label className="block text-xs text-white/65">{t('Password (at least 6 characters)')}<span className="mt-1.5 flex h-12 items-center rounded-lg border-b border-white/15"><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Create a password')} autoComplete="new-password" required className="w-full bg-transparent px-1 text-sm text-white outline-none placeholder:text-white/35" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="px-2 text-white/60">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
             <label className="block text-xs text-white/65">{t('Confirm your password')}<span className="mt-1.5 flex h-12 items-center rounded-lg border-b border-white/15"><input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder={t('Re-enter your password')} autoComplete="new-password" required className="w-full bg-transparent px-1 text-sm text-white outline-none placeholder:text-white/35" /></span></label>
-            <button type="submit" disabled={isLoading} className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 text-base font-bold text-white shadow-lg shadow-sky-500/25 transition-transform active:scale-[0.99] disabled:opacity-50">{isLoading ? t('Creating account…') : <><UserPlus className="h-5 w-5" />{t('Create account')}</>}</button>
-          </form> : <div className="flex justify-center py-5"><GoogleSignInButton text="signup_with" onSuccess={() => navigate(from, { replace: true })} onError={setError} /></div>}
+            <button type="submit" disabled={isLoading} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition-transform active:scale-[0.99] disabled:opacity-50">{isLoading ? t('Creating account…') : <><UserPlus className="h-4 w-4" />{t('Create account')}</>}</button>
+          </form> : <div className="py-5"><button type="button" onClick={() => { void handleTelegramRegister(); }} className="mx-auto flex h-12 w-full max-w-[260px] items-center justify-center gap-2 rounded-xl bg-[#229ed9] px-4 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 active:scale-[0.99]"><Send className="h-4 w-4" />{t('Continue with Telegram')}</button></div>}
 
           <p className="mt-5 text-center text-[11px] leading-5 text-white/45">{t('Login indicates you agree to the')} <span className="text-emerald-400">{t('Terms of Service')}</span> {t('and')} <span className="text-emerald-400">{t('Privacy Policy')}</span>.</p>
           <p className="-mx-5 mt-4 border-t border-white/[0.08] pt-4 text-center text-sm text-white/60">{t('Already have an account?')} <Link to="/login" state={{ from }} className="font-bold text-rose-400">{t('Sign in')}</Link></p>
@@ -274,7 +294,7 @@ export function RegisterPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-500 hover:to-blue-600 text-white font-black text-sm py-3.5 rounded-2xl shadow-lg shadow-sky-500/25 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer pt-3 mt-1"
+                className="w-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-500 hover:to-blue-600 text-white font-black text-sm py-3 rounded-xl shadow-lg shadow-sky-500/25 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer mt-1"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
