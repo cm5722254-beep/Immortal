@@ -463,6 +463,7 @@ export function WatchPage() {
                   src={offlineVideoUrl || currentEp.video_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
                   subtitleUrl={currentEp.subtitle_url}
                   subtitleTracks={currentEp.subtitle_tracks}
+                  qualitySources={currentEp.video_qualities}
                   onProgress={handleProgress}
                   resumeAt={resumeAt}
                   title={`${anime?.title} — ភាគ ${currentEp.episode_number}${currentEp.title ? `: ${currentEp.title}` : ''}`}

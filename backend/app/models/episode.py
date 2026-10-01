@@ -12,6 +12,7 @@ class Episode(Base):
     title = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     video_url = Column(String(1000), nullable=True)
+    video_qualities = Column(JSON, nullable=False, default=list)
     subtitle_url = Column(String(1000), nullable=True)
     subtitle_tracks = Column(JSON, nullable=False, default=list)
     thumbnail_url = Column(String(500), nullable=True)

@@ -19,6 +19,7 @@ const EMPTY_EP = {
   duration_seconds: 1440, is_published: true, is_vip: true, is_free: false,
 };
 type SubtitleTrackForm = { label: string; lang: string; src: string };
+type VideoQualityForm = { label: string; src: string };
 
 export function AdminEpisodesPage() {
   const [animeList, setAnimeList] = useState<Anime[]>([]);
@@ -37,6 +38,7 @@ export function AdminEpisodesPage() {
   const [editEp, setEditEp] = useState<Episode | null>(null);
   const [form, setForm] = useState({ ...EMPTY_EP });
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrackForm[]>([]);
+  const [videoQualities, setVideoQualities] = useState<VideoQualityForm[]>([]);
   const [batchCount, setBatchCount] = useState(12);
   const [batchUrlPattern, setBatchUrlPattern] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
   const [batchIsVip, setBatchIsVip] = useState(true);
@@ -149,6 +151,7 @@ export function AdminEpisodesPage() {
       is_free: false,
     });
     setSubtitleTracks([]);
+    setVideoQualities([]);
     setError('');
     setShowModal(true);
   };
@@ -169,6 +172,7 @@ export function AdminEpisodesPage() {
       is_free: !isVip,
     });
     setSubtitleTracks(ep.subtitle_tracks?.length ? ep.subtitle_tracks.map((track) => ({ ...track })) : (ep.subtitle_url ? [{ label: 'Subtitles', lang: 'und', src: ep.subtitle_url }] : []));
+    setVideoQualities(ep.video_qualities?.map((quality) => ({ ...quality })) || []);
     setError('');
     setShowModal(true);
   };
@@ -529,6 +533,7 @@ export function AdminEpisodesPage() {
         title: form.title?.trim() || null,
         description: (form as any).description?.trim() || null,
         video_url: form.video_url?.trim() || null,
+        video_qualities: videoQualities.filter((quality) => quality.src.trim()).map((quality) => ({ label: quality.label.trim(), src: quality.src.trim() })),
         subtitle_url: form.subtitle_url?.trim() || null,
         subtitle_tracks: subtitleTracks.filter((track) => track.src.trim()).map((track) => ({ ...track, src: track.src.trim(), lang: track.lang.trim() || 'und', label: track.label.trim() || track.lang.trim() || 'Subtitles' })),
         thumbnail_url: form.thumbnail_url?.trim() || null,
@@ -1606,6 +1611,19 @@ export function AdminEpisodesPage() {
                   </div>)}
                 </div>
                 <button type="button" className="mt-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-emerald-300 hover:bg-white/5" onClick={() => setSubtitleTracks((items) => [...items, { label: '', lang: '', src: '' }])}>+ Add subtitle language</button>
+              </div>
+
+              <div>
+                <label className="label">Alternate video quality sources</label>
+                <p className="mb-2 text-xs text-gray-400">Add separate encoded files (or a quality-specific HLS URL). The player switches to these real sources.</p>
+                <div className="space-y-2">
+                  {videoQualities.map((quality, index) => <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_3fr_auto]">
+                    <input className="input" value={quality.label} placeholder="720p HD" onChange={(e) => setVideoQualities((items) => items.map((item, i) => i === index ? { ...item, label: e.target.value } : item))} />
+                    <input type="url" className="input" value={quality.src} placeholder="https://.../episode-720p.mp4" onChange={(e) => setVideoQualities((items) => items.map((item, i) => i === index ? { ...item, src: e.target.value } : item))} />
+                    <button type="button" className="rounded-lg px-3 text-red-300 hover:bg-red-500/10" onClick={() => setVideoQualities((items) => items.filter((_, i) => i !== index))} aria-label="Remove video quality source">×</button>
+                  </div>)}
+                </div>
+                <button type="button" className="mt-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-emerald-300 hover:bg-white/5" onClick={() => setVideoQualities((items) => [...items, { label: '', src: '' }])}>+ Add video quality</button>
               </div>
 
               {/* VIP Access Control Box */}

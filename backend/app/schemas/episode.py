@@ -9,6 +9,7 @@ class EpisodeCreate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     video_url: Optional[str] = None
+    video_qualities: List[Dict[str, Any]] = []
     subtitle_url: Optional[str] = None
     subtitle_tracks: List[Dict[str, Any]] = []
     thumbnail_url: Optional[str] = None
@@ -22,6 +23,7 @@ class EpisodeUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     video_url: Optional[str] = None
+    video_qualities: Optional[List[Dict[str, Any]]] = None
     subtitle_url: Optional[str] = None
     subtitle_tracks: Optional[List[Dict[str, Any]]] = None
     thumbnail_url: Optional[str] = None
@@ -37,6 +39,7 @@ class EpisodeRead(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     video_url: Optional[str] = None
+    video_qualities: List[Dict[str, Any]] = []
     subtitle_url: Optional[str] = None
     subtitle_tracks: List[Dict[str, Any]] = []
     thumbnail_url: Optional[str] = None

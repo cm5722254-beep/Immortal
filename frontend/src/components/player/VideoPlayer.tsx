@@ -16,6 +16,7 @@ interface VideoPlayerProps {
   src: string;
   subtitleUrl?: string;
   subtitleTracks?: Array<{ src: string; lang: string; label: string }>;
+  qualitySources?: Array<{ src: string; label: string }>;
   onProgress?: (currentTime: number, duration: number) => void;
   onEnded?: () => void;
   resumeAt?: number;
@@ -36,11 +37,14 @@ function formatTime(s: number): string {
 }
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const EMPTY_SUBTITLE_TRACKS: Array<{ src: string; lang: string; label: string }> = [];
+const EMPTY_QUALITY_SOURCES: Array<{ src: string; label: string }> = [];
 
 export function VideoPlayer({
   src,
   subtitleUrl,
-  subtitleTracks = [],
+  subtitleTracks = EMPTY_SUBTITLE_TRACKS,
+  qualitySources = EMPTY_QUALITY_SOURCES,
   onProgress,
   onEnded,
   resumeAt = 0,
@@ -86,7 +90,7 @@ export function VideoPlayer({
   const [quality, setQuality] = useState(() => {
     try { return localStorage.getItem('nami_playback_quality') || 'Auto'; } catch { return 'Auto'; }
   });
-  const [qualityOptions, setQualityOptions] = useState<Array<{ label: string; level: number; height: number }>>([]);
+  const [qualityOptions, setQualityOptions] = useState<Array<{ label: string; level: number; height: number; src?: string }>>([]);
   const [showSettings, setShowSettings] = useState(false);
   const showSettingsRef = useRef(showSettings);
   useEffect(() => {
@@ -105,6 +109,7 @@ export function VideoPlayer({
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [isFacebookVideo, setIsFacebookVideo] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
+  const pendingQualitySwitchRef = useRef<{ time: number; wasPlaying: boolean; label: string } | null>(null);
   const [triedProxy, setTriedProxy] = useState(false);
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(() => {
     try { return localStorage.getItem('nami_subtitles_enabled') !== 'false'; } catch { return true; }
@@ -113,6 +118,25 @@ export function VideoPlayer({
   const [selectedSubtitle, setSelectedSubtitle] = useState(() => {
     try { return localStorage.getItem('nami_subtitle_track') || ((subtitleTracks.length || subtitleUrl) ? '0' : 'off'); } catch { return (subtitleTracks.length || subtitleUrl) ? '0' : 'off'; }
   });
+  const handleQualitySelect = (option: { label: string; level: number; src?: string }) => {
+    if (option.src) {
+      if (option.src === currentSrc) {
+        setQuality(option.label);
+        return;
+      }
+      pendingQualitySwitchRef.current = {
+        time: videoRef.current?.currentTime || 0,
+        wasPlaying: !!videoRef.current && !videoRef.current.paused,
+        label: option.label,
+      };
+      setCurrentSrc(option.src);
+      setQuality(option.label);
+      return;
+    }
+    if (hlsRef.current) hlsRef.current.currentLevel = option.level;
+    setQuality(option.label);
+    try { localStorage.setItem('nami_playback_quality', option.label); } catch {}
+  };
   useEffect(() => {
     if (selectedSubtitle !== 'off' && Number(selectedSubtitle) >= availableSubtitleTracks.length) {
       const next = availableSubtitleTracks.length ? '0' : 'off';
@@ -258,8 +282,9 @@ export function VideoPlayer({
     setError(null);
     setIsLoading(true);
     setIsPlaying(false);
-    setQuality('Auto');
-    setQualityOptions([]);
+    const alternateSources = qualitySources.map((quality) => ({ label: quality.label, level: -2, height: Number.parseInt(quality.label, 10) || 0, src: quality.src }));
+    setQuality(pendingQualitySwitchRef.current?.label || 'Auto');
+    setQualityOptions(alternateSources);
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -294,7 +319,7 @@ export function VideoPlayer({
             if (label !== 'Auto' && !uniqueLevels.has(label)) uniqueLevels.set(label, { label, level: index, height });
           });
           const options = Array.from(uniqueLevels.values()).sort((a, b) => b.height - a.height);
-          setQualityOptions(options);
+          setQualityOptions([...options, ...alternateSources.filter((source) => !options.some((option) => option.label === source.label))]);
           let preferredQuality = 'Auto';
           try {
             preferredQuality = localStorage.getItem('nami_playback_quality') || 'Auto';
@@ -331,7 +356,7 @@ export function VideoPlayer({
       }
       clearInterval(progressReportRef.current);
     };
-  }, [currentSrc, isIframeEmbed]);
+  }, [currentSrc, isIframeEmbed, qualitySources]);
 
   const handleVideoError = () => {
     if (!src) {
@@ -883,7 +908,15 @@ export function VideoPlayer({
           onDurationChange={() => setDuration(videoRef.current?.duration || 0)}
           onEnded={handleEnded}
           onWaiting={() => setIsLoading(true)}
-          onCanPlay={() => { setIsLoading(false); setError(null); }}
+          onCanPlay={() => {
+            setIsLoading(false); setError(null);
+            const pending = pendingQualitySwitchRef.current;
+            if (pending && videoRef.current) {
+              pendingQualitySwitchRef.current = null;
+              videoRef.current.currentTime = Math.min(pending.time, Number.isFinite(videoRef.current.duration) ? videoRef.current.duration : pending.time);
+              if (pending.wasPlaying) videoRef.current.play().catch(() => {});
+            }
+          }}
           onError={handleVideoError}
         >
           {availableSubtitleTracks.map((track, index) => <track key={`${track.lang}-${index}`} kind="subtitles" src={track.src} srcLang={track.lang} label={track.label} />)}
@@ -1222,9 +1255,7 @@ export function VideoPlayer({
                       <button
                         key={option.label}
                         onClick={() => {
-                          if (hlsRef.current) hlsRef.current.currentLevel = option.level;
-                          setQuality(option.label);
-                          try { localStorage.setItem('nami_playback_quality', option.label); } catch {}
+                          handleQualitySelect(option);
                           setShowSettings(false);
                         }}
                         className={`w-full text-left px-2 py-1 text-xs rounded-lg flex items-center justify-between transition-colors ${quality === option.label ? 'text-brand-400 font-bold bg-brand-500/10' : 'text-gray-300 hover:bg-white/5'}`}
@@ -1327,7 +1358,7 @@ export function VideoPlayer({
                   </div>
                 </section>
                 <section className="mb-6"><h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">Playback speed</h4><div className="flex flex-wrap gap-2">{SPEEDS.map((value) => <button key={value} onClick={() => { if (videoRef.current) videoRef.current.playbackRate = value; setSpeed(value); }} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium ${speed === value ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>{value}X</button>)}</div></section>
-                <section><h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">Video quality</h4><div className="flex flex-wrap gap-2">{qualityOptions.length ? [{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => <button key={option.label} onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = option.level; setQuality(option.label); try { localStorage.setItem('nami_playback_quality', option.label); } catch {} }} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium ${quality === option.label ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>{option.label}</button>) : <p className="w-full rounded-xl bg-white/5 px-4 py-3 text-sm leading-6 text-white/70">This video source provides one fixed quality. Add an HLS master playlist with multiple quality versions to enable quality switching.</p>}</div></section>
+                <section><h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">Video quality</h4><div className="flex flex-wrap gap-2">{qualityOptions.length ? [{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => <button key={option.label} onClick={() => handleQualitySelect(option)} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium ${quality === option.label ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>{option.label}</button>) : <p className="w-full rounded-xl bg-white/5 px-4 py-3 text-sm leading-6 text-white/70">This source has one fixed quality. Add another encoded file in episode settings to enable quality switching.</p>}</div></section>
               </div>
             </div>,
             document.body

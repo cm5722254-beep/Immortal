@@ -52,6 +52,15 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+        # Add alternate encoded video URLs to existing episode tables.
+        try:
+            await conn.execute(text("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS video_qualities JSON DEFAULT '[]';"))
+        except Exception:
+            try:
+                await conn.execute(text("ALTER TABLE episodes ADD COLUMN video_qualities JSON DEFAULT '[]';"))
+            except Exception:
+                pass
+
         # Add subtitle language tracks to pre-existing episode tables.
         try:
             await conn.execute(text("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS subtitle_tracks JSON DEFAULT '[]';"))

@@ -84,6 +84,7 @@ async def export_anime_episodes(
                 "episode_number": episode.episode_number,
                 "title": episode.title,
                 "video_url": episode.video_url,
+                "video_qualities": episode.video_qualities or [],
                 "subtitle_url": episode.subtitle_url,
                 "subtitle_tracks": episode.subtitle_tracks or [],
                 "thumbnail_url": episode.thumbnail_url,
