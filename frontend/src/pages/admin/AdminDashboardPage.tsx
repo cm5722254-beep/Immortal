@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 
 import { AdminLayout } from './AdminLayout';
-import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { useAuthStore } from '../../store/authStore';
 import { usePromoStore } from '../../store/promoStore';
 import { useSystemUpdateStore } from '../../store/systemUpdateStore';
@@ -263,10 +262,10 @@ export function AdminDashboardPage() {
 
   return (
     <AdminLayout title="ផ្ទាំងគ្រប់គ្រងទូទៅ (Dashboard)">
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-6 max-w-screen-2xl mx-auto">
 
         {/* ── 1. Top Header Bar (Calm & Informative) ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md">
+        <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,.13),transparent_45%),linear-gradient(110deg,#111a20,#0d1117_68%)] border border-emerald-400/[0.12] shadow-[0_16px_50px_rgba(0,0,0,.16)]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
@@ -315,9 +314,15 @@ export function AdminDashboardPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
             {isLoading ? (
-              <SkeletonCard count={6} />
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="min-h-[132px] rounded-2xl border border-white/[.07] bg-gradient-to-br from-[#141a22] to-[#0e1218] p-4">
+                  <div className="h-9 w-9 animate-pulse rounded-xl bg-white/[.06]" />
+                  <div className="mt-6 h-3 w-20 animate-pulse rounded bg-white/[.07]" />
+                  <div className="mt-2 h-6 w-14 animate-pulse rounded bg-white/[.09]" />
+                </div>
+              ))
             ) : (
               [
                 {
@@ -369,7 +374,7 @@ export function AdminDashboardPage() {
                 return (
                   <div
                     key={i}
-                    className="p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.07] hover:border-white/15 transition-all flex flex-col justify-between"
+                    className="group relative min-h-[142px] overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-[#151b23] to-[#0e1218] hover:from-[#19212a] border border-white/[0.07] hover:border-white/[0.14] transition-all duration-200 flex flex-col justify-between shadow-[0_8px_24px_rgba(0,0,0,.12)]"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className={`w-8 h-8 rounded-xl ${item.bg} flex items-center justify-center ${item.color}`}>
@@ -383,7 +388,7 @@ export function AdminDashboardPage() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-400 font-medium">{item.label}</p>
-                      <p className="text-lg sm:text-xl font-bold text-white mt-0.5 tracking-tight font-display">
+                      <p className="text-xl sm:text-2xl font-extrabold text-white mt-0.5 tracking-tight font-display">
                         {item.val.toLocaleString()}
                       </p>
                     </div>

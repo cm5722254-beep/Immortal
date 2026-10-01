@@ -154,8 +154,8 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
   };
 
   const Sidebar = () => (
-    <aside className="flex flex-col h-full bg-[#0d1017] border-r border-white/[0.08] overflow-hidden select-none">
-      <div className="p-4 border-b border-white/[0.08] shrink-0 flex items-center justify-between">
+    <aside className="flex flex-col h-full bg-gradient-to-b from-[#10151c] via-[#0d1117] to-[#0b0e13] border-r border-white/[0.08] overflow-hidden select-none shadow-[12px_0_40px_rgba(0,0,0,.16)]">
+      <div className="px-4 py-4 border-b border-white/[0.08] shrink-0 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <img
             src="/logo.png"
@@ -179,7 +179,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
         </button>
       </div>
 
-      <div className="px-4 py-3 border-b border-white/[0.06] shrink-0 bg-white/[0.01]">
+      <div className="px-4 py-3.5 border-b border-white/[0.06] shrink-0 bg-white/[0.015]">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold bg-white/10 text-white border border-white/10 shrink-0">
             {user?.username?.[0]?.toUpperCase()}
@@ -196,7 +196,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
         </div>
       </div>
 
-      <nav className="flex-1 p-2.5 space-y-1.5 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
         {availableSections.map((sec) => {
           const SecIcon = sec.icon;
           const isOpen = openSection === sec.id;
@@ -210,7 +210,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
             <div key={sec.id} className="rounded-xl overflow-hidden">
               <button
                 onClick={() => setOpenSection(isOpen ? '' : sec.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   isOpen || hasActive
                     ? `${sec.bg} ${sec.color} shadow-sm`
                     : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'
@@ -220,7 +220,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
                   <SecIcon className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="font-bold truncate text-[11px]">{sec.label}</p>
+                  <p className="font-bold truncate text-xs">{sec.label}</p>
                 </div>
                 {isOpen ? (
                   <ChevronUp className="w-3.5 h-3.5 opacity-50 shrink-0" />
@@ -230,7 +230,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
               </button>
 
               {isOpen && (
-                <div className="mt-1 ml-3 pl-2.5 border-l border-white/[0.08] space-y-0.5 animate-in slide-in-from-top-1 duration-150">
+                <div className="mt-1.5 ml-3 pl-2.5 border-l border-white/[0.08] space-y-1 animate-in slide-in-from-top-1 duration-150">
                   {sec.items.map((item) => {
                     const active = item.to === '/admin'
                       ? location.pathname === '/admin'
@@ -242,7 +242,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
                         key={item.to}
                         to={item.to}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 group ${
+                        className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all duration-150 group ${
                           active
                             ? 'bg-brand-600 text-white font-bold shadow-md shadow-brand-600/25'
                             : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
@@ -283,9 +283,9 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
   const activeSec = availableSections.find(s => s.id === getActiveSection());
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-gray-100 flex flex-col">
+    <div className="admin-dashboard-shell relative min-h-screen bg-[#080b10] text-gray-100 flex flex-col bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,.06),transparent_36%)]">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex w-60 xl:w-64 shrink-0 flex-col fixed inset-y-0 left-0 z-30">
+      <div className="hidden lg:flex w-64 xl:w-72 shrink-0 flex-col fixed inset-y-0 left-0 z-30">
         <Sidebar />
       </div>
 
@@ -303,9 +303,9 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
       )}
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-60 xl:ml-64 min-h-screen flex flex-col">
+      <main className="flex-1 lg:ml-64 xl:ml-72 min-h-screen flex flex-col">
         {/* Top bar */}
-        <header className="sticky top-0 z-20 bg-[#07090e]/95 backdrop-blur-md border-b border-white/[0.08] px-3 sm:px-6 h-14 flex items-center gap-2.5 sm:gap-3">
+        <header className="sticky top-0 z-20 bg-[#0a0e13]/90 backdrop-blur-xl border-b border-white/[0.08] px-3 sm:px-6 xl:px-8 h-16 flex items-center gap-3 sm:gap-4 shadow-[0_8px_28px_rgba(0,0,0,.12)]">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white transition cursor-pointer"
@@ -322,7 +322,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
             </div>
           )}
 
-          <h1 className="font-display font-bold text-sm sm:text-base text-white truncate flex-1 min-w-0">
+          <h1 className="font-display font-bold text-sm sm:text-lg text-white truncate flex-1 min-w-0 tracking-tight">
             {title}
           </h1>
 
@@ -371,7 +371,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
         </header>
 
         {/* Page content with bottom space for mobile navigation */}
-        <div className="flex-1 p-3 sm:p-4 md:p-6 pb-24 lg:pb-6 max-w-full overflow-x-hidden">
+        <div className="admin-content relative flex-1 p-4 sm:p-6 xl:p-8 pb-24 lg:pb-8 max-w-full overflow-x-hidden">
           {children}
         </div>
       </main>
