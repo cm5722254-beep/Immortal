@@ -1,4 +1,4 @@
-const CACHE_NAME = 'merdonghua-v2';
+const CACHE_NAME = 'merdonghua-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

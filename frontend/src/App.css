@@ -43,7 +43,7 @@
 .mini-shelf-heading h2 { margin: 0; font-size: 17px; font-weight: 750; }
 .mini-shelf-heading a { display: flex; align-items: center; color: #96979e; font-size: 12px; }
 .mini-poster-row { display: flex; gap: 9px; overflow-x: auto; padding: 0 15px 3px; scrollbar-width: none; }
-.mini-poster-card { flex: 0 0 calc((100% - 18px)/3); min-width: 0; color: #d7d7da; }
+.mini-home .mini-shelf .mini-poster-row > .mini-poster-card { flex: 0 0 clamp(112px,31vw,184px) !important; width: clamp(112px,31vw,184px) !important; max-width: 184px; min-width: 0; color: #d7d7da; }
 .mini-poster-art { position: relative; aspect-ratio: 2/2.85; overflow: hidden; border-radius: 7px; background: #25262b; }
 .mini-poster-art img { width: 100%; height: 100%; object-fit: cover; }
 .mini-poster-badge, .mini-poster-update { position: absolute; top: 0; right: 0; border-radius: 0 0 0 4px; padding: 3px 5px; background: #f2c178; color: #111; font-size: 9px; font-weight: 800; }
