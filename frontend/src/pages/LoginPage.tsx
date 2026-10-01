@@ -356,7 +356,7 @@ export function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-lime-400 via-lime-500 to-green-600 hover:from-lime-500 hover:to-green-600 text-white font-black text-sm py-3 rounded-xl shadow-lg shadow-lime-500/25 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                className="btn btn-primary h-12 w-full text-sm font-bold disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -486,7 +486,7 @@ function TelegramMiniLogin({
           <label className="block border-b border-white/10 pb-3"><span className="sr-only">{t('Phone number')}</span><input type="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder={t('Email or mobile number')} autoComplete="username" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /></label>
           <label className="flex items-center border-b border-white/10 pb-3"><span className="sr-only">{t('Password')}</span><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Enter password')} autoComplete="current-password" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="text-white/60">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></label>
           <button type="button" className="block w-full py-2 text-center text-sm text-white/80">{t('Recover password')}</button>
-          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="h-12 w-full rounded-xl bg-gradient-to-r from-lime-400 via-lime-500 to-green-600 text-sm font-bold text-white shadow-lg shadow-lime-500/25 transition-transform active:scale-[0.99] disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
+          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="btn btn-primary h-12 w-full text-sm font-bold disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
         </form>}
 
         {screen === 'phone' && <PhoneAuthForm onSuccess={() => navigate(from, { replace: true })} />}
