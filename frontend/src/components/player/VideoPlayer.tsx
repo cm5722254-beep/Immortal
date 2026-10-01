@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Hls from 'hls.js';
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
@@ -14,6 +15,7 @@ import { parseYouTubeVideoId, getYouTubeEmbedUrl, isFacebookUrl, getFacebookEmbe
 interface VideoPlayerProps {
   src: string;
   subtitleUrl?: string;
+  subtitleTracks?: Array<{ src: string; lang: string; label: string }>;
   onProgress?: (currentTime: number, duration: number) => void;
   onEnded?: () => void;
   resumeAt?: number;
@@ -38,6 +40,7 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 export function VideoPlayer({
   src,
   subtitleUrl,
+  subtitleTracks = [],
   onProgress,
   onEnded,
   resumeAt = 0,
@@ -78,12 +81,6 @@ export function VideoPlayer({
       setHudMessage(null);
     }, 1800);
   };
-  const toggleSubtitles = () => {
-    const next = !subtitlesEnabled;
-    setSubtitlesEnabled(next);
-    try { localStorage.setItem('nami_subtitles_enabled', String(next)); } catch {}
-    showHud(`Subtitles ${next ? 'on' : 'off'}`);
-  };
   const [showControls, setShowControls] = useState(true);
   const [speed, setSpeed] = useState(1);
   const [quality, setQuality] = useState(() => {
@@ -112,13 +109,35 @@ export function VideoPlayer({
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(() => {
     try { return localStorage.getItem('nami_subtitles_enabled') !== 'false'; } catch { return true; }
   });
+  const availableSubtitleTracks = subtitleTracks.length ? subtitleTracks : (subtitleUrl ? [{ src: subtitleUrl, lang: 'und', label: 'Subtitles' }] : []);
+  const [selectedSubtitle, setSelectedSubtitle] = useState(() => {
+    try { return localStorage.getItem('nami_subtitle_track') || ((subtitleTracks.length || subtitleUrl) ? '0' : 'off'); } catch { return (subtitleTracks.length || subtitleUrl) ? '0' : 'off'; }
+  });
+  useEffect(() => {
+    if (selectedSubtitle !== 'off' && Number(selectedSubtitle) >= availableSubtitleTracks.length) {
+      const next = availableSubtitleTracks.length ? '0' : 'off';
+      setSelectedSubtitle(next);
+      setSubtitlesEnabled(next !== 'off');
+      try { localStorage.setItem('nami_subtitle_track', next); } catch {}
+    }
+  }, [availableSubtitleTracks.length, selectedSubtitle]);
+  const toggleSubtitles = () => {
+    const next = !subtitlesEnabled;
+    setSubtitlesEnabled(next);
+    if (next && selectedSubtitle === 'off' && availableSubtitleTracks.length) {
+      setSelectedSubtitle('0');
+      try { localStorage.setItem('nami_subtitle_track', '0'); } catch {}
+    }
+    try { localStorage.setItem('nami_subtitles_enabled', String(next)); } catch {}
+    showHud(`Subtitles ${next ? 'on' : 'off'}`);
+  };
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     const syncSubtitleTracks = () => {
-      Array.from(video.textTracks).forEach((track) => {
-        track.mode = subtitlesEnabled ? 'showing' : 'disabled';
+      Array.from(video.textTracks).forEach((track, index) => {
+        track.mode = subtitlesEnabled && selectedSubtitle === String(index) ? 'showing' : 'disabled';
       });
     };
     syncSubtitleTracks();
@@ -128,7 +147,7 @@ export function VideoPlayer({
       video.removeEventListener('loadedmetadata', syncSubtitleTracks);
       video.textTracks.removeEventListener?.('addtrack', syncSubtitleTracks);
     };
-  }, [subtitleUrl, subtitlesEnabled]);
+  }, [subtitleUrl, subtitleTracks, subtitlesEnabled, selectedSubtitle]);
 
   // ─── ANTI-SCREEN RECORDING & SCREENSHOT SECURITY STATE ───────────
   const [captureBlocked, setCaptureBlocked] = useState(false);
@@ -563,9 +582,8 @@ export function VideoPlayer({
     const container = containerRef.current;
     if (!container) return;
 
-    try {
-      (window as any).Telegram?.WebApp?.expand?.();
-    } catch {}
+    const telegramWebApp = (window as any).Telegram?.WebApp;
+    try { telegramWebApp?.expand?.(); } catch {}
 
     // If already in landscape fullscreen, exit
     if ((isFullscreen || isPseudoFullscreen) && (isRotatedLandscape || screenOrientation === 'landscape')) {
@@ -576,9 +594,11 @@ export function VideoPlayer({
       try {
         if (document.fullscreenElement) await document.exitFullscreen();
       } catch {}
+      try { telegramWebApp?.exitFullscreen?.(); } catch {}
       if (window.screen && (window.screen.orientation as any)?.unlock) {
         try { (window.screen.orientation as any).unlock(); } catch {}
       }
+      try { telegramWebApp?.unlockOrientation?.(); } catch {}
       showHud('🔄 ចាកចេញពីរបៀបផ្ដេក');
       return;
     }
@@ -587,27 +607,39 @@ export function VideoPlayer({
     setIsPseudoFullscreen(true);
     setScreenOrientation('landscape');
 
-    let locked = false;
-    try {
-      if (container.requestFullscreen) {
-        await container.requestFullscreen();
-      } else if ((container as any).webkitRequestFullscreen) {
-        await (container as any).webkitRequestFullscreen();
-      }
-    } catch {}
+    if (isTelegram && telegramWebApp) {
+      try {
+        await new Promise<void>((resolve) => {
+          let settled = false;
+          let timeout: number | undefined;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            telegramWebApp.offEvent?.('fullscreenChanged', finish);
+            if (timeout !== undefined) window.clearTimeout(timeout);
+            resolve();
+          };
+          timeout = window.setTimeout(finish, 350);
+          telegramWebApp.onEvent?.('fullscreenChanged', finish);
+          telegramWebApp.requestFullscreen?.();
+        });
+      } catch {}
+    } else {
+      try {
+        if (container.requestFullscreen) await container.requestFullscreen();
+        else if ((container as any).webkitRequestFullscreen) await (container as any).webkitRequestFullscreen();
+      } catch {}
+    }
 
     if (window.screen && (window.screen.orientation as any)?.lock) {
       try {
         await (window.screen.orientation as any).lock('landscape');
-        locked = true;
       } catch {}
     }
 
-    if (!locked && window.innerHeight > window.innerWidth) {
-      setIsRotatedLandscape(true);
-    } else {
-      setIsRotatedLandscape(false);
-    }
+    // Telegram WebViews that cannot rotate the device use a rotated video surface instead.
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    setIsRotatedLandscape(window.innerHeight > window.innerWidth);
 
     showHud('🔄 របៀបផ្ដេកពេញអេក្រង់ (Landscape Full)');
   };
@@ -652,6 +684,9 @@ export function VideoPlayer({
         (document as any).mozFullScreenElement ||
         (document as any).msFullscreenElement
       );
+      // Telegram fullscreen is managed by the Mini App client and may not expose
+      // document.fullscreenElement. Do not let its DOM event collapse our overlay.
+      if (isTelegram && isPseudoFullscreen && !fs) return;
       setIsFullscreen(fs);
       if (!fs) {
         setIsPseudoFullscreen(false);
@@ -701,12 +736,15 @@ export function VideoPlayer({
     // Auto-adapt on screen orientation change (Portrait <-> Landscape)
     const handleOrientation = () => {
       const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-      try {
-        (window as any).Telegram?.WebApp?.expand?.();
-        (window as any).Telegram?.WebApp?.requestFullscreen?.();
-      } catch {}
-
-      if (isLandscape && isPlaying) {
+      if (isTelegram && isLandscape && isPlaying) {
+        setIsFullscreen(true);
+        setIsPseudoFullscreen(true);
+        setIsRotatedLandscape(false);
+        setScreenOrientation('landscape');
+      } else if (isTelegram && (isFullscreen || isPseudoFullscreen)) {
+        setIsRotatedLandscape(!isLandscape);
+      } else if (isLandscape && isPlaying) {
+        setIsFullscreen(true);
         setIsPseudoFullscreen(true);
       } else if (!isLandscape && !document.fullscreenElement) {
         setIsPseudoFullscreen(false);
@@ -723,7 +761,7 @@ export function VideoPlayer({
       window.removeEventListener('resize', handleOrientation);
       window.removeEventListener('orientationchange', handleOrientation);
     };
-  }, [isPseudoFullscreen, isPlaying]);
+  }, [isPseudoFullscreen, isPlaying, isTelegram, isFullscreen]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -848,7 +886,7 @@ export function VideoPlayer({
           onCanPlay={() => { setIsLoading(false); setError(null); }}
           onError={handleVideoError}
         >
-          {subtitleUrl && <track kind="subtitles" src={subtitleUrl} default={subtitlesEnabled} />}
+          {availableSubtitleTracks.map((track, index) => <track key={`${track.lang}-${index}`} kind="subtitles" src={track.src} srcLang={track.lang} label={track.label} />)}
         </video>
       )}
 
@@ -1180,7 +1218,7 @@ export function VideoPlayer({
 
                   <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 px-2 mb-1.5">កម្រិតច្បាស់ (Quality)</p>
                   <div className="space-y-1">
-                    {[{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => (
+                    {qualityOptions.length ? [{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => (
                       <button
                         key={option.label}
                         onClick={() => {
@@ -1194,14 +1232,14 @@ export function VideoPlayer({
                         {option.label}
                         {quality === option.label && <Check className="w-3.5 h-3.5" />}
                       </button>
-                    ))}
+                    )) : <p className="px-2 py-2 text-xs leading-5 text-gray-300">This source has one fixed quality.</p>}
                   </div>
                 </div>
               )}
             </div>
 
             {/* Subtitle Indicator */}
-            {subtitleUrl && (
+            {availableSubtitleTracks.length > 0 && (
               <button onClick={toggleSubtitles} className={`btn-icon ${subtitlesEnabled ? 'text-brand-400' : 'text-white/60'}`} aria-label={subtitlesEnabled ? 'Turn subtitles off' : 'Turn subtitles on'} aria-pressed={subtitlesEnabled} title={subtitlesEnabled ? 'Subtitles on' : 'Subtitles off'}>
                 <Subtitles className="w-5 h-5" />
               </button>
@@ -1276,19 +1314,23 @@ export function VideoPlayer({
             </div>
           </div>
 
-          {showSettings && (
-            <div className="absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-2xl border-t border-white/10 bg-[#17191f]/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-white shadow-2xl backdrop-blur-xl" onClick={(e) => e.stopPropagation()}>
-              <div className="mb-4 flex items-center justify-between"><h3 className="font-semibold">Playback settings</h3><button onClick={() => setShowSettings(false)} className="rounded-full bg-white/10 px-3 py-1 text-sm">Done</button></div>
-              <section className="mb-4"><h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/55">Audio &amp; Subtitles</h4>
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={toggleSubtitles} className={`rounded-lg px-3 py-2 text-sm ${subtitlesEnabled ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>Subtitles {subtitlesEnabled ? 'On' : 'Off'}</button>
-                  {(hlsRef.current?.audioTracks || []).map((track, index) => <button key={`${track.lang}-${index}`} onClick={() => { if (hlsRef.current) hlsRef.current.audioTrack = index; showHud(`Audio: ${track.name || track.lang || `Track ${index + 1}`}`); }} className={`rounded-lg px-3 py-2 text-sm ${hlsRef.current?.audioTrack === index ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>{track.name || track.lang || `Audio ${index + 1}`}</button>)}
-                  {!hlsRef.current?.audioTracks.length && <span className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white/65">Default audio</span>}
-                </div>
-              </section>
-              <section className="mb-4"><h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/55">Playback speed</h4><div className="flex flex-wrap gap-2">{SPEEDS.map((value) => <button key={value} onClick={() => { if (videoRef.current) videoRef.current.playbackRate = value; setSpeed(value); }} className={`rounded-lg px-3 py-2 text-sm ${speed === value ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>{value}X</button>)}</div></section>
-              <section><h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/55">Video quality</h4><div className="flex flex-wrap gap-2">{[{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => <button key={option.label} onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = option.level; setQuality(option.label); try { localStorage.setItem('nami_playback_quality', option.label); } catch {} }} className={`rounded-lg px-3 py-2 text-sm ${quality === option.label ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>{option.label}</button>)}</div></section>
-            </div>
+          {showSettings && createPortal(
+            <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/65 backdrop-blur-sm" onClick={() => setShowSettings(false)}>
+              <div role="dialog" aria-modal="true" aria-label="Playback settings" className="w-full max-w-2xl max-h-[88dvh] overflow-y-auto rounded-t-3xl border border-white/10 bg-[#17191f] px-5 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-semibold">Playback settings</h3><p className="mt-1 text-sm text-white/65">Choose subtitles, playback speed, and available video quality.</p></div><button onClick={() => setShowSettings(false)} className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold">Done</button></div>
+                <section className="mb-6"><h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">Audio &amp; Subtitles</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => { setSelectedSubtitle('off'); setSubtitlesEnabled(false); try { localStorage.setItem('nami_subtitle_track', 'off'); localStorage.setItem('nami_subtitles_enabled', 'false'); } catch {} }} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium ${selectedSubtitle === 'off' || !subtitlesEnabled ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>Subtitles off</button>
+                    {availableSubtitleTracks.map((track, index) => <button key={`${track.lang}-${index}`} onClick={() => { setSelectedSubtitle(String(index)); setSubtitlesEnabled(true); try { localStorage.setItem('nami_subtitle_track', String(index)); localStorage.setItem('nami_subtitles_enabled', 'true'); } catch {} }} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium ${selectedSubtitle === String(index) && subtitlesEnabled ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>{track.label || track.lang}</button>)}
+                    {(hlsRef.current?.audioTracks || []).map((track, index) => <button key={`${track.lang}-${index}`} onClick={() => { if (hlsRef.current) hlsRef.current.audioTrack = index; showHud(`Audio: ${track.name || track.lang || `Track ${index + 1}`}`); }} className={`min-h-11 rounded-xl px-4 py-2 text-sm ${hlsRef.current?.audioTrack === index ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>{track.name || track.lang || `Audio ${index + 1}`}</button>)}
+                    {!availableSubtitleTracks.length && !hlsRef.current?.audioTracks.length && <p className="w-full rounded-xl bg-white/5 px-4 py-3 text-sm leading-6 text-white/70">No subtitle files or alternate audio tracks are provided for this episode yet.</p>}
+                  </div>
+                </section>
+                <section className="mb-6"><h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">Playback speed</h4><div className="flex flex-wrap gap-2">{SPEEDS.map((value) => <button key={value} onClick={() => { if (videoRef.current) videoRef.current.playbackRate = value; setSpeed(value); }} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium ${speed === value ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>{value}X</button>)}</div></section>
+                <section><h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">Video quality</h4><div className="flex flex-wrap gap-2">{qualityOptions.length ? [{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => <button key={option.label} onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = option.level; setQuality(option.label); try { localStorage.setItem('nami_playback_quality', option.label); } catch {} }} className={`min-h-11 rounded-xl px-4 py-2 text-sm font-medium ${quality === option.label ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white'}`}>{option.label}</button>) : <p className="w-full rounded-xl bg-white/5 px-4 py-3 text-sm leading-6 text-white/70">This video source provides one fixed quality. Add an HLS master playlist with multiple quality versions to enable quality switching.</p>}</div></section>
+              </div>
+            </div>,
+            document.body
           )}
         </div>
       )}

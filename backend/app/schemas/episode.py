@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
@@ -10,6 +10,7 @@ class EpisodeCreate(BaseModel):
     description: Optional[str] = None
     video_url: Optional[str] = None
     subtitle_url: Optional[str] = None
+    subtitle_tracks: List[Dict[str, Any]] = []
     thumbnail_url: Optional[str] = None
     duration_seconds: int = 0
     is_published: bool = True
@@ -22,6 +23,7 @@ class EpisodeUpdate(BaseModel):
     description: Optional[str] = None
     video_url: Optional[str] = None
     subtitle_url: Optional[str] = None
+    subtitle_tracks: Optional[List[Dict[str, Any]]] = None
     thumbnail_url: Optional[str] = None
     duration_seconds: Optional[int] = None
     is_published: Optional[bool] = None
@@ -36,6 +38,7 @@ class EpisodeRead(BaseModel):
     description: Optional[str] = None
     video_url: Optional[str] = None
     subtitle_url: Optional[str] = None
+    subtitle_tracks: List[Dict[str, Any]] = []
     thumbnail_url: Optional[str] = None
     duration_seconds: int
     is_published: bool

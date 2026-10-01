@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, func
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, func, JSON
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -13,6 +13,7 @@ class Episode(Base):
     description = Column(Text, nullable=True)
     video_url = Column(String(1000), nullable=True)
     subtitle_url = Column(String(1000), nullable=True)
+    subtitle_tracks = Column(JSON, nullable=False, default=list)
     thumbnail_url = Column(String(500), nullable=True)
     duration_seconds = Column(Integer, default=0)
     is_published = Column(Boolean, default=True)

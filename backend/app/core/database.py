@@ -51,6 +51,15 @@ async def init_db():
     """Create all tables and safely apply non-destructive column migrations."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        # Add subtitle language tracks to pre-existing episode tables.
+        try:
+            await conn.execute(text("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS subtitle_tracks JSON DEFAULT '[]';"))
+        except Exception:
+            try:
+                await conn.execute(text("ALTER TABLE episodes ADD COLUMN subtitle_tracks JSON DEFAULT '[]';"))
+            except Exception:
+                pass
         
         # Safely migrate new VIP & Telegram columns to existing users table if they don't exist yet
         try:
@@ -91,4 +100,3 @@ async def init_db():
                     pass
         except Exception as e:
             print(f"[DB INFO] Sequence sync: {e}")
-

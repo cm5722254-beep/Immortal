@@ -18,6 +18,7 @@ const EMPTY_EP = {
   video_url: '', subtitle_url: '', thumbnail_url: '',
   duration_seconds: 1440, is_published: true, is_vip: true, is_free: false,
 };
+type SubtitleTrackForm = { label: string; lang: string; src: string };
 
 export function AdminEpisodesPage() {
   const [animeList, setAnimeList] = useState<Anime[]>([]);
@@ -35,6 +36,7 @@ export function AdminEpisodesPage() {
   const [converterError, setConverterError] = useState('');
   const [editEp, setEditEp] = useState<Episode | null>(null);
   const [form, setForm] = useState({ ...EMPTY_EP });
+  const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrackForm[]>([]);
   const [batchCount, setBatchCount] = useState(12);
   const [batchUrlPattern, setBatchUrlPattern] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
   const [batchIsVip, setBatchIsVip] = useState(true);
@@ -146,6 +148,7 @@ export function AdminEpisodesPage() {
       is_vip: true,
       is_free: false,
     });
+    setSubtitleTracks([]);
     setError('');
     setShowModal(true);
   };
@@ -165,6 +168,7 @@ export function AdminEpisodesPage() {
       is_vip: isVip,
       is_free: !isVip,
     });
+    setSubtitleTracks(ep.subtitle_tracks?.length ? ep.subtitle_tracks.map((track) => ({ ...track })) : (ep.subtitle_url ? [{ label: 'Subtitles', lang: 'und', src: ep.subtitle_url }] : []));
     setError('');
     setShowModal(true);
   };
@@ -526,6 +530,7 @@ export function AdminEpisodesPage() {
         description: (form as any).description?.trim() || null,
         video_url: form.video_url?.trim() || null,
         subtitle_url: form.subtitle_url?.trim() || null,
+        subtitle_tracks: subtitleTracks.filter((track) => track.src.trim()).map((track) => ({ ...track, src: track.src.trim(), lang: track.lang.trim() || 'und', label: track.label.trim() || track.lang.trim() || 'Subtitles' })),
         thumbnail_url: form.thumbnail_url?.trim() || null,
         duration_seconds: Number(form.duration_seconds) || 1440,
         is_published: Boolean(form.is_published),
@@ -1587,6 +1592,20 @@ export function AdminEpisodesPage() {
                   className="input"
                   placeholder="https://.../subtitles-kh.vtt"
                 />
+              </div>
+
+              <div>
+                <label className="label">Subtitles by language (WebVTT .vtt)</label>
+                <p className="mb-2 text-xs text-gray-400">Add real subtitle file URLs. A language appears in the player only when its file is provided.</p>
+                <div className="space-y-2">
+                  {subtitleTracks.map((track, index) => <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_2fr_auto]">
+                    <input className="input" value={track.label} placeholder="Name (Khmer)" onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => i === index ? { ...item, label: e.target.value } : item))} />
+                    <input className="input" value={track.lang} placeholder="Language (km)" onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => i === index ? { ...item, lang: e.target.value } : item))} />
+                    <input type="url" className="input" value={track.src} placeholder="https://.../subtitles-km.vtt" onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => i === index ? { ...item, src: e.target.value } : item))} />
+                    <button type="button" className="rounded-lg px-3 text-red-300 hover:bg-red-500/10" onClick={() => setSubtitleTracks((items) => items.filter((_, i) => i !== index))} aria-label="Remove subtitle track">×</button>
+                  </div>)}
+                </div>
+                <button type="button" className="mt-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-emerald-300 hover:bg-white/5" onClick={() => setSubtitleTracks((items) => [...items, { label: '', lang: '', src: '' }])}>+ Add subtitle language</button>
               </div>
 
               {/* VIP Access Control Box */}

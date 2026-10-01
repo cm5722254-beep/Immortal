@@ -78,6 +78,7 @@ export interface Episode {
   description?: string;
   video_url?: string;
   subtitle_url?: string;
+  subtitle_tracks?: Array<{ src: string; lang: string; label: string }>;
   thumbnail_url?: string;
   duration_seconds: number;
   is_published: boolean;
