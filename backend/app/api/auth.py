@@ -1,12 +1,18 @@
 from typing import Optional, List
 import re
 import random
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import parse_qsl
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 from app.models.user import User, UserRole
 from app.schemas.auth import (
@@ -251,28 +257,58 @@ async def google_login(data: GoogleAuthRequest, db: AsyncSession = Depends(get_d
 
 @router.post("/telegram", response_model=AuthResponse)
 async def telegram_login(data: TelegramAuthRequest, db: AsyncSession = Depends(get_db)):
-    """Auto login / register Telegram Mini App user seamlessly with their exact Telegram account username & profile photo."""
+    """Authenticate a Mini App user using Telegram's signed initData."""
     import secrets
+    from datetime import datetime, timezone
 
-    if not data.id:
-        raise HTTPException(status_code=400, detail="Telegram user ID is required")
+    if not settings.TELEGRAM_BOT_TOKEN:
+        raise HTTPException(status_code=503, detail="Telegram authentication is not configured")
+    try:
+        pairs = parse_qsl(data.init_data, keep_blank_values=True, strict_parsing=True)
+        fields = dict(pairs)
+        supplied_hash = fields.pop("hash", "")
+        if not supplied_hash or len(fields) != len(pairs) - 1:
+            raise ValueError("invalid fields")
+        check_string = "\n".join(f"{key}={value}" for key, value in sorted(fields.items()))
+        secret_key = hmac.new(b"WebAppData", settings.TELEGRAM_BOT_TOKEN.encode(), hashlib.sha256).digest()
+        expected_hash = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected_hash, supplied_hash):
+            raise ValueError("signature mismatch")
+        auth_date = int(fields["auth_date"])
+        now = int(time.time())
+        if auth_date > now + 60 or now - auth_date > 86400:
+            raise ValueError("expired authentication data")
+        tg_user = json.loads(fields["user"])
+        tg_id = int(tg_user["id"])
+    except (ValueError, KeyError, TypeError, json.JSONDecodeError):
+        raise HTTPException(status_code=401, detail="Telegram session could not be verified. Reopen the Mini App from Telegram.")
 
-    tg_email = f"tg_{data.id}@telegram.merdonghua.com"
+    if data.id is not None and data.id != tg_id:
+        raise HTTPException(status_code=401, detail="Telegram account does not match the signed session")
+    tg_username = tg_user.get("username")
+    tg_first_name = tg_user.get("first_name")
+    tg_last_name = tg_user.get("last_name")
+    tg_photo_url = tg_user.get("photo_url")
+    tg_email = f"tg_{tg_id}@telegram.merdonghua.com"
 
-    # Check if user already exists with this telegram email
-    result = await db.execute(select(User).where(User.email == tg_email))
+    result = await db.execute(select(User).where(User.telegram_id == str(tg_id)))
     user = result.scalar_one_or_none()
+    if user is None:
+        result = await db.execute(select(User).where(User.email == tg_email))
+        user = result.scalar_one_or_none()
+        if user is not None and user.telegram_id not in (None, str(tg_id)):
+            raise HTTPException(status_code=409, detail="Telegram account is already linked to another profile")
 
     # Determine real display username
-    full_name = f"{data.first_name or ''} {data.last_name or ''}".strip()
-    raw_name = data.username or full_name or data.first_name or f"TelegramUser_{data.id}"
-    clean_user = "".join(c for c in raw_name if c.isalnum() or c in ("_", "-", " ")).strip()[:30] or f"User_{data.id}"
+    full_name = f"{tg_first_name or ''} {tg_last_name or ''}".strip()
+    raw_name = tg_username or full_name or f"TelegramUser_{tg_id}"
+    clean_user = "".join(c for c in raw_name if c.isalnum() or c in ("_", "-", " ")).strip()[:30] or f"User_{tg_id}"
 
     if user:
         if not user.is_active:
             user.is_active = True
-        if data.photo_url and user.avatar_url != data.photo_url:
-            user.avatar_url = data.photo_url
+        if tg_photo_url and user.avatar_url != tg_photo_url:
+            user.avatar_url = tg_photo_url
         if clean_user and user.username != clean_user:
             # Check if username is not taken by another user
             existing = await db.execute(select(User).where(User.username == clean_user, User.id != user.id))
@@ -280,35 +316,34 @@ async def telegram_login(data: TelegramAuthRequest, db: AsyncSession = Depends(g
                 user.username = clean_user
         # Always update Telegram data on every login
         from datetime import datetime, timezone
-        user.telegram_id = str(data.id)
-        user.telegram_username = data.username
-        user.telegram_first_name = data.first_name
-        user.telegram_photo_url = data.photo_url
-        user.telegram_init_data = (data.init_data or '')[:2000]
+        user.telegram_id = str(tg_id)
+        user.telegram_username = tg_username
+        user.telegram_first_name = tg_first_name
+        user.telegram_photo_url = tg_photo_url
+        user.telegram_init_data = None
         user.login_source = "telegram"
         user.last_login_at = datetime.now(timezone.utc)
         await db.commit()
         await db.refresh(user)
     else:
         # Check unique username
-        existing = await db.execute(select(User).where(User.username == clean_user))
+        existing = await db.execute(select(User).where(func.lower(User.username) == clean_user.lower()))
         if existing.scalar_one_or_none():
-            clean_user = f"{clean_user}_{secrets.randbelow(9999):04d}"
+            clean_user = f"{clean_user[:20]}_{tg_id}"
 
         user = User(
             username=clean_user,
             email=tg_email,
             password_hash=hash_password(secrets.token_urlsafe(32)),
-            avatar_url=data.photo_url,
+            avatar_url=tg_photo_url,
             role=UserRole.USER,
             is_active=True,
             is_verified=True,
             # Telegram specific data
-            telegram_id=str(data.id),
-            telegram_username=data.username,
-            telegram_first_name=data.first_name,
-            telegram_photo_url=data.photo_url,
-            telegram_init_data=(data.init_data or '')[:2000],
+            telegram_id=str(tg_id),
+            telegram_username=tg_username,
+            telegram_first_name=tg_first_name,
+            telegram_photo_url=tg_photo_url,
             login_source="telegram",
         )
         db.add(user)
@@ -500,6 +535,5 @@ async def submit_unban_appeal(data: UnbanAppealRequest):
         "message": "សំណើស្នើសុំដោះសោររបស់អ្នកត្រូវបានផ្ញើទៅកាន់ Admin រួចរាល់ហើយ! Admin នឹងពិនិត្យដោះសោរជូនក្នុងពេលឆាប់ៗ។",
         "request_id": new_req["id"]
     }
-
 
 

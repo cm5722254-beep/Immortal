@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+.mini-player-seek {
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+  touch-action: pan-x;
+}
+.mini-player-seek::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .45);
+}
+.mini-player-seek::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .45);
+}
+
 @layer base {
   :root {
     --bg-base: #000000;
@@ -834,4 +858,3 @@
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
-

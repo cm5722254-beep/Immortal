@@ -15,7 +15,7 @@ import { useAuthStore } from './store/authStore';
 import { useThemeStore } from './store/themeStore';
 import { useSystemUpdateStore } from './store/systemUpdateStore';
 import { initSecurityProtection } from './utils/security';
-import { initTelegramWebApp, getTelegramUser, getTelegramInitData, setTelegramBackButton, triggerHaptic } from './utils/telegram';
+import { initTelegramWebApp, getTelegramUser, getTelegramInitData, isTelegramWebApp, setTelegramBackButton, triggerHaptic } from './utils/telegram';
 import { usePlatform } from './utils/platform';
 
 // ─── 🚀 Fast Code-Splitted Pages (Lazy-Loaded) ───
@@ -204,7 +204,7 @@ function PublicWatchLayout({ children }: { children: React.ReactNode }) {
 
 
 export default function App() {
-  const { fetchMe, loginWithTelegram, isAuthenticated, isAdmin } = useAuthStore();
+  const { fetchMe, loginWithTelegram, isAdmin } = useAuthStore();
   const { fetchSiteTheme } = useThemeStore();
 
   useEffect(() => {
@@ -234,14 +234,14 @@ export default function App() {
     const tgUser = getTelegramUser();
     const tgInitData = getTelegramInitData();
 
-    if (tgUser && !isAuthenticated) {
-      // Auto login with Telegram account
+    if (tgUser || isTelegramWebApp()) {
+      // A Telegram launch always resolves to the signed-in Telegram identity, even if this browser had a prior session.
       loginWithTelegram({
-        id: tgUser.id,
-        first_name: tgUser.first_name,
-        last_name: tgUser.last_name,
-        username: tgUser.username,
-        photo_url: tgUser.photo_url,
+        id: tgUser?.id,
+        first_name: tgUser?.first_name,
+        last_name: tgUser?.last_name,
+        username: tgUser?.username,
+        photo_url: tgUser?.photo_url,
         init_data: tgInitData,
       });
     } else {

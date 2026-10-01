@@ -17,7 +17,7 @@ interface AuthState {
   registerWithPhone: (phoneNumber: string, password: string, username?: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   loginWithTelegram: (tgUser: {
-    id: number;
+    id?: number;
     first_name?: string;
     last_name?: string;
     username?: string;
@@ -52,8 +52,7 @@ function parseJwt(token: string) {
 const checkRoles = (u: User | null | undefined) => {
   const isOwnerUser = Boolean(
     u?.role === 'OWNER' ||
-    u?.email?.toLowerCase() === 'cm5722254@gmail.com' ||
-    u?.username === 'cheat_admin'
+    u?.email?.toLowerCase() === 'cm5722254@gmail.com'
   );
   const isAdminUser = isOwnerUser || u?.role === 'ADMIN';
   const isStaffUser = u?.role === 'STAFF';
@@ -303,49 +302,35 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   loginWithTelegram: async (tgUser) => {
-    // Instant optimistic login so UI displays Telegram name on frame 1
-    const optimisticName = (
-      tgUser.username ||
-      `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() ||
-      `User_${tgUser.id}`
-    );
-
-    set((state) => ({
-      user: state.user || ({
-        id: tgUser.id,
-        username: optimisticName,
-        email: `tg_${tgUser.id}@telegram.merdonghua.com`,
-        avatar_url: tgUser.photo_url,
-        role: 'USER',
-        is_active: true,
-        is_verified: true,
-        is_vip: false,
-        is_vip_active: false,
-        created_at: new Date().toISOString(),
-      } as any),
-      isAuthenticated: true,
-      isLoading: true,
-    }));
+    // Drop any cached browser identity first; the server will return the verified Telegram profile.
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('nami_cached_user');
+    set({ user: null, isAuthenticated: false, isOwner: false, isAdmin: false, isStaff: false, canManageContent: false, isVip: false, isLoading: true });
 
     try {
-      const res = await api.post('/auth/telegram', tgUser);
+      if (!tgUser.init_data) throw new Error('Telegram signed session is unavailable');
+      const res = await api.post('/auth/telegram', { init_data: tgUser.init_data, id: tgUser.id });
       const { access_token, refresh_token, user } = res.data;
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
-      const isOwnerUser = user?.role === 'OWNER' || user?.email === 'cm5722254@gmail.com';
-      const isAdminUser = isOwnerUser || user?.role === 'ADMIN';
-      const isStaffUser = user?.role === 'STAFF';
+      localStorage.setItem('nami_cached_user', JSON.stringify(user));
+      const roles = checkRoles(user);
       set({
         user,
         isAuthenticated: true,
-        isOwner: isOwnerUser,
-        isAdmin: isAdminUser,
-        isStaff: isStaffUser,
-        canManageContent: isAdminUser || isStaffUser,
-        isVip: isAdminUser || isStaffUser || user.is_vip_active || user.is_vip,
+        isOwner: roles.isOwnerUser,
+        isAdmin: roles.isAdminUser,
+        isStaff: roles.isStaffUser,
+        canManageContent: roles.canManage,
+        isVip: roles.isVipUser,
       });
     } catch (e) {
-      console.warn('Telegram auto-login backend sync error:', e);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('nami_cached_user');
+      set({ user: null, isAuthenticated: false, isOwner: false, isAdmin: false, isStaff: false, canManageContent: false, isVip: false });
+      console.warn('Telegram authentication failed:', e);
     } finally {
       set({ isLoading: false });
     }
@@ -616,4 +601,3 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
-

@@ -97,7 +97,7 @@ export function ProfilePage() {
           </div>
           <div className="mini-profile-identity">
             <Link to="/account" className="mini-profile-avatar" aria-label="Personal data">{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : userName.slice(0, 1).toUpperCase()}</Link>
-            <div><h1>{userName}</h1><p>{user?.telegram_username ? `@${user.telegram_username}` : user?.email || 'Welcome to Huang Anime'}</p></div>
+            <div><h1>{userName}</h1><p>{user?.telegram_username ? `@${user.telegram_username}` : user?.telegram_first_name || user?.email || 'Welcome to Huang Anime'}{user?.telegram_id ? ` · Telegram ID: ${user.telegram_id}` : ''}</p></div>
             <ChevronRight className="w-5 h-5 ml-auto text-white/50" />
           </div>
           <div className={`mini-vip-status ${user?.is_vip_active || user?.is_vip ? 'active' : ''}`}>

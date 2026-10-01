@@ -89,19 +89,18 @@ class GoogleAuthRequest(BaseModel):
 
 
 class TelegramAuthRequest(BaseModel):
-    id: int
+    id: Optional[int] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     username: Optional[str] = None
     photo_url: Optional[str] = None
     auth_date: Optional[int] = None
     hash: Optional[str] = None
-    init_data: Optional[str] = None  # Google ID token JWT string
+    init_data: str
 
 
 class PhoneAuthRequest(BaseModel):
     phone_number: str
     firebase_id_token: Optional[str] = None
     display_name: Optional[str] = None
-
 

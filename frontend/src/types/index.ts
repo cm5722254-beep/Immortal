@@ -21,6 +21,7 @@ export interface User {
   phone_number?: string | null;
   telegram_username?: string | null;
   telegram_id?: string | null;
+  telegram_first_name?: string | null;
   login_source?: string | null;
   created_at: string;
   updated_at?: string;
@@ -216,4 +217,3 @@ export interface PaymentStatusCheck {
   vip_expires_at?: string | null;
   message?: string;
 }
-

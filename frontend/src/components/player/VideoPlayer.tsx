@@ -8,6 +8,7 @@ import {
   Smartphone, RotateCw, Scan, ExternalLink
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { usePlatform } from '../../utils/platform';
 import { parseYouTubeVideoId, getYouTubeEmbedUrl, isFacebookUrl, getFacebookEmbedUrl } from '../../utils/youtube';
 
 interface VideoPlayerProps {
@@ -100,6 +101,7 @@ export function VideoPlayer({
   const [buffered, setBuffered] = useState(0);
 
   const { user } = useAuthStore();
+  const { isTelegram } = usePlatform();
   const [cinemaMode, setCinemaMode] = useState(false);
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [isIframeEmbed, setIsIframeEmbed] = useState(false);
@@ -997,7 +999,7 @@ export function VideoPlayer({
       {/* Controls Overlay (Hidden when playing YouTube/iframe to avoid duplicate controls) */}
       {!isIframeEmbed && (
       <div
-        className={`absolute inset-0 flex flex-col justify-between p-3 sm:p-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] px-[max(0.75rem,env(safe-area-inset-left))] bg-gradient-to-t from-black/90 via-transparent to-black/60 transition-all duration-300 z-30 ${
+        className={`${isTelegram ? 'hidden' : ''} absolute inset-0 flex flex-col justify-between p-3 sm:p-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] px-[max(0.75rem,env(safe-area-inset-left))] bg-gradient-to-t from-black/90 via-transparent to-black/60 transition-all duration-300 z-30 ${
           showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={(e) => {
@@ -1238,6 +1240,57 @@ export function VideoPlayer({
           </div>
         </div>
       </div>
+      )}
+
+      {/* Compact Telegram Mini App controls */}
+      {!isIframeEmbed && isTelegram && (
+        <div className={`absolute inset-0 z-30 flex flex-col justify-between px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-gradient-to-b from-black/65 via-transparent to-black/70 transition-opacity duration-200 ${showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+          <div className="flex items-center justify-between gap-3 text-white drop-shadow-md">
+            <p className="min-w-0 truncate text-sm font-semibold">{title}</p>
+            <button onClick={toggleFullscreen} className="shrink-0 rounded-full bg-black/30 p-2" aria-label="Toggle fullscreen">
+              {isFullscreen || isPseudoFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center gap-10 text-white">
+            <button onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.max(0, currentTime - 10); showHud('−10s'); }} className="flex h-12 w-12 items-center justify-center rounded-full bg-black/25 active:scale-90" aria-label="Back 10 seconds">
+              <span className="relative"><SkipBack className="h-7 w-7" /><span className="absolute inset-0 flex items-center justify-center pt-1 text-[9px] font-bold">10</span></span>
+            </button>
+            <button onClick={togglePlay} className="flex h-16 w-16 items-center justify-center rounded-full text-white active:scale-90" aria-label={isPlaying ? 'Pause' : 'Play'}>
+              {isPlaying ? <Pause className="h-12 w-12 fill-current" /> : <Play className="h-12 w-12 fill-current" />}
+            </button>
+            <button onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(duration || currentTime + 10, currentTime + 10); showHud('+10s'); }} className="flex h-12 w-12 items-center justify-center rounded-full bg-black/25 active:scale-90" aria-label="Forward 10 seconds">
+              <span className="relative"><SkipForward className="h-7 w-7" /><span className="absolute inset-0 flex items-center justify-center pt-1 text-[9px] font-bold">10</span></span>
+            </button>
+          </div>
+
+          <div className="space-y-2 text-white drop-shadow-md">
+            <input aria-label="Playback position" type="range" min={0} max={duration || 0} step={0.1} value={Math.min(currentTime, duration || 0)} onChange={(e) => { if (videoRef.current) videoRef.current.currentTime = Number(e.target.value); }} className="mini-player-seek w-full" style={{ background: `linear-gradient(to right, #16c66b ${progressPct}%, rgba(255,255,255,.4) ${progressPct}%)` }} />
+            <div className="flex items-center justify-between text-xs text-white/90">
+              <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
+              <div className="flex items-center gap-5">
+                <button onClick={() => setShowSettings((open) => !open)} className="whitespace-nowrap font-medium">Audio &amp; Subtitles</button>
+                <button onClick={() => setShowSettings((open) => !open)} className="font-medium">{speed}X</button>
+                <button onClick={() => setShowSettings((open) => !open)} className="font-medium">{quality === 'Auto' ? 'Auto' : quality}</button>
+              </div>
+            </div>
+          </div>
+
+          {showSettings && (
+            <div className="absolute inset-x-0 bottom-0 z-40 max-h-[75%] overflow-y-auto rounded-t-2xl border-t border-white/10 bg-[#17191f]/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-white shadow-2xl backdrop-blur-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="mb-4 flex items-center justify-between"><h3 className="font-semibold">Playback settings</h3><button onClick={() => setShowSettings(false)} className="rounded-full bg-white/10 px-3 py-1 text-sm">Done</button></div>
+              <section className="mb-4"><h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/55">Audio &amp; Subtitles</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={toggleSubtitles} className={`rounded-lg px-3 py-2 text-sm ${subtitlesEnabled ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>Subtitles {subtitlesEnabled ? 'On' : 'Off'}</button>
+                  {(hlsRef.current?.audioTracks || []).map((track, index) => <button key={`${track.lang}-${index}`} onClick={() => { if (hlsRef.current) hlsRef.current.audioTrack = index; showHud(`Audio: ${track.name || track.lang || `Track ${index + 1}`}`); }} className={`rounded-lg px-3 py-2 text-sm ${hlsRef.current?.audioTrack === index ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>{track.name || track.lang || `Audio ${index + 1}`}</button>)}
+                  {!hlsRef.current?.audioTracks.length && <span className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white/65">Default audio</span>}
+                </div>
+              </section>
+              <section className="mb-4"><h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/55">Playback speed</h4><div className="flex flex-wrap gap-2">{SPEEDS.map((value) => <button key={value} onClick={() => { if (videoRef.current) videoRef.current.playbackRate = value; setSpeed(value); }} className={`rounded-lg px-3 py-2 text-sm ${speed === value ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>{value}X</button>)}</div></section>
+              <section><h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/55">Video quality</h4><div className="flex flex-wrap gap-2">{[{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => <button key={option.label} onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = option.level; setQuality(option.label); try { localStorage.setItem('nami_playback_quality', option.label); } catch {} }} className={`rounded-lg px-3 py-2 text-sm ${quality === option.label ? 'bg-green-600 text-white' : 'bg-white/10 text-white/80'}`}>{option.label}</button>)}</div></section>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
