@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Loader2 } from 'lucide-react';
+import { translate, useLanguageStore } from '../../store/languageStore';
 
 declare global {
   interface Window {
@@ -31,6 +32,8 @@ export function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   const btnRef = useRef<HTMLDivElement>(null);
   const { loginWithGoogle } = useAuthStore();
+  const language = useLanguageStore((state) => state.language);
+  const t = (text: string) => translate(text, language);
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState('');
   const isNative = Capacitor.isNativePlatform();
@@ -43,7 +46,7 @@ export function GoogleSignInButton({
     if (loading) return;
     try {
       setLoading(true);
-      setStatusText('កំពុងបើក Google Login...');
+      setStatusText(t('កំពុងបើក Google Login...'));
 
       // 15-second timeout protection for native Google Sign-In dialog
       const authPromise = FirebaseAuthentication.signInWithGoogle({
@@ -59,7 +62,7 @@ export function GoogleSignInButton({
       const idToken = result?.credential?.idToken || result?.user?.idToken;
 
       if (idToken) {
-        setStatusText('កំពុងផ្ទៀងផ្ទាត់ជាមួយ Server...');
+        setStatusText(t('កំពុងផ្ទៀងផ្ទាត់ជាមួយ Server...'));
         await loginWithGoogle(idToken);
         onSuccess?.();
       } else {
@@ -130,10 +133,11 @@ export function GoogleSignInButton({
           shape: 'pill',
           logo_alignment: 'left',
           width: 320,
+          locale: language === 'km' ? 'km' : 'en',
         });
       }
     }
-  }, [clientId, text, loginWithGoogle, onSuccess, onError, isNative]);
+  }, [clientId, text, loginWithGoogle, onSuccess, onError, isNative, language]);
 
   if (isNative) {
     return (
@@ -167,7 +171,7 @@ export function GoogleSignInButton({
             </svg>
           )}
           <span className="text-sm font-semibold">
-            {loading ? (statusText || 'កំពុងដំណើរការ...') : 'Continue with Google'}
+            {loading ? (statusText || t('កំពុងដំណើរការ...')) : t('Continue with Google')}
           </span>
         </button>
         {statusText && <p className="text-[11px] text-amber-400 animate-pulse font-medium">{statusText}</p>}
@@ -185,7 +189,7 @@ export function GoogleSignInButton({
           onClick={() => onError?.('Google Client ID is not configured yet.')}
           className="w-full max-w-[320px] flex items-center justify-center gap-3 bg-dark-card border border-dark-border rounded-xl py-2.5 px-4 text-sm font-semibold text-gray-200"
         >
-          Continue with Google
+          {t('Continue with Google')}
         </button>
       )}
       {statusText && <p className="text-[11px] text-amber-400 animate-pulse font-medium">{statusText}</p>}

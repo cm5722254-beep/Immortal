@@ -6,8 +6,10 @@ import {
 } from 'lucide-react';
 import { useDownloadStore } from '../store/downloadStore';
 import type { DownloadedItem } from '../services/downloadService';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 export function DownloadsPage() {
+  const appLanguage = useLanguageStore((state) => state.language);
   const { downloads, activeDownloads, storageUsed, isOnline, fetchDownloads, deleteDownload, cancelDownload } = useDownloadStore();
 
   useEffect(() => {
@@ -51,12 +53,12 @@ export function DownloadsPage() {
           <div className="flex items-center gap-3">
             <WifiOff className="w-5 h-5 shrink-0 text-amber-400" />
             <div>
-              <p className="font-bold text-sm">អ្នកកំពុងស្ថិតក្នុងទម្រង់គ្មានអ៊ីនធឺណិត (Offline Mode)</p>
-              <p className="text-xs text-amber-300/80">អ្នកអាចទស្សនាភាគដែលបានទាញយករួចនៅក្នុងបណ្ណាល័យនេះដោយសេរី!</p>
+              <p className="font-bold text-sm">{translate('Offline mode', appLanguage)}</p>
+              <p className="text-xs text-amber-300/80">{translate('Downloaded episodes are available here offline.', appLanguage)}</p>
             </div>
           </div>
           <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs">
-            ទម្រង់ Offline
+            {translate('Offline', appLanguage)}
           </span>
         </div>
       )}
@@ -65,10 +67,10 @@ export function DownloadsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display font-black text-2xl md:text-3xl text-white flex items-center gap-3">
-            <Download className="w-7 h-7 text-brand-400" /> បណ្ណាល័យទាញយកទុកមើល
+            <Download className="w-7 h-7 text-brand-400" /> {translate('Download library', appLanguage)}
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            ទស្សនាភាគដែលបានទាញយកទុកមើលគ្រប់ពេលវេលា ទោះបីគ្មានសេវាអ៊ីនធឺណិតក៏ដោយ។
+            {translate('Watch downloads any time, even without internet.', appLanguage)}
           </p>
         </div>
 
@@ -76,7 +78,7 @@ export function DownloadsPage() {
           onClick={() => fetchDownloads()}
           className="btn-secondary text-xs self-start sm:self-auto flex items-center gap-2"
         >
-          <RefreshCw className="w-3.5 h-3.5" /> ធ្វើបច្ចុប្បន្នភាព
+          <RefreshCw className="w-3.5 h-3.5" /> {translate('Refresh', appLanguage)}
         </button>
       </div>
 
@@ -84,31 +86,31 @@ export function DownloadsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-5 bg-gradient-to-br from-brand-950/40 to-dark-card border-brand-500/30">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase">ទំហំផ្ទុកបានប្រើ</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase">{translate('Storage used', appLanguage)}</span>
             <HardDrive className="w-4 h-4 text-brand-400" />
           </div>
           <p className="font-display font-black text-2xl text-white">{storageUsed.usedMB} MB</p>
-          <p className="text-xs text-gray-400 mt-1">ទំហំទំនេរនៅលើឧបករណ៍: ~{storageUsed.quotaMB} MB</p>
+          <p className="text-xs text-gray-400 mt-1">{translate('Free space on device', appLanguage)}: ~{storageUsed.quotaMB} MB</p>
         </div>
 
         <div className="card p-5 bg-gradient-to-br from-purple-950/40 to-dark-card border-purple-500/30">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase">ចំនួនរឿងទាញយក</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase">{translate('Downloaded titles', appLanguage)}</span>
             <Film className="w-4 h-4 text-purple-400" />
           </div>
           <p className="font-display font-black text-2xl text-white">{animeList.length}</p>
-          <p className="text-xs text-gray-400 mt-1">សរុប {downloads.length} ភាគបានរក្សាទុក</p>
+          <p className="text-xs text-gray-400 mt-1">{downloads.length} {translate('episodes saved', appLanguage)}</p>
         </div>
 
         <div className="card p-5 bg-gradient-to-br from-emerald-950/40 to-dark-card border-emerald-500/30">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase">ស្ថានភាពទុកមើលក្រៅបណ្ដាញ</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase">{translate('Offline playback status', appLanguage)}</span>
             <span className="flex items-center gap-1 text-xs font-bold text-emerald-400">
-              <Check className="w-3.5 h-3.5" /> រួចរាល់ 100%
+              <Check className="w-3.5 h-3.5" /> {translate('Ready', appLanguage)} 100%
             </span>
           </div>
-          <p className="font-display font-black text-xl text-white">ទំហំផ្ទុកលើឧបករណ៍</p>
-          <p className="text-xs text-gray-400 mt-1">ចាក់វីដេអូបានលឿន មិនអស់ទិន្នន័យអ៊ីនធឺណិត</p>
+          <p className="font-display font-black text-xl text-white">{translate('Device storage', appLanguage)}</p>
+          <p className="text-xs text-gray-400 mt-1">{translate('Play videos quickly and save mobile data.', appLanguage)}</p>
         </div>
       </div>
 
@@ -116,7 +118,7 @@ export function DownloadsPage() {
       {activeDownloadsList.length > 0 && (
         <div className="card p-6 border-brand-500/40 space-y-4">
           <h2 className="font-display font-bold text-lg text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-brand-400" /> កំពុងទាញយក
+            <Sparkles className="w-5 h-5 text-brand-400" /> {translate('Downloading', appLanguage)}
           </h2>
           <div className="space-y-3">
             {activeDownloadsList.map((ad) => (
@@ -124,7 +126,7 @@ export function DownloadsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-bold text-sm text-white">{ad.animeTitle}</h4>
-                    <p className="text-xs text-gray-400">ភាគទី {ad.episodeNumber} • {formatBytes(ad.downloadedBytes)} / {formatBytes(ad.totalBytes)}</p>
+                    <p className="text-xs text-gray-400">{translate('Episode', appLanguage)} {ad.episodeNumber} • {formatBytes(ad.downloadedBytes)} / {formatBytes(ad.totalBytes)}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-mono font-bold text-brand-400">{ad.progress}%</span>
@@ -132,7 +134,7 @@ export function DownloadsPage() {
                       onClick={() => cancelDownload(ad.id)}
                       className="text-xs text-red-400 hover:text-red-300 font-semibold px-2 py-1 rounded bg-red-500/10 border border-red-500/20"
                     >
-                      បោះបង់
+                      {translate('Cancel', appLanguage)}
                     </button>
                   </div>
                 </div>
@@ -151,19 +153,19 @@ export function DownloadsPage() {
           <div className="w-16 h-16 rounded-full bg-brand-500/10 text-brand-400 flex items-center justify-center mx-auto border border-brand-500/20">
             <Download className="w-8 h-8" />
           </div>
-          <h3 className="font-display font-bold text-lg text-white">មិនទាន់មានវីដេអូទាញយកនៅឡើយទេ</h3>
+          <h3 className="font-display font-bold text-lg text-white">{translate('No downloads yet', appLanguage)}</h3>
           <p className="text-gray-400 text-sm max-w-md mx-auto">
-            លោកអ្នកអាចចុចលើប៊ូតុង <b>"ទាញយកទុកមើល"</b> ក្នុងទំព័រមើលរឿង ដើម្បីរក្សាទុកភាគដែលលោកអ្នកចូលចិត្តទស្សនាពេលគ្មានអ៊ីនធឺណិត។
+            {translate('Download episodes from the watch page to watch them offline.', appLanguage)}
           </p>
           <div className="pt-2">
             <Link to="/donghua" className="btn-primary text-sm px-6 py-2.5">
-              រុករករឿង Donghua & Anime
+              {translate('Browse Donghua and Anime', appLanguage)}
             </Link>
           </div>
         </div>
       ) : (
         <div className="space-y-6">
-          <h2 className="font-display font-bold text-xl text-white">រឿងដែលបានទាញយករួច ({animeList.length})</h2>
+          <h2 className="font-display font-bold text-xl text-white">{translate('Downloaded series', appLanguage)} ({animeList.length})</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {animeList.map((group) => (
@@ -185,7 +187,7 @@ export function DownloadsPage() {
                       {group.animeTitle}
                     </h3>
                     <p className="text-xs text-gray-400 mt-1">
-                      {group.episodes.length} ភាគបានរក្សាទុក
+                      {group.episodes.length} {translate('episodes stored', appLanguage)}
                     </p>
                   </div>
                 </div>
@@ -203,10 +205,10 @@ export function DownloadsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-xs text-white truncate">
-                            ភាគ {ep.episodeNumber} - {ep.episodeTitle}
+                            {translate('Episode', appLanguage)} {ep.episodeNumber} - {ep.episodeTitle}
                           </p>
                           <p className="text-[11px] text-gray-400 flex items-center gap-2">
-                            <span><Clock className="w-3 h-3 inline" /> ~{Math.round(ep.durationSeconds / 60)} នាទី</span>
+                            <span><Clock className="w-3 h-3 inline" /> ~{Math.round(ep.durationSeconds / 60)} {translate('minutes', appLanguage)}</span>
                             <span>•</span>
                             <span>{formatBytes(ep.fileSize)}</span>
                           </p>
@@ -217,14 +219,14 @@ export function DownloadsPage() {
                         <Link
                           to={`/watch/${group.animeSlug}/${ep.episodeNumber}`}
                           className="p-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white transition-all hover:scale-105 shadow-sm"
-                          title="Play Offline"
+                          title={translate('Play offline', appLanguage)}
                         >
                           <Play className="w-3.5 h-3.5 fill-white" />
                         </Link>
                         <button
                           onClick={() => deleteDownload(ep.id)}
                           className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
-                          title="Delete from storage"
+                          title={translate('Delete from storage', appLanguage)}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

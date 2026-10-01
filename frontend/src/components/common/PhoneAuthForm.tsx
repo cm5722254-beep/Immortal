@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Smartphone, Check, ArrowRight, RotateCcw, AlertCircle, ShieldCheck } from 'lucide-react';
 import { formatPhoneNumber, sendPhoneOtp, type PhoneAuthSession } from '../../utils/firebase';
 import { useAuthStore } from '../../store/authStore';
+import { translate, useLanguageStore } from '../../store/languageStore';
 
 interface PhoneAuthFormProps {
   onSuccess: () => void;
@@ -10,6 +11,8 @@ interface PhoneAuthFormProps {
 
 export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
   const { loginWithPhone, isLoading } = useAuthStore();
+  const language = useLanguageStore((state) => state.language);
+  const t = (text: string) => translate(text, language);
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -46,7 +49,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
 
     const formatted = formatPhoneNumber(phoneNumber);
     if (formatted.length < 9) {
-      setError('សូមបញ្ចូលលេខទូរសព្ទឱ្យបានត្រឹមត្រូវ (ឧទាហរណ៍៖ 012 345 678)');
+      setError(t('សូមបញ្ចូលលេខទូរសព្ទឱ្យបានត្រឹមត្រូវ (ឧទាហរណ៍៖ 012 345 678)'));
       return;
     }
 
@@ -60,7 +63,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
       // Focus first OTP input
       setTimeout(() => inputRefs.current[0]?.focus(), 150);
     } catch (err: any) {
-      const msg = err?.message || 'បរាជ័យក្នុងការផ្ញើសារ OTP សូមព្យាយាមម្ដងទៀត';
+      const msg = err?.message || t('បរាជ័យក្នុងការផ្ញើសារ OTP សូមព្យាយាមម្ដងទៀត');
       setError(msg);
       if (onError) onError(msg);
     } finally {
@@ -105,7 +108,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
 
     const otpCode = otp.join('');
     if (otpCode.length < 6) {
-      setError('សូមបញ្ចូលលេខកូដសម្ងាត់ OTP ឱ្យគ្រប់ ៦ ខ្ទង់');
+      setError(t('សូមបញ្ចូលលេខកូដសម្ងាត់ OTP ឱ្យគ្រប់ ៦ ខ្ទង់'));
       return;
     }
 
@@ -121,7 +124,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
       await loginWithPhone(formatted, idToken, displayName.trim() || undefined);
       onSuccess();
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'លេខកូដ OTP មិនត្រឹមត្រូវទេ សូមពិនិត្យម្ដងទៀត';
+      const msg = err?.response?.data?.detail || err?.message || t('លេខកូដ OTP មិនត្រឹមត្រូវទេ សូមពិនិត្យម្ដងទៀត');
       setError(msg);
       if (onError) onError(msg);
     } finally {
@@ -144,7 +147,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
       {step === 'phone' ? (
         <form onSubmit={handleSendOtp} className="space-y-4">
           <div>
-            <label className="label text-xs">លេខទូរសព្ទ (Phone Number)</label>
+            <label className="label text-xs">{t('លេខទូរសព្ទ (Phone Number)')}</label>
             <div className="relative">
               <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none text-gray-400">
                 <span className="text-sm font-bold text-amber-400">🇰🇭 +855</span>
@@ -154,24 +157,24 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="12 345 678 (Smart / Cellcard / Metfone)"
+                placeholder={t('12 345 678 (Smart / Cellcard / Metfone)')}
                 className="input pl-24 text-sm font-semibold"
                 autoFocus
                 required
               />
             </div>
             <p className="text-[11px] text-gray-500 mt-1">
-              យើងនឹងផ្ញើលេខកូដសម្ងាត់ ៦ ខ្ទង់តាមសារ SMS ដើម្បីផ្ទៀងផ្ទាត់
+              {t('យើងនឹងផ្ញើលេខកូដសម្ងាត់ ៦ ខ្ទង់តាមសារ SMS ដើម្បីផ្ទៀងផ្ទាត់')}
             </p>
           </div>
 
           <div>
-            <label className="label text-xs">ឈ្មោះគណនី (ស្រេចចិត្ត - Display Name)</label>
+            <label className="label text-xs">{t('ឈ្មោះគណនី (ស្រេចចិត្ត - Display Name)')}</label>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="ឧទាហរណ៍៖ Dara_Nami"
+              placeholder={t('ឧទាហរណ៍៖ Dara_Nami')}
               className="input text-xs"
             />
           </div>
@@ -185,7 +188,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
               <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
             ) : (
               <>
-                <Smartphone className="w-4 h-4" /> ផ្ញើលេខកូដ OTP តាម SMS <ArrowRight className="w-4 h-4" />
+                <Smartphone className="w-4 h-4" /> {t('ផ្ញើលេខកូដ OTP តាម SMS')} <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
@@ -196,9 +199,9 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
             <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto mb-2">
               <ShieldCheck className="w-6 h-6" />
             </div>
-            <p className="text-sm font-bold text-white">បញ្ចូលលេខកូដសម្ងាត់ OTP</p>
+            <p className="text-sm font-bold text-white">{t('បញ្ចូលលេខកូដសម្ងាត់ OTP')}</p>
             <p className="text-xs text-gray-400">
-              បានផ្ញើទៅកាន់លេខ <span className="font-mono text-amber-300 font-bold">{formatPhoneNumber(phoneNumber)}</span>
+              {t('បានផ្ញើទៅកាន់លេខ')} <span className="font-mono text-amber-300 font-bold">{formatPhoneNumber(phoneNumber)}</span>
             </p>
           </div>
 
@@ -206,7 +209,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
           {session?.generatedOtp && (
             <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center justify-between gap-2 animate-bounce">
               <div className="text-xs">
-                <span>🔑 លេខកូដ OTP តេស្ត៖ </span>
+                <span>🔑 {t('លេខកូដ OTP តេស្ត៖')} </span>
                 <strong className="font-mono text-sm tracking-wider text-white bg-black/40 px-2 py-0.5 rounded-lg border border-amber-400/40">
                   {session.generatedOtp}
                 </strong>
@@ -216,7 +219,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
                 onClick={() => setOtp(session.generatedOtp!.split(''))}
                 className="px-2.5 py-1 rounded-xl bg-amber-500 text-black text-[11px] font-black hover:scale-105 transition-all shadow"
               >
-                បំពេញស្វ័យប្រវត្ត
+                {t('បំពេញស្វ័យប្រវត្ត')}
               </button>
             </div>
           )}
@@ -245,7 +248,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
               onClick={() => { setStep('phone'); setOtp(['', '', '', '', '', '']); }}
               className="text-gray-400 hover:text-white underline transition-colors"
             >
-              ប្តូរលេខទូរសព្ទ
+              {t('ប្តូរលេខទូរសព្ទ')}
             </button>
 
             {canResend ? (
@@ -254,11 +257,11 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
                 onClick={handleSendOtp}
                 className="text-amber-400 font-bold hover:underline flex items-center gap-1"
               >
-                <RotateCcw className="w-3 h-3" /> ផ្ញើម្ដងទៀត
+                <RotateCcw className="w-3 h-3" /> {t('ផ្ញើម្ដងទៀត')}
               </button>
             ) : (
               <span className="font-mono text-gray-500">
-                ផ្ញើម្ដងទៀតក្នុង ({countdown}s)
+                {t('ផ្ញើម្ដងទៀតក្នុង')} ({countdown}s)
               </span>
             )}
           </div>
@@ -272,7 +275,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
               <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
             ) : (
               <>
-                <Check className="w-5 h-5" /> ផ្ទៀងផ្ទាត់ & ចូលគណនី (Confirm OTP)
+                <Check className="w-5 h-5" /> {t('ផ្ទៀងផ្ទាត់ & ចូលគណនី (Confirm OTP)')}
               </>
             )}
           </button>

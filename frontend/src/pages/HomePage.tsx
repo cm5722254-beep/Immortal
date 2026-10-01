@@ -10,6 +10,7 @@ import { AnimeCard } from '../components/home/AnimeCard';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
 import { useAuthStore } from '../store/authStore';
 import { getVipContactUrl } from '../utils/vip';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 function getLocalContinueHistory(): WatchHistoryItem[] {
   try {
@@ -98,6 +99,7 @@ function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean
 
 export function HomePage() {
   void BentoCard;
+  const language = useLanguageStore((state) => state.language);
   const { isTelegram, isMobileApp } = usePlatform();
   const { isAuthenticated } = useAuthStore();
 
@@ -175,16 +177,16 @@ export function HomePage() {
 
   if (isTelegram || isMobileApp) {
     const miniSections = [
-      { title: 'Popular anime', items: animeList },
-      { title: 'Donghua for you', items: popularDonghua },
-      { title: 'Movies & drama', items: movies },
+      { title: translate('Popular anime', language), items: animeList },
+      { title: translate('Donghua for you', language), items: popularDonghua },
+      { title: translate('Movies & drama', language), items: movies },
     ].filter((section) => section.items.length > 0);
 
     return (
       <main className="mini-home min-h-screen bg-[#111216] text-white pb-5">
         <header className="mini-home-header">
           <Link to="/" className="mini-brand" aria-label="Huang Anime home">Huang<span>+</span></Link>
-          <Link to="/search" className="mini-search" aria-label="Search"><span>Search anime and drama</span><Search className="w-5 h-5" /></Link>
+          <Link to="/search" className="mini-search" aria-label={translate('Search', language)}><span>{translate('Search anime and drama', language)}</span><Search className="w-5 h-5" /></Link>
           <a href={getVipContactUrl()} target="_blank" rel="noopener noreferrer" className="mini-vip">VIP</a>
         </header>
         <nav className="mini-categories" aria-label="Browse categories">
@@ -211,7 +213,7 @@ export function HomePage() {
           <ContinueWatchingSection items={continueItems} />
           {miniSections.map((section) => (
             <section key={section.title} className="mini-shelf">
-              <div className="mini-shelf-heading"><h2>{section.title}</h2><Link to="/explore">More <ChevronRight className="w-4 h-4" /></Link></div>
+          <div className="mini-shelf-heading"><h2>{section.title}</h2><Link to="/explore">{translate('More', language)} <ChevronRight className="w-4 h-4" /></Link></div>
               <div className="mini-poster-row">
                 {section.items.slice(0, 9).map((anime) => (
                   <Link key={`${section.title}-${anime.id}`} to={`/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DRAMA' ? 'drama' : anime.type === 'MOVIE' ? 'movie' : 'donghua'}/${anime.slug}`} className="mini-poster-card">
@@ -246,10 +248,10 @@ export function HomePage() {
       <div className="website-home-content">
         <ContinueWatchingSection items={continueItems} />
         {[
-          { title: 'Popular on Huang Anime', items: [...popularDonghua, ...animeList], to: '/explore' },
-          { title: 'Trending Chinese Animation', items: popularDonghua, to: '/donghua' },
-          { title: 'Latest Release', items: animeList, to: '/anime' },
-          { title: 'Movies & Drama', items: movies, to: '/movies' },
+          { title: translate('Popular on Huang Anime', language), items: [...popularDonghua, ...animeList], to: '/explore' },
+          { title: translate('Trending Chinese Animation', language), items: popularDonghua, to: '/donghua' },
+          { title: translate('Latest Release', language), items: animeList, to: '/anime' },
+          { title: translate('Movies & drama', language), items: movies, to: '/movies' },
         ].filter((section) => section.items.length > 0).map((section) => <section className="website-shelf" key={section.title}>
           <div className="website-shelf-heading"><h2>{section.title}</h2><Link to={section.to}>More <ChevronRight size={16}/></Link></div>
           <div className="website-shelf-row">{section.items.slice(0, 10).map((anime) => <div className="website-shelf-card" key={`${section.title}-${anime.id}`}><AnimeCard anime={anime}/><span>{anime.title}</span></div>)}</div>

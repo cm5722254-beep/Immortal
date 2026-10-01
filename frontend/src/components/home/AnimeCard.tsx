@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Plus, Check, Star } from 'lucide-react';
 import type { Anime } from '../../types';
 import { triggerHaptic } from '../../utils/telegram';
+import { translate, useLanguageStore } from '../../store/languageStore';
 
 interface AnimeCardProps {
   anime: Anime;
@@ -16,6 +17,7 @@ export function AnimeCard({
   progressPercent
 }: AnimeCardProps) {
   const navigate = useNavigate();
+  const language = useLanguageStore((state) => state.language);
   const [imageError, setImageError] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(() => {
     try {
@@ -31,10 +33,10 @@ export function AnimeCard({
   const watchUrl = `/watch/${anime.slug}/1`;
 
   const tagText = anime.status === 'COMPLETED'
-    ? `ចប់ត្រឹម ${anime.episode_count || 16} ភាគ`
+    ? (language === 'km' ? `ចប់ត្រឹម ${anime.episode_count || 16} ភាគ` : `Completed · ${anime.episode_count || 16} episodes`)
     : anime.episode_count
-    ? `ភាគ ${anime.episode_count}`
-    : 'ថ្មីៗ';
+    ? `${translate('Episode', language)} ${anime.episode_count}`
+    : translate('New', language);
 
   const [imgSrc, setImgSrc] = useState(anime.poster_url || anime.banner_url || '');
 
@@ -91,7 +93,7 @@ export function AnimeCard({
           <button
             onClick={toggleBookmark}
             className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-md hover:bg-white text-white hover:text-black border border-white/20 flex items-center justify-center transition-colors active:scale-95"
-            title={isBookmarked ? "ដកពីបញ្ជី" : "បញ្ចូលបញ្ជី"}
+            title={translate(isBookmarked ? 'Remove from My List' : 'Add to My List', language)}
           >
             {isBookmarked ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Plus className="w-3.5 h-3.5" />}
           </button>
@@ -109,7 +111,7 @@ export function AnimeCard({
           <span>•</span>
           <span>{anime.year || '2024'}</span>
           <span>•</span>
-          <span className="truncate">{anime.type === 'ANIME' ? 'ជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្ត' : '3D ចិន'}</span>
+          <span className="truncate">{anime.type === 'ANIME' ? translate('Japanese', language) : anime.type === 'MOVIE' ? translate('Movies', language) : translate('Chinese', language)}</span>
         </div>
 
         {showProgress && progressPercent !== undefined ? (
@@ -129,7 +131,7 @@ export function AnimeCard({
               className="w-full h-full flex items-center justify-center gap-2 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors text-xs"
             >
               <Play className="w-3.5 h-3.5 fill-black" />
-              ចាក់ទស្សនា
+              {translate('Play now', language)}
             </button>
           </div>
         )}

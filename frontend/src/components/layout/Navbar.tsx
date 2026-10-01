@@ -11,6 +11,7 @@ import { Logo } from './Logo';
 import api from '../../services/api';
 import { usePlatform } from '../../utils/platform';
 import { getVipContactUrl } from '../../utils/vip';
+import { translate, useLanguageStore } from '../../store/languageStore';
 
 interface NotificationItem {
   id: string;
@@ -25,15 +26,16 @@ interface NotificationItem {
 }
 
 const NAV_LINKS = [
-  { to: '/', label: 'ទំព័រដើម' },
-  { to: '/donghua', label: 'រឿងចិន' },
-  { to: '/anime', label: 'រឿងជប៉ុន' },
-  { to: '/movies', label: 'ភាពយន្តដុំ' },
-  { to: '/drama', label: 'រឿងភាគ' },
-  { to: '/explore', label: 'រុករក' },
+  { to: '/', label: 'Home' },
+  { to: '/donghua', label: 'Donghua' },
+  { to: '/anime', label: 'Anime' },
+  { to: '/movies', label: 'Movies' },
+  { to: '/drama', label: 'Drama' },
+  { to: '/explore', label: 'Explore' },
 ];
 
 export function Navbar() {
+  const language = useLanguageStore((state) => state.language);
   const { isWeb } = usePlatform();
   const { user, isAuthenticated, isStaff, isOwner, isAdmin, canManageContent, logout } = useAuthStore();
   const isOwnerUser = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
@@ -68,22 +70,22 @@ export function Navbar() {
   }, []);
 
   const getPageTitle = (pathname: string) => {
-    if (pathname === '/') return 'ទំព័រដើម';
-    if (pathname.startsWith('/donghua')) return 'រឿងចិន 3D';
-    if (pathname.startsWith('/anime')) return 'រឿងជប៉ុន';
-    if (pathname.startsWith('/drama')) return 'រឿងភាគ';
-    if (pathname.startsWith('/movies')) return 'ភាពយន្តដុំ';
-    if (pathname.startsWith('/explore')) return 'រុករក';
-    if (pathname.startsWith('/search')) return 'ស្វែងរក';
-    if (pathname.startsWith('/favorites')) return 'បញ្ជីរក្សាទុក';
-    if (pathname.startsWith('/history')) return 'ប្រវត្តិទស្សនា';
-    if (pathname.startsWith('/downloads')) return 'ទាញយក';
-    if (pathname.startsWith('/vip')) return 'សមាជិក VIP';
-    if (pathname.startsWith('/profile')) return 'គណនី';
-    return 'ទំព័រដើម';
+    if (pathname === '/') return 'Home';
+    if (pathname.startsWith('/donghua')) return 'Donghua';
+    if (pathname.startsWith('/anime')) return 'Anime';
+    if (pathname.startsWith('/drama')) return 'Drama';
+    if (pathname.startsWith('/movies')) return 'Movies';
+    if (pathname.startsWith('/explore')) return 'Explore';
+    if (pathname.startsWith('/search')) return 'Search';
+    if (pathname.startsWith('/favorites')) return 'My List';
+    if (pathname.startsWith('/history')) return 'History';
+    if (pathname.startsWith('/downloads')) return 'Download';
+    if (pathname.startsWith('/vip')) return 'VIP';
+    if (pathname.startsWith('/profile')) return 'Me';
+    return 'Home';
   };
 
-  const pageTitle = getPageTitle(location.pathname);
+  const pageTitle = translate(getPageTitle(location.pathname), language);
 
   useEffect(() => {
     api.get('/notifications')
@@ -194,7 +196,7 @@ export function Navbar() {
                     {isActive && (
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_#ff4d6d]" />
                     )}
-                    <span>{link.label}</span>
+                    <span>{translate(link.label, language)}</span>
                   </>
                 )}
               </NavLink>

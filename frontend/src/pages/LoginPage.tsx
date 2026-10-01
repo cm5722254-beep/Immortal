@@ -2,14 +2,18 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sparkles, AlertTriangle, Play, Smartphone,
-  Lock, Eye, EyeOff
+  Lock, Eye, EyeOff, ArrowLeft, X, KeyRound, Plus
 } from 'lucide-react';
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
+import { PhoneAuthForm } from '../components/common/PhoneAuthForm';
 import { useAuthStore } from '../store/authStore';
 import { triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 export function LoginPage() {
+  const language = useLanguageStore((state) => state.language);
+  const t = (text: string) => translate(text, language);
   const { isTelegram } = usePlatform();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,7 +39,7 @@ export function LoginPage() {
     e.preventDefault();
     const cleanPhone = phoneNumber.replace(/\s+/g, '').trim();
     if (!cleanPhone || !password.trim()) {
-      setError('សូមបញ្ចូលលេខទូរសព្ទ និងពាក្យសម្ងាត់របស់អ្នក');
+      setError(t('សូមបញ្ចូលលេខទូរសព្ទ និងពាក្យសម្ងាត់របស់អ្នក'));
       return;
     }
 
@@ -49,7 +53,7 @@ export function LoginPage() {
       const d = err?.response?.data?.detail;
       const msg = typeof d === 'string'
         ? d
-        : (d?.msg || err?.message || 'លេខទូរសព្ទ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវឡើយ');
+        : (d?.msg || err?.message || t('លេខទូរសព្ទ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវឡើយ'));
       setError(msg);
     }
   };
@@ -74,16 +78,37 @@ export function LoginPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setAppealSuccess(data.message || 'សំណើស្នើសុំដោះសោរត្រូវបានផ្ញើទៅកាន់ Admin រួចរាល់ហើយ!');
+        setAppealSuccess(data.message || t('សំណើស្នើសុំដោះសោរត្រូវបានផ្ញើទៅកាន់ Admin រួចរាល់ហើយ!'));
       } else {
-        setError(data.detail || 'មានបញ្ហាក្នុងការផ្ញើសំណើ');
+        setError(data.detail || t('មានបញ្ហាក្នុងការផ្ញើសំណើ'));
       }
     } catch {
-      setError('មិនអាចភ្ជាប់ទៅកាន់ Server បានទេ');
+      setError(t('មិនអាចភ្ជាប់ទៅកាន់ Server បានទេ'));
     } finally {
       setIsSubmittingAppeal(false);
     }
   };
+
+  if (isTelegram) {
+    return (
+      <TelegramMiniLogin
+        from={from}
+        navigate={navigate}
+        loginMethod={loginMethod}
+        setLoginMethod={setLoginMethod}
+        phoneNumber={phoneNumber}
+        setPhoneNumber={setPhoneNumber}
+        password={password}
+        setPassword={setPassword}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        error={error}
+        setError={setError}
+        isLoading={isLoading}
+        onPasswordLogin={handlePhoneLogin}
+      />
+    );
+  }
 
   return (
     <main className={`website-login min-h-screen ${isTelegram ? 'min-h-[100dvh] items-center px-4 py-5 sm:py-8' : 'items-center px-4 py-8 sm:py-12'} flex justify-center bg-[#080d1a] relative overflow-x-hidden overflow-y-auto select-none`}>
@@ -100,16 +125,16 @@ export function LoginPage() {
           <Link to="/" className="inline-flex items-center gap-3 group transition-transform duration-300 hover:scale-105">
             <img
               src="/logo.png"
-              alt="ទស្សនារឿង"
+              alt={t('ទស្សនារឿង')}
               className="w-14 h-14 object-cover rounded-full border border-rose-500/40 drop-shadow-[0_0_25px_rgba(255,77,109,0.5)]"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             <div className="text-left">
               <span className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-                ទស្សនា <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-300 to-amber-300">រឿង</span>
+                {t('ទស្សនា')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-300 to-amber-300">{t('រឿង')}</span>
               </span>
               <p className="text-[10px] text-rose-300 font-bold uppercase tracking-widest flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-rose-400" /> កម្មវិធីទស្សនារឿងកម្រិត 4K Ultra HD
+                <Sparkles className="w-3 h-3 text-rose-400" /> {t('កម្មវិធីទស្សនារឿងកម្រិត 4K Ultra HD')}
               </p>
             </div>
           </Link>
@@ -120,10 +145,10 @@ export function LoginPage() {
           
           <div className="text-center mb-5">
             <h1 className="font-display font-black text-xl sm:text-2xl text-white mb-1 tracking-tight">
-              ចូលទស្សនារឿង
+              {t('ចូលទស្សនារឿង')}
             </h1>
             <p className="text-xs text-gray-300">
-              ចូលគណនីតាមលេខទូរសព្ទ ឬ Google យ៉ាងងាយស្រួល
+              {t('ចូលគណនីតាមលេខទូរសព្ទ ឬ Google យ៉ាងងាយស្រួល')}
             </p>
           </div>
 
@@ -142,7 +167,7 @@ export function LoginPage() {
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              <Smartphone className="w-3.5 h-3.5" /> លេខទូរសព្ទ (Phone)
+              <Smartphone className="w-3.5 h-3.5" /> {t('លេខទូរសព្ទ (Phone)')}
             </button>
             <button
               type="button"
@@ -171,14 +196,14 @@ export function LoginPage() {
               {(error.toLowerCase().includes('disabled') || error.toLowerCase().includes('banned') || error.toLowerCase().includes('403') || error.toLowerCase().includes('បិទ')) && (
                 <div className="pt-2 border-t border-rose-500/30">
                   <p className="text-[11px] text-gray-300 font-normal mb-2">
-                    គណនីរបស់អ្នកត្រូវបានផ្អាកដំណើរការ។ សូមដាក់ពាក្យស្នើសុំដោះសោរទៅកាន់ Admin៖
+                    {t('គណនីរបស់អ្នកត្រូវបានផ្អាកដំណើរការ។ សូមដាក់ពាក្យស្នើសុំដោះសោរទៅកាន់ Admin៖')}
                   </p>
                   <button
                     type="button"
                     onClick={() => setShowAppeal(true)}
                     className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs shadow-md transition-all active:scale-95"
                   >
-                    📝 ដាក់ពាក្យស្នើសុំដោះសោរ
+                    📝 {t('ដាក់ពាក្យស្នើសុំដោះសោរ')}
                   </button>
                 </div>
               )}
@@ -190,14 +215,14 @@ export function LoginPage() {
             <div className="space-y-4 py-2 animate-slide-up text-left">
               <div className="flex items-center justify-between pb-2 border-b border-white/10">
                 <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                  📝 ពាក្យស្នើសុំដោះសោរគណនី
+                  📝 {t('ពាក្យស្នើសុំដោះសោរគណនី')}
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowAppeal(false)}
                   className="text-xs text-gray-400 hover:text-white cursor-pointer"
                 >
-                  បោះបង់
+                  {t('បោះបង់')}
                 </button>
               </div>
 
@@ -205,20 +230,20 @@ export function LoginPage() {
                 <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs text-center font-bold space-y-2">
                   <p>✅ {appealSuccess}</p>
                   <p className="text-gray-300 font-normal text-[11px]">
-                    Admin នឹងពិនិត្យ និងដោះសោរជូនអ្នកក្នុងពេលឆាប់ៗ!
+                    {t('Admin នឹងពិនិត្យ និងដោះសោរជូនអ្នកក្នុងពេលឆាប់ៗ!')}
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleAppealSubmit} className="space-y-3">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      ឈ្មោះគណនី / Email របស់អ្នក៖
+                      {t('ឈ្មោះគណនី / Email របស់អ្នក៖')}
                     </label>
                     <input
                       type="text"
                       value={appealUsername}
                       onChange={(e) => setAppealUsername(e.target.value)}
-                      placeholder="ឧ. your_email@gmail.com ឬ 012345678"
+                      placeholder={t('ឧ. your_email@gmail.com ឬ 012345678')}
                       required
                       className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"
                     />
@@ -226,12 +251,12 @@ export function LoginPage() {
 
                   <div>
                     <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      មូលហេតុស្នើសុំដោះសោរ៖
+                      {t('មូលហេតុស្នើសុំដោះសោរ៖')}
                     </label>
                     <textarea
                       value={appealReason}
                       onChange={(e) => setAppealReason(e.target.value)}
-                      placeholder="ឧ. ខ្ញុំច្រឡំដៃចុច F12 / Shortcut សូម Admin ជួយដោះសោរគណនីខ្ញុំវិញផង..."
+                      placeholder={t('ឧ. ខ្ញុំច្រឡំដៃចុច F12 / Shortcut សូម Admin ជួយដោះសោរគណនីខ្ញុំវិញផង...')}
                       rows={3}
                       required
                       className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none resize-none"
@@ -240,13 +265,13 @@ export function LoginPage() {
 
                   <div>
                     <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      ព័ត៌មានទំនាក់ទំនង (Telegram ឬលេខទូរស័ព្ទ) [បើមាន]៖
+                      {t('ព័ត៌មានទំនាក់ទំនង (Telegram ឬលេខទូរស័ព្ទ) [បើមាន]៖')}
                     </label>
                     <input
                       type="text"
                       value={appealContact}
                       onChange={(e) => setAppealContact(e.target.value)}
-                      placeholder="ឧ. @my_telegram ឬ 012345678"
+                      placeholder={t('ឧ. @my_telegram ឬ 012345678')}
                       className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"
                     />
                   </div>
@@ -256,7 +281,7 @@ export function LoginPage() {
                     disabled={isSubmittingAppeal}
                     className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black text-xs py-2.5 rounded-xl shadow-lg shadow-rose-500/20 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
-                    {isSubmittingAppeal ? 'កំពុងផ្ញើសំណើ...' : '📩 ផ្ញើសំណើទៅកាន់ Admin'}
+                    {isSubmittingAppeal ? t('កំពុងផ្ញើសំណើ...') : `📩 ${t('ផ្ញើសំណើទៅកាន់ Admin')}`}
                   </button>
                 </form>
               )}
@@ -266,7 +291,7 @@ export function LoginPage() {
             <form onSubmit={handlePhoneLogin} className="space-y-4 text-left">
               <div>
                 <label className="block text-[11px] font-bold text-gray-300 mb-1.5 flex items-center gap-1">
-                  <Smartphone className="w-3.5 h-3.5 text-rose-400" /> លេខទូរសព្ទរបស់អ្នក
+                  <Smartphone className="w-3.5 h-3.5 text-rose-400" /> {t('លេខទូរសព្ទរបស់អ្នក')}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
@@ -276,7 +301,7 @@ export function LoginPage() {
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="12 345 678 ឬ 012345678"
+                    placeholder={t('12 345 678 ឬ 012345678')}
                     required
                     className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-2xl pl-20 pr-4 py-3 text-xs sm:text-sm focus:outline-none transition-all placeholder:text-gray-500 font-mono"
                   />
@@ -285,14 +310,14 @@ export function LoginPage() {
 
               <div>
                 <label className="block text-[11px] font-bold text-gray-300 mb-1.5 flex items-center gap-1">
-                  <Lock className="w-3.5 h-3.5 text-rose-400" /> ពាក្យសម្ងាត់ (Password)
+                  <Lock className="w-3.5 h-3.5 text-rose-400" /> {t('ពាក្យសម្ងាត់ (Password)')}
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="បញ្ចូលពាក្យសម្ងាត់របស់អ្នក"
+                    placeholder={t('បញ្ចូលពាក្យសម្ងាត់របស់អ្នក')}
                     required
                     className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-2xl pl-4 pr-11 py-3 text-xs sm:text-sm focus:outline-none transition-all placeholder:text-gray-500 font-sans"
                   />
@@ -317,7 +342,7 @@ export function LoginPage() {
                 ) : (
                   <>
                     <Lock className="w-4 h-4 stroke-[2.5]" />
-                    <span>ចូលគណនី (Login)</span>
+                    <span>{t('ចូលគណនី (Login)')}</span>
                   </>
                 )}
               </button>
@@ -325,13 +350,13 @@ export function LoginPage() {
               {/* Links below: Register & Guest */}
               <div className="pt-3 border-t border-white/10 flex flex-col items-center gap-2.5 text-center text-xs">
                 <p className="text-gray-400">
-                  មិនទាន់មានគណនីមែនទេ?{' '}
+                  {t('មិនទាន់មានគណនីមែនទេ?')}{' '}
                   <Link
                     to="/register"
                     state={{ from }}
                     className="text-rose-400 font-black hover:text-rose-300 underline"
                   >
-                    បង្កើតគណនីថ្មី (ចុះឈ្មោះ)
+                    {t('បង្កើតគណនីថ្មី (ចុះឈ្មោះ)')}
                   </Link>
                 </p>
               </div>
@@ -344,7 +369,7 @@ export function LoginPage() {
                   <Play className="w-6 h-6 fill-current ml-0.5" />
                 </div>
                 <p className="text-xs text-rose-300 font-bold mb-4">
-                  ⚡ ចុចប៊ូតុងខាងក្រោមដើម្បីចូលប្រើប្រាស់ភ្លាមៗ៖
+                  ⚡ {t('ចុចប៊ូតុងខាងក្រោមដើម្បីចូលប្រើប្រាស់ភ្លាមៗ៖')}
                 </p>
 
                 <div className="w-full flex justify-center animate-scale-in">
@@ -366,11 +391,89 @@ export function LoginPage() {
             <a href="https://t.me/animeflickh_bot" className="text-sm tracking-wide text-gray-300/90 hover:text-rose-300 transition-colors">@animeflickh_bot</a>
           ) : (
             <Link to="/" className="text-xs text-gray-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1">
-              ← ត្រឡប់ទៅទំព័រដើម
+              ← {t('ត្រឡប់ទៅទំព័រដើម')}
             </Link>
           )}
         </div>
       </div>
+    </main>
+  );
+}
+
+type TelegramMiniLoginProps = {
+  from: string;
+  navigate: (path: string, options?: { replace?: boolean }) => void;
+  loginMethod: 'phone' | 'google';
+  setLoginMethod: (method: 'phone' | 'google') => void;
+  phoneNumber: string;
+  setPhoneNumber: (value: string) => void;
+  password: string;
+  setPassword: (value: string) => void;
+  showPassword: boolean;
+  setShowPassword: (value: boolean) => void;
+  error: string;
+  setError: (value: string) => void;
+  isLoading: boolean;
+  onPasswordLogin: (event: React.FormEvent) => Promise<void>;
+};
+
+function TelegramMiniLogin({
+  from, navigate, phoneNumber, setPhoneNumber, password, setPassword,
+  showPassword, setShowPassword, error, setError, isLoading, onPasswordLogin,
+}: TelegramMiniLoginProps) {
+  const [screen, setScreen] = useState<'methods' | 'password' | 'phone'>('methods');
+  const language = useLanguageStore((state) => state.language);
+  const t = (text: string) => translate(text, language);
+
+  const close = () => navigate(from && from !== '/login' ? from : '/', { replace: true });
+
+  return (
+    <main className="fixed inset-0 z-[100] flex flex-col justify-end overflow-hidden bg-[#07080b] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_25%,rgba(40,48,65,.35),transparent_62%)]" />
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/[0.06] px-5 text-white/70">
+          <button type="button" onClick={close} aria-label={t('Back')} className="p-1"><ArrowLeft className="h-5 w-5" /></button>
+          <span className="text-[15px] font-medium">{t('Switch accounts')}</span>
+        </header>
+        <div className="flex flex-1 flex-col px-5 pt-5">
+          <button type="button" onClick={() => setScreen('methods')} className="flex items-center gap-4 py-3 text-left text-white/70">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.06]"><Plus className="h-6 w-6" /></span>
+            <span className="text-sm">{t('Add account')}</span>
+          </button>
+        </div>
+      </div>
+
+      <section className="relative z-20 max-h-[76dvh] shrink-0 overflow-y-auto rounded-t-[24px] border-t border-white/[0.08] bg-[#15161b] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_60px_rgba(0,0,0,.6)]">
+        <div className="mb-5 flex items-center justify-between">
+          <button type="button" onClick={() => screen === 'methods' ? close() : (setError(''), setScreen('methods'))} aria-label={t('Back')} className="p-1 text-white/70">
+            {screen === 'methods' ? <span className="block h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
+          </button>
+          <h1 className="text-center text-base font-bold">{t('Login to unlock more content')}</h1>
+          <button type="button" onClick={close} aria-label={t('Close')} className="p-1 text-white/60"><X className="h-5 w-5" /></button>
+        </div>
+
+        {error && <p role="alert" className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-center text-xs text-red-300">{error}</p>}
+
+        {screen === 'methods' && <div className="space-y-3">
+          <button type="button" onClick={() => { setError(''); setScreen('password'); }} className="flex h-14 w-full items-center gap-4 rounded-lg bg-[#25262c] px-4 text-left text-[15px] font-semibold"><KeyRound className="h-5 w-5 text-white/70" />{t('Log in with password')}</button>
+          <button type="button" onClick={() => { setError(''); setScreen('phone'); }} className="flex h-14 w-full items-center gap-4 rounded-lg bg-[#25262c] px-4 text-left text-[15px] font-semibold"><Smartphone className="h-5 w-5 text-white/70" />{t('Log in with mobile number')}</button>
+          <div className="flex justify-center py-2">
+            <GoogleSignInButton text="continue_with" onSuccess={() => navigate(from, { replace: true })} onError={setError} />
+          </div>
+        </div>}
+
+        {screen === 'password' && <form onSubmit={onPasswordLogin} className="space-y-4">
+          <label className="block border-b border-white/10 pb-3"><span className="sr-only">{t('Phone number')}</span><input type="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder={t('Email or mobile number')} autoComplete="username" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /></label>
+          <label className="flex items-center border-b border-white/10 pb-3"><span className="sr-only">{t('Password')}</span><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Enter password')} autoComplete="current-password" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="text-white/60">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></label>
+          <button type="button" className="block w-full py-2 text-center text-sm text-white/80">{t('Recover password')}</button>
+          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="h-14 w-full rounded-lg bg-[#0c6532] text-base font-semibold text-[#071d10] disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
+        </form>}
+
+        {screen === 'phone' && <PhoneAuthForm onSuccess={() => navigate(from, { replace: true })} />}
+
+        <p className="mt-7 text-center text-[11px] leading-5 text-white/45">{t('Login indicates you agree to the')} <span className="text-emerald-400">{t('Terms of Service')}</span> {t('and')} <span className="text-emerald-400">{t('Privacy Policy')}</span>.</p>
+        <Link to="/register" state={{ from }} className="-mx-5 mt-5 block border-t border-white/[0.08] py-4 text-center text-base font-medium">{t('Register')}</Link>
+      </section>
     </main>
   );
 }

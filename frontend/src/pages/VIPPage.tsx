@@ -1,9 +1,12 @@
 import { Crown, Send } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getVipContactUrl } from '../utils/vip';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 export function VIPPage() {
   const { user, isVip } = useAuthStore();
+  const language = useLanguageStore((state) => state.language);
+  const t = (text: string) => translate(text, language);
   const telegramUrl = getVipContactUrl(user?.username);
 
   return (
@@ -15,12 +18,12 @@ export function VIPPage() {
         <h1 className="text-2xl font-black">Huang+ Premium</h1>
         <p className="mt-3 text-sm leading-6 text-white/70">
           {isVip
-            ? 'Premium is active on your account. You can watch every available episode.'
-            : 'Premium membership is arranged through Telegram. Message the admin to ask about access.'}
+            ? t('Premium is active on your account. You can watch every available episode.')
+            : t('Premium membership is arranged through Telegram. Message the admin to ask about access.')}
         </p>
         {isVip && user?.vip_expires_at && (
           <p className="mt-3 text-xs text-amber-200/80">
-            Expires {new Date(user.vip_expires_at).toLocaleDateString()}
+            {t('Expires')} {new Date(user.vip_expires_at).toLocaleDateString(language === 'km' ? 'km-KH' : 'en-US')}
           </p>
         )}
         {!isVip && (
@@ -30,7 +33,7 @@ export function VIPPage() {
             rel="noopener noreferrer"
             className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-3 font-bold text-[#17130a] transition hover:bg-amber-300"
           >
-            <Send className="h-4 w-4" /> Message on Telegram
+            <Send className="h-4 w-4" /> {t('Message on Telegram')}
           </a>
         )}
       </section>

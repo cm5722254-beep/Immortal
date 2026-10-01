@@ -9,6 +9,7 @@ import { SkeletonCard } from '../components/common/SkeletonLoader';
 import api from '../services/api';
 import { searchCatalogSync, loadCatalog, getLocalCatalogSync } from '../services/catalogService';
 import type { Anime } from '../types';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 const POPULAR_SEARCHES = [
   'គុជអមតះធៀននី',
@@ -31,6 +32,7 @@ type StatusFilter = 'ALL' | 'ONGOING' | 'COMPLETED';
 type SortFilter = 'LATEST' | 'VIEWS' | 'RATING' | 'TITLE';
 
 export function SearchPage() {
+  const appLanguage = useLanguageStore((state) => state.language);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQ = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQ);
@@ -221,10 +223,10 @@ export function SearchPage() {
         <div>
           <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight flex items-center gap-2.5">
             <span className="w-2.5 h-7 rounded-full bg-[#E50914]" />
-            ស្វែងរកចំណងជើងរឿង & តម្រងកម្រិតខ្ពស់
+            {translate('Title search and advanced filters', appLanguage)}
           </h1>
           <p className="text-gray-400 text-xs sm:text-sm mt-1">
-            ស្វែងរករឿងចិន 3D, Anime ជប៉ុន និងភាពយន្តច្រើនជាង 75+ រឿងកម្រិត 4K Ultra HD
+            {translate('Search anime, donghua, and movies in 4K.', appLanguage)}
           </p>
         </div>
 
@@ -238,7 +240,7 @@ export function SearchPage() {
           }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
-          <span>តម្រងស្វែងរក (Filters)</span>
+          <span>{translate('Filters', appLanguage)}</span>
           {hasActiveFilters && (
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
           )}
@@ -260,16 +262,16 @@ export function SearchPage() {
                 setShowSuggestions(true);
               }
             }}
-            placeholder="វាយបញ្ចូលឈ្មោះរឿងចិន 3D, រឿងជប៉ុន, ឬឈ្មោះភាសាអង់គ្លេស..."
+            placeholder={translate('Enter a title to search...', appLanguage)}
             autoFocus
             className="w-full pl-12 pr-11 py-3.5 text-sm sm:text-base rounded-2xl bg-[#1e1e1e] border border-white/10 focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20 text-white placeholder-gray-400 outline-none transition-all shadow-inner"
-            aria-label="ស្វែងរក"
+            aria-label={translate('Search title', appLanguage)}
           />
           {query && (
             <button
               onClick={clearSearch}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
-              title="លុបពាក្យស្វែងរក"
+              title={translate('Clear search', appLanguage)}
             >
               <X className="w-4 h-4" />
             </button>
@@ -280,8 +282,8 @@ export function SearchPage() {
         {showSuggestions && autocompleteSuggestions.length > 0 && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-[#181818] border border-white/15 rounded-2xl shadow-2xl backdrop-blur-xl z-50 overflow-hidden animate-scale-in">
             <div className="p-2 border-b border-white/10 flex items-center justify-between text-[11px] text-gray-400 font-bold px-3">
-              <span>លទ្ធផលណែនាំរហ័ស ({autocompleteSuggestions.length})</span>
-              <span>ចុចលើរឿងដើម្បីទស្សនាផ្ទាល់</span>
+              <span>{translate('Quick suggestions count', appLanguage)} ({autocompleteSuggestions.length})</span>
+              <span>{translate('Tap a title to watch.', appLanguage)}</span>
             </div>
             <div className="divide-y divide-white/5 max-h-80 overflow-y-auto">
               {autocompleteSuggestions.map((item) => (
@@ -307,7 +309,7 @@ export function SearchPage() {
                     )}
                     <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-400">
                       <span className="px-1.5 py-0.5 rounded bg-white/10 text-gray-300 font-semibold">
-                        {item.type === 'DONGHUA' ? 'រឿងចិន 3D' : item.type === 'MOVIE' ? 'ភាពយន្ត' : 'Anime'}
+                        {item.type === 'DONGHUA' ? translate('Donghua 3D', appLanguage) : item.type === 'MOVIE' ? translate('Movies', appLanguage) : translate('Anime', appLanguage)}
                       </span>
                       {item.year && <span>{item.year}</span>}
                       {item.average_rating > 0 && (
@@ -330,7 +332,7 @@ export function SearchPage() {
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div className="flex items-center gap-2 text-sm font-black text-white">
               <Filter className="w-4 h-4 text-[#E50914]" />
-              <span>កំណត់លក្ខខណ្ឌចម្រាញ់</span>
+              <span>{translate('Filter options', appLanguage)}</span>
             </div>
             {hasActiveFilters && (
               <button
@@ -338,7 +340,7 @@ export function SearchPage() {
                 className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>កំណត់ឡើងវិញ (Reset)</span>
+                <span>{translate('Reset', appLanguage)}</span>
               </button>
             )}
           </div>
@@ -346,13 +348,13 @@ export function SearchPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* 1. Content Type Filter */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">ប្រភេទសាច់រឿង (Type)</label>
+              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Type', appLanguage)}</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { value: 'ALL', label: 'ទាំងអស់' },
-                  { value: 'DONGHUA', label: 'រឿងចិន 3D' },
-                  { value: 'ANIME', label: 'Anime ជប៉ុន' },
-                  { value: 'MOVIE', label: 'ភាពយន្ត Movie' },
+                  { value: 'ALL', label: 'All' },
+                  { value: 'DONGHUA', label: 'Donghua 3D' },
+                  { value: 'ANIME', label: 'Japanese Anime' },
+                  { value: 'MOVIE', label: 'Movies (Movie)' },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -363,7 +365,7 @@ export function SearchPage() {
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
                     }`}
                   >
-                    <span>{opt.label}</span>
+                    <span>{translate(opt.label, appLanguage)}</span>
                     {contentType === opt.value && <Check className="w-3.5 h-3.5" />}
                   </button>
                 ))}
@@ -372,12 +374,12 @@ export function SearchPage() {
 
             {/* 2. Language Filter (Dub / Sub) */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">ភាសា & សំឡេង (Language)</label>
+              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Language', appLanguage)}</label>
               <div className="space-y-1.5">
                 {[
-                  { value: 'ALL', label: 'ទាំងអស់ (All Audio)' },
-                  { value: 'DUB', label: 'និយាយខ្មែរ (KH DUB)' },
-                  { value: 'SUB', label: 'អក្សររត់ខ្មែរ (SUB KH)' },
+                  { value: 'ALL', label: 'All audio' },
+                  { value: 'DUB', label: 'Khmer dub' },
+                  { value: 'SUB', label: 'Khmer subtitles' },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -388,7 +390,7 @@ export function SearchPage() {
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
                     }`}
                   >
-                    <span>{opt.label}</span>
+                    <span>{translate(opt.label, appLanguage)}</span>
                     {language === opt.value && <Check className="w-3.5 h-3.5" />}
                   </button>
                 ))}
@@ -397,12 +399,12 @@ export function SearchPage() {
 
             {/* 3. Status Filter */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">ស្ថានភាពផ្សាយ (Status)</label>
+              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Status', appLanguage)}</label>
               <div className="space-y-1.5">
                 {[
-                  { value: 'ALL', label: 'ទាំងអស់' },
-                  { value: 'ONGOING', label: 'កំពុងចាក់ផ្សាយ (ONGOING)' },
-                  { value: 'COMPLETED', label: 'ចប់ហើយ (COMPLETED)' },
+                  { value: 'ALL', label: 'All' },
+                  { value: 'ONGOING', label: 'Ongoing (status)' },
+                  { value: 'COMPLETED', label: 'Completed (status)' },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -413,7 +415,7 @@ export function SearchPage() {
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
                     }`}
                   >
-                    <span>{opt.label}</span>
+                    <span>{translate(opt.label, appLanguage)}</span>
                     {status === opt.value && <Check className="w-3.5 h-3.5" />}
                   </button>
                 ))}
@@ -422,13 +424,13 @@ export function SearchPage() {
 
             {/* 4. Sort Filter */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">តម្រៀបតាម (Sort By)</label>
+              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Sort by', appLanguage)}</label>
               <div className="space-y-1.5">
                 {[
-                  { value: 'LATEST', label: 'ចុងក្រោយបង្អស់ (Latest)' },
-                  { value: 'VIEWS', label: 'មើលច្រើនជាងគេ (Popular)' },
-                  { value: 'RATING', label: 'ពិន្ទុខ្ពស់ជាងគេ (Top Rated)' },
-                  { value: 'TITLE', label: 'តាមតួអក្សរ (A - Z)' },
+                  { value: 'LATEST', label: 'Latest first' },
+                  { value: 'VIEWS', label: 'Most viewed' },
+                  { value: 'RATING', label: 'Highest rated' },
+                  { value: 'TITLE', label: 'Title A to Z' },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -439,7 +441,7 @@ export function SearchPage() {
                         : 'bg-white/5 text-gray-300 hover:bg-white/10'
                     }`}
                   >
-                    <span>{opt.label}</span>
+                    <span>{translate(opt.label, appLanguage)}</span>
                     {sortBy === opt.value && <Check className="w-3.5 h-3.5" />}
                   </button>
                 ))}
@@ -453,7 +455,7 @@ export function SearchPage() {
       {!query && !hasActiveFilters && (
         <div className="mb-8 space-y-3">
           <p className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#E50914]" /> ពាក្យពេញនិយមស្វែងរក
+            <Sparkles className="w-3.5 h-3.5 text-[#E50914]" /> {translate('Search popular titles', appLanguage)}
           </p>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SEARCHES.map((term) => (
@@ -480,17 +482,17 @@ export function SearchPage() {
             <SearchIcon className="w-8 h-8 text-gray-500" />
           </div>
           <p className="text-gray-200 text-base font-bold">
-            រកមិនឃើញលទ្ធផល {query ? `សម្រាប់ "${query}"` : 'តាមលក្ខខណ្ឌតម្រងនេះ'} ឡើយ
+            {translate('No results for this search', appLanguage)}{query && appLanguage === 'km' ? ` សម្រាប់ "${query}"` : query ? ` for "${query}"` : ''}
           </p>
           <p className="text-gray-400 text-xs max-w-sm mx-auto">
-            សូមសាកល្បងវាយបញ្ចូលឈ្មោះរឿងផ្សេងទៀត ឬចុចកំណត់ឡើងវិញនូវតម្រងស្វែងរក។
+            {translate('Try another title or reset filters.', appLanguage)}
           </p>
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
               className="mt-2 px-4 py-2 rounded-xl bg-[#E50914] text-white text-xs font-bold transition cursor-pointer"
             >
-              លុបលក្ខខណ្ឌតម្រងទាំងអស់
+              {translate('Clear all filters', appLanguage)}
             </button>
           )}
         </div>
@@ -499,12 +501,12 @@ export function SearchPage() {
           <div className="flex items-center justify-between">
             <p className="text-xs sm:text-sm text-gray-400 font-medium flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#E50914]" />
-              រកឃើញចំនួន <strong className="text-white font-bold">{results.length}</strong> រឿង
-              {query && <span>សម្រាប់ពាក្យ "{query}"</span>}
+              {translate('Showing results', appLanguage)} <strong className="text-white font-bold">{results.length}</strong> {translate('titles', appLanguage)}
+              {query && <span>{appLanguage === 'km' ? `សម្រាប់ពាក្យ "${query}"` : `for "${query}"`}</span>}
             </p>
             {hasActiveFilters && (
               <span className="text-xs text-[#E50914] font-semibold bg-[#E50914]/10 px-2.5 py-1 rounded-full border border-[#E50914]/30">
-                កំពុងប្រើតម្រង
+                {translate('Filter active', appLanguage)}
               </span>
             )}
           </div>
@@ -519,9 +521,9 @@ export function SearchPage() {
           <div className="w-16 h-16 rounded-full bg-[#1e1e1e] border border-white/10 flex items-center justify-center mx-auto text-[#E50914] shadow-lg shadow-[#E50914]/10">
             <SearchIcon className="w-8 h-8 text-[#E50914]" />
           </div>
-          <p className="text-gray-200 text-sm sm:text-base font-bold">ស្វែងរករឿងដែលអ្នកចូលចិត្ត</p>
+          <p className="text-gray-200 text-sm sm:text-base font-bold">{translate('Search for something to watch', appLanguage)}</p>
           <p className="text-gray-400 text-xs max-w-xs mx-auto">
-            ស្វែងរក និងទស្សនារឿងចិន 3D, Anime ជប៉ុន និងភាពយន្តល្បីៗជាច្រើនកម្រិត 4K Ultra HD។
+            {translate('Search and watch popular titles in 4K.', appLanguage)}
           </p>
         </div>
       )}

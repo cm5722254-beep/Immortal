@@ -7,6 +7,7 @@ import {
 
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 interface NotificationItem {
   id: string;
@@ -20,16 +21,17 @@ interface NotificationItem {
   category?: string;
 }
 
-function formatNotificationTime(value: string) {
+function formatNotificationTime(value: string, language: 'km' | 'en') {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return value;
   const minutes = Math.floor((Date.now() - timestamp) / 60000);
   const unit = minutes < 60 ? 'minute' : minutes < 1440 ? 'hour' : 'day';
   const amount = unit === 'minute' ? Math.max(1, minutes) : unit === 'hour' ? Math.floor(minutes / 60) : Math.floor(minutes / 1440);
-  return new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }).format(-amount, unit);
+  return new Intl.RelativeTimeFormat(language === 'km' ? 'km-KH' : 'en-US', { numeric: 'auto' }).format(-amount, unit);
 }
 
 export function NotificationsPage() {
+  const appLanguage = useLanguageStore((state) => state.language);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -97,21 +99,21 @@ export function NotificationsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            aria-label="Back"
+            aria-label={appLanguage === 'km' ? 'ត្រឡប់ក្រោយ' : 'Back'}
             className="w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-white/5 hover:bg-white/10 transition-colors border border-white/10 active:scale-95"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
           <div>
             <h1 className="font-display font-black text-xl sm:text-2xl md:text-3xl text-white flex items-center gap-2">
-              <span>សេចក្តីជូនដំណឹង</span>
+              <span>{translate('Notifications', appLanguage)}</span>
               {unreadCount > 0 && (
                 <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-md shadow-rose-500/30 animate-pulse">
-                  {unreadCount} ថ្មី
+                  {unreadCount} {translate('New', appLanguage)}
                 </span>
               )}
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">ដំណឹងចេញផ្សាយភាគថ្មីៗ និងប្រព័ន្ធ VIP ពិសេស</p>
+            <p className="text-xs text-gray-400 mt-0.5">{translate('New episodes and VIP updates', appLanguage)}</p>
           </div>
         </div>
 
@@ -121,7 +123,7 @@ export function NotificationsPage() {
             className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 font-bold transition-all px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 active:scale-95"
           >
             <CheckCheck className="w-4 h-4" />
-            <span className="hidden xs:inline">អានទាំងអស់</span>
+            <span className="hidden xs:inline">{translate('Mark all read', appLanguage)}</span>
           </button>
         )}
       </div>
@@ -136,7 +138,7 @@ export function NotificationsPage() {
               : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/5'
           }`}
         >
-          ទាំងអស់ ({notifications.length})
+          {translate('All', appLanguage)} ({notifications.length})
         </button>
         <button
           onClick={() => setNotifTab('episode')}
@@ -147,7 +149,7 @@ export function NotificationsPage() {
           }`}
         >
           <Flame className="w-3.5 h-3.5 text-amber-400" />
-          ភាគថ្មី ({episodeCount})
+          {translate('New episodes', appLanguage)} ({episodeCount})
         </button>
         {isAuthenticated && <button
           onClick={() => setNotifTab('following')}
@@ -168,7 +170,7 @@ export function NotificationsPage() {
           }`}
         >
           <Crown className="w-3.5 h-3.5 text-yellow-400" />
-          VIP & ប្រព័ន្ធ ({systemCount})
+          {translate('VIP & system', appLanguage)} ({systemCount})
         </button>
         {unreadCount > 0 && (
           <button
@@ -180,7 +182,7 @@ export function NotificationsPage() {
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-            មិនទាន់អាន ({unreadCount})
+            {translate('Unread', appLanguage)} ({unreadCount})
           </button>
         )}
       </div>
@@ -198,8 +200,8 @@ export function NotificationsPage() {
             <div className="w-16 h-16 rounded-3xl bg-[#12172b] border border-rose-500/30 flex items-center justify-center mx-auto text-gray-400 shadow-xl shadow-rose-500/10">
               <Bell className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-200 text-base font-bold">មិនមានការជូនដំណឹងនៅឡើយទេ</p>
-            <p className="text-xs text-gray-400">នៅពេលមានភាគថ្មី ឬដំណឹងពិសេស នឹងបង្ហាញនៅទីនេះ</p>
+            <p className="text-gray-200 text-base font-bold">{translate('No notifications yet', appLanguage)}</p>
+            <p className="text-xs text-gray-400">{translate('Updates will appear here.', appLanguage)}</p>
           </div>
         ) : (
           filteredNotifications.map((item) => {
@@ -286,7 +288,7 @@ export function NotificationsPage() {
                     )}
                     <span className="text-[11px] text-gray-400 font-mono flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-gray-500" />
-                      {formatNotificationTime(item.time)}
+                    {formatNotificationTime(item.time, appLanguage)}
                     </span>
                   </div>
 

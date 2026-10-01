@@ -3,11 +3,13 @@ import { Home, Search, Tv, Sparkles, User, Crown, Download } from 'lucide-react'
 import { triggerHaptic } from '../../utils/telegram';
 import { useAuthStore } from '../../store/authStore';
 import { usePlatform } from '../../utils/platform';
+import { translate, useLanguageStore } from '../../store/languageStore';
 
 export function MobileNav() {
   const location = useLocation();
   const { user, isAuthenticated, isVip } = useAuthStore();
   const { isMobileApp, isTelegram } = usePlatform();
+  const language = useLanguageStore((state) => state.language);
   const isVipUser = isVip || user?.is_vip_active;
 
   if (location.pathname.startsWith('/watch') || ['/vip', '/settings', '/account', '/help', '/scan', '/referrals', '/notifications'].includes(location.pathname)) return null;
@@ -15,18 +17,18 @@ export function MobileNav() {
   const miniApp = isMobileApp || isTelegram;
   const tabs = miniApp
     ? [
-        { to: '/', icon: Home, label: 'Home', activeMatches: ['/'] },
-        { to: '/explore', icon: Sparkles, label: 'Explore', activeMatches: ['/explore', '/donghua', '/anime', '/movies', '/drama'] },
-        { to: '/shorts', icon: Tv, label: 'Short', activeMatches: ['/shorts'] },
-        { to: '/downloads', icon: Download, label: 'Download', activeMatches: ['/downloads'] },
-        { to: '/profile', icon: User, label: 'Me', activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history', '/vip'] },
+        { to: '/', icon: Home, label: translate('Home', language), activeMatches: ['/'] },
+        { to: '/explore', icon: Sparkles, label: translate('Explore', language), activeMatches: ['/explore', '/donghua', '/anime', '/movies', '/drama'] },
+        { to: '/shorts', icon: Tv, label: translate('Short', language), activeMatches: ['/shorts'] },
+        { to: '/downloads', icon: Download, label: translate('Download', language), activeMatches: ['/downloads'] },
+        { to: '/profile', icon: User, label: translate('Me', language), activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history', '/vip'] },
       ]
     : [
-        { to: '/', icon: Home, label: 'Home', activeMatches: ['/'] },
-        { to: '/donghua', icon: Sparkles, label: 'Donghua', activeMatches: ['/donghua'] },
-        { to: '/anime', icon: Tv, label: 'Anime', activeMatches: ['/anime'] },
-        { to: '/search', icon: Search, label: 'Search', activeMatches: ['/search'] },
-        { to: '/profile', icon: User, label: 'Me', activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history', '/vip', '/downloads'] },
+        { to: '/', icon: Home, label: translate('Home', language), activeMatches: ['/'] },
+        { to: '/donghua', icon: Sparkles, label: translate('Donghua', language), activeMatches: ['/donghua'] },
+        { to: '/anime', icon: Tv, label: translate('Anime', language), activeMatches: ['/anime'] },
+        { to: '/search', icon: Search, label: translate('Search', language), activeMatches: ['/search'] },
+        { to: '/profile', icon: User, label: translate('Me', language), activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history', '/vip', '/downloads'] },
       ];
 
   return (

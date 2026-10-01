@@ -14,9 +14,12 @@ import { useUiPreferencesStore } from '../store/uiPreferencesStore';
 import { PlatformSwitcherModal } from '../components/common/PlatformSwitcherModal';
 import { clearLocalCatalogCache } from '../services/catalogService';
 import { getVipContactUrl } from '../utils/vip';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 export function ProfilePage() {
   const { user } = useAuthStore();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
   const { isTelegram, isMobileApp } = usePlatform();
   const {
     cleanMode,
@@ -51,15 +54,15 @@ export function ProfilePage() {
   }, [user?.vip_expires_at]);
 
   const vipTimeLeft = (() => {
-    if (!user?.vip_expires_at) return user?.is_vip_active ? 'No expiry date' : 'No active VIP plan';
+    if (!user?.vip_expires_at) return translate(user?.is_vip_active ? 'No expiry date' : 'No active VIP plan', language);
     const remaining = new Date(user.vip_expires_at).getTime() - vipClock;
-    if (!Number.isFinite(remaining) || remaining <= 0) return 'Expired';
+    if (!Number.isFinite(remaining) || remaining <= 0) return translate('Expired', language);
     const days = Math.floor(remaining / 86_400_000);
     const hours = Math.floor((remaining % 86_400_000) / 3_600_000);
     const minutes = Math.floor((remaining % 3_600_000) / 60_000);
-    return `${days}d ${hours}h ${minutes}m remaining`;
+    return language === 'km' ? `នៅសល់ ${days}ថ្ងៃ ${hours}ម៉ោង ${minutes}នាទី` : `${days}d ${hours}h ${minutes}m remaining`;
   })();
-  const vipExpiryDate = user?.vip_expires_at ? new Date(user.vip_expires_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : null;
+  const vipExpiryDate = user?.vip_expires_at ? new Date(user.vip_expires_at).toLocaleString(language === 'km' ? 'km-KH' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }) : null;
 
   const showToast = (msg: string) => {
     triggerHaptic('light');
@@ -74,12 +77,11 @@ export function ProfilePage() {
       { label: 'My List', icon: Bookmark, to: '/favorites' },
       { label: 'History', icon: Clock3, to: '/history' },
       { label: 'Download TV App', icon: Download, to: '/downloads', hint: 'Enjoy now' },
-      { label: 'Language · Khmer', icon: Languages, action: () => showToast('Khmer is the current interface language') },
-      { label: `Subtitles · ${subtitlesEnabled ? 'On' : 'Off'}`, icon: Languages, action: () => {
+      { label: `Subtitles · ${translate(subtitlesEnabled ? 'On' : 'Off', language)}`, icon: Languages, action: () => {
         const next = !subtitlesEnabled;
         setSubtitlesEnabled(next);
         localStorage.setItem('nami_subtitles_enabled', String(next));
-        showToast(`Subtitles ${next ? 'enabled' : 'disabled'}`);
+        showToast(`${translate('Subtitles', language)} ${translate(next ? 'enabled' : 'disabled', language)}`);
       } },
       { label: 'Settings', icon: Settings, to: '/settings' },
       { label: 'App appearance', icon: SlidersHorizontal, action: () => setShowPlatformModal(true) },
@@ -102,12 +104,12 @@ export function ProfilePage() {
             <ChevronRight className="w-5 h-5 ml-auto text-white/50" />
           </div>
           <div className={`mini-vip-status ${user?.is_vip_active ? 'active' : ''}`}>
-            <div><strong>{user?.is_vip_active ? `VIP · ${user.vip_plan || 'Active'}` : 'Standard'}</strong><span>{vipExpiryDate ? `Expires ${vipExpiryDate} · ${vipTimeLeft}` : vipTimeLeft}</span></div>
-            {user?.is_vip_active ? <Link to="/vip">VIP benefits ›</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer">Upgrade VIP ›</a>}
+            <div><strong>{user?.is_vip_active ? `VIP · ${user.vip_plan || translate('Active', language)}` : translate('Standard', language)}</strong><span>{vipExpiryDate ? `${translate('Expires', language)} ${vipExpiryDate} · ${vipTimeLeft}` : vipTimeLeft}</span></div>
+            {user?.is_vip_active ? <Link to="/vip">{translate('VIP benefits', language)} ›</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer">{translate('Upgrade VIP', language)} ›</a>}
           </div>
         </div>
         {user?.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() && (
-          <p className="mx-4 mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">Free trial active for one series · expires {new Date(user.trial_expires_at).toLocaleString()}</p>
+          <p className="mx-4 mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{translate('Free trial active for one series · expires', language)} {new Date(user.trial_expires_at).toLocaleString(language === 'km' ? 'km-KH' : 'en-US')}</p>
         )}
         <div className="mini-profile-wallet">
           {[
@@ -115,17 +117,23 @@ export function ProfilePage() {
             { label: 'My List', icon: Bookmark },
             { label: 'Downloads', icon: Download },
           ].map(({ label, icon: Icon }, index) => index === 0
-            ? <a key={label} href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer"><Icon /><span>Message to buy</span></a>
-            : <Link key={label} to={index === 1 ? '/favorites' : '/downloads'}><Icon /><span>{label}</span></Link>)}
+            ? <a key={label} href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer"><Icon /><span>{translate('Message to buy', language)}</span></a>
+            : <Link key={label} to={index === 1 ? '/favorites' : '/downloads'}><Icon /><span>{translate(label, language)}</span></Link>)}
         </div>
         <div className="mini-profile-menu">
           {menuRows.map(({ label, icon: Icon, to, hint, action }) => {
-            const row = <><Icon className="mini-menu-icon" /><span>{label}</span>{hint && <small>{hint}</small>}{label === 'My List' && <Plus className="mini-menu-plus" />}</>;
+            const row = <><Icon className="mini-menu-icon" /><span>{translate(label.split(' · ')[0], language)}{label.includes(' · ') ? ` · ${label.split(' · ')[1]}` : ''}</span>{hint && <small>{translate(hint, language)}</small>}{label === 'My List' && <Plus className="mini-menu-plus" />}</>;
             return to === '/vip'
               ? <a key={label} href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer" className="mini-menu-row">{row}</a>
               : to ? <Link key={label} to={to} className="mini-menu-row">{row}</Link> : <button key={label} className="mini-menu-row" onClick={action}>{row}</button>;
           })}
         </div>
+        <section className="mx-4 mt-4 rounded-xl border border-white/10 bg-[#1a1b20] p-4" aria-label={translate('Display language', language)}>
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white"><Languages className="h-4 w-4 text-emerald-400" />{translate('Display language', language)}</div>
+          <div className="grid grid-cols-2 gap-2">
+            {(['km', 'en'] as const).map((option) => <button key={option} type="button" aria-pressed={language === option} onClick={() => { setLanguage(option); showToast(translate('Language updated', option)); }} className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${language === option ? 'bg-emerald-500 text-black' : 'bg-white/10 text-gray-300'}`}>{option === 'km' ? 'ខ្មែរ' : 'English'}</button>)}
+          </div>
+        </section>
         <p className="mini-profile-version">Huang Anime · Mobile</p>
         <PlatformSwitcherModal isOpen={showPlatformModal} onClose={() => setShowPlatformModal(false)} />
         {toastMessage && <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-[#24252b] border border-white/10 text-white text-xs px-4 py-3 rounded-xl shadow-2xl whitespace-nowrap">{toastMessage}</div>}
@@ -139,10 +147,10 @@ export function ProfilePage() {
       <div className="mb-6 pt-1 flex items-center justify-between">
         <div>
           <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-            {isTelegram ? 'គណនី Telegram' : isMobileApp ? 'ការកំណត់កម្មវិធី' : 'ព័ត៌មានគណនី'}
+            {isTelegram ? (language === 'km' ? 'គណនី Telegram' : 'Telegram account') : isMobileApp ? translate('Settings', language) : translate('Account information', language)}
           </h1>
           <p className="text-xs text-gray-400 mt-0.5">
-            {isTelegram ? 'កម្មវិធីទស្សនារឿង Telegram' : isMobileApp ? 'កម្មវិធីទូរស័ព្ទ App v1.5' : 'ការកំណត់ និងព័ត៌មានទស្សនា'}
+            {isTelegram ? (language === 'km' ? 'កម្មវិធីទស្សនារឿង Telegram' : 'Watch anime on Telegram') : isMobileApp ? `Mobile app v1.5` : translate('Account and viewing settings', language)}
           </p>
         </div>
 
@@ -224,11 +232,11 @@ export function ProfilePage() {
 
         <section className="rounded-2xl border border-amber-400/25 bg-gradient-to-r from-[#201a10] to-[#17191e] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-wider text-amber-300">VIP membership</p>
-            <p className="mt-1 text-sm font-semibold text-white">{vipExpiryDate ? `Expires ${vipExpiryDate}` : user?.is_vip_active ? 'Lifetime membership' : 'Standard plan'}</p>
+            <p className="text-xs uppercase tracking-wider text-amber-300">{translate('VIP membership', language)}</p>
+            <p className="mt-1 text-sm font-semibold text-white">{vipExpiryDate ? `${translate('Expires', language)} ${vipExpiryDate}` : user?.is_vip_active ? translate('Lifetime membership', language) : translate('Standard plan', language)}</p>
             <p className="mt-1 text-xs text-gray-400">{vipTimeLeft}</p>
           </div>
-          {user?.is_vip_active ? <Link to="/vip" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">VIP benefits</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">Message to buy</a>}
+          {user?.is_vip_active ? <Link to="/vip" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">{translate('VIP benefits', language)}</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">{translate('Message to buy', language)}</a>}
         </section>
         {user?.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() && (
           <p className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">Free trial active for one series · expires {new Date(user.trial_expires_at).toLocaleString()}</p>
@@ -238,11 +246,11 @@ export function ProfilePage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-rose-400" /> ការកំណត់ការបង្ហាញ (Display & UI)
+              <SlidersHorizontal className="w-3.5 h-3.5 text-rose-400" /> {translate('UI and display settings', language)}
             </span>
             {cleanMode && (
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                ✓ របៀបស្រួលភ្នែក
+                ✓ {translate('Eye comfort mode', language)}
               </span>
             )}
           </div>
@@ -267,13 +275,13 @@ export function ProfilePage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-display font-bold text-sm text-white">របៀបសាមញ្ញ (Clean UI Mode)</span>
+                    <span className="font-display font-bold text-sm text-white">{translate('Clean UI Mode', language)}</span>
                     <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      ណែនាំ
+                      {translate('Recommended', language)}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
-                    លុបចលនាវិល 3D ស្មុគស្មាញ និងសម្រួលស្លាកលើ Poster ឱ្យលែងរញេរញៃ
+                    {translate('Simplify animations and poster labels.', language)}
                   </p>
                 </div>
               </div>
@@ -305,9 +313,9 @@ export function ProfilePage() {
                   <Eye className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="font-display font-bold text-sm text-white">កាត់បន្ថយចលនា & ពន្លឺ (Reduce Motion)</span>
+                  <span className="font-display font-bold text-sm text-white">{translate('Reduce motion and glow', language)}</span>
                   <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
-                    បិទពន្លឺ Neon Pulse និងចលនាខ្លាំងៗកុំឱ្យឈឺភ្នែក
+                    {translate('Turn off neon pulses and intense movement.', language)}
                   </p>
                 </div>
               </div>
@@ -339,9 +347,9 @@ export function ProfilePage() {
                   <RotateCw className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="font-display font-bold text-sm text-white">លាក់ផ្ទាំងផ្សាយ & កង់បង្វិល</span>
+                  <span className="font-display font-bold text-sm text-white">{translate('Hide promotions and lucky wheel', language)}</span>
                   <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
-                    លាក់ផ្ទាំងផ្សាយធំៗដើម្បីផ្ដោតលើការទស្សនារឿងសុទ្ធសាធ
+                    {translate('Hide large promotions to focus on watching.', language)}
                   </p>
                 </div>
               </div>
@@ -362,7 +370,7 @@ export function ProfilePage() {
         {/* ── 3. Playback Preferences (ការកំណត់ការចាក់វីដេអូ) ── */}
         <div className="space-y-2">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
-            <Tv className="w-3.5 h-3.5 text-amber-400" /> ការកំណត់ការចាក់វីដេអូ (Playback)
+            <Tv className="w-3.5 h-3.5 text-amber-400" /> {translate('Playback settings', language)}
           </span>
 
           <div className="rounded-2xl bg-[#111726] border border-[#1E283C] overflow-hidden divide-y divide-[#1E283C]/70 shadow-lg">
@@ -381,7 +389,7 @@ export function ProfilePage() {
                 <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-black shadow-md shadow-amber-500/20">
                   <Tv className="w-4.5 h-4.5" />
                 </div>
-                <span className="font-display font-bold text-sm text-white">កម្រិតរូបភាពលំនាំដើម</span>
+                <span className="font-display font-bold text-sm text-white">{translate('Default picture quality', language)}</span>
               </div>
               <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
                 <span className="text-amber-400">{streamQuality}</span>
@@ -391,18 +399,16 @@ export function ProfilePage() {
 
             {/* Language Selector */}
             <div
-              onClick={() => showToast('ភាសា៖ ភាសាខ្មែរ 100%')}
-              className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
+              className="flex items-center justify-between gap-3 p-4 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
                   <Languages className="w-4.5 h-4.5" />
                 </div>
-                <span className="font-display font-bold text-sm text-white">ភាសាបង្ហាញ (Language)</span>
+                <span className="font-display font-bold text-sm text-white">{translate('Display language', language)}</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
-                <span className="text-white font-semibold">ភាសាខ្មែរ (Khmer 100%)</span>
-                <ChevronRight className="w-4 h-4 text-gray-500" />
+              <div className="flex items-center gap-1 text-xs font-bold" role="group" aria-label={translate('Display language', language)}>
+              {(['km', 'en'] as const).map((option) => <button key={option} type="button" aria-pressed={language === option} onClick={() => { setLanguage(option); showToast(translate('Language updated', option)); }} className={`rounded-lg px-2.5 py-2 transition-colors ${language === option ? 'bg-emerald-500 text-black' : 'bg-white/10 text-gray-300'}`}>{option === 'km' ? 'ខ្មែរ' : 'English'}</button>)}
               </div>
             </div>
           </div>
@@ -420,19 +426,19 @@ export function ProfilePage() {
               </div>
               <div>
                 <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-amber-300">
-                  <Sparkles className="w-3 h-3 text-amber-300" /> ឈ្នះរង្វាន់ VIP រហូតដល់ 3 ខែ
+                  <Sparkles className="w-3 h-3 text-amber-300" /> {translate('VIP prizes up to 3 months', language)}
                 </div>
-                <h3 className="font-display font-black text-xs sm:text-sm text-white">កង់បង្វិលសំណាង VIP (Lucky Wheel)</h3>
+                <h3 className="font-display font-black text-xs sm:text-sm text-white">{translate('VIP Lucky Wheel', language)}</h3>
                 <p className="text-[10px] sm:text-[11px] text-gray-400">
                   {user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.username === 'cheat_admin'
                     ? '👑 គណនី Admin (ចាប់រង្វាន់បានរហូត)'
-                    : 'ទិញ VIP ម្ដង ចាប់រង្វាន់បានម្ដង!'}
+                    : translate('Spin after buying VIP.', language)}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1 py-1 px-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-xs shadow-sm shrink-0 group-hover:from-rose-400 group-hover:to-pink-400 transition-all">
-              <span>ចាប់រង្វាន់</span>
+              <span>{translate('Spin now', language)}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </Link>
@@ -443,7 +449,7 @@ export function ProfilePage() {
           <div className="rounded-2xl bg-[#0E1B2B]/90 border border-[#24A1DE]/30 p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Send className="w-4 h-4 text-[#24A1DE]" /> ប៉ុស្តិ៍ Telegram ផ្លូវការ
+                <Send className="w-4 h-4 text-[#24A1DE]" /> {translate('Official Telegram channel', language)}
               </span>
               <a
                 href="https://t.me/watchflixanimeadmin"
@@ -451,11 +457,11 @@ export function ProfilePage() {
                 rel="noopener noreferrer"
                 className="text-xs text-[#24A1DE] font-bold hover:underline"
               >
-                ចូលរួម Channel →
+                {translate('Join channel', language)} →
               </a>
             </div>
             <p className="text-[11px] text-gray-400">
-              ទទួលដំណឹងរឿងភាគចិន និង Anime ថ្មីៗជារៀងរាល់ថ្ងៃតាម Telegram
+              {translate('Daily updates about new donghua and anime on Telegram.', language)}
             </p>
           </div>
         )}
@@ -467,16 +473,16 @@ export function ProfilePage() {
                 <Smartphone className="w-4 h-4 text-amber-400" /> NAMI ANIME APK v1.5
               </span>
               <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                កំណែចុងក្រោយ
+                {translate('Latest version', language)}
               </span>
             </div>
             <div className="pt-2 flex items-center justify-between text-xs text-gray-400 border-t border-amber-500/20">
-              <span>ទិន្នន័យផ្ទុកបណ្ដោះអាសន្ន (Cache)៖</span>
+              <span>{translate('Temporary data (Cache):', language)}</span>
               <button
-                onClick={() => { clearLocalCatalogCache(); showToast('បានសម្អាត Cache រួចរាល់!'); }}
+                onClick={() => { clearLocalCatalogCache(); showToast(translate('Cache cleared.', language)); }}
                 className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <Trash2 className="w-3.5 h-3.5" /> សម្អាត Cache
+                <Trash2 className="w-3.5 h-3.5" /> {translate('Clear Cache', language)}
               </button>
             </div>
           </div>
@@ -485,7 +491,7 @@ export function ProfilePage() {
         {/* ── 6. Support & Security (ជំនួយ និងសុវត្ថិភាព) ── */}
         <div className="space-y-2">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
-            <ShieldAlert className="w-3.5 h-3.5 text-blue-400" /> ជំនួយ និងសុវត្ថិភាព (Support & Security)
+            <ShieldAlert className="w-3.5 h-3.5 text-blue-400" /> {translate('Support and security', language)}
           </span>
 
           <div className="rounded-2xl bg-[#111726] border border-[#1E283C] overflow-hidden divide-y divide-[#1E283C]/70 shadow-lg">
@@ -500,7 +506,7 @@ export function ProfilePage() {
                 <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
                   <Headset className="w-4.5 h-4.5" />
                 </div>
-                <span className="font-display font-bold text-sm text-white">ផ្នែកបម្រើអតិថិជន និងជំនួយ</span>
+                <span className="font-display font-bold text-sm text-white">{translate('Customer support', language)}</span>
               </div>
               <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
                 <span className="text-emerald-400">@watchflixanimeadmin</span>

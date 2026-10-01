@@ -6,6 +6,7 @@ import api from '../services/api';
 import { loadCatalog } from '../services/catalogService';
 import type { Anime, PaginatedResponse, AnimeType, Genre } from '../types';
 import { triggerHaptic } from '../utils/telegram';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 interface ExplorePageProps {
   defaultType?: AnimeType;
@@ -13,6 +14,7 @@ interface ExplorePageProps {
 }
 
 export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
+  const appLanguage = useLanguageStore((state) => state.language);
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<Anime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,23 +101,23 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
   }, [sort, genre, status, type, access, page, isFreeOnly, year, country]);
 
   const title = isFreeOnly
-    ? '🆓 តំបន់ទស្សនាឥតគិតថ្លៃ (Free Zone)'
+    ? 'Free Zone'
     : defaultType === 'DONGHUA'
-    ? '🇨🇳 រឿងចិន 3D (Donghua)'
+    ? '🇨🇳 Donghua 3D'
     : defaultType === 'DRAMA'
-    ? '🎭 រឿងភាគ (Drama)'
+    ? '🎭 Drama'
     : defaultType === 'MOVIE'
-    ? '🎬 ភាពយន្តដុំ (Movies)'
+    ? '🎬 Movies'
     : defaultType === 'ANIME'
-    ? '🇯🇵 រឿងគំនូរជីវចលជប៉ុន (Anime)'
-    : '🌟 រុករកបញ្ជីរឿងទាំងអស់';
+    ? '🇯🇵 Japanese anime'
+    : 'All titles';
 
   return (
     <main className="website-catalog min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-black text-gray-100">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight mb-1">{title}</h1>
-        <p className="text-gray-400 text-xs sm:text-sm">សរុប {total.toLocaleString()} រឿង</p>
+        <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight mb-1">{translate(title, appLanguage)}</h1>
+        <p className="text-gray-400 text-xs sm:text-sm">{total.toLocaleString()} {translate('Total titles', appLanguage)}</p>
       </div>
 
       {/* ── Responsive Khmer Filter Toolbar ── */}
@@ -123,13 +125,13 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
         {/* Type selector (Only if not fixed by route) */}
         {!defaultType && !isFreeOnly && (
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            <span className="text-xs font-bold text-gray-400 mr-1 shrink-0">ប្រភេទ៖</span>
+            <span className="text-xs font-bold text-gray-400 mr-1 shrink-0">{translate('Category:', appLanguage)}</span>
             {[
-              { id: 'ALL', label: 'ទាំងអស់' },
-              { id: 'DONGHUA', label: '🇨🇳 រឿងចិន 3D' },
-              { id: 'ANIME', label: '🇯🇵 រឿងជប៉ុន' },
-              { id: 'MOVIE', label: '🍿 ភាពយន្តដុំ' },
-              { id: 'DRAMA', label: '📺 រឿងភាគ' },
+              { id: 'ALL', label: 'All' },
+              { id: 'DONGHUA', label: '🇨🇳 Donghua 3D' },
+              { id: 'ANIME', label: '🇯🇵 Japanese anime' },
+              { id: 'MOVIE', label: '🍿 Movies' },
+              { id: 'DRAMA', label: '🎭 Drama' },
             ].map((t) => {
               const active = (!type && t.id === 'ALL') || type === t.id;
               return (
@@ -142,7 +144,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
                       : 'bg-[#111] hover:bg-white/10 text-gray-300 border border-white/5'
                   }`}
                 >
-                  {t.label}
+                  {translate(t.label, appLanguage)}
                 </button>
               );
             })}
@@ -154,10 +156,10 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
           {/* Access Filter */}
           {!isFreeOnly && (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-gray-400">សិទ្ធិមើល៖</span>
+              <span className="text-xs font-bold text-gray-400">{translate('Access:', appLanguage)}</span>
               {[
-                { id: 'ALL', label: 'ទាំងអស់' },
-                { id: 'free', label: '🆓 ឥតគិតថ្លៃ' },
+                { id: 'ALL', label: 'All' },
+                { id: 'free', label: '🆓 Free' },
                 { id: 'vip', label: '⭐ VIP' },
               ].map((a) => {
                 const active = (!access && a.id === 'ALL') || access === a.id;
@@ -171,40 +173,40 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
                         : 'bg-[#131d36] hover:bg-white/10 text-gray-300 border border-white/5'
                     }`}
                   >
-                    {a.label}
+                    {translate(a.label, appLanguage)}
                   </button>
                 );
               })}
             </div>
           )}
 
-          {genres.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">Genre
+          {genres.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">{translate('Genre', appLanguage)}
             <select value={genre} onChange={(event) => updateFilter('genre', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
-              <option value="">All genres</option>{genres.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}
+              <option value="">{translate('All genres', appLanguage)}</option>{genres.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}
             </select>
           </label>}
-          <label className="flex items-center gap-2 text-xs text-gray-400">Year
+          <label className="flex items-center gap-2 text-xs text-gray-400">{translate('Year', appLanguage)}
             <select value={year} onChange={(event) => updateFilter('year', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
-              <option value="">All years</option>{Array.from({ length: 10 }, (_, index) => new Date().getFullYear() - index).map((item) => <option key={item} value={item}>{item}</option>)}
+              <option value="">{translate('All years', appLanguage)}</option>{Array.from({ length: 10 }, (_, index) => new Date().getFullYear() - index).map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
-          {countries.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">Region
+          {countries.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">{translate('Region', appLanguage)}
             <select value={country} onChange={(event) => updateFilter('country', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
-              <option value="">All regions</option>{countries.map((item) => <option key={item} value={item}>{item}</option>)}
+              <option value="">{translate('All regions', appLanguage)}</option>{countries.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>}
 
           {/* Sort Selector */}
           <div className="flex items-center gap-1.5 ml-auto">
-            <span className="text-xs font-bold text-gray-400">តម្រៀប៖</span>
+            <span className="text-xs font-bold text-gray-400">{translate('Sort:', appLanguage)}</span>
             <select
               value={sort}
               onChange={(e) => updateFilter('sort', e.target.value)}
               className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-gray-500 transition-colors cursor-pointer"
             >
-              <option value="latest">ថ្មីៗចុងក្រោយ</option>
-              <option value="popular">ពេញនិយមបំផុត</option>
-              <option value="rating">ពិន្ទុខ្ពស់</option>
+              <option value="latest">{translate('Latest', appLanguage)}</option>
+              <option value="popular">{translate('Popular', appLanguage)}</option>
+              <option value="rating">{translate('Top rated', appLanguage)}</option>
             </select>
           </div>
         </div>
@@ -217,8 +219,8 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
         </div>
       ) : items.length === 0 ? (
         <div className="text-center py-20 bg-[#0a0a0a]/60 rounded-3xl border border-white/5">
-          <p className="text-gray-300 text-base font-bold">រកមិនឃើញរឿងឡើយ</p>
-          <p className="text-gray-500 text-xs mt-1">សូមសាកល្បងជ្រើសរើសប្រភេទរឿង ឬលក្ខខណ្ឌផ្សេងទៀត</p>
+          <p className="text-gray-300 text-base font-bold">{translate('No titles found', appLanguage)}</p>
+          <p className="text-gray-500 text-xs mt-1">{translate('Try changing the category or filters.', appLanguage)}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
@@ -239,7 +241,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
             disabled={page === 1}
             className="px-3.5 py-2 rounded-xl bg-[#0e1629] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-white/10"
           >
-            ← ថយក្រោយ
+            {appLanguage === 'km' ? '← ថយក្រោយ' : '← Previous'}
           </button>
           {Array.from({ length: Math.min(pages, 7) }, (_, i) => i + 1).map((p) => (
             <button
@@ -265,7 +267,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
             disabled={page === pages}
             className="px-3.5 py-2 rounded-xl bg-[#0e1629] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-white/10"
           >
-            បន្ទាប់ →
+            {appLanguage === 'km' ? 'បន្ទាប់ →' : 'Next →'}
           </button>
         </div>
       )}

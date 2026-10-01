@@ -7,8 +7,10 @@ import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { getFavoritesSync, loadCatalog } from '../services/catalogService';
 import type { Anime, WatchHistoryItem } from '../types';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 export function FavoritesPage() {
+  const appLanguage = useLanguageStore((state) => state.language);
   const { isAuthenticated } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'bookmarks' | 'history'>('bookmarks');
 
@@ -57,7 +59,7 @@ export function FavoritesPage() {
       {/* ── Header ── */}
       <div className="mb-6">
         <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
-          បណ្ណាល័យរបស់ខ្ញុំ
+          {translate('My library', appLanguage)}
         </h1>
       </div>
 
@@ -71,7 +73,7 @@ export function FavoritesPage() {
               : 'bg-[#101522] text-gray-400 hover:text-white border border-white/[0.08]'
           }`}
         >
-          <Bookmark className="w-4 h-4 text-amber-400" /> បញ្ជីរក្សាទុក ({favorites.length})
+          <Bookmark className="w-4 h-4 text-amber-400" /> {translate('Saved titles', appLanguage)} ({favorites.length})
         </button>
 
         <button
@@ -82,7 +84,7 @@ export function FavoritesPage() {
               : 'bg-[#101522] text-gray-400 hover:text-white border border-white/[0.08]'
           }`}
         >
-          <Clock className="w-4 h-4 text-amber-400" /> ប្រវត្តិទស្សនា ({history.length})
+          <Clock className="w-4 h-4 text-amber-400" /> {translate('Watch history', appLanguage)} ({history.length})
         </button>
       </div>
 
@@ -97,11 +99,11 @@ export function FavoritesPage() {
             <div className="w-20 h-20 rounded-full bg-[#111726] border border-white/10 flex items-center justify-center mx-auto text-gray-500">
               <Cloud className="w-10 h-10 text-gray-500 stroke-[1.5]" />
             </div>
-            <p className="text-gray-300 text-base font-bold">មិនទាន់មានរឿងក្នុងបញ្ជីរក្សាទុកនៅឡើយទេ</p>
-            <p className="text-gray-500 text-xs">ស្វែងរករឿងដែលអ្នកចូលចិត្ត ហើយចុចប៊ូតុងរក្សាទុក ដើម្បីងាយស្រួលបើកមើលពេលក្រោយ។</p>
+            <p className="text-gray-300 text-base font-bold">{translate('No saved titles yet', appLanguage)}</p>
+            <p className="text-gray-500 text-xs">{translate('Find a title and save it to watch later.', appLanguage)}</p>
             <div className="pt-2">
               <Link to="/donghua" className="btn-primary text-xs py-2.5 px-6">
-                រុករករឿងទស្សនា
+                {translate('Browse titles', appLanguage)}
               </Link>
             </div>
           </div>
@@ -118,8 +120,8 @@ export function FavoritesPage() {
             <div className="w-20 h-20 rounded-full bg-[#111726] border border-white/10 flex items-center justify-center mx-auto text-gray-500">
               <Clock className="w-10 h-10 text-gray-500 stroke-[1.5]" />
             </div>
-            <p className="text-gray-300 text-base font-bold">មិនទាន់មានប្រវត្តិទស្សនានៅឡើយទេ</p>
-            <p className="text-gray-500 text-xs">រាល់ភាគរឿងដែលអ្នកបានចុចមើល នឹងបង្ហាញនៅទីនេះដោយស្វ័យប្រវត្តិ។</p>
+            <p className="text-gray-300 text-base font-bold">{translate('No watch history yet', appLanguage)}</p>
+            <p className="text-gray-500 text-xs">{translate('Watched episodes appear here.', appLanguage)}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
@@ -139,8 +141,8 @@ export function FavoritesPage() {
                   <h4 className="font-bold text-sm text-white line-clamp-1 group-hover:text-amber-400 transition-colors">
                     {h.anime_title}
                   </h4>
-                  <p className="text-xs text-gray-400 mt-0.5">ភាគ {h.episode_number}</p>
-                  <span className="pill-tag text-[9px] mt-1.5 text-amber-400 bg-amber-500/10 border border-amber-500/30">បន្តទស្សនា</span>
+                  <p className="text-xs text-gray-400 mt-0.5">{translate('Episode', appLanguage)} {h.episode_number}</p>
+                  <span className="pill-tag text-[9px] mt-1.5 text-amber-400 bg-amber-500/10 border border-amber-500/30">{translate('Continue watching', appLanguage)}</span>
                 </div>
               </Link>
             ))}

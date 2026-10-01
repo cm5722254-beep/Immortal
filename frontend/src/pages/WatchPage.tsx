@@ -15,8 +15,10 @@ import { downloadService } from '../services/downloadService';
 import { triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
 import { getVipContactUrl } from '../utils/vip';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 export function WatchPage() {
+  const appLanguage = useLanguageStore((state) => state.language);
   const { isTelegram, isMobileApp } = usePlatform();
   const { slug, episodeNumber } = useParams<{ slug: string; episodeNumber: string }>();
   const navigate = useNavigate();
@@ -331,13 +333,13 @@ export function WatchPage() {
 
                   <div className="space-y-1.5">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
-                      <Lock className="w-3.5 h-3.5" /> សូមចូលគណនីជាមុនសិន
+                      <Lock className="w-3.5 h-3.5" /> {translate('Please sign in first', appLanguage)}
                     </div>
                     <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight">
-                      {anime?.title} (ភាគ {currentEp.episode_number})
+                      {anime?.title} ({translate('Episode', appLanguage)} {currentEp.episode_number})
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-300 leading-relaxed px-2">
-                      ដើម្បីទស្សនាវីដេអូកម្រិតច្បាស់ 4K UHD សូមចុច <strong className="text-amber-400">Sign in with Google</strong> ខាងក្រោមដើម្បីចូលទស្សនាភ្លាមៗ។
+                      {translate('Sign in to watch in 4K.', appLanguage)}
                     </p>
                   </div>
 
@@ -354,7 +356,7 @@ export function WatchPage() {
                         <path fill="#000" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                         <path fill="#000" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                       </svg>
-                      ចូលគណនីជាមួយ Google (Sign In)
+                      {translate('Sign in with Google', appLanguage)}
                     </Link>
                   </div>
                 </div>
@@ -377,28 +379,28 @@ export function WatchPage() {
 
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/40 shadow-sm">
-                      <Film className="w-3.5 h-3.5" /> រឿងភាពយន្តដុំពិសេស
+                      <Film className="w-3.5 h-3.5" /> {translate('Special movie access', appLanguage)}
                     </div>
                     <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight leading-snug">
                       {anime?.title}
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-300 leading-relaxed px-2">
-                      រឿងនេះជាប្រភេទភាពយន្តដុំ (Movie) ពិសេស។ <span className="text-amber-300 font-bold">ទោះជាសមាជិក VIP ក៏ត្រូវទិញទស្សនាដែរ</span> ក្នុងតម្លៃ <strong className="text-amber-400 font-black text-sm">$1.00 (≈ 4,000 ៛)</strong> តែម្តងគត់ គឺអាចទស្សនាបានរហូត (Admin មើលបានដោយសេរី)។
+                      {translate('Special movie', appLanguage)}. <span className="text-amber-300 font-bold">{translate('VIP members must also purchase this movie.', appLanguage)}</span> <strong className="text-amber-400 font-black text-sm">{appLanguage === 'km' ? '$1.00 (≈ 4,000 ៛)' : '$1.00 (≈ KHR 4,000)'}</strong> {translate('One-time purchase, watch forever.', appLanguage)}
                     </p>
                   </div>
 
                   {/* Buy Button */}
                   <div className="w-full pt-2 max-w-xs mx-auto">
                     <a
-                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime?.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
+                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(appLanguage === 'km' ? `សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime?.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}` : `Hello Admin, I would like to buy this movie: ${anime?.title} ($1.00). Username: ${user?.username || 'Guest'}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.45)] hover:scale-105 active:scale-95 transition-all"
                     >
-                      <Send className="w-5 h-5 stroke-[2.5]" /> ទិញទស្សនា ($1.00) តាម Telegram
+                      <Send className="w-5 h-5 stroke-[2.5]" /> {translate('Buy this movie on Telegram', appLanguage)} ($1.00)
                     </a>
                     <p className="text-[11px] text-gray-400 mt-2">
-                      💬 ទាក់ទង Admin @watchflixanimeadmin ដើម្បីបើកសិទ្ធិទស្សនាភ្លាមៗ
+                      💬 {appLanguage === 'km' ? 'ទាក់ទង Admin @watchflixanimeadmin ដើម្បីបើកសិទ្ធិទស្សនាភ្លាមៗ' : 'Contact @watchflixanimeadmin to activate viewing access.'}
                     </p>
                   </div>
                 </div>
@@ -422,26 +424,24 @@ export function WatchPage() {
 
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
-                      <Crown className="w-3.5 h-3.5 fill-amber-400" /> សម្រាប់តែសមាជិក VIP ប៉ុណ្ណោះ
+                      <Crown className="w-3.5 h-3.5 fill-amber-400" /> {translate('VIP members only', appLanguage)}
                     </div>
                     <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight leading-snug">
-                      {anime?.title} (ភាគ {currentEp.episode_number})
+                      {anime?.title} ({translate('Episode', appLanguage)} {currentEp.episode_number})
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-300 leading-relaxed px-2">
-                      {isGlobalVipLocked
-                        ? 'ការទស្សនាដោយឥតគិតថ្លៃ ១៥ ថ្ងៃបានផុតកំណត់ហើយ! ទោះបីជាមានគណនីក៏ដោយ លុះត្រាតែ Admin កំណត់សិទ្ធិ VIP Member ទើបអាចទស្សនាបាន។'
-                        : 'ភាគនេះសម្រាប់តែសមាជិក VIP ប៉ុណ្ណោះ! សូមដំឡើងគណនីរបស់អ្នកដើម្បីទស្សនា។'}
+                      {isGlobalVipLocked ? translate('Free access expired.', appLanguage) : translate('This episode requires VIP.', appLanguage)}
                     </p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-1">
                     <a
-                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ដំឡើងសមាជិក VIP សម្រាប់គណនី: ${user?.username || 'ភ្ញៀវ'}`)}`}
+                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(appLanguage === 'km' ? `សួស្តី Admin ខ្ញុំចង់ដំឡើងសមាជិក VIP សម្រាប់គណនី: ${user?.username || 'ភ្ញៀវ'}` : `Hello Admin, I would like to upgrade this account to VIP: ${user?.username || 'Guest'}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-primary w-full py-3 px-4 text-xs sm:text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-black shadow-lg shadow-amber-500/30"
                     >
-                      <Send className="w-4 h-4" /> ទាក់ទង Admin @watchflixanimeadmin ដំឡើង VIP
+                      <Send className="w-4 h-4" /> {translate('Contact admin to upgrade VIP', appLanguage)}
                     </a>
                     <a
                       href={getVipContactUrl(user?.username)}
@@ -449,7 +449,7 @@ export function WatchPage() {
                       rel="noopener noreferrer"
                       className="w-full sm:w-auto py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm whitespace-nowrap transition-all"
                     >
-                      ព័ត៌មាន VIP
+                      {translate('VIP information', appLanguage)}
                     </a>
                   </div>
                 </div>
@@ -459,7 +459,7 @@ export function WatchPage() {
                 {offlineVideoUrl && (
                   <div className="absolute top-3 left-3 z-30 pointer-events-none">
                     <span className="bg-emerald-600 text-white text-[11px] font-bold py-1 px-2.5 rounded-full shadow-lg flex items-center gap-1">
-                      ⚡ ទស្សនា Offline (បានទាញយក)
+                      ⚡ {translate('Watch offline', appLanguage)}
                     </span>
                   </div>
                 )}
@@ -470,7 +470,7 @@ export function WatchPage() {
                   qualitySources={currentEp.video_qualities}
                   onProgress={handleProgress}
                   resumeAt={resumeAt}
-                  title={`${anime?.title} — ភាគ ${currentEp.episode_number}${currentEp.title ? `: ${currentEp.title}` : ''}`}
+                  title={`${anime?.title} — ${translate('Episode', appLanguage)} ${currentEp.episode_number}${currentEp.title ? `: ${currentEp.title}` : ''}`}
                   hasPrev={!!prevEp}
                   hasNext={!!nextEp}
                   onPrevEpisode={() => prevEp && goToEp(prevEp.episode_number)}
@@ -490,20 +490,20 @@ export function WatchPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-[#E50914] text-white">
-                    ភាគ {currentEp.episode_number}
+                    {translate('Episode', appLanguage)} {currentEp.episode_number}
                   </span>
                   {offlineVideoUrl ? (
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                      បានទាញយក
+                      {translate('Downloaded', appLanguage)}
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                      <Users className="w-3 h-3" /> {liveViewers} នាក់
+                  <Users className="w-3 h-3" /> {liveViewers} {translate('Viewers', appLanguage)}
                     </span>
                   )}
                 </div>
                 <h1 className="font-display font-bold text-sm sm:text-base md:text-lg text-white tracking-tight truncate">
-                  {anime?.title} — ភាគ {currentEp.episode_number}
+                  {anime?.title} — {translate('Episode', appLanguage)} {currentEp.episode_number}
                 </h1>
                 {anime?.alt_title && (
                   <p className="text-[11px] text-gray-400 mt-0.5 truncate">{anime.alt_title}</p>
@@ -517,20 +517,20 @@ export function WatchPage() {
                   disabled={!prevEp}
                   className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1a2336] hover:bg-[#222e46] text-gray-200 hover:text-white border border-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" /> ភាគមុន
+                  <ChevronLeft className="w-3.5 h-3.5" /> {translate('Previous', appLanguage)}
                 </button>
                 <button
                   onClick={() => nextEp && goToEp(nextEp.episode_number)}
                   disabled={!nextEp}
                   className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 shadow-md shadow-rose-600/30"
                 >
-                  ភាគបន្ទាប់ <ChevronRight className="w-3.5 h-3.5" />
+                  {translate('Next', appLanguage)} <ChevronRight className="w-3.5 h-3.5" />
                 </button>
                 {anime && (
                   <Link
                     to={`/donghua/${anime.slug}`}
                     className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 transition-colors"
-                    title="ព័ត៌មានរឿង"
+                    title={translate('Story details', appLanguage)}
                   >
                     <Info className="w-4 h-4" />
                   </Link>
@@ -545,7 +545,7 @@ export function WatchPage() {
             <div className="p-3.5 border-b border-white/10 bg-[#111] space-y-2.5">
               <div className="flex items-center justify-between">
                 <h3 className="font-display font-bold text-white text-xs sm:text-sm flex items-center gap-2">
-                  <List className="w-4 h-4 text-[#E8452C]" /> បញ្ជីភាគទាំងអស់ ({episodes.length})
+                  <List className="w-4 h-4 text-[#E8452C]" /> {translate('All episodes', appLanguage)} ({episodes.length})
                 </h3>
                 <div className="flex items-center gap-1.5">
                   <button
@@ -555,8 +555,8 @@ export function WatchPage() {
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
-                    title="ទិដ្ឋភាពក្រឡា"
-                    aria-label="ទិដ្ឋភាពក្រឡា"
+                    title={translate('Grid view', appLanguage)}
+                    aria-label={translate('Grid view', appLanguage)}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
                   </button>
@@ -567,13 +567,13 @@ export function WatchPage() {
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
-                    title="ទិដ្ឋភាពបញ្ជី"
-                    aria-label="ទិដ្ឋភាពបញ្ជី"
+                    title={translate('List view', appLanguage)}
+                    aria-label={translate('List view', appLanguage)}
                   >
                     <List className="w-3.5 h-3.5" />
                   </button>
                   <span className="text-[11px] text-gray-400 font-mono ml-1">
-                    ភាគ {epNum}
+                    {translate('Episode', appLanguage)} {epNum}
                   </span>
                 </div>
               </div>
@@ -583,7 +583,7 @@ export function WatchPage() {
                   type="text"
                   value={epSearch}
                   onChange={(e) => setEpSearch(e.target.value)}
-                  placeholder="ស្វែងរកលេខភាគ..."
+                  placeholder={translate('Search episode number...', appLanguage)}
                   className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 transition-colors"
                 />
               </div>
@@ -593,7 +593,7 @@ export function WatchPage() {
             <div className="flex-1 overflow-y-auto p-2 space-y-1 max-h-[420px]">
               {filteredEpisodes.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 text-xs">
-                  រកមិនឃើញភាគដែលស្វែងរកឡើយ
+                  {translate('No episodes found', appLanguage)}
                 </div>
               ) : epViewMode === 'grid' ? (
                 /* Compact Pill Grid (Instant 1-tap jump on Mobile & Desktop) */
@@ -613,7 +613,7 @@ export function WatchPage() {
                             ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
                             : 'bg-[#111] hover:bg-[#222] text-gray-200 border border-white/5'
                         }`}
-                        title={`ភាគ ${ep.episode_number}`}
+                        title={`${translate('Episode', appLanguage)} ${ep.episode_number}`}
                       >
                         {isEpVip && (
                           <span className="absolute top-1 right-1">
@@ -657,7 +657,7 @@ export function WatchPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <p className={`text-xs font-bold truncate ${isActive ? 'text-amber-400' : 'text-gray-100'}`}>
-                              {ep.title || `ភាគ ${ep.episode_number}`}
+                              {ep.title || `${translate('Episode', appLanguage)} ${ep.episode_number}`}
                             </p>
                             {isEpVip && (
                               <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -666,7 +666,7 @@ export function WatchPage() {
                             )}
                           </div>
                           <p className="text-[10px] text-gray-400">
-                            {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)} នាទី` : '24 នាទី'} · Full HD
+                            {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)} ${translate('minutes', appLanguage)}` : `24 ${translate('minutes', appLanguage)}`} · Full HD
                           </p>
                         </div>
                       </button>

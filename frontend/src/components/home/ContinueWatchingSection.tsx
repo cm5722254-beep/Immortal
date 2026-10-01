@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Play, Clock, X } from 'lucide-react';
 import type { WatchHistoryItem } from '../../types';
+import { translate, useLanguageStore } from '../../store/languageStore';
 
 interface ContinueWatchingSectionProps {
   items: WatchHistoryItem[];
@@ -16,6 +17,7 @@ function formatMinutes(seconds: number): string {
 }
 
 export function ContinueWatchingSection({ items, onClear, onRemoveItem }: ContinueWatchingSectionProps) {
+  const language = useLanguageStore((state) => state.language);
   if (!items || items.length === 0) return null;
 
   return (
@@ -27,7 +29,7 @@ export function ContinueWatchingSection({ items, onClear, onRemoveItem }: Contin
             <Clock className="w-3.5 h-3.5" />
           </span>
           <h2 className="font-display font-black text-lg sm:text-xl text-white tracking-wide">
-            បន្តការទស្សនាពីកន្លែងចាស់
+            {translate('Continue from where you left off', language)}
           </h2>
         </div>
         {onClear && (
@@ -35,7 +37,7 @@ export function ContinueWatchingSection({ items, onClear, onRemoveItem }: Contin
             onClick={onClear}
             className="text-xs font-bold text-gray-400 hover:text-rose-400 transition-colors cursor-pointer"
           >
-            លុបប្រវត្តិទាំងអស់
+            {translate('Clear all history', language)}
           </button>
         )}
       </div>
@@ -85,7 +87,7 @@ export function ContinueWatchingSection({ items, onClear, onRemoveItem }: Contin
 
                 {/* Episode Tag */}
                 <span className="absolute bottom-1.5 left-2 text-[10px] font-black text-white/95 drop-shadow bg-black/60 px-2 py-0.5 rounded-full border border-white/10 backdrop-blur-sm">
-                  ភាគ {item.episode_number}
+                  {translate('Episode', language)} {item.episode_number}
                 </span>
 
                 {timeText && (
@@ -120,7 +122,7 @@ export function ContinueWatchingSection({ items, onClear, onRemoveItem }: Contin
                       onRemoveItem(item.id);
                     }}
                     className="p-1 rounded-full text-gray-500 hover:text-white hover:bg-white/10 transition"
-                    title="លុបចេញ"
+                    title={translate('Remove item', language)}
                   >
                     <X className="w-3 h-3" />
                   </button>

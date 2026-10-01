@@ -17,6 +17,7 @@ import { useSystemUpdateStore } from './store/systemUpdateStore';
 import { initSecurityProtection } from './utils/security';
 import { initTelegramWebApp, getTelegramUser, getTelegramInitData, isTelegramWebApp, setTelegramBackButton, triggerHaptic } from './utils/telegram';
 import { usePlatform } from './utils/platform';
+import { useLanguageStore } from './store/languageStore';
 
 // ─── 🚀 Fast Code-Splitted Pages (Lazy-Loaded) ───
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -208,6 +209,11 @@ function PublicWatchLayout({ children }: { children: React.ReactNode }) {
 export default function App() {
   const { fetchMe, loginWithTelegram, isAdmin } = useAuthStore();
   const { fetchSiteTheme } = useThemeStore();
+  const appLanguage = useLanguageStore((state) => state.language);
+
+  useEffect(() => {
+    document.documentElement.lang = appLanguage;
+  }, [appLanguage]);
 
   useEffect(() => {
     // Clear any accidental localhost bans
