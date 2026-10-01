@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, FolderDown, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { Download, FolderDown, LoaderCircle, ShieldCheck, Film, Layers3, AlertCircle } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { AdminSeriesDownloader } from './AdminSeriesDownloader';
 import api from '../../services/api';
@@ -9,6 +9,7 @@ export function AdminDownloadsPage() {
   const [items, setItems] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const episodeCount = items.reduce((sum, item) => sum + (Number(item.episode_count) || 0), 0);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,14 +42,19 @@ export function AdminDownloadsPage() {
 
   return (
     <AdminLayout title="Admin Video Downloads">
-      <div className="mx-auto max-w-6xl space-y-5">
-        <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 to-[#11151c] p-5 sm:p-6">
-          <div className="flex items-start gap-4">
-            <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-300"><FolderDown className="h-6 w-6" /></div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Download videos to a computer folder</h2>
-              <p className="mt-1 max-w-3xl text-sm text-gray-400">Choose one or more series, select a destination folder, and save available direct video files into separate series folders.</p>
-              <p className="mt-3 flex items-center gap-2 text-xs text-emerald-300"><ShieldCheck className="h-4 w-4" /> Admin tool · Browser will ask you to choose the folder.</p>
+      <div className="mx-auto max-w-screen-2xl space-y-5">
+        <section className="relative overflow-hidden rounded-3xl border border-emerald-400/20 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,.17),transparent_48%),linear-gradient(115deg,#101923,#0d1117_58%,#101b19)] p-5 sm:p-7">
+          <div className="absolute -right-12 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-center">
+            <div className="max-w-3xl">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[.16em] text-emerald-300"><ShieldCheck className="h-3.5 w-3.5" /> Admin media tools</div>
+              <h2 className="flex items-center gap-3 text-2xl font-black tracking-tight text-white sm:text-3xl"><FolderDown className="h-7 w-7 text-emerald-400" /> Video downloads</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Choose series, then save available video files straight into organized folders on this computer.</p>
+              <p className="mt-3 flex items-center gap-2 text-xs text-emerald-300/90"><ShieldCheck className="h-4 w-4" /> Your browser asks you to choose where files are saved.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:min-w-[340px]">
+              <div className="rounded-2xl border border-white/[.08] bg-black/20 p-4"><div className="flex items-center gap-2 text-xs font-medium text-slate-400"><Film className="h-4 w-4 text-emerald-400" /> Series in library</div><div className="mt-2 text-2xl font-black text-white">{loading ? '—' : items.length}</div></div>
+              <div className="rounded-2xl border border-white/[.08] bg-black/20 p-4"><div className="flex items-center gap-2 text-xs font-medium text-slate-400"><Layers3 className="h-4 w-4 text-sky-400" /> Episodes listed</div><div className="mt-2 text-2xl font-black text-white">{loading ? '—' : episodeCount.toLocaleString()}</div></div>
             </div>
           </div>
         </section>
@@ -56,7 +62,7 @@ export function AdminDownloadsPage() {
         {loading ? (
           <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#11151c] p-12 text-sm text-gray-300"><LoaderCircle className="h-5 w-5 animate-spin" /> Loading library…</div>
         ) : error ? (
-          <div role="alert" className="rounded-xl border border-red-500/30 bg-red-950/20 p-4 text-sm text-red-200">{String(error)}</div>
+          <div role="alert" className="flex items-center gap-3 rounded-2xl border border-red-500/30 bg-red-950/20 p-5 text-sm text-red-200"><AlertCircle className="h-5 w-5 shrink-0" />{String(error)}</div>
         ) : items.length ? (
           <AdminSeriesDownloader items={items} />
         ) : (
