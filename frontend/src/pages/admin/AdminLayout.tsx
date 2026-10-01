@@ -5,7 +5,7 @@ import {
   Image, Settings, LogOut, Shield, Menu, ChevronRight, Send,
   Tv, Clapperboard, Palette, Database, Key,
   Globe, Smartphone, Bot, ChevronDown, ChevronUp,
-  Layers, Zap, Bell, Package, QrCode, Crown, ShieldCheck, Lock, Terminal, X, Rocket
+  Layers, Zap, Bell, Package, QrCode, Crown, ShieldCheck, Lock, Terminal, X, Rocket, FolderDown
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useSystemUpdateStore } from '../../store/systemUpdateStore';
@@ -344,6 +344,14 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
               title="មើល Website"
             >
               <Globe className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Website</span>
+            </Link>
+
+            <Link
+              to="/admin/downloads"
+              className="hidden sm:flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 transition"
+              title="Download videos to a computer folder"
+            >
+              <FolderDown className="h-3.5 w-3.5" /> Downloads
             </Link>
 
             {isOwner ? (

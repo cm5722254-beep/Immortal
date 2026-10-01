@@ -43,6 +43,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage').then((m) => ({ de
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
 const AdminAnimePage = lazy(() => import('./pages/admin/AdminAnimePage').then((m) => ({ default: m.AdminAnimePage })));
 const AdminEpisodesPage = lazy(() => import('./pages/admin/AdminEpisodesPage').then((m) => ({ default: m.AdminEpisodesPage })));
+const AdminDownloadsPage = lazy(() => import('./pages/admin/AdminDownloadsPage').then((m) => ({ default: m.AdminDownloadsPage })));
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })));
 const AdminCommentsPage = lazy(() => import('./pages/admin/AdminCommentsPage').then((m) => ({ default: m.AdminCommentsPage })));
 const AdminBannersPage = lazy(() => import('./pages/admin/AdminBannersPage').then((m) => ({ default: m.AdminBannersPage })));
@@ -287,6 +288,7 @@ export default function App() {
           <Route path="/admin/movies" element={<ContentManagerGuard><AdminAnimePage animeType="MOVIE" /></ContentManagerGuard>} />
           <Route path="/admin/anime" element={<ContentManagerGuard><AdminAnimePage animeType="ANIME" /></ContentManagerGuard>} />
           <Route path="/admin/episodes" element={<ContentManagerGuard><AdminEpisodesPage /></ContentManagerGuard>} />
+          <Route path="/admin/downloads" element={<ContentManagerGuard><AdminDownloadsPage /></ContentManagerGuard>} />
 
           {/* Admin ONLY: System, Users, Keys, Banners, Mobile, Telegram */}
           <Route path="/admin/api-keys" element={<AdminGuard><AdminApiKeysPage /></AdminGuard>} />
