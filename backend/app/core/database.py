@@ -85,6 +85,9 @@ async def init_db():
                 ("telegram_init_data", "VARCHAR(2000) DEFAULT NULL"),
                 ("login_source", "VARCHAR(30) DEFAULT NULL"),
                 ("last_login_at", "TIMESTAMP DEFAULT NULL"),
+                ("trial_anime_id", "INTEGER DEFAULT NULL"),
+                ("trial_claimed_at", "TIMESTAMP DEFAULT NULL"),
+                ("trial_expires_at", "TIMESTAMP DEFAULT NULL"),
             ]
             for col_name, col_type in user_columns:
                 try:

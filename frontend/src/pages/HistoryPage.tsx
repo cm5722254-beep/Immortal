@@ -41,7 +41,7 @@ export function HistoryPage() {
 
   if (!isAuthenticated) {
     return (
-      <main className="min-h-screen pt-24 flex flex-col items-center justify-center text-center px-4">
+      <main className="mini-history-page min-h-screen pt-24 flex flex-col items-center justify-center text-center px-4">
         <Clock className="w-16 h-16 text-gray-700 mb-4" />
         <h1 className="text-2xl font-bold text-white mb-2">ប្រវត្តិទស្សនា</h1>
         <p className="text-gray-400 mb-4">សូមចូលគណនីរបស់អ្នកដើម្បីពិនិត្យមើលប្រវត្តិទស្សនា។</p>
@@ -51,7 +51,7 @@ export function HistoryPage() {
   }
 
   return (
-    <main className="min-h-screen pt-20 pb-24 md:pb-8 px-4 md:px-8 max-w-4xl mx-auto">
+    <main className="mini-history-page min-h-screen pt-20 pb-24 md:pb-8 px-4 md:px-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display font-black text-3xl text-white flex items-center gap-3">

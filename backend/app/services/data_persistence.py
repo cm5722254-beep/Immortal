@@ -66,6 +66,9 @@ async def export_all_data_to_dict() -> Dict[str, Any]:
                 "vip_plan": u.vip_plan,
                 "vip_started_at": _serialize_datetime(u.vip_started_at),
                 "vip_expires_at": _serialize_datetime(u.vip_expires_at),
+                "trial_anime_id": u.trial_anime_id,
+                "trial_claimed_at": _serialize_datetime(u.trial_claimed_at),
+                "trial_expires_at": _serialize_datetime(u.trial_expires_at),
                 "avatar_url": u.avatar_url,
                 "phone_number": u.phone_number,
                 "telegram_id": u.telegram_id,
@@ -292,6 +295,9 @@ async def restore_data_from_dict(data: Dict[str, Any], merge_only: bool = True) 
                     is_verified=bool(u_data.get("is_verified", True)),
                     is_vip=bool(u_data.get("is_vip", False)),
                     vip_plan=u_data.get("vip_plan"),
+                    trial_anime_id=u_data.get("trial_anime_id"),
+                    trial_claimed_at=datetime.fromisoformat(u_data["trial_claimed_at"]) if u_data.get("trial_claimed_at") else None,
+                    trial_expires_at=datetime.fromisoformat(u_data["trial_expires_at"]) if u_data.get("trial_expires_at") else None,
                     avatar_url=u_data.get("avatar_url"),
                 )
                 db.add(u)

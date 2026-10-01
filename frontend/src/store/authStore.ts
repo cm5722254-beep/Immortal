@@ -57,7 +57,7 @@ const checkRoles = (u: User | null | undefined) => {
   const isAdminUser = isOwnerUser || u?.role === 'ADMIN';
   const isStaffUser = u?.role === 'STAFF';
   const canManage = isAdminUser || isStaffUser;
-  const isVipUser = Boolean(isAdminUser || isStaffUser || u?.is_vip_active || u?.is_vip);
+  const isVipUser = Boolean(isAdminUser || isStaffUser || u?.is_vip_active);
   return { isOwnerUser, isAdminUser, isStaffUser, canManage, isVipUser };
 };
 
@@ -363,7 +363,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAdmin: isAdminUser,
         isStaff: isStaffUser,
         canManageContent: isAdminUser || isStaffUser,
-        isVip: isAdminUser || isStaffUser || user.is_vip_active || user.is_vip,
+        isVip: isAdminUser || isStaffUser || user.is_vip_active,
       });
     } catch (err: any) {
       // 2. If 404 on live server (endpoint not yet deployed to Render), fallback to standard login/register
@@ -387,7 +387,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             isAdmin: isAdminUser,
             isStaff: isStaffUser,
             canManageContent: isAdminUser || isStaffUser,
-            isVip: isAdminUser || isStaffUser || user.is_vip_active || user.is_vip,
+            isVip: isAdminUser || isStaffUser || user.is_vip_active,
           });
         } catch {
           // If account doesn't exist yet, register it
@@ -410,7 +410,7 @@ export const useAuthStore = create<AuthState>((set) => ({
               isAdmin: isAdminUser,
               isStaff: isStaffUser,
               canManageContent: isAdminUser || isStaffUser,
-              isVip: isAdminUser || isStaffUser || user.is_vip_active || user.is_vip,
+              isVip: isAdminUser || isStaffUser || user.is_vip_active,
             });
           } catch (regErr: any) {
             // Optimistic login session

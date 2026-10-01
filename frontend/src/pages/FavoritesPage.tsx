@@ -53,7 +53,7 @@ export function FavoritesPage() {
   }, [isAuthenticated]);
 
   return (
-    <main className="min-h-screen pb-24 md:pb-12 text-gray-100 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
+    <main className="mini-library-page min-h-screen pb-24 md:pb-12 text-gray-100 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
       {/* ── Header ── */}
       <div className="mb-6">
         <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
@@ -150,4 +150,3 @@ export function FavoritesPage() {
     </main>
   );
 }
-

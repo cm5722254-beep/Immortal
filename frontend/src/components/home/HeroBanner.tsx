@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Info, ChevronLeft, ChevronRight, Star, Sparkles, Flame, Film, Crown, Send } from 'lucide-react';
 import type { Banner, Anime } from '../../types';
+import { getVipContactUrl } from '../../utils/vip';
 
 interface HeroBannerProps {
   banners: Banner[];
@@ -181,12 +182,14 @@ export function HeroBanner({ banners, anime }: HeroBannerProps) {
                 <Info className="w-5 h-5 text-gray-300" />
                 ព័ត៌មានរឿង
               </Link>
-              <Link
-                to="/vip"
+              <a
+                href={getVipContactUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 backdrop-blur-md transition-all hover:scale-105"
               >
                 <Crown className="w-4 h-4 fill-amber-400" /> VIP 4K UHD
-              </Link>
+              </a>
               <a
                 href="https://t.me/animekhnotocation"
                 target="_blank"

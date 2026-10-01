@@ -16,6 +16,9 @@ export interface User {
   vip_plan?: string | null;
   vip_started_at?: string | null;
   vip_expires_at?: string | null;
+  trial_anime_id?: number | null;
+  trial_claimed_at?: string | null;
+  trial_expires_at?: string | null;
   is_vip_active: boolean;
   unlocked_movies?: string[];
   phone_number?: string | null;

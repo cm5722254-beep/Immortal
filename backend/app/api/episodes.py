@@ -5,14 +5,31 @@ from sqlalchemy import select, func, or_
 from app.core.database import get_db
 from app.core.redis import get_cache, set_cache, delete_cache_pattern
 from app.dependencies.auth import require_admin, require_staff_or_admin
+from app.dependencies.auth import get_optional_user
 from app.models.anime import Anime
 from app.models.episode import Episode
 from app.models.user import User
 from app.schemas.episode import EpisodeCreate, EpisodeUpdate, EpisodeRead
 from typing import List
 from urllib.parse import urlparse
+from datetime import datetime, timezone
 
 router = APIRouter(tags=["Episodes"])
+
+
+def _episode_read(episode: Episode, user: User | None) -> EpisodeRead:
+    result = EpisodeRead.model_validate(episode)
+    privileged = bool(user and user.is_vip_active)
+    trial_access = bool(
+        user and user.trial_anime_id == episode.anime_id and user.trial_expires_at and
+        (user.trial_expires_at.replace(tzinfo=timezone.utc) if user.trial_expires_at.tzinfo is None else user.trial_expires_at) > datetime.now(timezone.utc)
+    )
+    if not episode.is_free and not (privileged or trial_access):
+        result.video_url = None
+        result.video_qualities = []
+        result.subtitle_url = None
+        result.subtitle_tracks = []
+    return result
 
 
 @router.get("/admin/stream-health")
@@ -65,7 +82,7 @@ async def get_stream_health(
 
 @router.get("/anime/{anime_id_or_slug}/episodes", response_model=List[EpisodeRead])
 @router.get("/episodes/anime/{anime_id_or_slug}", response_model=List[EpisodeRead])
-async def list_episodes(anime_id_or_slug: str, db: AsyncSession = Depends(get_db)):
+async def list_episodes(anime_id_or_slug: str, db: AsyncSession = Depends(get_db), user: User | None = Depends(get_optional_user)):
     from urllib.parse import unquote
     raw_slug = anime_id_or_slug.strip()
     decoded_slug = unquote(anime_id_or_slug).strip()
@@ -73,7 +90,7 @@ async def list_episodes(anime_id_or_slug: str, db: AsyncSession = Depends(get_db
     cache_key = f"episodes:list:{raw_slug}"
     cached = await get_cache(cache_key)
     if cached:
-        return [EpisodeRead(**e) for e in cached]
+        return [_episode_read(Episode(**{k: v for k, v in e.items() if k in Episode.__mapper__.attrs.keys()}), user) for e in cached]
 
     if raw_slug.isdigit():
         target_anime_id = int(raw_slug)
@@ -102,17 +119,17 @@ async def list_episodes(anime_id_or_slug: str, db: AsyncSession = Depends(get_db
         .where(Episode.anime_id == target_anime_id, Episode.is_published == True)
         .order_by(Episode.episode_number)
     )
-    items = [EpisodeRead.model_validate(e) for e in result.scalars().all()]
-    await set_cache(cache_key, [e.model_dump() for e in items], ttl=300)
-    return items
+    episodes = result.scalars().all()
+    await set_cache(cache_key, [EpisodeRead.model_validate(e).model_dump() for e in episodes], ttl=300)
+    return [_episode_read(e, user) for e in episodes]
 
 
 @router.get("/episodes/{episode_id}", response_model=EpisodeRead)
-async def get_episode(episode_id: int, db: AsyncSession = Depends(get_db)):
+async def get_episode(episode_id: int, db: AsyncSession = Depends(get_db), user: User | None = Depends(get_optional_user)):
     cache_key = f"episodes:detail:{episode_id}"
     cached = await get_cache(cache_key)
     if cached:
-        return EpisodeRead(**cached)
+        return _episode_read(Episode(**{k: v for k, v in cached.items() if k in Episode.__mapper__.attrs.keys()}), user)
 
     result = await db.execute(select(Episode).where(Episode.id == episode_id))
     ep = result.scalar_one_or_none()
@@ -126,7 +143,7 @@ async def get_episode(episode_id: int, db: AsyncSession = Depends(get_db)):
 
     res_obj = EpisodeRead.model_validate(ep)
     await set_cache(cache_key, res_obj.model_dump(), ttl=300)
-    return res_obj
+    return _episode_read(ep, user)
 
 
 @router.post("/episodes", response_model=EpisodeRead, status_code=201)
@@ -395,4 +412,3 @@ async def batch_broadcast_episodes_to_telegram(
         "sent_count": len(episodes_list),
         "message": f"⚡ បានបញ្ជូន {len(episodes_list)} ភាគដែលបានជ្រើសរើស ចូល Telegram Group ភ្លាមៗ!"
     }
-

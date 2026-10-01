@@ -116,7 +116,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   const { isWeb, isTelegram, isMobileApp } = usePlatform();
   const isMiniAppLanding = (isTelegram || isMobileApp) && ['/', '/profile', '/me'].includes(location.pathname);
   const showMiniHeader = (isTelegram || isMobileApp) && ['/explore', '/free', '/donghua', '/anime', '/drama', '/movies', '/movie', '/search'].includes(location.pathname);
-  const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active || user?.is_vip;
+  const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active;
 
   // 🔒 Website Maintenance Lock: If enabled, check if VIP only or full lock
   if (config.enabled && !isAdmin && !isOwner && !isStaff) {
@@ -185,7 +185,7 @@ function PublicWatchLayout({ children }: { children: React.ReactNode }) {
   const { config } = useSystemUpdateStore();
   const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
   const { isTelegram, isMobileApp } = usePlatform();
-  const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active || user?.is_vip;
+  const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active;
 
   if (config.enabled && !isAdmin && !isOwner && !isStaff) {
     if (config.allow_vip && isVipUser) {

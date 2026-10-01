@@ -10,6 +10,7 @@ export interface StaticCatalog {
 }
 
 let memoryCatalog: StaticCatalog | null = null;
+let catalogRefresh: Promise<StaticCatalog> | null = null;
 const CATALOG_STORAGE_KEY = 'nami_static_catalog_v3';
 
 export function clearLocalCatalogCache() {
@@ -32,11 +33,28 @@ export function getLocalCatalogSync(): StaticCatalog | null {
 
 // 2. Fetch catalog from Live Database API (first priority) or fallback
 export async function loadCatalog(): Promise<StaticCatalog> {
-  refreshCatalogInBackground();
+  const apiRequest = refreshCatalogInBackground();
+
+  // Return a saved catalogue immediately, then refresh it without blocking first paint.
+  const cached = getLocalCatalogSync();
+  if (cached?.anime?.length) return cached;
+
+  // On a fresh install, try the local static copy before waiting for a cold API server.
+  try {
+    const res = await fetch('/data/catalog.json');
+    if (res.ok) {
+      const data: StaticCatalog = await res.json();
+      if (data?.anime?.length) {
+        memoryCatalog = data;
+        try { localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(data)); } catch {}
+        return data;
+      }
+    }
+  } catch {}
 
   // 1. Try Live Database API first so any website/Supabase updates persist across refreshes!
   try {
-    const apiData = await fetchCatalogFromApi();
+    const apiData = await apiRequest;
     if (apiData && apiData.anime && apiData.anime.length > 0) {
       return apiData;
     }
@@ -63,10 +81,11 @@ export async function loadCatalog(): Promise<StaticCatalog> {
 }
 
 async function refreshCatalogInBackground() {
-  try {
-    // Ping API health to keep Render warm
-    fetch('https://immortal-s7ui.onrender.com/api/health').catch(() => {});
-  } catch {}
+  if (catalogRefresh) return catalogRefresh;
+  catalogRefresh = fetchCatalogFromApi().finally(() => { catalogRefresh = null; });
+  // Share this in-flight request with loadCatalog so a cold start does not
+  // issue duplicate catalogue requests from the app shell and the page.
+  return catalogRefresh;
 }
 
 async function fetchCatalogFromApi(): Promise<StaticCatalog> {
@@ -79,13 +98,14 @@ async function fetchCatalogFromApi(): Promise<StaticCatalog> {
     const data: StaticCatalog = {
       anime: animeRes.data.items || [],
       banners: bannersRes.data || [],
-      episodes: [],
+      episodes: getLocalCatalogSync()?.episodes || [],
     };
     if (data.anime && data.anime.length > 0) {
       memoryCatalog = data;
       try {
         localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(data));
       } catch {}
+      window.dispatchEvent(new Event('nami-catalog-updated'));
     }
     return data;
   } catch {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Sparkles, Crown, ArrowRight, Flame, Clock, X } from 'lucide-react';
 import { usePromoStore } from '../../store/promoStore';
+import { getVipContactUrl } from '../../utils/vip';
 import { useAuthStore } from '../../store/authStore';
 import { useUiPreferencesStore } from '../../store/uiPreferencesStore';
 
@@ -12,7 +12,7 @@ export function PromoCountdownBanner() {
   const [isDismissed, setIsDismissed] = useState(() => {
     return sessionStorage.getItem('nami_promo_dismissed') === 'true';
   });
-  const isVipUser = !!user && (user.role === 'ADMIN' || user.is_vip_active || user.is_vip);
+  const isVipUser = !!user && (user.role === 'ADMIN' || user.is_vip_active);
 
   const handleDismiss = () => {
     setIsDismissed(true);
@@ -58,12 +58,14 @@ export function PromoCountdownBanner() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/vip"
+            <a
+              href={getVipContactUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
               className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black text-[11px] shadow-lg shadow-amber-500/20 hover:scale-105 transition-all"
             >
               <Crown className="w-3 h-3 fill-black" /> ដំឡើង VIP ឥឡូវនេះ ($1.50) <ArrowRight className="w-3 h-3" />
-            </Link>
+            </a>
             <button
               onClick={handleDismiss}
               className="p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -103,12 +105,14 @@ export function PromoCountdownBanner() {
             </span>
           </div>
 
-          <Link
-            to="/vip"
+          <a
+            href={getVipContactUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hidden md:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black text-[10px] hover:brightness-110 shadow-sm transition-all"
           >
             <Sparkles className="w-2.5 h-2.5 fill-black" /> VIP
-          </Link>
+          </a>
 
           <button
             onClick={handleDismiss}

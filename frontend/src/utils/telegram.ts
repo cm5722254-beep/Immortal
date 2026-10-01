@@ -146,9 +146,6 @@ export function initTelegramWebApp() {
     // Expand to maximum viewport height for mobile full immersion
     tg.expand();
 
-    // Request fullscreen on modern Telegram client
-    tg.requestFullscreen?.();
-
     // Disable vertical pull-to-close gestures so users can freely scroll and rotate without closing
     tg.disableVerticalSwipes?.();
 
@@ -162,4 +159,3 @@ export function initTelegramWebApp() {
     console.warn('Telegram WebApp initialization error:', e);
   }
 }
-

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { getVipContactUrl } from '../../utils/vip';
 
 const CATEGORIES = [
   { label: 'For You', to: '/' },
@@ -31,7 +32,7 @@ export function MiniAppHeader() {
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search anime and drama" aria-label="Search anime and drama" />
           <button type="submit" aria-label="Search"><Search className="w-5 h-5" /></button>
         </form>
-        <Link to="/vip" className="mini-vip">VIP</Link>
+        <a href={getVipContactUrl()} target="_blank" rel="noopener noreferrer" className="mini-vip">VIP</a>
       </div>
       <nav className="mini-categories" aria-label="Browse categories">
         {CATEGORIES.map(({ label, to }) => {

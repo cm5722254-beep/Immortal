@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Logo } from './Logo';
 import api from '../../services/api';
 import { usePlatform } from '../../utils/platform';
+import { getVipContactUrl } from '../../utils/vip';
 
 interface NotificationItem {
   id: string;
@@ -228,14 +229,16 @@ export function Navbar() {
           </form>
 
           {/* VIP Upgrade Button */}
-          <Link
-            to="/vip"
+          <a
+            href={getVipContactUrl(user?.username)}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white shadow-md shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-105 active:scale-95 transition-all group shrink-0"
             title="គម្រោង VIP"
           >
             <Crown className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300 shrink-0" />
             <span className="whitespace-nowrap font-extrabold text-[11px] sm:text-xs">VIP</span>
-          </Link>
+          </a>
 
           {/* Telegram Channel Direct Link (Desktop only) */}
           <a

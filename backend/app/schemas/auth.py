@@ -45,6 +45,9 @@ class UserRead(BaseModel):
     vip_plan: Optional[str] = None
     vip_started_at: Optional[datetime] = None
     vip_expires_at: Optional[datetime] = None
+    trial_anime_id: Optional[int] = None
+    trial_claimed_at: Optional[datetime] = None
+    trial_expires_at: Optional[datetime] = None
     is_vip_active: bool = False
     unlocked_movies: Optional[list[str]] = []
     created_at: datetime
@@ -103,4 +106,3 @@ class PhoneAuthRequest(BaseModel):
     phone_number: str
     firebase_id_token: Optional[str] = None
     display_name: Optional[str] = None
-

@@ -137,7 +137,7 @@ async def verify_stream_vip(request: Request, db: AsyncSession, episode: Optiona
     - All users MUST be logged in to stream.
     - Admin/Owner/Staff bypass all VIP checks.
     - Episodes with is_free=True or is_free=None => any logged-in user can watch.
-    - Episodes with is_free=False => VIP or active promo required.
+    - Episodes with is_free=False => VIP, active promo, or matching active series trial required.
     """
     token = None
     auth_header = request.headers.get("authorization")
@@ -176,6 +176,18 @@ async def verify_stream_vip(request: Request, db: AsyncSession, episode: Optiona
 
         # ⚠️ Episode is VIP-only (is_free=False) — check VIP membership status
         if not user.is_vip_active:
+            from datetime import datetime, timezone
+            trial_expiry = user.trial_expires_at
+            if trial_expiry and trial_expiry.tzinfo is None:
+                trial_expiry = trial_expiry.replace(tzinfo=timezone.utc)
+            if (
+                episode is not None
+                and user.trial_anime_id == episode.anime_id
+                and trial_expiry is not None
+                and trial_expiry > datetime.now(timezone.utc)
+            ):
+                return user
+
             from app.api.site_settings import load_promo_config, compute_promo_status
             config = load_promo_config()
             promo = compute_promo_status(config)

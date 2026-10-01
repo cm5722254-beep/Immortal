@@ -15,12 +15,44 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 from app.models.user import User, UserRole
+from app.models.anime import Anime, AnimeType
+from app.dependencies.auth import require_user
 from app.schemas.auth import (
     RegisterRequest, LoginRequest, TokenResponse, RefreshRequest,
     AuthResponse, UserRead, GoogleAuthRequest, TelegramAuthRequest, PhoneAuthRequest
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+class TrialClaimRequest(BaseModel):
+    anime_id: int
+
+
+@router.post("/claim-trial", response_model=UserRead)
+async def claim_trial(data: TrialClaimRequest, user: User = Depends(require_user), db: AsyncSession = Depends(get_db)):
+    """Grant a one-time 24-hour trial for one published series."""
+    from datetime import datetime, timedelta, timezone
+
+    if user.role in (UserRole.OWNER, UserRole.ADMIN, UserRole.STAFF) or user.is_vip_active:
+        raise HTTPException(status_code=409, detail="Your account already has premium access")
+    if user.trial_claimed_at is not None:
+        raise HTTPException(status_code=409, detail="The free trial has already been claimed")
+
+    anime = await db.get(Anime, data.anime_id)
+    if not anime or not anime.is_published:
+        raise HTTPException(status_code=404, detail="Series not found")
+    anime_type = anime.type.value if hasattr(anime.type, "value") else str(anime.type)
+    if anime_type == AnimeType.MOVIE.value:
+        raise HTTPException(status_code=400, detail="The free trial is for one series, not a movie")
+
+    now = datetime.now(timezone.utc)
+    user.trial_anime_id = anime.id
+    user.trial_claimed_at = now
+    user.trial_expires_at = now + timedelta(days=1)
+    await db.commit()
+    await db.refresh(user)
+    return UserRead.model_validate(user)
 
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
@@ -535,5 +567,4 @@ async def submit_unban_appeal(data: UnbanAppealRequest):
         "message": "សំណើស្នើសុំដោះសោររបស់អ្នកត្រូវបានផ្ញើទៅកាន់ Admin រួចរាល់ហើយ! Admin នឹងពិនិត្យដោះសោរជូនក្នុងពេលឆាប់ៗ។",
         "request_id": new_req["id"]
     }
-
 

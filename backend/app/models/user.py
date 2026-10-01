@@ -31,6 +31,11 @@ class User(Base):
     vip_started_at = Column(DateTime(timezone=True), nullable=True)
     vip_expires_at = Column(DateTime(timezone=True), nullable=True)
 
+    # One-time starter trial, restricted to a single series for 24 hours.
+    trial_anime_id = Column(Integer, nullable=True)
+    trial_claimed_at = Column(DateTime(timezone=True), nullable=True)
+    trial_expires_at = Column(DateTime(timezone=True), nullable=True)
+
     # Movie Access Fields (JSON-encoded list of movie slugs)
     unlocked_movies = Column(Text, default="[]", nullable=False)
 
@@ -69,4 +74,3 @@ class User(Base):
         if self.vip_expires_at.tzinfo is None:
             return self.vip_expires_at > datetime.utcnow()
         return self.vip_expires_at > now
-

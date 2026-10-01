@@ -14,6 +14,7 @@ import type { Anime, Episode, DanmakuItem } from '../types';
 import { downloadService } from '../services/downloadService';
 import { triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
+import { getVipContactUrl } from '../utils/vip';
 
 export function WatchPage() {
   const { isTelegram, isMobileApp } = usePlatform();
@@ -43,11 +44,12 @@ export function WatchPage() {
   }, [fetchPromoCountdown]);
 
   // ✅ VIP: Admin, Owner, STAFF, is_vip_active, is_vip => always unlocked
-  const isVipUser = isAdmin || isOwner || !!user && (user.role === 'ADMIN' || user.role === 'OWNER' || user.role === 'STAFF' || user.is_vip_active === true || user.is_vip === true);
+  const isVipUser = isAdmin || isOwner || !!user && (user.role === 'ADMIN' || user.role === 'OWNER' || user.role === 'STAFF' || user.is_vip_active === true);
+  const hasSeriesTrial = !!user && user.trial_anime_id === anime?.id && !!user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now();
   const isGlobalVipLocked = !!promoData && (promoData.is_vip_locked || promoData.is_expired);
   // ✅ Only treat episode as VIP if is_free is explicitly false (not null/undefined)
   const isCurrentEpVip = currentEp?.is_vip === true || (currentEp as any)?.is_vip_only === true || (currentEp?.is_free !== null && currentEp?.is_free !== undefined && currentEp?.is_free === false);
-  const isLocked = (isGlobalVipLocked || isCurrentEpVip) && !isVipUser;
+  const isLocked = (isGlobalVipLocked || isCurrentEpVip) && !isVipUser && !hasSeriesTrial;
 
   // 🍿 Movie Pay-Per-View check ($1.00)
   const isMovie = anime?.type === 'MOVIE';
@@ -441,12 +443,14 @@ export function WatchPage() {
                     >
                       <Send className="w-4 h-4" /> ទាក់ទង Admin @watchflixanimeadmin ដំឡើង VIP
                     </a>
-                    <Link
-                      to="/vip"
+                    <a
+                      href={getVipContactUrl(user?.username)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="w-full sm:w-auto py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm whitespace-nowrap transition-all"
                     >
                       ព័ត៌មាន VIP
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </div>

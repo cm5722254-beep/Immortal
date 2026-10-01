@@ -7,8 +7,10 @@ import {
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
 import { useAuthStore } from '../store/authStore';
 import { triggerHaptic } from '../utils/telegram';
+import { usePlatform } from '../utils/platform';
 
 export function LoginPage() {
+  const { isTelegram } = usePlatform();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from || '/';
@@ -84,15 +86,15 @@ export function LoginPage() {
   };
 
   return (
-    <main className="website-login min-h-screen flex items-center justify-center px-4 py-8 sm:py-12 bg-[#080d1a] relative overflow-hidden select-none">
+    <main className={`website-login min-h-screen ${isTelegram ? 'min-h-[100dvh] items-center px-4 py-5 sm:py-8' : 'items-center px-4 py-8 sm:py-12'} flex justify-center bg-[#080d1a] relative overflow-x-hidden overflow-y-auto select-none`}>
       {/* ── Dynamic Glowing Auroras ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-br from-rose-500/20 via-pink-600/15 to-transparent rounded-full blur-[150px]" />
-        <div className="absolute bottom-10 left-1/4 w-80 h-80 bg-rose-700/15 rounded-full blur-[110px]" />
-        <div className="absolute top-10 right-10 w-72 h-72 bg-amber-400/10 rounded-full blur-[100px]" />
+        <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[150px] ${isTelegram ? 'bg-gradient-to-br from-rose-500/25 via-violet-700/15 to-transparent' : 'bg-gradient-to-br from-rose-500/20 via-pink-600/15 to-transparent'}`} />
+        <div className={`absolute bottom-10 left-1/4 w-80 h-80 rounded-full blur-[110px] ${isTelegram ? 'bg-fuchsia-700/15' : 'bg-rose-700/15'}`} />
+        <div className={`absolute top-10 right-10 w-72 h-72 rounded-full blur-[100px] ${isTelegram ? 'bg-blue-600/10' : 'bg-amber-400/10'}`} />
       </div>
 
-      <div className="relative w-full max-w-md animate-scale-in z-10">
+      <div className={`relative w-full ${isTelegram ? 'max-w-[520px]' : 'max-w-md'} animate-scale-in z-10`}>
         {/* ── Brand Header & Logo ── */}
         <div className="text-center mb-6">
           <Link to="/" className="inline-flex items-center gap-3 group transition-transform duration-300 hover:scale-105">
@@ -114,7 +116,7 @@ export function LoginPage() {
         </div>
 
         {/* ── Main Luxury Glass Card ── */}
-        <div className="bg-[#0e1629]/95 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl relative overflow-hidden">
+        <div className={`${isTelegram ? 'bg-[#101727]/95 border-[#293247] rounded-[26px] p-5 sm:p-7 shadow-[0_22px_70px_rgba(0,0,0,.62)]' : 'bg-[#0e1629]/95 border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85)]'} border backdrop-blur-2xl relative overflow-hidden`}>
           
           <div className="text-center mb-5">
             <h1 className="font-display font-black text-xl sm:text-2xl text-white mb-1 tracking-tight">
@@ -359,10 +361,14 @@ export function LoginPage() {
         </div>
 
         {/* ── Back to Home ── */}
-        <div className="text-center mt-6">
-          <Link to="/" className="text-xs text-gray-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1">
-            ← ត្រឡប់ទៅទំព័រដើម
-          </Link>
+        <div className="text-center mt-6 pb-2">
+          {isTelegram ? (
+            <a href="https://t.me/animeflickh_bot" className="text-sm tracking-wide text-gray-300/90 hover:text-rose-300 transition-colors">@animeflickh_bot</a>
+          ) : (
+            <Link to="/" className="text-xs text-gray-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1">
+              ← ត្រឡប់ទៅទំព័រដើម
+            </Link>
+          )}
         </div>
       </div>
     </main>

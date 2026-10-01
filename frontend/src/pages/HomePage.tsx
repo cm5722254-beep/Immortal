@@ -9,6 +9,7 @@ import { usePlatform } from '../utils/platform';
 import { AnimeCard } from '../components/home/AnimeCard';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
 import { useAuthStore } from '../store/authStore';
+import { getVipContactUrl } from '../utils/vip';
 
 function getLocalContinueHistory(): WatchHistoryItem[] {
   try {
@@ -147,28 +148,22 @@ export function HomePage() {
           setIsLoading(false);
         }
 
-        const [donghuaRes, animeRes, movieRes] = await Promise.all([
-          api.get('/anime?type=DONGHUA&sort=popular&per_page=12').catch(() => null),
-          api.get('/anime?type=ANIME&sort=popular&per_page=6').catch(() => null),
-          api.get('/anime?type=MOVIE&sort=popular&per_page=6').catch(() => null),
-        ]);
-
-        if (isMounted) {
-          if (donghuaRes?.data?.items?.length) {
-            const fetched = donghuaRes.data.items as Anime[];
-            setForYouDonghua(fetched.slice(0, 4));
-            setPopularDonghua(fetched.slice(4, 12));
-          }
-          if (animeRes?.data?.items?.length) setAnimeList(animeRes.data.items);
-          if (movieRes?.data?.items?.length) setMovies(movieRes.data.items);
-          setIsLoading(false);
-        }
       } catch (err) {} finally {
         if (isMounted) setIsLoading(false);
       }
     };
+    const refreshFromCatalog = () => {
+      const catalog = getLocalCatalogSync();
+      if (!catalog?.anime?.length) return;
+      const extracted = extractHomeData(catalog);
+      setForYouDonghua(extracted.forYouDonghua);
+      setPopularDonghua(extracted.popularDonghua);
+      setAnimeList(extracted.animeList);
+      setMovies(extracted.movies);
+    };
+    window.addEventListener('nami-catalog-updated', refreshFromCatalog);
     initData();
-    return () => { isMounted = false; };
+    return () => { isMounted = false; window.removeEventListener('nami-catalog-updated', refreshFromCatalog); };
   }, []);
 
   const heroItems = [...forYouDonghua, ...popularDonghua, ...animeList].filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index).slice(0, 8);
@@ -190,7 +185,7 @@ export function HomePage() {
         <header className="mini-home-header">
           <Link to="/" className="mini-brand" aria-label="Huang Anime home">Huang<span>+</span></Link>
           <Link to="/search" className="mini-search" aria-label="Search"><span>Search anime and drama</span><Search className="w-5 h-5" /></Link>
-          <Link to="/vip" className="mini-vip">VIP</Link>
+          <a href={getVipContactUrl()} target="_blank" rel="noopener noreferrer" className="mini-vip">VIP</a>
         </header>
         <nav className="mini-categories" aria-label="Browse categories">
           {[

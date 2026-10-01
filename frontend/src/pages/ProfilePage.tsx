@@ -13,6 +13,7 @@ import { triggerHaptic } from '../utils/telegram';
 import { useUiPreferencesStore } from '../store/uiPreferencesStore';
 import { PlatformSwitcherModal } from '../components/common/PlatformSwitcherModal';
 import { clearLocalCatalogCache } from '../services/catalogService';
+import { getVipContactUrl } from '../utils/vip';
 
 export function ProfilePage() {
   const { user } = useAuthStore();
@@ -50,7 +51,7 @@ export function ProfilePage() {
   }, [user?.vip_expires_at]);
 
   const vipTimeLeft = (() => {
-    if (!user?.vip_expires_at) return user?.is_vip_active || user?.is_vip ? 'No expiry date' : 'No active VIP plan';
+    if (!user?.vip_expires_at) return user?.is_vip_active ? 'No expiry date' : 'No active VIP plan';
     const remaining = new Date(user.vip_expires_at).getTime() - vipClock;
     if (!Number.isFinite(remaining) || remaining <= 0) return 'Expired';
     const days = Math.floor(remaining / 86_400_000);
@@ -100,22 +101,29 @@ export function ProfilePage() {
             <div><h1>{userName}</h1><p>{user?.telegram_username ? `@${user.telegram_username}` : user?.telegram_first_name || user?.email || 'Welcome to Huang Anime'}{user?.telegram_id ? ` · Telegram ID: ${user.telegram_id}` : ''}</p></div>
             <ChevronRight className="w-5 h-5 ml-auto text-white/50" />
           </div>
-          <div className={`mini-vip-status ${user?.is_vip_active || user?.is_vip ? 'active' : ''}`}>
-            <div><strong>{user?.is_vip_active || user?.is_vip ? `VIP · ${user.vip_plan || 'Active'}` : 'Standard'}</strong><span>{vipExpiryDate ? `Expires ${vipExpiryDate} · ${vipTimeLeft}` : vipTimeLeft}</span></div>
-            <Link to="/vip">{user?.is_vip_active || user?.is_vip ? 'VIP benefits' : 'Upgrade VIP'} ›</Link>
+          <div className={`mini-vip-status ${user?.is_vip_active ? 'active' : ''}`}>
+            <div><strong>{user?.is_vip_active ? `VIP · ${user.vip_plan || 'Active'}` : 'Standard'}</strong><span>{vipExpiryDate ? `Expires ${vipExpiryDate} · ${vipTimeLeft}` : vipTimeLeft}</span></div>
+            {user?.is_vip_active ? <Link to="/vip">VIP benefits ›</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer">Upgrade VIP ›</a>}
           </div>
         </div>
+        {user?.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() && (
+          <p className="mx-4 mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">Free trial active for one series · expires {new Date(user.trial_expires_at).toLocaleString()}</p>
+        )}
         <div className="mini-profile-wallet">
           {[
             { label: 'VIP Plans', icon: Gift },
             { label: 'My List', icon: Bookmark },
             { label: 'Downloads', icon: Download },
-          ].map(({ label, icon: Icon }, index) => <Link key={label} to={index === 0 ? '/vip' : index === 1 ? '/favorites' : '/downloads'}><Icon /><span>{label}</span></Link>)}
+          ].map(({ label, icon: Icon }, index) => index === 0
+            ? <a key={label} href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer"><Icon /><span>Message to buy</span></a>
+            : <Link key={label} to={index === 1 ? '/favorites' : '/downloads'}><Icon /><span>{label}</span></Link>)}
         </div>
         <div className="mini-profile-menu">
           {menuRows.map(({ label, icon: Icon, to, hint, action }) => {
             const row = <><Icon className="mini-menu-icon" /><span>{label}</span>{hint && <small>{hint}</small>}{label === 'My List' && <Plus className="mini-menu-plus" />}</>;
-            return to ? <Link key={label} to={to} className="mini-menu-row">{row}</Link> : <button key={label} className="mini-menu-row" onClick={action}>{row}</button>;
+            return to === '/vip'
+              ? <a key={label} href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer" className="mini-menu-row">{row}</a>
+              : to ? <Link key={label} to={to} className="mini-menu-row">{row}</Link> : <button key={label} className="mini-menu-row" onClick={action}>{row}</button>;
           })}
         </div>
         <p className="mini-profile-version">Huang Anime · Mobile</p>
@@ -191,7 +199,7 @@ export function ProfilePage() {
                   <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                     <ShieldAlert className="w-3 h-3" /> បុគ្គលិក (Staff)
                   </span>
-                ) : user?.is_vip_active || user?.is_vip ? (
+                ) : user?.is_vip_active ? (
                   <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black px-2 py-0.5 rounded-full">
                     <Crown className="w-3 h-3 fill-amber-400" /> VIP ({user.vip_plan ? user.vip_plan.toUpperCase() : 'សកម្ម'})
                   </span>
@@ -217,11 +225,14 @@ export function ProfilePage() {
         <section className="rounded-2xl border border-amber-400/25 bg-gradient-to-r from-[#201a10] to-[#17191e] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-wider text-amber-300">VIP membership</p>
-            <p className="mt-1 text-sm font-semibold text-white">{vipExpiryDate ? `Expires ${vipExpiryDate}` : (user?.is_vip_active || user?.is_vip) ? 'Lifetime membership' : 'Standard plan'}</p>
+            <p className="mt-1 text-sm font-semibold text-white">{vipExpiryDate ? `Expires ${vipExpiryDate}` : user?.is_vip_active ? 'Lifetime membership' : 'Standard plan'}</p>
             <p className="mt-1 text-xs text-gray-400">{vipTimeLeft}</p>
           </div>
-          <Link to="/vip" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">{user?.is_vip_active || user?.is_vip ? 'VIP benefits' : 'View VIP plans'}</Link>
+          {user?.is_vip_active ? <Link to="/vip" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">VIP benefits</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">Message to buy</a>}
         </section>
+        {user?.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() && (
+          <p className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">Free trial active for one series · expires {new Date(user.trial_expires_at).toLocaleString()}</p>
+        )}
 
         {/* ── 2. ✨ NEW: UI & DISPLAY SETTINGS (ការកំណត់ការបង្ហាញកុំឱ្យរញេរញៃ) ── */}
         <div className="space-y-2">

@@ -8,7 +8,7 @@ export function MobileNav() {
   const location = useLocation();
   const { user, isAuthenticated, isVip } = useAuthStore();
   const { isMobileApp, isTelegram } = usePlatform();
-  const isVipUser = isVip || user?.is_vip_active || user?.is_vip;
+  const isVipUser = isVip || user?.is_vip_active;
 
   if (location.pathname.startsWith('/watch') || ['/vip', '/settings', '/account', '/help', '/scan', '/referrals', '/notifications'].includes(location.pathname)) return null;
 

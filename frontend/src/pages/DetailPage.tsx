@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Play, Bookmark, Share2, MessageSquare, ArrowLeft,
   Star, Check, Sparkles, Crown, Film,
@@ -22,7 +22,8 @@ type MyListStatus = 'NONE' | 'WATCHING' | 'PLAN_TO_WATCH' | 'COMPLETED' | 'FAVOR
 export function DetailPage() {
   const { isTelegram, isMobileApp } = usePlatform();
   const { slug } = useParams<{ slug: string }>();
-  const { user, isAuthenticated, isAdmin, isOwner } = useAuthStore();
+  const location = useLocation();
+  const { user, isAuthenticated, isAdmin, isOwner, setUser } = useAuthStore();
   const navigate = useNavigate();
 
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -37,6 +38,8 @@ export function DetailPage() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [movieUnlocked] = useState(false);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const [claimingTrial, setClaimingTrial] = useState(false);
+  const [trialError, setTrialError] = useState('');
 
   // 5-Star Rating State
   const [userRating, setUserRating] = useState<number>(0);
@@ -324,6 +327,24 @@ export function DetailPage() {
     }, 1500);
   };
 
+  const claimFreeTrial = async () => {
+    if (!anime || anime.type === 'MOVIE') return;
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+    setClaimingTrial(true);
+    setTrialError('');
+    try {
+      const response = await api.post('/auth/claim-trial', { anime_id: anime.id });
+      setUser(response.data);
+    } catch (error: any) {
+      setTrialError(error?.response?.data?.detail || 'Could not claim the free trial. Please try again.');
+    } finally {
+      setClaimingTrial(false);
+    }
+  };
+
   // Filter & sort episodes (must be before early returns to satisfy React rules of hooks)
   const filteredEpisodes = useMemo(() => {
     return episodes
@@ -366,6 +387,7 @@ export function DetailPage() {
   }, [filteredEpisodes, rangeChunks, selectedRange, epSearch]);
 
   const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
+  const hasSeriesTrial = !!user && user.trial_anime_id === anime?.id && !!user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now();
   const userUnlockedMovies = user?.unlocked_movies || [];
   const hasMovieAccess = isAdministrator || movieUnlocked || (anime?.slug ? (isMoviePurchased(anime.slug) || userUnlockedMovies.includes(anime.slug)) : false);
 
@@ -631,6 +653,25 @@ export function DetailPage() {
 
       {/* ── 2. Tab Navigation & Content Section ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+        {anime.type !== 'MOVIE' && user?.role !== 'ADMIN' && user?.role !== 'OWNER' && user?.role !== 'STAFF' && !user?.is_vip_active && (
+          <section className="flex flex-col gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.07] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-bold text-white">One free day for one series</h2>
+              <p className="mt-1 text-sm text-white/65">Claim once to watch every episode of this series for 24 hours.</p>
+              {trialError && <p role="alert" className="mt-2 text-sm text-rose-300">{trialError}</p>}
+            </div>
+            {user?.trial_anime_id === anime.id && user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() ? (
+              <span className="rounded-xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-200">Your free trial is active for this series</span>
+            ) : user?.trial_claimed_at ? (
+              <span className="rounded-xl bg-white/5 px-4 py-3 text-sm text-white/60">Free trial already claimed</span>
+            ) : user?.is_vip_active ? null : (
+              <button onClick={claimFreeTrial} disabled={claimingTrial} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 font-bold text-[#06130c] transition hover:bg-emerald-400 disabled:opacity-60">
+                {claimingTrial ? 'Claiming…' : 'Claim free 1-day trial'}
+              </button>
+            )}
+          </section>
+        )}
+
         {/* Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto no-scrollbar">
           <button
@@ -774,7 +815,7 @@ export function DetailPage() {
               /* Sleek Compact Number Grid (5 per row on mobile, up to 10 on desktop) */
               <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-2.5">
                 {displayedEpisodes.map((ep) => {
-                  const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
+                  const isEpVip = !hasSeriesTrial && (ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false));
 
                   return (
                     <Link
@@ -801,7 +842,7 @@ export function DetailPage() {
               /* List Mode with Episode Name & Quick Play */
               <div className="space-y-2">
                 {displayedEpisodes.map((ep) => {
-                  const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
+                  const isEpVip = !hasSeriesTrial && (ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false));
 
                   return (
                     <Link
