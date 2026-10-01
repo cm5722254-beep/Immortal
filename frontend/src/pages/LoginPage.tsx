@@ -60,7 +60,7 @@ export function LoginPage() {
     setIsSubmittingAppeal(true);
     try {
       const isProd = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
-      const apiBase = (window as any).__VITE_API_URL__ || (isProd ? 'https://merdonghua-com.onrender.com' : 'http://localhost:8000');
+      const apiBase = (window as any).__VITE_API_URL__ || (isProd ? 'https://immortal-s7ui.onrender.com' : 'http://localhost:8000');
       const res = await fetch(`${apiBase}/api/auth/request-unban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,7 +84,7 @@ export function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-12 bg-[#080d1a] relative overflow-hidden select-none">
+    <main className="website-login min-h-screen flex items-center justify-center px-4 py-8 sm:py-12 bg-[#080d1a] relative overflow-hidden select-none">
       {/* ── Dynamic Glowing Auroras ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-br from-rose-500/20 via-pink-600/15 to-transparent rounded-full blur-[150px]" />

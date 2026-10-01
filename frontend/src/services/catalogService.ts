@@ -12,6 +12,11 @@ export interface StaticCatalog {
 let memoryCatalog: StaticCatalog | null = null;
 const CATALOG_STORAGE_KEY = 'nami_static_catalog_v3';
 
+export function clearLocalCatalogCache() {
+  memoryCatalog = null;
+  try { localStorage.removeItem(CATALOG_STORAGE_KEY); } catch {}
+}
+
 // 1. Synchronously get catalog from memory or localStorage (0.001s)
 export function getLocalCatalogSync(): StaticCatalog | null {
   if (memoryCatalog) return memoryCatalog;
@@ -60,7 +65,7 @@ export async function loadCatalog(): Promise<StaticCatalog> {
 async function refreshCatalogInBackground() {
   try {
     // Ping API health to keep Render warm
-    fetch('https://merdonghua-com.onrender.com/api/health').catch(() => {});
+    fetch('https://immortal-s7ui.onrender.com/api/health').catch(() => {});
   } catch {}
 }
 
@@ -182,4 +187,3 @@ export function getFavoritesSync(catalog?: StaticCatalog | null): Anime[] {
   if (!ids.length) return [];
   return c.anime.filter((a) => ids.includes(a.id));
 }
-

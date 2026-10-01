@@ -1,11 +1,12 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, TrendingUp, Sparkles, Star, ChevronRight } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import { Play, Star, ChevronRight, Search, Bookmark, ChevronLeft } from 'lucide-react';
 import api from '../services/api';
 import { getLocalCatalogSync, loadCatalog, extractHomeData } from '../services/catalogService';
-import type { Anime, Banner, WatchHistoryItem } from '../types';
+import type { Anime } from '../types';
 import { triggerHaptic } from '../utils/telegram';
+import { usePlatform } from '../utils/platform';
+import { AnimeCard } from '../components/home/AnimeCard';
 
 // A completely new, ultra-modern Bento Box / Magazine style card
 function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean }) {
@@ -47,7 +48,7 @@ function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean
             {anime.title}
           </h3>
           <div className="flex items-center gap-2 text-[10px] sm:text-xs text-gray-400 font-medium mb-4">
-            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> {anime.rating || '9.5'}</span>
+            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> {anime.average_rating?.toFixed(1) || '9.5'}</span>
             <span>•</span>
             <span>{anime.year || '2024'}</span>
             <span>•</span>
@@ -71,8 +72,9 @@ function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean
 }
 
 export function HomePage() {
-  const { isAuthenticated } = useAuthStore();
-  
+  void BentoCard;
+  const { isTelegram, isMobileApp } = usePlatform();
+
   const initialData = (() => {
     const sync = getLocalCatalogSync();
     if (sync && sync.anime && sync.anime.length > 0) return extractHomeData(sync);
@@ -84,6 +86,7 @@ export function HomePage() {
   const [animeList, setAnimeList] = useState<Anime[]>(initialData?.animeList || []);
   const [movies, setMovies] = useState<Anime[]>(initialData?.movies || []);
   const [isLoading, setIsLoading] = useState(!initialData);
+  const [heroIndex, setHeroIndex] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -123,83 +126,93 @@ export function HomePage() {
     return () => { isMounted = false; };
   }, []);
 
-  const allCombined = useMemo(() => {
-    const map = new Map<number, Anime>();
-    [...forYouDonghua, ...popularDonghua, ...animeList, ...movies].forEach((a) => map.set(a.id, a));
-    return Array.from(map.values());
-  }, [forYouDonghua, popularDonghua, animeList, movies]);
-
-  const heroItem = forYouDonghua[0] || popularDonghua[0];
-  const bentoItems = popularDonghua.slice(0, 5); // Take 5 items for the bento grid
+  const heroItems = [...forYouDonghua, ...popularDonghua, ...animeList].filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index).slice(0, 8);
+  const heroItem = heroItems[heroIndex] || forYouDonghua[0] || popularDonghua[0];
 
   if (isLoading) {
     return <div className="min-h-screen bg-black flex items-center justify-center"><div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" /></div>;
   }
 
-  return (
-    <main className="min-h-screen bg-black text-gray-100 pb-24 font-sans selection:bg-white/20">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10">
-        
-        {/* ── Giant Header ── */}
-        <header className="mb-8 sm:mb-12">
-          <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter mb-2">ស្វែងរកអានីមេ<br/>ដែលអ្នកចូលចិត្ត</h1>
-          <p className="text-gray-400 text-sm sm:text-base max-w-md">ទទួលបានបទពិសោធន៍ទស្សនាភាពយន្តលំដាប់ខ្ពស់ជាមួយគុណភាពច្បាស់ត្រជាក់ភ្នែក គ្មានពាណិជ្ជកម្ម។</p>
+  if (isTelegram || isMobileApp) {
+    const miniSections = [
+      { title: 'Continue watching', items: forYouDonghua },
+      { title: 'Popular anime', items: animeList },
+      { title: 'Donghua for you', items: popularDonghua },
+      { title: 'Movies & drama', items: movies },
+    ].filter((section) => section.items.length > 0);
+
+    return (
+      <main className="mini-home min-h-screen bg-[#111216] text-white pb-5">
+        <header className="mini-home-header">
+          <Link to="/" className="mini-brand" aria-label="Huang Anime home">Huang<span>+</span></Link>
+          <Link to="/search" className="mini-search" aria-label="Search"><span>Search anime and drama</span><Search className="w-5 h-5" /></Link>
+          <Link to="/vip" className="mini-vip">VIP</Link>
         </header>
-
-        {/* ── Modern Bento Grid ── */}
-        <section className="mb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-              កំពុងពេញនិយមខ្លាំង
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 auto-rows-[200px] sm:auto-rows-[250px] lg:auto-rows-[300px]">
-            {heroItem && <BentoCard anime={heroItem} isLarge={true} />}
-            {bentoItems.map((anime, index) => (
-              <BentoCard key={anime.id} anime={anime} isLarge={false} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Anime List Grid (Minimalist) ── */}
-        <section className="mb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-rose-500" />
-              អានីមេជប៉ុនថ្មីៗ
-            </h2>
-            <Link to="/anime" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center">
-              មើលទាំងអស់ <ChevronRight className="w-4 h-4 ml-1" />
+        <nav className="mini-categories" aria-label="Browse categories">
+          {[
+            ['For You', '/'], ['Donghua', '/donghua'], ['Anime', '/anime'],
+            ['Drama', '/drama'], ['Movies', '/movies'], ['Explore', '/explore'],
+          ].map(([label, to]) => <Link key={to} to={to}>{label}</Link>)}
+        </nav>
+        {heroItem && (
+          <section className="mini-hero">
+            <Link to={`/${heroItem.type === 'ANIME' ? 'anime' : heroItem.type === 'DRAMA' ? 'drama' : heroItem.type === 'MOVIE' ? 'movie' : 'donghua'}/${heroItem.slug}`} className="mini-hero-art">
+              <img src={heroItem.banner_url || heroItem.poster_url || ''} alt={heroItem.title} />
+              <div className="mini-hero-shade" />
+              <div className="mini-hero-copy">
+                <span className="mini-hero-tag">✦ Featured</span>
+                <h1>{heroItem.title}</h1>
+                <p>{heroItem.description || `${heroItem.year || 'New'} · ${heroItem.episode_count || 'New'} episodes · ★ ${(heroItem.average_rating || 9.5).toFixed(1)}`}</p>
+              </div>
             </Link>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-            {animeList.slice(0, 6).map((anime) => (
-              <BentoCard key={anime.id} anime={anime} isLarge={false} />
-            ))}
-          </div>
-        </section>
+            <Link to={`/watch/${heroItem.slug}/1`} className="mini-hero-play" aria-label={`Play ${heroItem.title}`}><Play className="w-6 h-6 fill-current" /></Link>
+          </section>
+        )}
+        <div className="mini-home-sections">
+          {miniSections.map((section) => (
+            <section key={section.title} className="mini-shelf">
+              <div className="mini-shelf-heading"><h2>{section.title}</h2><Link to="/explore">More <ChevronRight className="w-4 h-4" /></Link></div>
+              <div className="mini-poster-row">
+                {section.items.slice(0, 9).map((anime) => (
+                  <Link key={`${section.title}-${anime.id}`} to={`/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DRAMA' ? 'drama' : anime.type === 'MOVIE' ? 'movie' : 'donghua'}/${anime.slug}`} className="mini-poster-card">
+                    <div className="mini-poster-art"><img src={anime.poster_url || anime.banner_url || ''} alt={anime.title} loading="lazy" />
+                      {!anime.is_free && <span className="mini-poster-badge">VIP</span>}
+                      {anime.status === 'ONGOING' && <span className="mini-poster-update">Updated · {anime.episode_count || 'New'}</span>}
+                    </div>
+                    <span className="mini-poster-title">{anime.title}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </main>
+    );
+  }
 
-        {/* ── Movies Grid (Minimalist) ── */}
-        <section className="mb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
-              ភាពយន្តដុំល្បីៗ
-            </h2>
-            <Link to="/movies" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center">
-              មើលទាំងអស់ <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-            {movies.slice(0, 6).map((anime) => (
-              <BentoCard key={anime.id} anime={anime} isLarge={false} />
-            ))}
-          </div>
-        </section>
-
+  return (
+    <main className="website-home min-h-screen bg-[#111216] text-gray-100 pb-24 font-sans selection:bg-white/20">
+      {heroItem && <section className="website-hero" style={{ backgroundImage: `linear-gradient(90deg,rgba(12,19,36,.98) 0%,rgba(12,19,36,.84) 28%,rgba(12,19,36,.12) 67%,rgba(12,19,36,.5) 100%),linear-gradient(0deg,#111216 0%,transparent 29%),url('${heroItem.banner_url || heroItem.poster_url || ''}')` }}>
+        <div className="website-hero-copy">
+          <div className="website-hero-eyebrow"><span>TOP {heroIndex + 1}</span><span>{heroItem.is_free ? 'Limited free' : 'VIP'}</span><span>{heroItem.type === 'ANIME' ? 'Anime' : heroItem.type === 'DRAMA' ? 'Drama' : 'Popular'}</span></div>
+          <h1>{heroItem.title}</h1>
+          <div className="website-hero-meta"><b>★ {(heroItem.average_rating || 9.6).toFixed(1)}</b><i />{heroItem.year || '2026'}<i />13+<i />{heroItem.episode_count || 12} Episodes</div>
+          <div className="website-hero-tags">{[heroItem.type === 'ANIME' ? 'Japan' : 'Chinese Mainland', heroItem.type === 'ANIME' ? 'Japanese' : 'Mandarin', 'Adventure'].map((tag) => <span key={tag}>{tag}</span>)}</div>
+          <p>{heroItem.description || `Discover ${heroItem.title}, now streaming on Huang Anime.`}</p>
+          <div className="website-hero-actions"><Link to={`/watch/${heroItem.slug}/1`} className="website-play"><Play fill="currentColor" /></Link><button type="button" className="website-save" onClick={() => { const saved = JSON.parse(localStorage.getItem('nami_my_list') || '[]'); const next = saved.includes(heroItem.id) ? saved.filter((id: number) => id !== heroItem.id) : [...saved, heroItem.id]; localStorage.setItem('nami_my_list', JSON.stringify(next)); }} aria-label="Add to My List"><Bookmark /></button></div>
+        </div>
+        {heroItems.length > 1 && <><button className="website-hero-arrow prev" onClick={() => setHeroIndex((heroIndex - 1 + heroItems.length) % heroItems.length)} aria-label="Previous"><ChevronLeft /></button><button className="website-hero-arrow next" onClick={() => setHeroIndex((heroIndex + 1) % heroItems.length)} aria-label="Next"><ChevronRight /></button><div className="website-hero-dots">{heroItems.map((item, index) => <button key={item.id} onClick={() => setHeroIndex(index)} className={index === heroIndex ? 'active' : ''} aria-label={`Show ${item.title}`} />)}</div></>}
+      </section>}
+      <div className="website-home-content">
+        {[
+          { title: 'Popular on Huang Anime', items: [...popularDonghua, ...animeList], to: '/explore' },
+          { title: 'Trending Chinese Animation', items: popularDonghua, to: '/donghua' },
+          { title: 'Latest Release', items: animeList, to: '/anime' },
+          { title: 'Movies & Drama', items: movies, to: '/movies' },
+        ].filter((section) => section.items.length > 0).map((section) => <section className="website-shelf" key={section.title}>
+          <div className="website-shelf-heading"><h2>{section.title}</h2><Link to={section.to}>More <ChevronRight size={16}/></Link></div>
+          <div className="website-shelf-row">{section.items.slice(0, 10).map((anime) => <div className="website-shelf-card" key={`${section.title}-${anime.id}`}><AnimeCard anime={anime}/><span>{anime.title}</span></div>)}</div>
+        </section>)}
       </div>
     </main>
   );

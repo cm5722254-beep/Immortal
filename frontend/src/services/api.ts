@@ -5,7 +5,7 @@ const isNative = Capacitor.isNativePlatform();
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
   (isNative || import.meta.env.PROD
-    ? 'https://merdonghua-com.onrender.com'
+    ? 'https://immortal-s7ui.onrender.com'
     : 'http://localhost:8000');
 
 export const api = axios.create({
@@ -113,7 +113,7 @@ api.interceptors.response.use(
     ) {
       const currentUrl = error.config.baseURL || '';
       if (currentUrl.includes('localhost:8000')) {
-        error.config.baseURL = 'https://merdonghua-com.onrender.com/api';
+        error.config.baseURL = 'https://immortal-s7ui.onrender.com/api';
         error.config.headers = error.config.headers || {};
         error.config.headers['X-Fallback-Tried'] = 'true';
         return axios(error.config);

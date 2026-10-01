@@ -9,6 +9,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { Logo } from './Logo';
 import api from '../../services/api';
+import { usePlatform } from '../../utils/platform';
 
 interface NotificationItem {
   id: string;
@@ -32,6 +33,7 @@ const NAV_LINKS = [
 ];
 
 export function Navbar() {
+  const { isWeb } = usePlatform();
   const { user, isAuthenticated, isStaff, isOwner, isAdmin, canManageContent, logout } = useAuthStore();
   const isOwnerUser = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
   const isAdminUser = isOwnerUser || isAdmin || user?.role === 'ADMIN';
@@ -171,7 +173,10 @@ export function Navbar() {
 
           {/* Navigation Links (Visible from Tablet md: upwards) */}
           <nav className="hidden md:flex items-center gap-1 lg:gap-1.5">
-            {NAV_LINKS.map((link) => (
+            {(isWeb ? [
+              { to: '/', label: 'For You' }, { to: '/donghua', label: 'Donghua' }, { to: '/anime', label: 'Anime' },
+              { to: '/drama', label: 'Drama' }, { to: '/movies', label: 'Movies' }, { to: '/explore', label: 'More' },
+            ] : NAV_LINKS).map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}

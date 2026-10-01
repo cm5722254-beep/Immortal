@@ -4,13 +4,15 @@ import {
   ChevronRight, Languages, Headset,
   Sparkles, Tv, Zap, ExternalLink,
   Send, Smartphone, Trash2, CheckCircle2, Crown, ShieldAlert,
-  RotateCw, SlidersHorizontal, Eye, Wand2
+  RotateCw, SlidersHorizontal, Eye, Wand2, Clock3, Download, Bookmark,
+  Gift, Settings, MessageSquare, Plus, Bell, QrCode
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { usePlatform } from '../utils/platform';
 import { triggerHaptic } from '../utils/telegram';
 import { useUiPreferencesStore } from '../store/uiPreferencesStore';
 import { PlatformSwitcherModal } from '../components/common/PlatformSwitcherModal';
+import { clearLocalCatalogCache } from '../services/catalogService';
 
 export function ProfilePage() {
   const { user } = useAuthStore();
@@ -26,14 +28,37 @@ export function ProfilePage() {
 
   const [userName, setUserName] = useState(user?.username || 'Free Cultivator');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [streamQuality, setStreamQuality] = useState('4K Ultra HD');
+  const [streamQuality, setStreamQuality] = useState(() => {
+    try { return localStorage.getItem('nami_playback_quality') || 'Auto'; } catch { return 'Auto'; }
+  });
   const [showPlatformModal, setShowPlatformModal] = useState(false);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(() => {
+    try { return localStorage.getItem('nami_subtitles_enabled') !== 'false'; } catch { return true; }
+  });
+  const [vipClock, setVipClock] = useState(() => Date.now());
 
   useEffect(() => {
     if (user?.username) {
       setUserName(user.username);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.vip_expires_at) return;
+    const timer = window.setInterval(() => setVipClock(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, [user?.vip_expires_at]);
+
+  const vipTimeLeft = (() => {
+    if (!user?.vip_expires_at) return user?.is_vip_active || user?.is_vip ? 'No expiry date' : 'No active VIP plan';
+    const remaining = new Date(user.vip_expires_at).getTime() - vipClock;
+    if (!Number.isFinite(remaining) || remaining <= 0) return 'Expired';
+    const days = Math.floor(remaining / 86_400_000);
+    const hours = Math.floor((remaining % 86_400_000) / 3_600_000);
+    const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+    return `${days}d ${hours}h ${minutes}m remaining`;
+  })();
+  const vipExpiryDate = user?.vip_expires_at ? new Date(user.vip_expires_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : null;
 
   const showToast = (msg: string) => {
     triggerHaptic('light');
@@ -43,8 +68,65 @@ export function ProfilePage() {
     }, 2500);
   };
 
+  if (isTelegram || isMobileApp) {
+    const menuRows = [
+      { label: 'My List', icon: Bookmark, to: '/favorites' },
+      { label: 'History', icon: Clock3, to: '/history' },
+      { label: 'Download TV App', icon: Download, to: '/downloads', hint: 'Enjoy now' },
+      { label: 'Language · Khmer', icon: Languages, action: () => showToast('Khmer is the current interface language') },
+      { label: `Subtitles · ${subtitlesEnabled ? 'On' : 'Off'}`, icon: Languages, action: () => {
+        const next = !subtitlesEnabled;
+        setSubtitlesEnabled(next);
+        localStorage.setItem('nami_subtitles_enabled', String(next));
+        showToast(`Subtitles ${next ? 'enabled' : 'disabled'}`);
+      } },
+      { label: 'Settings', icon: Settings, to: '/settings' },
+      { label: 'App appearance', icon: SlidersHorizontal, action: () => setShowPlatformModal(true) },
+      { label: 'VIP Membership', icon: Gift, to: '/vip' },
+      { label: 'Friend Referral Rewards', icon: Gift, to: '/referrals' },
+      { label: 'Help and Feedback', icon: MessageSquare, to: '/help' },
+    ];
+
+    return (
+      <main className="mini-profile min-h-screen bg-[#111216] text-white pb-8">
+        <div className="mini-profile-top">
+          <div className="mini-profile-tools">
+            <Link aria-label="Scan QR code" to="/scan"><QrCode /></Link>
+            <Link aria-label="Notifications" to="/notifications"><Bell /></Link>
+            <button aria-label="Display settings" onClick={() => setShowPlatformModal(true)}><SlidersHorizontal /></button>
+          </div>
+          <div className="mini-profile-identity">
+            <Link to="/account" className="mini-profile-avatar" aria-label="Personal data">{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : userName.slice(0, 1).toUpperCase()}</Link>
+            <div><h1>{userName}</h1><p>{user?.telegram_username ? `@${user.telegram_username}` : user?.email || 'Welcome to Huang Anime'}</p></div>
+            <ChevronRight className="w-5 h-5 ml-auto text-white/50" />
+          </div>
+          <div className={`mini-vip-status ${user?.is_vip_active || user?.is_vip ? 'active' : ''}`}>
+            <div><strong>{user?.is_vip_active || user?.is_vip ? `VIP · ${user.vip_plan || 'Active'}` : 'Standard'}</strong><span>{vipExpiryDate ? `Expires ${vipExpiryDate} · ${vipTimeLeft}` : vipTimeLeft}</span></div>
+            <Link to="/vip">{user?.is_vip_active || user?.is_vip ? 'VIP benefits' : 'Upgrade VIP'} ›</Link>
+          </div>
+        </div>
+        <div className="mini-profile-wallet">
+          {[
+            { label: 'VIP Plans', icon: Gift },
+            { label: 'My List', icon: Bookmark },
+            { label: 'Downloads', icon: Download },
+          ].map(({ label, icon: Icon }, index) => <Link key={label} to={index === 0 ? '/vip' : index === 1 ? '/favorites' : '/downloads'}><Icon /><span>{label}</span></Link>)}
+        </div>
+        <div className="mini-profile-menu">
+          {menuRows.map(({ label, icon: Icon, to, hint, action }) => {
+            const row = <><Icon className="mini-menu-icon" /><span>{label}</span>{hint && <small>{hint}</small>}{label === 'My List' && <Plus className="mini-menu-plus" />}</>;
+            return to ? <Link key={label} to={to} className="mini-menu-row">{row}</Link> : <button key={label} className="mini-menu-row" onClick={action}>{row}</button>;
+          })}
+        </div>
+        <p className="mini-profile-version">Huang Anime · Mobile</p>
+        <PlatformSwitcherModal isOpen={showPlatformModal} onClose={() => setShowPlatformModal(false)} />
+        {toastMessage && <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-[#24252b] border border-white/10 text-white text-xs px-4 py-3 rounded-xl shadow-2xl whitespace-nowrap">{toastMessage}</div>}
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen pb-28 md:pb-14 bg-[#0A0E17] text-gray-100 px-4 py-6 max-w-lg mx-auto">
+    <main className={`website-profile min-h-screen pb-28 md:pb-14 bg-[#0A0E17] text-gray-100 px-4 py-6 max-w-lg mx-auto ${!isTelegram && !isMobileApp ? 'is-web-profile' : ''}`}>
       {/* ── Top Header ── */}
       <div className="mb-6 pt-1 flex items-center justify-between">
         <div>
@@ -131,6 +213,15 @@ export function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <section className="rounded-2xl border border-amber-400/25 bg-gradient-to-r from-[#201a10] to-[#17191e] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-amber-300">VIP membership</p>
+            <p className="mt-1 text-sm font-semibold text-white">{vipExpiryDate ? `Expires ${vipExpiryDate}` : (user?.is_vip_active || user?.is_vip) ? 'Lifetime membership' : 'Standard plan'}</p>
+            <p className="mt-1 text-xs text-gray-400">{vipTimeLeft}</p>
+          </div>
+          <Link to="/vip" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">{user?.is_vip_active || user?.is_vip ? 'VIP benefits' : 'View VIP plans'}</Link>
+        </section>
 
         {/* ── 2. ✨ NEW: UI & DISPLAY SETTINGS (ការកំណត់ការបង្ហាញកុំឱ្យរញេរញៃ) ── */}
         <div className="space-y-2">
@@ -267,8 +358,10 @@ export function ProfilePage() {
             {/* Quality Selector */}
             <div
               onClick={() => {
-                const next = streamQuality === '4K Ultra HD' ? '1080p Full HD' : '4K Ultra HD';
+                const order = ['Auto', '720p HD', '1080p Full HD', '4K Ultra HD'];
+                const next = order[(order.indexOf(streamQuality) + 1) % order.length];
                 setStreamQuality(next);
+                localStorage.setItem('nami_playback_quality', next);
                 showToast(`កម្រិតរូបភាព៖ ${next}`);
               }}
               className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
@@ -369,7 +462,7 @@ export function ProfilePage() {
             <div className="pt-2 flex items-center justify-between text-xs text-gray-400 border-t border-amber-500/20">
               <span>ទិន្នន័យផ្ទុកបណ្ដោះអាសន្ន (Cache)៖</span>
               <button
-                onClick={() => showToast('បានសម្អាត Cache រួចរាល់!')}
+                onClick={() => { clearLocalCatalogCache(); showToast('បានសម្អាត Cache រួចរាល់!'); }}
                 className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" /> សម្អាត Cache

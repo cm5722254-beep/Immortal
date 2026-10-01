@@ -15,10 +15,12 @@ import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { loadCatalog, extractAnimeDetail } from '../services/catalogService';
 import type { Anime, Episode, Comment } from '../types';
+import { usePlatform } from '../utils/platform';
 
 type MyListStatus = 'NONE' | 'WATCHING' | 'PLAN_TO_WATCH' | 'COMPLETED' | 'FAVORITE';
 
 export function DetailPage() {
+  const { isTelegram, isMobileApp } = usePlatform();
   const { slug } = useParams<{ slug: string }>();
   const { user, isAuthenticated, isAdmin, isOwner } = useAuthStore();
   const navigate = useNavigate();
@@ -384,7 +386,7 @@ export function DetailPage() {
   }
 
   return (
-    <main className="min-h-screen pb-24 md:pb-16 bg-black text-gray-100 selection:bg-rose-500 selection:text-white">
+    <main className={`mini-detail ${!isTelegram && !isMobileApp ? 'website-detail' : ''} min-h-screen pb-24 md:pb-16 bg-black text-gray-100 selection:bg-rose-500 selection:text-white ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
       {/* ── 1. Full-Bleed Cinematic Hero Banner (Mobile & Desktop App Style) ── */}
       <div className="relative w-full overflow-hidden bg-black">
         

@@ -12,10 +12,11 @@ import api from '../services/api';
 import { loadCatalog, extractAnimeDetail } from '../services/catalogService';
 import type { Anime, Episode, DanmakuItem } from '../types';
 import { downloadService } from '../services/downloadService';
-import { isYouTubeUrl, isFacebookUrl } from '../utils/youtube';
 import { triggerHaptic } from '../utils/telegram';
+import { usePlatform } from '../utils/platform';
 
 export function WatchPage() {
+  const { isTelegram, isMobileApp } = usePlatform();
   const { slug, episodeNumber } = useParams<{ slug: string; episodeNumber: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -175,6 +176,23 @@ export function WatchPage() {
       } catch (err) {
         console.error('Offline load error:', err);
       }
+
+      // Keep cached catalog titles on the watch flow when the API is offline.
+      // A missing network response is not the same as a title that does not exist.
+      try {
+        const fallbackCatalog = await loadCatalog();
+        const fallbackDetail = extractAnimeDetail(slug, fallbackCatalog);
+        if (fallbackDetail) {
+          setAnime(fallbackDetail.anime);
+          setEpisodes(fallbackDetail.episodes);
+          const fallbackEpisode = fallbackDetail.episodes.find((episode) => episode.episode_number === epNum) || fallbackDetail.episodes[0] || null;
+          setCurrentEp(fallbackEpisode);
+          setIsLoading(false);
+          if (!fallbackEpisode) return;
+          return;
+        }
+      } catch { /* use the not-found route only when both API and cache miss */ }
+
       navigate('/404');
     }).finally(() => setIsLoading(false));
   }, [slug, epNum, isAuthenticated]);
@@ -269,17 +287,26 @@ export function WatchPage() {
   }
 
   if (!currentEp) {
+    const detailPath = anime
+      ? `/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DRAMA' ? 'drama' : anime.type === 'MOVIE' ? 'movie' : 'donghua'}/${anime.slug}`
+      : '/explore';
     return (
-      <div className="min-h-screen bg-[#0A0E17] pt-24 flex flex-col items-center justify-center text-center px-4">
-        <p className="text-2xl text-white font-bold mb-2">Episode Not Found</p>
-        <p className="text-gray-400 mb-4 text-sm">This episode may not be published yet.</p>
-        {slug && <Link to={`/donghua/${slug}`} className="btn-primary text-xs py-2.5 px-6">Return to Series</Link>}
+      <div className="mini-watch-empty min-h-screen bg-[#111216] pt-16 flex flex-col items-center justify-center text-center px-5">
+        <div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-white/5 text-gray-400"><Film className="h-6 w-6" /></div>
+        <h1 className="text-xl text-white font-bold mb-2">Episode unavailable</h1>
+        <p className="max-w-sm text-gray-400 mb-6 text-sm leading-relaxed">
+          {anime ? 'This title is in your catalog, but no playable episode is available right now.' : 'This episode may have been removed or is not published yet.'}
+        </p>
+        <div className="flex items-center gap-3">
+          <Link to={detailPath} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black">Return to title</Link>
+          <Link to="/explore" className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white">Browse catalog</Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#080d1a] text-gray-100 pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6">
+    <main className={`mini-watch ${!isTelegram && !isMobileApp ? 'website-watch' : ''} min-h-screen bg-[#080d1a] text-gray-100 pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6 ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-5">
           {/* Main Stream Area */}
@@ -442,6 +469,11 @@ export function WatchPage() {
                   hasNext={!!nextEp}
                   onPrevEpisode={() => prevEp && goToEp(prevEp.episode_number)}
                   onNextEpisode={() => nextEp && goToEp(nextEp.episode_number)}
+                  onEnded={() => {
+                    let autoplay = true;
+                    try { autoplay = localStorage.getItem('nami_autoplay') !== 'false'; } catch {}
+                    if (autoplay && nextEp) goToEp(nextEp.episode_number);
+                  }}
                 />
               </div>
             )}

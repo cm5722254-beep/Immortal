@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { MobileNav } from './components/layout/MobileNav';
+import { MiniAppHeader } from './components/layout/MiniAppHeader';
 import { NotFoundPage, ForbiddenPage, ServerErrorPage } from './pages/ErrorPages';
 import { ContactDeveloperButton } from './components/common/ContactDeveloperButton';
 import { ConfirmDialog } from './components/common/ConfirmDialog';
@@ -29,6 +30,12 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ defa
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
 const DownloadsPage = lazy(() => import('./pages/DownloadsPage').then((m) => ({ default: m.DownloadsPage })));
 const VIPPage = lazy(() => import('./pages/VIPPage').then((m) => ({ default: m.VIPPage })));
+const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
+const ReferralPage = lazy(() => import('./pages/ReferralPage').then((m) => ({ default: m.ReferralPage })));
+const ScanPage = lazy(() => import('./pages/ScanPage').then((m) => ({ default: m.ScanPage })));
+const ShortsPage = lazy(() => import('./pages/ShortsPage').then((m) => ({ default: m.ShortsPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
 
@@ -101,9 +108,12 @@ function OwnerGuard({ children }: { children: React.ReactNode }) {
 
 // Layout wrapper for public pages
 function PublicLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
   const { config } = useSystemUpdateStore();
   const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
   const { isWeb, isTelegram, isMobileApp } = usePlatform();
+  const isMiniAppLanding = (isTelegram || isMobileApp) && ['/', '/profile', '/me'].includes(location.pathname);
+  const showMiniHeader = (isTelegram || isMobileApp) && ['/explore', '/free', '/donghua', '/anime', '/drama', '/movies', '/movie', '/search'].includes(location.pathname);
   const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active || user?.is_vip;
 
   // 🔒 Website Maintenance Lock: If enabled, check if VIP only or full lock
@@ -116,7 +126,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col text-gray-100 ${
+    <div className={`streaming-site min-h-screen flex flex-col text-gray-100 ${isTelegram || isMobileApp ? 'mini-app-layout' : ''} ${isWeb ? 'website-iqiyi-layout' : ''} ${isTelegram ? 'telegram-app-layout' : ''} ${isMobileApp ? 'apk-app-layout' : ''} ${
       isTelegram ? 'bg-black tg-theme-wrapper' : isMobileApp ? 'bg-black apk-wrapper' : 'bg-black'
     }`}>
       {/* Promo banner on Desktop Website */}
@@ -127,7 +137,8 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main Navigation Bar */}
-      <Navbar />
+      {!isTelegram && !isMobileApp && !isMiniAppLanding && <Navbar />}
+      {showMiniHeader && <MiniAppHeader />}
 
       <div className={`flex-1 ${isWeb ? 'pb-24 md:pb-0' : 'pb-20'}`}>
         {children}
@@ -171,6 +182,7 @@ function TelegramBackButtonHandler() {
 function PublicWatchLayout({ children }: { children: React.ReactNode }) {
   const { config } = useSystemUpdateStore();
   const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
+  const { isTelegram, isMobileApp } = usePlatform();
   const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active || user?.is_vip;
 
   if (config.enabled && !isAdmin && !isOwner && !isStaff) {
@@ -183,7 +195,7 @@ function PublicWatchLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Navbar />
+      {!isTelegram && !isMobileApp && <Navbar />}
       {children}
       <MobileNav />
     </>
@@ -322,9 +334,14 @@ export default function App() {
           <Route path="/notifications" element={<PublicLayout><NotificationsPage /></PublicLayout>} />
           <Route path="/profile" element={<PublicLayout><ProfilePage /></PublicLayout>} />
           <Route path="/me" element={<PublicLayout><ProfilePage /></PublicLayout>} />
-          <Route path="/settings" element={<PublicLayout><ProfilePage /></PublicLayout>} />
           <Route path="/vip" element={<PublicLayout><VIPPage /></PublicLayout>} />
           <Route path="/downloads" element={<PublicLayout><DownloadsPage /></PublicLayout>} />
+          <Route path="/shorts" element={<PublicLayout><ShortsPage /></PublicLayout>} />
+          <Route path="/account" element={<PublicLayout><AccountPage /></PublicLayout>} />
+          <Route path="/settings" element={<PublicLayout><SettingsPage /></PublicLayout>} />
+          <Route path="/help" element={<PublicLayout><HelpPage /></PublicLayout>} />
+          <Route path="/referrals" element={<PublicLayout><ReferralPage /></PublicLayout>} />
+          <Route path="/scan" element={<PublicLayout><ScanPage /></PublicLayout>} />
 
           <Route path="/library" element={<PublicLayout><FavoritesPage /></PublicLayout>} />
 
@@ -368,7 +385,7 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
     try {
       const endpoints = [
         'http://localhost:8000/api/auth/request-unban',
-        'https://merdonghua-com.onrender.com/api/auth/request-unban'
+        'https://immortal-s7ui.onrender.com/api/auth/request-unban'
       ];
 
       let success = false;
@@ -503,4 +520,3 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
     </div>
   );
 }
-

@@ -7,6 +7,7 @@ import { triggerConfirm } from '../../store/confirmStore';
 import api from '../../services/api';
 import { loadCatalog } from '../../services/catalogService';
 import type { Anime, Genre, PaginatedResponse, AnimeType } from '../../types';
+import { AdminSeriesDownloader } from './AdminSeriesDownloader';
 
 const DAYS = [
   { value: 'Monday', label: 'ថ្ងៃចន្ទ (Monday)' },
@@ -326,6 +327,8 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
           </button>
         </div>
       </div>
+
+      <AdminSeriesDownloader items={filtered} />
 
       {/* Catalog Container */}
       <div className="card overflow-hidden shadow-2xl bg-[#181818] border border-white/10 rounded-2xl">

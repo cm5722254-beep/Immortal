@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Play, Plus, Check, Star } from 'lucide-react';
 import type { Anime } from '../../types';
 import { triggerHaptic } from '../../utils/telegram';
@@ -105,7 +105,7 @@ export function AnimeCard({
         </h3>
         
         <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] text-gray-400 font-medium mb-3">
-          <span className="flex items-center gap-1 text-amber-400"><Star className="w-3 h-3 fill-amber-400" /> {anime.rating || '9.5'}</span>
+          <span className="flex items-center gap-1 text-amber-400"><Star className="w-3 h-3 fill-amber-400" /> {anime.average_rating?.toFixed(1) || '9.5'}</span>
           <span>•</span>
           <span>{anime.year || '2024'}</span>
           <span>•</span>

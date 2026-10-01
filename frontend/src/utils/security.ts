@@ -73,7 +73,7 @@ export function initSecurityProtection(isAdmin: boolean) {
 
     // Report to backend to permanently ban user in Database
     const isProd = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
-    const apiBase = (window as any).__VITE_API_URL__ || (isProd ? 'https://merdonghua-com.onrender.com' : 'http://localhost:8000');
+    const apiBase = (window as any).__VITE_API_URL__ || (isProd ? 'https://immortal-s7ui.onrender.com' : 'http://localhost:8000');
     const token = localStorage.getItem('nami_auth_token') || '';
 
     try {
@@ -217,7 +217,7 @@ export function initSecurityProtection(isAdmin: boolean) {
           // Try local first, then fallback to Render backend
           const endpoints = [
             'http://localhost:8000/api/auth/request-unban',
-            'https://merdonghua-com.onrender.com/api/auth/request-unban'
+            'https://immortal-s7ui.onrender.com/api/auth/request-unban'
           ];
 
           for (const url of endpoints) {

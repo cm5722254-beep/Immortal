@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Star, Sparkles, Play, Flame } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
 import type { Anime } from '../../types';
 import { triggerHaptic } from '../../utils/telegram';
 

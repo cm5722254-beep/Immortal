@@ -44,7 +44,7 @@ export function DownloadsPage() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-8 animate-fade-in space-y-8 min-h-[80vh]">
+    <main className="mini-downloads-page max-w-[1600px] mx-auto px-4 md:px-8 py-8 animate-fade-in space-y-8 min-h-[80vh]">
       {/* Offline Status Banner */}
       {!isOnline && (
         <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center justify-between gap-4 animate-slide-down">
@@ -237,6 +237,6 @@ export function DownloadsPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

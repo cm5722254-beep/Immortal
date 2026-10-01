@@ -15,11 +15,14 @@ import {
   ShieldCheck,
   CheckCircle2,
   Bell,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { ManualVipPaymentModal } from '../components/payment/ManualVipPaymentModal';
 import { VIPLuckyWheel } from '../components/vip/VIPLuckyWheel';
+import { usePlatform } from '../utils/platform';
+import { Link } from 'react-router-dom';
 
 interface UpcomingPlan {
   id: string;
@@ -45,6 +48,8 @@ interface UpcomingPlan {
 
 export function VIPPage() {
   const { user, isVip } = useAuthStore();
+  const { isTelegram, isMobileApp } = usePlatform();
+  const isMiniApp = isTelegram || isMobileApp;
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null);
 
   const upcomingPlans: UpcomingPlan[] = [
@@ -180,7 +185,8 @@ export function VIPPage() {
   };
 
   return (
-    <main className="min-h-screen pt-24 pb-24 md:pb-16 px-4 md:px-8 max-w-7xl mx-auto animate-fade-in relative">
+    <main className={`website-vip-page min-h-screen pt-24 pb-24 md:pb-16 px-4 md:px-8 max-w-7xl mx-auto animate-fade-in relative ${isMiniApp ? 'mini-vip-page' : ''}`}>
+      {isMiniApp && <div className="mini-page-title mini-vip-page-title"><Link to="/profile" aria-label="Back"><ArrowLeft /></Link><h1>VIP Membership</h1></div>}
       {/* ── Ambient Background Glows ── */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[450px] bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-amber-500/15 rounded-full blur-[120px] pointer-events-none -z-10" />
       <div className="absolute top-[500px] right-5 w-96 h-96 bg-rose-600/10 rounded-full blur-[100px] pointer-events-none -z-10" />

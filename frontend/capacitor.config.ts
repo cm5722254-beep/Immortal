@@ -8,7 +8,8 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     cleartext: true,
     allowNavigation: [
-      'merdonghua-com.onrender.com',
+      'immortal-s7ui.onrender.com',
+      'animekh.duckdns.org',
       'namianime.vercel.app',
       '*.vercel.app',
       '*.netlify.app',

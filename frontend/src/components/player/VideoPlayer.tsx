@@ -33,7 +33,6 @@ function formatTime(s: number): string {
 }
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
-const QUALITIES = ['4K Ultra HD', '1080p Full HD', '720p HD', 'Auto'];
 
 export function VideoPlayer({
   src,
@@ -78,9 +77,18 @@ export function VideoPlayer({
       setHudMessage(null);
     }, 1800);
   };
+  const toggleSubtitles = () => {
+    const next = !subtitlesEnabled;
+    setSubtitlesEnabled(next);
+    try { localStorage.setItem('nami_subtitles_enabled', String(next)); } catch {}
+    showHud(`Subtitles ${next ? 'on' : 'off'}`);
+  };
   const [showControls, setShowControls] = useState(true);
   const [speed, setSpeed] = useState(1);
-  const [quality, setQuality] = useState('1080p Full HD');
+  const [quality, setQuality] = useState(() => {
+    try { return localStorage.getItem('nami_playback_quality') || 'Auto'; } catch { return 'Auto'; }
+  });
+  const [qualityOptions, setQualityOptions] = useState<Array<{ label: string; level: number; height: number }>>([]);
   const [showSettings, setShowSettings] = useState(false);
   const showSettingsRef = useRef(showSettings);
   useEffect(() => {
@@ -99,6 +107,26 @@ export function VideoPlayer({
   const [isFacebookVideo, setIsFacebookVideo] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [triedProxy, setTriedProxy] = useState(false);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(() => {
+    try { return localStorage.getItem('nami_subtitles_enabled') !== 'false'; } catch { return true; }
+  });
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const syncSubtitleTracks = () => {
+      Array.from(video.textTracks).forEach((track) => {
+        track.mode = subtitlesEnabled ? 'showing' : 'disabled';
+      });
+    };
+    syncSubtitleTracks();
+    video.addEventListener('loadedmetadata', syncSubtitleTracks);
+    video.textTracks.addEventListener?.('addtrack', syncSubtitleTracks);
+    return () => {
+      video.removeEventListener('loadedmetadata', syncSubtitleTracks);
+      video.textTracks.removeEventListener?.('addtrack', syncSubtitleTracks);
+    };
+  }, [subtitleUrl, subtitlesEnabled]);
 
   // ─── ANTI-SCREEN RECORDING & SCREENSHOT SECURITY STATE ───────────
   const [captureBlocked, setCaptureBlocked] = useState(false);
@@ -209,6 +237,8 @@ export function VideoPlayer({
     setError(null);
     setIsLoading(true);
     setIsPlaying(false);
+    setQuality('Auto');
+    setQualityOptions([]);
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -236,6 +266,27 @@ export function VideoPlayer({
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           setIsLoading(false);
           setError(null);
+          const uniqueLevels = new Map<string, { label: string; level: number; height: number }>();
+          hls.levels.forEach((level, index) => {
+            const height = level.height || 0;
+            const label = height >= 2160 ? '4K Ultra HD' : height >= 1080 ? '1080p Full HD' : height >= 720 ? '720p HD' : height ? `${height}p` : 'Auto';
+            if (label !== 'Auto' && !uniqueLevels.has(label)) uniqueLevels.set(label, { label, level: index, height });
+          });
+          const options = Array.from(uniqueLevels.values()).sort((a, b) => b.height - a.height);
+          setQualityOptions(options);
+          let preferredQuality = 'Auto';
+          try {
+            preferredQuality = localStorage.getItem('nami_playback_quality') || 'Auto';
+            if (localStorage.getItem('nami_data_saver') === 'true' && preferredQuality === 'Auto') preferredQuality = '480p';
+          } catch {}
+          const preferredLevel = options.find((option) => option.label === preferredQuality);
+          if (preferredLevel) {
+            hls.currentLevel = preferredLevel.level;
+            setQuality(preferredLevel.label);
+          } else {
+            hls.currentLevel = -1;
+            setQuality('Auto');
+          }
         });
 
         hls.on(Hls.Events.ERROR, (_, data) => {
@@ -271,7 +322,7 @@ export function VideoPlayer({
     if (!triedProxy && (src.includes('nintanime.com') || src.includes('s3.') || src.includes('http'))) {
       setTriedProxy(true);
       const isProd = import.meta.env.PROD;
-      const proxyBase = import.meta.env.VITE_API_URL || (isProd ? 'https://merdonghua-com.onrender.com' : 'http://localhost:8000');
+      const proxyBase = import.meta.env.VITE_API_URL || (isProd ? 'https://immortal-s7ui.onrender.com' : 'http://localhost:8000');
       const proxyUrl = `${proxyBase}/api/stream/proxy?url=${encodeURIComponent(src)}`;
       setCurrentSrc(proxyUrl);
       setError(null);
@@ -795,7 +846,7 @@ export function VideoPlayer({
           onCanPlay={() => { setIsLoading(false); setError(null); }}
           onError={handleVideoError}
         >
-          {subtitleUrl && <track kind="subtitles" src={subtitleUrl} default />}
+          {subtitleUrl && <track kind="subtitles" src={subtitleUrl} default={subtitlesEnabled} />}
         </video>
       )}
 
@@ -1127,14 +1178,19 @@ export function VideoPlayer({
 
                   <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 px-2 mb-1.5">កម្រិតច្បាស់ (Quality)</p>
                   <div className="space-y-1">
-                    {QUALITIES.map((q) => (
+                    {[{ label: 'Auto', level: -1, height: 0 }, ...qualityOptions].map((option) => (
                       <button
-                        key={q}
-                        onClick={() => { setQuality(q); setShowSettings(false); }}
-                        className={`w-full text-left px-2 py-1 text-xs rounded-lg flex items-center justify-between transition-colors ${quality === q ? 'text-brand-400 font-bold bg-brand-500/10' : 'text-gray-300 hover:bg-white/5'}`}
+                        key={option.label}
+                        onClick={() => {
+                          if (hlsRef.current) hlsRef.current.currentLevel = option.level;
+                          setQuality(option.label);
+                          try { localStorage.setItem('nami_playback_quality', option.label); } catch {}
+                          setShowSettings(false);
+                        }}
+                        className={`w-full text-left px-2 py-1 text-xs rounded-lg flex items-center justify-between transition-colors ${quality === option.label ? 'text-brand-400 font-bold bg-brand-500/10' : 'text-gray-300 hover:bg-white/5'}`}
                       >
-                        {q}
-                        {quality === q && <Check className="w-3.5 h-3.5" />}
+                        {option.label}
+                        {quality === option.label && <Check className="w-3.5 h-3.5" />}
                       </button>
                     ))}
                   </div>
@@ -1144,7 +1200,7 @@ export function VideoPlayer({
 
             {/* Subtitle Indicator */}
             {subtitleUrl && (
-              <button className="btn-icon text-brand-400" aria-label="Subtitles available">
+              <button onClick={toggleSubtitles} className={`btn-icon ${subtitlesEnabled ? 'text-brand-400' : 'text-white/60'}`} aria-label={subtitlesEnabled ? 'Turn subtitles off' : 'Turn subtitles on'} aria-pressed={subtitlesEnabled} title={subtitlesEnabled ? 'Subtitles on' : 'Subtitles off'}>
                 <Subtitles className="w-5 h-5" />
               </button>
             )}

@@ -4,7 +4,7 @@ import { AnimeCard } from '../components/home/AnimeCard';
 import { SkeletonCard } from '../components/common/SkeletonLoader';
 import api from '../services/api';
 import { loadCatalog } from '../services/catalogService';
-import type { Anime, PaginatedResponse, AnimeType } from '../types';
+import type { Anime, PaginatedResponse, AnimeType, Genre } from '../types';
 import { triggerHaptic } from '../utils/telegram';
 
 interface ExplorePageProps {
@@ -19,12 +19,16 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [countries, setCountries] = useState<string[]>([]);
 
   const sort = searchParams.get('sort') || 'latest';
   const genre = searchParams.get('genre') || '';
   const status = searchParams.get('status') || '';
   const type = defaultType || searchParams.get('type') || '';
   const access = isFreeOnly ? 'free' : (searchParams.get('access') || '');
+  const year = searchParams.get('year') || '';
+  const country = searchParams.get('country') || '';
 
   const updateFilter = (key: string, value: string) => {
     triggerHaptic('light');
@@ -47,11 +51,16 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
     loadCatalog().then((catalog) => {
       if (!isMounted || !catalog?.anime?.length) return;
       let list = [...catalog.anime];
+      setGenres((catalog.genres || []) as Genre[]);
+      setCountries([...new Set(list.map((item) => item.country).filter((value): value is string => Boolean(value)))].sort());
       if (type) list = list.filter((a) => a.type === type);
       if (isFreeOnly) list = list.filter((a) => a.is_free && a.type !== 'MOVIE');
       else if (access === 'free') list = list.filter((a) => a.is_free);
       else if (access === 'vip') list = list.filter((a) => !a.is_free);
       if (status) list = list.filter((a) => a.status === status);
+      if (genre) list = list.filter((a) => a.genres?.some((g) => g.slug === genre));
+      if (year) list = list.filter((a) => String(a.year) === year);
+      if (country) list = list.filter((a) => a.country === country);
       
       setItems(list.slice((page - 1) * 24, page * 24));
       setTotal(list.length);
@@ -64,19 +73,22 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
     if (type) params.set('type', type);
     if (genre) params.set('genre', genre);
     if (status) params.set('status', status);
+    if (year) params.set('year', year);
     if (access === 'free') params.set('is_free', 'true');
     if (access === 'vip') params.set('is_free', 'false');
 
     api.get(`/anime?${params}`)
       .then((res) => {
         if (!isMounted) return;
+        if (country) return;
         const data = res.data as PaginatedResponse<Anime>;
-        const filtered = isFreeOnly
+        let filtered = isFreeOnly
           ? data.items.filter((item) => item.type !== 'MOVIE')
           : data.items;
+        if (country) filtered = filtered.filter((item) => item.country === country);
         setItems(filtered);
-        setTotal(isFreeOnly ? filtered.length : data.total);
-        setPages(data.pages);
+        setTotal(isFreeOnly || country ? filtered.length : data.total);
+        setPages(country ? Math.max(1, Math.ceil(filtered.length / 24)) : data.pages);
       })
       .catch(() => {})
       .finally(() => {
@@ -84,7 +96,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
       });
 
     return () => { isMounted = false; };
-  }, [sort, genre, status, type, access, page, isFreeOnly]);
+  }, [sort, genre, status, type, access, page, isFreeOnly, year, country]);
 
   const title = isFreeOnly
     ? '🆓 តំបន់ទស្សនាឥតគិតថ្លៃ (Free Zone)'
@@ -99,7 +111,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
     : '🌟 រុករកបញ្ជីរឿងទាំងអស់';
 
   return (
-    <main className="min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-black text-gray-100">
+    <main className="website-catalog min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-black text-gray-100">
       {/* Header */}
       <div className="mb-6">
         <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight mb-1">{title}</h1>
@@ -165,6 +177,22 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
               })}
             </div>
           )}
+
+          {genres.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">Genre
+            <select value={genre} onChange={(event) => updateFilter('genre', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
+              <option value="">All genres</option>{genres.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}
+            </select>
+          </label>}
+          <label className="flex items-center gap-2 text-xs text-gray-400">Year
+            <select value={year} onChange={(event) => updateFilter('year', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
+              <option value="">All years</option>{Array.from({ length: 10 }, (_, index) => new Date().getFullYear() - index).map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
+          {countries.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">Region
+            <select value={country} onChange={(event) => updateFilter('country', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
+              <option value="">All regions</option>{countries.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>}
 
           {/* Sort Selector */}
           <div className="flex items-center gap-1.5 ml-auto">
