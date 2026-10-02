@@ -12,7 +12,7 @@ import {
 import { AdminLayout } from './AdminLayout';
 import { useAuthStore } from '../../store/authStore';
 import { triggerConfirm } from '../../store/confirmStore';
-import api from '../../services/api';
+import api, { clearApiCache } from '../../services/api';
 
 function StatCard({ icon: Icon, label, value, color, bgColor, sub, trend }: any) {
   return (
@@ -227,6 +227,10 @@ export function AdminOwnerPage() {
       formData.append('file', videoCsvFile);
       formData.append('apply', String(apply));
       const response = await api.post('/stream/csv-import', formData);
+      if (apply) {
+        clearApiCache('anime');
+        clearApiCache('episodes');
+      }
       setVideoCsvPreview(response.data);
       showSuccess(apply ? 'CSV video links imported successfully.' : 'CSV preview is ready.');
     } catch (e: any) {

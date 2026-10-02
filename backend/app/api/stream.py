@@ -535,8 +535,8 @@ async def import_episode_csv(
         try:
             from app.core.redis import delete_cache_pattern
             import asyncio
-            asyncio.create_task(delete_cache_pattern("episodes:*"))
-            asyncio.create_task(delete_cache_pattern("anime:*"))
+            await delete_cache_pattern("episodes:*")
+            await delete_cache_pattern("anime:*")
             from app.services.data_persistence import sync_database_to_export_json
             asyncio.create_task(sync_database_to_export_json())
         except Exception:
