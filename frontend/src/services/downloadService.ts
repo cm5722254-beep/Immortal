@@ -2,6 +2,7 @@
  * Offline Download Service using IndexedDB
  * Handles chunked streaming downloads, blob storage, and offline retrieval.
  */
+import api from './api';
 
 export interface DownloadedItem {
   id: string; // `${animeId}_${episodeNumber}`
@@ -161,13 +162,22 @@ export const downloadService = {
     });
 
     try {
-      const response = await fetch(item.videoUrl, {
+      const proxyUrl = api.getUri({
+        url: '/stream/proxy',
+        params: { url: item.videoUrl },
+      });
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(proxyUrl, {
         signal: abortSignal,
-        headers: { 'Cache-Control': 'no-cache' },
+        cache: 'no-store',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Download failed with HTTP ${response.status}`);
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `Download failed with HTTP ${response.status}`);
       }
 
       const contentLength = response.headers.get('content-length');
