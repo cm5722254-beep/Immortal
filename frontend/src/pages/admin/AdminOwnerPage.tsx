@@ -638,6 +638,7 @@ export function AdminOwnerPage() {
                       <div key={`${row.anime_id}-${row.episode_number}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 border-b border-white/5 px-3 py-2 text-xs last:border-0">
                         <div className="min-w-0">
                           <span className="block truncate text-gray-200">{row.anime_title} · {row.anime_slug} · Ep {row.episode_number}</span>
+                          {row.would_create_anime && <span className="mt-1 block text-[10px] font-bold text-amber-300">New series entry will be created on Apply</span>}
                           {!!row.video_qualities?.length && <span className="mt-1 block truncate text-[10px] text-cyan-300">Quality: {row.video_qualities.map((quality: { label: string }) => quality.label).join(', ')}</span>}
                         </div>
                         <span className={row.action === 'add' ? 'text-emerald-300' : row.action === 'update' ? 'text-amber-300' : 'text-gray-500'}>{row.action}</span>

@@ -74,6 +74,21 @@ CSV_TITLE_ALIASES.update({
     "ហាន់ទ័រ": 45,
 })
 
+CSV_TITLE_ALIAS_SLUGS = {
+    "ពិភពក្បាច់គុន វគ្គ៥": "martial-universe-season-5",
+}
+
+# This CSV contains Season 5, while the catalog only has Season 6. Keep it as a
+# separate series and reuse the existing franchise artwork until an owner edits it.
+CSV_AUTO_CREATE_SERIES = {
+    "martial-universe-season-5": {
+        "title": "ពិភពក្បាច់គុន វគ្គ៥",
+        "alt_title": "Martial Universe Season 5",
+        "template_slug": "martial-universe-season-6",
+        "description": "Martial Universe Season 5",
+    },
+}
+
 # CSV title aliases were originally resolved through local database IDs. Those
 # IDs can differ between seed data and production, so keep their stable slugs
 # alongside the aliases and resolve by slug first.
@@ -425,6 +440,8 @@ async def import_episode_csv(
             if normalized:
                 title_index.setdefault(normalized, []).append(anime)
 
+    pending_catalog_series: dict[str, dict] = {}
+
     has_quality_columns = any(
         field.strip().casefold() in {"quality", "source type", "source_type"}
         for field in reader.fieldnames
@@ -476,12 +493,23 @@ async def import_episode_csv(
             conflicts.append({"row": line_number, "title": series_title, "reason": "anime title matches multiple catalog entries"})
             continue
         else:
+            alias_slug = next(
+                (slug for alias, slug in CSV_TITLE_ALIAS_SLUGS.items() if _normalize_csv_title(alias) == normalized_series_title),
+                None,
+            )
             alias_id = next(
                 (alias_id for alias, alias_id in CSV_TITLE_ALIASES.items() if _normalize_csv_title(alias) == normalized_series_title),
                 None,
             )
-            alias_slug = CSV_ALIAS_ID_TO_SLUG.get(alias_id) if alias_id is not None else None
+            if alias_slug is None:
+                alias_slug = CSV_ALIAS_ID_TO_SLUG.get(alias_id) if alias_id is not None else None
             anime = anime_by_slug.get(_normalize_csv_title(alias_slug or "")) if alias_slug else None
+            if anime is None and alias_slug in CSV_AUTO_CREATE_SERIES:
+                series_config = CSV_AUTO_CREATE_SERIES[alias_slug]
+                pending_catalog_series[alias_slug] = series_config
+                # Preview uses a virtual ID; Apply creates this catalog record
+                # transactionally before saving its episode rows.
+                anime = Anime(id=-1, title=series_config["title"], slug=alias_slug)
             # Explicit IDs remain useful for CSVs whose title is not in the
             # alias catalog, but are lower priority than stable title matches.
             if anime is None and anime_id_value.isdigit():
@@ -527,6 +555,7 @@ async def import_episode_csv(
             "anime_id": anime.id,
             "anime_title": anime.title,
             "anime_slug": anime.slug,
+            "would_create_anime": anime.id == -1,
             "episode_number": episode_number,
             "episode_title": (row.get("Episode Title") or row.get("title") or f"ភាគ {episode_number}").strip(),
             "video_url": video_url,
@@ -565,6 +594,38 @@ async def import_episode_csv(
     if apply:
         if conflicts:
             raise HTTPException(status_code=409, detail={"message": "Resolve CSV conflicts before applying", "conflicts": conflicts, "preview": counts})
+        for anime_slug, series_config in pending_catalog_series.items():
+            target = await db.scalar(select(Anime).where(Anime.slug == anime_slug))
+            if target is None:
+                template = anime_by_slug.get(_normalize_csv_title(series_config["template_slug"]))
+                if template is None:
+                    raise HTTPException(status_code=422, detail=f"Cannot create {series_config['title']}: template series is missing")
+                target = Anime(
+                    title=series_config["title"],
+                    slug=anime_slug,
+                    alt_title=series_config["alt_title"],
+                    description=series_config["description"],
+                    poster_url=template.poster_url,
+                    banner_url=template.banner_url,
+                    year=template.year,
+                    status=template.status,
+                    studio=template.studio,
+                    country=template.country,
+                    airing_day=template.airing_day,
+                    type=template.type,
+                    is_published=True,
+                    is_free=template.is_free,
+                    episode_count=0,
+                )
+                db.add(target)
+                await db.flush()
+            anime_by_id[target.id] = target
+            anime_by_slug[_normalize_csv_title(anime_slug)] = target
+            for item in preview:
+                if item["anime_slug"] == anime_slug:
+                    item["anime_id"] = target.id
+                    item["anime_title"] = target.title
+                    item["would_create_anime"] = False
         for item in preview:
             if item["action"] == "unchanged":
                 continue
