@@ -105,49 +105,52 @@ export function AdminSeriesDownloader({ items }: { items: Anime[] }) {
     try {
       const jobs: DownloadJob[] = selectedJobs;
 
-      for (let index = 0; index < jobs.length; index += 1) {
+      for (let batchStart = 0; batchStart < jobs.length; batchStart += 4) {
         if (abort.signal.aborted) break;
-        const { anime, episode } = jobs[index];
-        const rawUrl = episode.video_url!.trim();
-        setProgress(`Downloading ${index + 1}/${jobs.length} · ${anime.title} · Episode ${episode.episode_number}`);
-        let url: URL;
-        try {
-          const apiOrigin = new URL(api.defaults.baseURL || window.location.origin, window.location.origin).origin;
-          url = new URL(rawUrl, apiOrigin);
-        } catch {
-          skipped += 1;
-          continue;
-        }
-        if (!['http:', 'https:'].includes(url.protocol) || /\.(m3u8|mpd)(?:$|\?)/i.test(url.href) || /youtu(?:\.be|be\.com)|facebook\.com/i.test(url.hostname)) {
-          skipped += 1;
-          continue;
-        }
-        try {
-          // Fetch remote video through our API proxy. Direct browser requests
-          // fail for R2 and most video hosts because their CORS policy blocks
-          // cross-origin downloads, even when the source URL is valid.
-          const proxyUrl = api.getUri({ url: '/stream/proxy', params: { url: url.href } });
-          const token = localStorage.getItem('access_token');
-          const response = await fetch(proxyUrl, {
-            signal: abort.signal,
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-          });
-          if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
-          const folder = await root.getDirectoryHandle(safeName(anime.title), { create: true });
-          const extension = url.pathname.match(/\.(mp4|m4v|mov|webm|mkv)$/i)?.[1] || 'mp4';
-          const fileName = `Episode ${String(episode.episode_number).padStart(3, '0')}${episode.title ? ` - ${safeName(episode.title)}` : ''}.${extension}`;
-          const file = await folder.getFileHandle(fileName, { create: true });
-          const writable = await file.createWritable();
-          await response.body.pipeTo(writable, { signal: abort.signal });
-          saved += 1;
-        } catch (error) {
-          if (abort.signal.aborted) break;
-          failed.push(`${anime.title} Ep ${episode.episode_number}: ${(error as Error).message}`);
-        }
+        const batch = jobs.slice(batchStart, batchStart + 4);
+        await Promise.all(batch.map(async ({ anime, episode }, offset) => {
+          const index = batchStart + offset;
+          const rawUrl = episode.video_url!.trim();
+          setProgress(`Downloading ${index + 1}/${jobs.length} (up to 4 at once) · ${anime.title} · Episode ${episode.episode_number}`);
+          let url: URL;
+          try {
+            const apiOrigin = new URL(api.defaults.baseURL || window.location.origin, window.location.origin).origin;
+            url = new URL(rawUrl, apiOrigin);
+          } catch {
+            skipped += 1;
+            return;
+          }
+          if (!['http:', 'https:'].includes(url.protocol) || /\.(m3u8|mpd)(?:$|\?)/i.test(url.href) || /youtu(?:\.be|be\.com)|facebook\.com/i.test(url.hostname)) {
+            skipped += 1;
+            return;
+          }
+          try {
+            // Fetch remote video through our API proxy. Direct browser requests
+            // fail for R2 and most video hosts because their CORS policy blocks
+            // cross-origin downloads, even when the source URL is valid.
+            const proxyUrl = api.getUri({ url: '/stream/proxy', params: { url: url.href } });
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(proxyUrl, {
+              signal: abort.signal,
+              cache: 'no-store',
+              headers: {
+                'Cache-Control': 'no-cache',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+            });
+            if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
+            const folder = await root.getDirectoryHandle(safeName(anime.title), { create: true });
+            const extension = url.pathname.match(/\.(mp4|m4v|mov|webm|mkv)$/i)?.[1] || 'mp4';
+            const fileName = `Episode ${String(episode.episode_number).padStart(3, '0')}${episode.title ? ` - ${safeName(episode.title)}` : ''}.${extension}`;
+            const file = await folder.getFileHandle(fileName, { create: true });
+            const writable = await file.createWritable();
+            await response.body.pipeTo(writable, { signal: abort.signal });
+            saved += 1;
+          } catch (error) {
+            if (abort.signal.aborted) return;
+            failed.push(`${anime.title} Ep ${episode.episode_number}: ${(error as Error).message}`);
+          }
+        }));
       }
       setResult(abort.signal.aborted
         ? `Stopped. Saved ${saved} episode file(s).`
