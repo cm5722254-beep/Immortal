@@ -25,6 +25,7 @@ interface VideoPlayerProps {
   onNextEpisode?: () => void;
   hasPrev?: boolean;
   hasNext?: boolean;
+  autoNext?: boolean;
 }
 
 function formatTime(s: number): string {
@@ -53,12 +54,14 @@ export function VideoPlayer({
   onNextEpisode,
   hasPrev,
   hasNext,
+  autoNext = true,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const progressReportRef = useRef<number | undefined>(undefined);
   const hideControlsTimer = useRef<number | undefined>(undefined);
+  const autoNextTimerRef = useRef<number | undefined>(undefined);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const isPlayingRef = useRef(isPlaying);
@@ -439,6 +442,10 @@ export function VideoPlayer({
     };
   }, [isPlaying, resetControlsTimer]);
 
+  useEffect(() => () => {
+    if (autoNextTimerRef.current !== undefined) window.clearInterval(autoNextTimerRef.current);
+  }, []);
+
   // When settings menu is closed while playing, start 3s timer
   useEffect(() => {
     if (!showSettings && isPlaying) {
@@ -466,18 +473,22 @@ export function VideoPlayer({
   const handleEnded = () => {
     setIsPlaying(false);
     onEnded?.();
-    if (hasNext) {
+    if (autoNext && hasNext) {
+      if (autoNextTimerRef.current !== undefined) window.clearInterval(autoNextTimerRef.current);
       let countdown = 5;
       setAutoNextCountdown(countdown);
-      const timer = setInterval(() => {
+      autoNextTimerRef.current = window.setInterval(() => {
         countdown--;
         setAutoNextCountdown(countdown);
         if (countdown <= 0) {
-          clearInterval(timer);
+          if (autoNextTimerRef.current !== undefined) window.clearInterval(autoNextTimerRef.current);
+          autoNextTimerRef.current = undefined;
           setAutoNextCountdown(null);
           onNextEpisode?.();
         }
       }, 1000);
+    } else {
+      setAutoNextCountdown(null);
     }
   };
 

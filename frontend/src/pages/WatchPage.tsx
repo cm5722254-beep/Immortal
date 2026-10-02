@@ -37,6 +37,9 @@ export function WatchPage() {
   const [resumeAt, setResumeAt] = useState(0);
   const [epSearch, setEpSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [autoplayEnabled] = useState(() => {
+    try { return localStorage.getItem('nami_autoplay') !== 'false'; } catch { return true; }
+  });
   const [movieUnlocked] = useState(false);
   const [epViewMode, setEpViewMode] = useState<'grid' | 'list'>('grid');
   const [downloadNotice, setDownloadNotice] = useState('');
@@ -75,6 +78,10 @@ export function WatchPage() {
   useEffect(() => {
     if (!slug) return;
     setIsLoading(true);
+    setAnime(null);
+    setEpisodes([]);
+    setCurrentEp(null);
+    setResumeAt(0);
     setOfflineVideoUrl(null);
 
     // 1. Instant load from local catalog (10ms)
@@ -484,13 +491,9 @@ export function WatchPage() {
                   title={`${anime?.title} — ${translate('Episode', appLanguage)} ${currentEp.episode_number}${currentEp.title ? `: ${currentEp.title}` : ''}`}
                   hasPrev={!!prevEp}
                   hasNext={!!nextEp}
+                  autoNext={autoplayEnabled}
                   onPrevEpisode={() => prevEp && goToEp(prevEp.episode_number)}
                   onNextEpisode={() => nextEp && goToEp(nextEp.episode_number)}
-                  onEnded={() => {
-                    let autoplay = true;
-                    try { autoplay = localStorage.getItem('nami_autoplay') !== 'false'; } catch {}
-                    if (autoplay && nextEp) goToEp(nextEp.episode_number);
-                  }}
                 />
               </div>
             )}
