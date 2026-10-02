@@ -11,6 +11,7 @@ export function MobileNav() {
   const { isMobileApp, isTelegram } = usePlatform();
   const language = useLanguageStore((state) => state.language);
   const isVipUser = isVip || user?.is_vip_active;
+  const isPremiumVerified = user?.is_vip_active === true && user.vip_plan?.trim().toLowerCase() === 'premium';
 
   if (location.pathname.startsWith('/watch') || ['/vip', '/settings', '/account', '/help', '/scan', '/referrals', '/notifications'].includes(location.pathname)) return null;
 
@@ -49,7 +50,9 @@ export function MobileNav() {
                     <Icon strokeWidth={active ? 2.2 : 1.8} className={`w-[20px] h-[20px] ${active && miniApp ? 'text-emerald-400' : active ? 'text-rose-400' : 'text-gray-400 group-hover:text-gray-200'}`} />
                   </div>
                 )}
-                {isProfile && isVipUser && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black flex items-center justify-center ring-1 ring-[#0A0E17]"><Crown className="w-2 h-2 fill-current" /></span>}
+                {isProfile && isPremiumVerified
+                  ? <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-[#111216] text-sky-400 ring-1 ring-[#0A0E17]" aria-label="Premium verified"><span className="grid h-3 w-3 place-items-center rounded-full bg-sky-400 text-[#111216]"><svg aria-hidden="true" viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none"><path d="m4 8 2.5 2.5L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></span></span>
+                  : isProfile && isVipUser && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black flex items-center justify-center ring-1 ring-[#0A0E17]"><Crown className="w-2 h-2 fill-current" /></span>}
               </div>
               <span className={`text-[10px] mt-1 leading-none tracking-tight truncate max-w-[68px] ${active ? 'text-white font-semibold' : 'text-gray-400'}`}>{label}</span>
             </Link>

@@ -21,6 +21,7 @@ export function ProfilePage() {
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const { isTelegram, isMobileApp } = usePlatform();
+  const isPremiumVerified = user?.is_vip_active === true && user.vip_plan?.trim().toLowerCase() === 'premium';
   const {
     cleanMode,
     reduceMotion,
@@ -100,7 +101,7 @@ export function ProfilePage() {
           </div>
           <div className="mini-profile-identity">
             <Link to="/account" className="mini-profile-avatar" aria-label="Personal data">{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : userName.slice(0, 1).toUpperCase()}</Link>
-            <div><h1>{userName}</h1><p>{user?.telegram_username ? `@${user.telegram_username}` : user?.telegram_first_name || user?.email || 'Welcome to Huang Anime'}{user?.telegram_id ? ` · Telegram ID: ${user.telegram_id}` : ''}</p></div>
+            <div><div className="mini-profile-identity-name"><h1>{userName}</h1>{isPremiumVerified && <CheckCircle2 className="mini-verified-badge" role="img" aria-label="Premium verified profile" title="Premium verified profile" />}</div><p>{user?.telegram_username ? `@${user.telegram_username}` : user?.telegram_first_name || user?.email || 'Welcome to Huang Anime'}{user?.telegram_id ? ` · Telegram ID: ${user.telegram_id}` : ''}</p></div>
             <ChevronRight className="w-5 h-5 ml-auto text-white/50" />
           </div>
           <div className={`mini-vip-status ${user?.is_vip_active ? 'active' : ''}`}>
@@ -195,6 +196,7 @@ export function ProfilePage() {
                 <h2 className="font-display font-black text-base text-white truncate max-w-[160px]">
                   {userName}
                 </h2>
+                {isPremiumVerified && <CheckCircle2 className="h-4 w-4 shrink-0 text-sky-400" role="img" aria-label="Premium verified profile" title="Premium verified profile" />}
                 {user?.role === 'OWNER' || user?.email === 'cm5722254@gmail.com' ? (
                   <span className="bg-gradient-to-r from-amber-500/25 via-yellow-500/25 to-red-500/25 text-amber-300 border border-amber-400/50 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
                     <Crown className="w-3 h-3 fill-amber-400" /> OWNER (ម្ចាស់)
