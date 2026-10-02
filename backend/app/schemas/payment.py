@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class CreatePaymentRequest(BaseModel):
-    plan_type: str = Field("1month", description="VIP plan key: 1month, 3month, 6month, 1year, lifetime")
+    plan_type: str = Field("premium", description="VIP plan key: pro, plus, premium, or a legacy plan")
     currency: str = Field("USD", description="Currency: USD or KHR")
 
 
@@ -16,6 +16,8 @@ class VIPPlanItem(BaseModel):
     amount_khr: int
     description: str
     badge: Optional[str] = None
+    can_download: bool = False
+    offline_download_limit: Optional[int] = None
 
 
 class PaymentResponse(BaseModel):

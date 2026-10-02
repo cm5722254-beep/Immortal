@@ -159,6 +159,9 @@ async def admin_set_user_vip(
     else:
         # Duration mapping
         duration_days_map = {
+            "pro": 30,
+            "plus": 30,
+            "premium": 30,
             "1month": 30,
             "3month": 90,
             "6month": 180,

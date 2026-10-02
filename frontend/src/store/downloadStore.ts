@@ -52,6 +52,18 @@ export const useDownloadStore = create<DownloadState>((set, get) => {
       const id = `${item.animeId}_${item.episodeNumber}`;
       if (get().activeDownloads[id]?.status === 'downloading') return;
 
+      const auth = (await import('./authStore')).useAuthStore.getState();
+      const plan = auth.user?.vip_plan?.toLowerCase() || '';
+      const bypass = auth.isAdmin || auth.isOwner || auth.isStaff;
+      const canDownload = bypass || (auth.isVip && plan !== 'pro');
+      if (!canDownload) throw new Error('A Plus or Premium membership is required to download episodes.');
+      if (!bypass && plan === 'plus') {
+        const saved = await downloadService.getAllDownloads();
+        if (!saved.some((download) => download.id === id) && saved.length >= 10) {
+          throw new Error('The Plus plan allows up to 10 downloaded episodes on this device.');
+        }
+      }
+
       const controller = new AbortController();
       set((state) => ({
         controllers: { ...state.controllers, [id]: controller },
@@ -76,6 +88,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => {
         });
       } catch (err: any) {
         console.error('Download failed:', err);
+        throw err;
       }
     },
 

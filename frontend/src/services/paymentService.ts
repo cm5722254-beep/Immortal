@@ -6,6 +6,9 @@ const MENG_API_BASE = 'https://mengsmm.store/api/v1/';
 const MENG_API_TOKEN = '1590108099:36dfa58ec89bda8f089044bd7fe87bda';
 
 export const PLAN_PRICES: Record<string, { title: string; days: number; amount: number; khr: number }> = {
+  pro: { title: 'Pro - 1 Month', days: 30, amount: 2, khr: 8000 },
+  plus: { title: 'Plus - 1 Month', days: 30, amount: 3, khr: 12000 },
+  premium: { title: 'Premium - 1 Month', days: 30, amount: 5, khr: 20000 },
   '1month': { title: '1 Month VIP Access', days: 30, amount: 2.50, khr: 10000 },
   '3month': { title: '3 Months VIP Access', days: 90, amount: 7.50, khr: 30000 },
   '6month': { title: '6 Months VIP Access', days: 180, amount: 15.00, khr: 60000 },
@@ -79,7 +82,7 @@ export async function createKHQROrder(planKey: string): Promise<{
   const timestamp = Date.now();
   const billNumber = `MD${timestamp.toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
 
-  const qrString = CANADIA_AUTOFILL_KHQR_MAP[planKey] || CANADIA_AUTOFILL_KHQR_MAP['1month'];
+  const qrString = CANADIA_AUTOFILL_KHQR_MAP[planKey] || generateOfficialBakongKHQR(plan.khr, billNumber);
   const encodedQr = encodeURIComponent(qrString);
 
   // Try standard backend API first

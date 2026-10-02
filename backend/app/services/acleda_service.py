@@ -14,6 +14,36 @@ logger = logging.getLogger(__name__)
 
 # VIP Plans definitions
 VIP_PLANS = {
+    "pro": {
+        "title": "Pro - 1 Month",
+        "days": 30,
+        "amount_usd": 2.00,
+        "amount_khr": 8000,
+        "description": "Watch all available episodes. Offline downloads are not included.",
+        "badge": "Pro",
+        "can_download": False,
+        "offline_download_limit": 0,
+    },
+    "plus": {
+        "title": "Plus - 1 Month",
+        "days": 30,
+        "amount_usd": 3.00,
+        "amount_khr": 12000,
+        "description": "Watch all available episodes and keep up to 10 episodes offline.",
+        "badge": "Plus",
+        "can_download": True,
+        "offline_download_limit": 10,
+    },
+    "premium": {
+        "title": "Premium - 1 Month",
+        "days": 30,
+        "amount_usd": 5.00,
+        "amount_khr": 20000,
+        "description": "Watch all available episodes and keep unlimited episodes offline.",
+        "badge": "Premium",
+        "can_download": True,
+        "offline_download_limit": None,
+    },
     "1month": {
         "title": "1 Month VIP Access",
         "days": 30,

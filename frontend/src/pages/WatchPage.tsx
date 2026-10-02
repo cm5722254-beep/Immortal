@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, List, Info, Users,
-  Play, Search, Lock, Crown, Send, Film, LayoutGrid
+  Play, Search, Lock, Crown, Send, Film, LayoutGrid, Download
 } from 'lucide-react';
 import { VideoPlayer } from '../components/player/VideoPlayer';
 import { isMoviePurchased } from '../services/paymentService';
@@ -16,6 +16,7 @@ import { triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
 import { getVipContactUrl } from '../utils/vip';
 import { translate, useLanguageStore } from '../store/languageStore';
+import { useDownloadStore } from '../store/downloadStore';
 
 export function WatchPage() {
   const appLanguage = useLanguageStore((state) => state.language);
@@ -24,6 +25,7 @@ export function WatchPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, isAdmin, isOwner } = useAuthStore();
+  const { downloads, fetchDownloads, startDownload, isDownloaded, getDownloadProgress } = useDownloadStore();
   const { promoData, fetchPromoCountdown } = usePromoStore();
 
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -37,6 +39,7 @@ export function WatchPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [movieUnlocked] = useState(false);
   const [epViewMode, setEpViewMode] = useState<'grid' | 'list'>('grid');
+  const [downloadNotice, setDownloadNotice] = useState('');
 
   const wsRef = useRef<WebSocket | null>(null);
   const epNum = parseInt(episodeNumber || '1', 10);
@@ -45,6 +48,10 @@ export function WatchPage() {
     fetchPromoCountdown();
   }, [fetchPromoCountdown]);
 
+  useEffect(() => {
+    void fetchDownloads();
+  }, [fetchDownloads]);
+
   // ✅ VIP: Admin, Owner, STAFF, is_vip_active, is_vip => always unlocked
   const isVipUser = isAdmin || isOwner || !!user && (user.role === 'ADMIN' || user.role === 'OWNER' || user.role === 'STAFF' || user.is_vip_active === true);
   const hasSeriesTrial = !!user && user.trial_anime_id === anime?.id && !!user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now();
@@ -52,6 +59,10 @@ export function WatchPage() {
   // ✅ Only treat episode as VIP if is_free is explicitly false (not null/undefined)
   const isCurrentEpVip = currentEp?.is_vip === true || (currentEp as any)?.is_vip_only === true || (currentEp?.is_free !== null && currentEp?.is_free !== undefined && currentEp?.is_free === false);
   const isLocked = (isGlobalVipLocked || isCurrentEpVip) && !isVipUser && !hasSeriesTrial;
+  const vipPlan = user?.vip_plan?.toLowerCase() || '';
+  const canDownload = isAdmin || isOwner || user?.role === 'STAFF' || (isVipUser && vipPlan !== 'pro');
+  const isPlusPlan = vipPlan === 'plus' && !isAdmin && !isOwner && user?.role !== 'STAFF';
+  const plusLimitReached = isPlusPlan && downloads.length >= 10;
 
   // 🍿 Movie Pay-Per-View check ($1.00)
   const isMovie = anime?.type === 'MOVIE';
@@ -535,7 +546,46 @@ export function WatchPage() {
                     <Info className="w-4 h-4" />
                   </Link>
                 )}
+                {currentEp && currentEp.video_url && !offlineVideoUrl && (
+                  canDownload ? (
+                    <button
+                      onClick={async () => {
+                        setDownloadNotice('');
+                        try {
+                          await startDownload({
+                            animeId: anime?.id || currentEp.anime_id,
+                            animeTitle: anime?.title || '',
+                            animeSlug: anime?.slug || slug || '',
+                            animePoster: anime?.poster_url || '',
+                            animeType: anime?.type || 'ANIME',
+                            episodeId: currentEp.id,
+                            episodeNumber: currentEp.episode_number,
+                            episodeTitle: currentEp.title || `Episode ${currentEp.episode_number}`,
+                            durationSeconds: currentEp.duration_seconds || 0,
+                            videoUrl: currentEp.video_url!,
+                          });
+                        } catch (error) {
+                          setDownloadNotice(error instanceof Error ? error.message : 'Download failed');
+                        }
+                      }}
+                      disabled={plusLimitReached || isDownloaded(anime?.id || currentEp.anime_id, currentEp.episode_number) || getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'}
+                      className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1a2336] hover:bg-[#222e46] text-gray-200 border border-white/10 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      {getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'
+                        ? `${getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.progress || 0}%`
+                        : translate('Download episode', appLanguage)}
+                      {isPlusPlan && ` (${Math.max(0, 10 - downloads.length)})`}
+                    </button>
+                  ) : (
+                    <Link to="/vip" className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1a2336] text-amber-300 border border-amber-400/20 flex items-center justify-center gap-1">
+                      <Crown className="w-3.5 h-3.5" />{translate('Upgrade to Plus', appLanguage)}
+                    </Link>
+                  )
+                )}
               </div>
+              {downloadNotice && <p role="status" className="mt-2 text-xs text-rose-300">{downloadNotice}</p>}
+              {plusLimitReached && <p className="mt-2 text-xs text-amber-300">{translate('Plus download limit reached', appLanguage)}</p>}
             </div>
           </div>
 

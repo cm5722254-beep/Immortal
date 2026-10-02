@@ -236,6 +236,8 @@ async def get_vip_plans():
                 amount_khr=val["amount_khr"],
                 description=val["description"],
                 badge=val.get("badge"),
+                can_download=val.get("can_download", True),
+                offline_download_limit=val.get("offline_download_limit"),
             )
         )
     return plans
