@@ -14,6 +14,7 @@ import { parseYouTubeVideoId, getYouTubeEmbedUrl, isFacebookUrl, getFacebookEmbe
 
 interface VideoPlayerProps {
   src: string;
+  autoPlay?: boolean;
   subtitleUrl?: string;
   subtitleTracks?: Array<{ src: string; lang: string; label: string }>;
   qualitySources?: Array<{ src: string; label: string }>;
@@ -43,6 +44,7 @@ const EMPTY_QUALITY_SOURCES: Array<{ src: string; label: string }> = [];
 
 export function VideoPlayer({
   src,
+  autoPlay = false,
   subtitleUrl,
   subtitleTracks = EMPTY_SUBTITLE_TRACKS,
   qualitySources = EMPTY_QUALITY_SOURCES,
@@ -360,6 +362,27 @@ export function VideoPlayer({
       clearInterval(progressReportRef.current);
     };
   }, [currentSrc, isIframeEmbed, qualitySources]);
+
+  // A viewer has already chosen an episode before arriving here, so start its
+  // stream as soon as the browser has enough data. If autoplay is blocked by
+  // the browser, the normal player controls remain available.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!autoPlay || !video || isIframeEmbed) return;
+
+    let disposed = false;
+    const startPlayback = () => {
+      if (disposed || !video.paused) return;
+      void video.play().catch(() => {});
+    };
+
+    video.addEventListener('canplay', startPlayback, { once: true });
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) startPlayback();
+    return () => {
+      disposed = true;
+      video.removeEventListener('canplay', startPlayback);
+    };
+  }, [autoPlay, currentSrc, isIframeEmbed]);
 
   const handleVideoError = () => {
     if (!src) {
@@ -905,6 +928,7 @@ export function VideoPlayer({
       ) : (
         <video
           ref={videoRef}
+          autoPlay={autoPlay}
           className={`w-full h-full select-none pointer-events-auto transition-all duration-300 ${
             scaleMode === 'cover' ? 'object-cover' : scaleMode === 'fill' ? 'object-fill' : 'object-contain'
           }`}

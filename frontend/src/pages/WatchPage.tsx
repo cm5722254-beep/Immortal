@@ -489,6 +489,7 @@ export function WatchPage() {
                   onProgress={handleProgress}
                   resumeAt={resumeAt}
                   title={`${anime?.title} — ${translate('Episode', appLanguage)} ${currentEp.episode_number}${currentEp.title ? `: ${currentEp.title}` : ''}`}
+                  autoPlay
                   hasPrev={!!prevEp}
                   hasNext={!!nextEp}
                   autoNext={autoplayEnabled}
