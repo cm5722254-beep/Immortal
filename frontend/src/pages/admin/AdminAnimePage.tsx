@@ -50,6 +50,8 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
   const [broadcastingAnimeId, setBroadcastingAnimeId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [uploadingField, setUploadingField] = useState<'poster' | 'banner' | null>(null);
+  const [selectedAnimeIds, setSelectedAnimeIds] = useState<number[]>([]);
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
 
   const posterInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -122,6 +124,7 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
   };
 
   useEffect(() => {
+    setSelectedAnimeIds([]);
     fetchItems();
     api.get('/genres').then((r) => setGenres(r.data)).catch(() => {});
   }, [animeType, page, statusFilter]);
@@ -175,6 +178,51 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
         } catch (err: any) {
           alert(err?.response?.data?.detail || 'បរាជ័យក្នុងការលុបរឿង');
         }
+      },
+    });
+  };
+
+  const toggleAnimeSelection = (id: number) => {
+    setSelectedAnimeIds((selected) => selected.includes(id)
+      ? selected.filter((selectedId) => selectedId !== id)
+      : [...selected, id]);
+  };
+
+  const toggleVisibleAnimeSelection = () => {
+    const visibleIds = filtered.map((item) => item.id);
+    const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedAnimeIds.includes(id));
+    setSelectedAnimeIds((selected) => allVisibleSelected
+      ? selected.filter((id) => !visibleIds.includes(id))
+      : Array.from(new Set([...selected, ...visibleIds])));
+  };
+
+  const handleDeleteSelected = () => {
+    const selectedItems = items.filter((item) => selectedAnimeIds.includes(item.id));
+    if (!selectedItems.length) return;
+    const names = selectedItems.slice(0, 3).map((item) => `“${item.title}”`).join(', ');
+    const extraCount = selectedItems.length - 3;
+    triggerConfirm({
+      title: `Delete selected series (${selectedItems.length})?`,
+      message: `Permanently delete ${names}${extraCount > 0 ? ` and ${extraCount} more` : ''}? All episodes, comments, ratings, favorites, and watch history for these series will also be deleted.`,
+      confirmText: `Delete ${selectedItems.length}`,
+      variant: 'danger',
+      onConfirm: async () => {
+        setIsDeletingSelected(true);
+        let deleted = 0;
+        let failed = 0;
+        for (const item of selectedItems) {
+          try {
+            await api.delete(`/anime/${item.id}`);
+            deleted += 1;
+          } catch {
+            failed += 1;
+          }
+        }
+        setSelectedAnimeIds([]);
+        await fetchItems();
+        setIsDeletingSelected(false);
+        setToastMessage(`Deleted ${deleted} series${failed ? `; ${failed} failed` : ''}.`);
+        window.setTimeout(() => setToastMessage(null), 5000);
       },
     });
   };
@@ -303,6 +351,26 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
 
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 shrink-0">
           <button
+            type="button"
+            onClick={toggleVisibleAnimeSelection}
+            disabled={!filtered.length || isDeletingSelected}
+            className="btn-secondary text-xs py-2 px-3 flex items-center justify-center gap-1.5 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 font-bold disabled:opacity-50"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {filtered.length > 0 && filtered.every((item) => selectedAnimeIds.includes(item.id)) ? 'Clear selection' : 'Select visible'}
+          </button>
+          {selectedAnimeIds.length > 0 && (
+            <button
+              type="button"
+              onClick={handleDeleteSelected}
+              disabled={isDeletingSelected}
+              className="btn-secondary text-xs py-2 px-3 flex items-center justify-center gap-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-300 font-bold disabled:opacity-50"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {isDeletingSelected ? 'Deleting…' : `Delete selected (${selectedAnimeIds.length})`}
+            </button>
+          )}
+          <button
             onClick={handleSaveBackup}
             disabled={isSavingBackup}
             className="btn-secondary text-xs py-2 px-3 flex items-center justify-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold transition-all active:scale-95 cursor-pointer"
@@ -342,6 +410,13 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
             filtered.map((item) => (
               <div key={item.id} className="pt-3 first:pt-0 bg-[#151515] p-3.5 rounded-2xl border border-white/5 space-y-3 shadow-md">
                 <div className="flex gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedAnimeIds.includes(item.id)}
+                    onChange={() => toggleAnimeSelection(item.id)}
+                    aria-label={`Select ${item.title}`}
+                    className="mt-1 h-4 w-4 shrink-0 accent-red-500"
+                  />
                   <img
                     src={item.poster_url || ''}
                     alt=""
@@ -419,6 +494,15 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-dark-border bg-dark-muted/40 text-left">
+                <th className="px-3 py-3.5">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && filtered.every((item) => selectedAnimeIds.includes(item.id))}
+                    onChange={toggleVisibleAnimeSelection}
+                    aria-label="Select all visible series"
+                    className="h-4 w-4 accent-red-500"
+                  />
+                </th>
                 <th className="px-4 py-3.5 text-gray-400 font-bold text-xs">Series</th>
                 <th className="px-4 py-3.5 text-gray-400 font-bold text-xs hidden md:table-cell">Airing Day</th>
                 <th className="px-4 py-3.5 text-gray-400 font-bold text-xs hidden sm:table-cell">Status</th>
@@ -431,19 +515,28 @@ export function AdminAnimePage({ animeType = 'DONGHUA' }: AnimeAdminPageProps) {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8">
+                  <td colSpan={8} className="px-4 py-8">
                     <SkeletonTable rows={8} />
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-xs">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-xs">
                     {search ? `រកមិនឃើញ "${search}" ឡើយ` : `មិនទាន់មានទិន្នន័យ ${title} នៅឡើយទេ`}
                   </td>
                 </tr>
               ) : (
                 filtered.map((item) => (
                   <tr key={item.id} className="border-b border-dark-border/40 hover:bg-white/5 transition-colors">
+                    <td className="px-3 py-3.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedAnimeIds.includes(item.id)}
+                        onChange={() => toggleAnimeSelection(item.id)}
+                        aria-label={`Select ${item.title}`}
+                        className="h-4 w-4 accent-red-500"
+                      />
+                    </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
                         <img

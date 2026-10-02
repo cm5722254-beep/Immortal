@@ -4,7 +4,7 @@ import {
   Plus, Edit3, Trash2, X, Play, Film,
   ExternalLink, CheckCircle2, AlertCircle, Layers,
   Crown, Unlock, Sparkles, Globe, Link2, Copy, Check,
-  Search, RefreshCw, RotateCcw, CheckSquare, Send
+  Search, RefreshCw, RotateCcw, CheckSquare, Send, ImagePlus
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { triggerConfirm } from '../../store/confirmStore';
@@ -38,6 +38,7 @@ export function AdminEpisodesPage() {
   const [editEp, setEditEp] = useState<Episode | null>(null);
   const [form, setForm] = useState({ ...EMPTY_EP });
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [isGeneratingThumbnails, setIsGeneratingThumbnails] = useState(false);
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrackForm[]>([]);
   const [videoQualities, setVideoQualities] = useState<VideoQualityForm[]>([]);
   const [primaryQuality, setPrimaryQuality] = useState('');
@@ -159,6 +160,49 @@ export function AdminEpisodesPage() {
   });
 
   const currentAnime = animeList.find((a) => a.id === selectedAnime);
+  const needsEpisodeThumbnail = (episode: Episode) => {
+    const thumbnail = episode.thumbnail_url?.trim();
+    const isSeriesArtwork = thumbnail && (thumbnail === currentAnime?.poster_url || thumbnail === currentAnime?.banner_url);
+    return Boolean(episode.video_url?.trim() && (!thumbnail || isSeriesArtwork) && !isYouTubeUrl(episode.video_url));
+  };
+
+  const generateMissingThumbnails = async () => {
+    const pending = episodes.filter(needsEpisodeThumbnail);
+    if (!pending.length) {
+      setStatusMessage('All episodes with video links already have thumbnails.');
+      window.setTimeout(() => setStatusMessage(''), 3500);
+      return;
+    }
+
+    setIsGeneratingThumbnails(true);
+    setError('');
+    let generated = 0;
+    let failed = 0;
+    try {
+      for (let i = 0; i < pending.length; i += 2) {
+        const batch = pending.slice(i, i + 2);
+        const results = await Promise.all(batch.map(async (episode) => {
+          try {
+            const response = await api.post(`/stream/episodes/${episode.id}/generate-thumbnail`, {}, { timeout: 45000 });
+            return { episodeId: episode.id, thumbnailUrl: response.data.thumbnail_url as string, ok: true };
+          } catch (requestError: any) {
+            failed += 1;
+            return { episodeId: episode.id, thumbnailUrl: '', ok: false };
+          }
+        }));
+        generated += results.filter((result) => result.ok).length;
+        setEpisodes((current) => current.map((episode) => {
+          const result = results.find((item) => item.episodeId === episode.id && item.ok);
+          return result?.ok && result.thumbnailUrl ? { ...episode, thumbnail_url: result.thumbnailUrl } : episode;
+        }));
+        setStatusMessage(`Generating episode images… ${Math.min(i + batch.length, pending.length)} / ${pending.length}`);
+      }
+      setStatusMessage(`Generated ${generated} episode thumbnails${failed ? `; ${failed} failed` : ''}.`);
+    } finally {
+      setIsGeneratingThumbnails(false);
+      window.setTimeout(() => setStatusMessage(''), 6000);
+    }
+  };
 
   const detectPrimaryQuality = () => {
     const source = form.video_url.trim();
@@ -944,6 +988,15 @@ export function AdminEpisodesPage() {
           {/* Quick Action Tools: 2 Columns on Mobile, Wrap on Tablet/Desktop */}
           {selectedAnime && (
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
+              <button
+                onClick={() => void generateMissingThumbnails()}
+                disabled={isGeneratingThumbnails || !episodes.some(needsEpisodeThumbnail)}
+                className="px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Create episode stills from the R2 video links and save them to R2"
+              >
+                {isGeneratingThumbnails ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
+                {isGeneratingThumbnails ? 'Generating…' : `Generate images (${episodes.filter(needsEpisodeThumbnail).length})`}
+              </button>
               <button
                 onClick={handleSetFreeFirst3Episodes}
                 className="px-3 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"

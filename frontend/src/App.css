@@ -444,6 +444,28 @@
 .telegram-app-layout .mini-vip-page #lucky-wheel [class*="max-w-"] { max-width: 100%; }
 .telegram-app-layout .mini-vip-page > div[class*="rounded-3xl"] { border-color: rgba(255,255,255,.08); border-radius: 10px; background: #1b1c21; box-shadow: none; }
 .telegram-app-layout .mini-vip-page > div[class*="rounded-3xl"] a { border-radius: 5px; background: #20c55a; color: #09130c; box-shadow: none; }
+
+/* Keep Telegram sign-in and registration controls consistent with the native mini-app. */
+.mini-auth-page { color-scheme: dark; background: #111216; }
+.mini-auth-page > section { background: #17181d; border-color: rgba(255,255,255,.09); }
+.mini-auth-page input,
+.mini-auth-page input:-webkit-autofill,
+.mini-auth-page input:-webkit-autofill:hover,
+.mini-auth-page input:-webkit-autofill:focus {
+  color: #f4f4f5 !important;
+  -webkit-text-fill-color: #f4f4f5 !important;
+  caret-color: #f4c178;
+  box-shadow: 0 0 0 1000px #17181d inset;
+  transition: background-color 9999s ease-out;
+}
+.mini-auth-page input::placeholder { color: rgba(244,244,245,.42); }
+.mini-auth-page button,
+.mini-auth-page a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.mini-auth-page form > button[type="submit"] { min-height: 46px; border-radius: 10px; }
+.mini-auth-page section > div > button:not([aria-label]) { border-radius: 8px; }
+.mini-auth-page section > p:last-child,
+.mini-auth-page section > a:last-child { border-color: rgba(255,255,255,.08); }
+.mini-auth-page :focus-visible { outline: 2px solid #f4c178; outline-offset: 2px; }
 @media (min-width: 768px) {
   .mini-settings-page, .mini-help-page, .mini-referral-page, .mini-scan-page { border-right: 1px solid rgba(255,255,255,.04); border-left: 1px solid rgba(255,255,255,.04); }
   .mini-shorts-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }

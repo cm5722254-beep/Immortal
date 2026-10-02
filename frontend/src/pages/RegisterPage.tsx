@@ -56,7 +56,9 @@ export function RegisterPage() {
       navigate(from, { replace: true });
     } catch (err: any) {
       const d = err?.response?.data?.detail;
-      const msg = typeof d === 'string'
+      const msg = !err?.response
+        ? t('មិនអាចភ្ជាប់ទៅម៉ាស៊ីនមេបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។')
+        : typeof d === 'string'
         ? d
         : Array.isArray(d)
         ? d.map((x: any) => x.msg || JSON.stringify(x)).join('; ')
@@ -87,7 +89,7 @@ export function RegisterPage() {
 
   if (isTelegram) {
     return (
-      <main className="fixed inset-0 z-[100] flex flex-col justify-end overflow-hidden bg-[#07080b] text-white">
+      <main className="mini-auth-page mini-register-page fixed inset-0 z-[100] flex flex-col justify-end overflow-hidden bg-[#07080b] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_25%,rgba(40,48,65,.35),transparent_62%)]" />
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/[0.06] px-5 text-white/70">

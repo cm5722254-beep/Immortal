@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import csv
 import io
 import re
@@ -339,6 +340,39 @@ class BulkEpisodeImportItem(BaseModel):
 class BulkImportRequest(BaseModel):
     anime_id: int
     episodes: List[BulkEpisodeImportItem]
+
+
+@router.post("/episodes/{episode_id}/generate-thumbnail")
+async def generate_episode_thumbnail(
+    episode_id: int,
+    db: AsyncSession = Depends(get_db),
+    staff: User = Depends(require_staff_or_admin),
+):
+    """Capture a representative frame from an episode and persist it in R2."""
+    result = await db.execute(select(Episode).where(Episode.id == episode_id))
+    episode = result.scalar_one_or_none()
+    if not episode:
+        raise HTTPException(status_code=404, detail="Episode not found")
+    if not episode.video_url:
+        raise HTTPException(status_code=400, detail="This episode has no video link")
+
+    from app.services.episode_thumbnail_service import create_episode_thumbnail
+
+    try:
+        thumbnail_url = await asyncio.to_thread(
+            create_episode_thumbnail, episode.video_url, episode.anime_id, episode.episode_number
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Failed to generate thumbnail for episode %s", episode_id)
+        raise HTTPException(status_code=502, detail="Could not save the episode thumbnail to R2") from exc
+
+    episode.thumbnail_url = thumbnail_url
+    await db.commit()
+    return {"success": True, "episode_id": episode.id, "thumbnail_url": thumbnail_url}
 
 
 @router.get("/csv-export")
@@ -1099,4 +1133,3 @@ async def stream_video(
     except Exception as e:
         logger.error(f"Proxy stream error for episode {episode_id}: {e}")
         raise HTTPException(status_code=502, detail="Failed to stream video from host")
-

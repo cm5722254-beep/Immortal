@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
-  ChevronLeft, ChevronRight, List, Info, Users,
-  Play, Search, Lock, Crown, Send, Film, LayoutGrid, Download
+  ChevronLeft, ChevronRight, Info, Users,
+  Play, Lock, Crown, Send, Film, Download
 } from 'lucide-react';
 import { VideoPlayer } from '../components/player/VideoPlayer';
 import { isMoviePurchased } from '../services/paymentService';
@@ -35,13 +35,11 @@ export function WatchPage() {
   const [, setDanmakuList] = useState<DanmakuItem[]>([]);
   const [liveViewers, setLiveViewers] = useState(1);
   const [resumeAt, setResumeAt] = useState(0);
-  const [epSearch, setEpSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [autoplayEnabled] = useState(() => {
     try { return localStorage.getItem('nami_autoplay') !== 'false'; } catch { return true; }
   });
   const [movieUnlocked] = useState(false);
-  const [epViewMode, setEpViewMode] = useState<'grid' | 'list'>('grid');
   const [downloadNotice, setDownloadNotice] = useState('');
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -294,12 +292,6 @@ export function WatchPage() {
   const prevEp = episodes.find((e) => e.episode_number === epNum - 1);
   const nextEp = episodes.find((e) => e.episode_number === epNum + 1);
 
-  const filteredEpisodes = episodes.filter((e) =>
-    !epSearch.trim() ||
-    e.episode_number.toString().includes(epSearch.trim()) ||
-    (e.title && e.title.toLowerCase().includes(epSearch.toLowerCase().trim()))
-  );
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0A0E17] flex items-center justify-center">
@@ -330,7 +322,7 @@ export function WatchPage() {
   return (
     <main className={`mini-watch ${!isTelegram && !isMobileApp ? 'website-watch' : ''} min-h-screen bg-[#080d1a] text-gray-100 pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6 ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-5">
+        <div className="flex flex-col gap-5">
           {/* Main Stream Area */}
           <div className="flex-1 min-w-0">
             {!isAuthenticated ? (
@@ -590,146 +582,6 @@ export function WatchPage() {
               </div>
               {downloadNotice && <p role="status" className="mt-2 text-xs text-rose-300">{downloadNotice}</p>}
               {plusLimitReached && <p className="mt-2 text-xs text-amber-300">{translate('Plus download limit reached', appLanguage)}</p>}
-            </div>
-          </div>
-
-          {/* Right Dedicated Episode Drawer */}
-          <div className="lg:w-80 lg:max-h-[600px] flex flex-col rounded-2xl bg-black border border-white/10 backdrop-blur-xl overflow-hidden shrink-0 shadow-xl">
-            {/* Header with Search & View Toggle */}
-            <div className="p-3.5 border-b border-white/10 bg-[#111] space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display font-bold text-white text-xs sm:text-sm flex items-center gap-2">
-                  <List className="w-4 h-4 text-[#E8452C]" /> {translate('All episodes', appLanguage)} ({episodes.length})
-                </h3>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setEpViewMode('grid')}
-                    className={`p-1.5 rounded-lg text-xs transition-colors ${
-                      epViewMode === 'grid'
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                    title={translate('Grid view', appLanguage)}
-                    aria-label={translate('Grid view', appLanguage)}
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setEpViewMode('list')}
-                    className={`p-1.5 rounded-lg text-xs transition-colors ${
-                      epViewMode === 'list'
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                    title={translate('List view', appLanguage)}
-                    aria-label={translate('List view', appLanguage)}
-                  >
-                    <List className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-[11px] text-gray-400 font-mono ml-1">
-                    {translate('Episode', appLanguage)} {epNum}
-                  </span>
-                </div>
-              </div>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={epSearch}
-                  onChange={(e) => setEpSearch(e.target.value)}
-                  placeholder={translate('Search episode number...', appLanguage)}
-                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Episode List / Grid Display */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 max-h-[420px]">
-              {filteredEpisodes.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 text-xs">
-                  {translate('No episodes found', appLanguage)}
-                </div>
-              ) : epViewMode === 'grid' ? (
-                /* Compact Pill Grid (Instant 1-tap jump on Mobile & Desktop) */
-                <div className="grid grid-cols-4 gap-2 p-1">
-                  {filteredEpisodes.map((ep) => {
-                    const isActive = ep.episode_number === epNum;
-                    const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime?.poster_url && ep.thumbnail_url !== anime?.banner_url ? ep.thumbnail_url : undefined;
-                    const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
-
-                    return (
-                      <button
-                        key={ep.id}
-                        onClick={() => goToEp(ep.episode_number)}
-                        className={`group relative aspect-square overflow-hidden rounded-xl border flex items-center justify-center text-white transition-all duration-200 active:scale-95 ${
-                          isActive
-                            ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30 border-amber-400'
-                            : 'bg-[#10192e]/90 hover:bg-gradient-to-br hover:from-rose-600 hover:to-pink-600 border-white/10 hover:border-rose-400/50 hover:shadow-lg hover:shadow-rose-500/25'
-                        }`}
-                        title={`${translate('Episode', appLanguage)} ${ep.episode_number}`}
-                      >
-                        {episodeThumb && <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full object-cover" />}
-                        {episodeThumb && <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/10" />}
-                        {isEpVip && (
-                          <span className={`absolute top-1 right-1 z-10 grid h-3.5 w-3.5 place-items-center rounded-full ${isActive ? 'bg-black/15' : 'bg-gradient-to-tr from-amber-400 to-yellow-300 shadow'}`}>
-                            <Crown className={`w-2 h-2 ${isActive ? 'fill-black text-black' : 'fill-black text-black'}`} />
-                          </span>
-                        )}
-                        <span className="relative z-10 rounded-md bg-black/55 px-2 py-1 font-display text-sm font-black text-white sm:text-base">{ep.episode_number}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                /* Detailed List View */
-                filteredEpisodes.map((ep) => {
-                  const isActive = ep.episode_number === epNum;
-                  const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime?.poster_url && ep.thumbnail_url !== anime?.banner_url ? ep.thumbnail_url : undefined;
-                  const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
-                  return (
-                    <div
-                      key={ep.id}
-                      className={`w-full flex items-center justify-between gap-2 p-2 rounded-xl transition-all ${
-                        isActive
-                          ? 'bg-amber-500/15 text-white border border-amber-500/40 shadow-sm'
-                          : 'hover:bg-white/5 text-gray-300'
-                      }`}
-                    >
-                      <button
-                        onClick={() => goToEp(ep.episode_number)}
-                        className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
-                      >
-                        {episodeThumb ? <img src={episodeThumb} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="h-10 w-16 shrink-0 rounded-lg border border-white/10 object-cover" /> : <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
-                            isActive
-                              ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
-                              : isEpVip
-                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                              : 'bg-[#1E283C] text-gray-300'
-                          }`}
-                        >
-                          {isActive ? <Play className="w-3.5 h-3.5 fill-current" /> : isEpVip ? <Crown className="w-3.5 h-3.5 fill-amber-400" /> : ep.episode_number}
-                        </div>}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <p className={`text-xs font-bold truncate ${isActive ? 'text-amber-400' : 'text-gray-100'}`}>
-                              {ep.title || `${translate('Episode', appLanguage)} ${ep.episode_number}`}
-                            </p>
-                            {isEpVip && (
-                              <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                VIP
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[10px] text-gray-400">
-                            {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)} ${translate('minutes', appLanguage)}` : `24 ${translate('minutes', appLanguage)}`} · Full HD
-                          </p>
-                        </div>
-                      </button>
-                    </div>
-                  );
-                })
-              )}
             </div>
           </div>
         </div>

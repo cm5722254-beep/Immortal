@@ -51,7 +51,9 @@ export function LoginPage() {
       navigate(from, { replace: true });
     } catch (err: any) {
       const d = err?.response?.data?.detail;
-      const msg = typeof d === 'string'
+      const msg = !err?.response
+        ? t('មិនអាចភ្ជាប់ទៅម៉ាស៊ីនមេបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។')
+        : typeof d === 'string'
         ? d
         : (d?.msg || err?.message || t('លេខទូរសព្ទ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវឡើយ'));
       setError(msg);
@@ -450,7 +452,7 @@ function TelegramMiniLogin({
   const close = () => navigate(from && from !== '/login' ? from : '/', { replace: true });
 
   return (
-    <main className="fixed inset-0 z-[100] flex flex-col justify-end overflow-hidden bg-[#07080b] text-white">
+    <main className="mini-auth-page mini-login-page fixed inset-0 z-[100] flex flex-col justify-end overflow-hidden bg-[#07080b] text-white">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_25%,rgba(40,48,65,.35),transparent_62%)]" />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/[0.06] px-5 text-white/70">
@@ -483,9 +485,8 @@ function TelegramMiniLogin({
         </div>}
 
         {screen === 'password' && <form onSubmit={onPasswordLogin} className="space-y-4">
-          <label className="block border-b border-white/10 pb-3"><span className="sr-only">{t('Phone number')}</span><input type="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder={t('Email or mobile number')} autoComplete="username" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /></label>
+          <label className="block border-b border-white/10 pb-3"><span className="sr-only">{t('Phone number')}</span><input type="text" inputMode="email" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder={t('Email or mobile number')} autoComplete="username" autoCapitalize="none" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /></label>
           <label className="flex items-center border-b border-white/10 pb-3"><span className="sr-only">{t('Password')}</span><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Enter password')} autoComplete="current-password" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="text-white/60">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></label>
-          <button type="button" className="block w-full py-2 text-center text-sm text-white/80">{t('Recover password')}</button>
           <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="btn btn-primary h-12 w-full text-sm font-bold disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
         </form>}
 
