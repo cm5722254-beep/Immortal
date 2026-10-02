@@ -28,10 +28,10 @@
 
 @layer base {
   :root {
-    --bg-base: #000000;
-    --bg-card: #0a0a0a;
-    --bg-card-subtle: #111111;
-    --border-subtle: rgba(255, 255, 255, 0.08);
+    --bg-base: #0b0f14;
+    --bg-card: #151b23;
+    --bg-card-subtle: #1c2530;
+    --border-subtle: rgba(190, 205, 225, 0.14);
     --accent-primary: #ffffff;
     --color-brand: 255 255 255;
     --color-brand-light: 240 240 240;
@@ -42,7 +42,7 @@
   }
 
   body {
-    background-color: #000000;
+    background-color: #0b0f14;
     background-image: none;
     background-attachment: fixed;
     color: #ffffff;
@@ -53,7 +53,7 @@
     min-height: 100vh;
     overflow-x: hidden;
     line-height: 1.55;
-    transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.15s ease;
     /* Site-wide anti-copy & anti-select protection */
     user-select: none;
     -webkit-user-select: none;
@@ -116,6 +116,13 @@
     background: #ff4d6d;
     box-shadow: 0 0 14px rgba(255, 77, 109, 0.7);
   }
+}
+
+/* Muted labels should remain readable on the dark surface palette. */
+@layer utilities {
+  .text-gray-400 { color: #c0c8d4; }
+  .text-gray-500 { color: #a3adbb; }
+  .text-gray-600 { color: #8995a5; }
 }
 
 @layer components {

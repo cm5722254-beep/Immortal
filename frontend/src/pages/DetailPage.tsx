@@ -67,24 +67,27 @@ export function DetailPage() {
     if (!slug) return;
     setIsLoading(true);
 
-    // 1. Instant load from local catalog (10ms)
-    try {
-      const catalog = await loadCatalog();
-      if (catalog) {
-        const detail = extractAnimeDetail(slug, catalog);
-        if (detail) {
-          setAnime(detail.anime);
-          if (detail.episodes.length > 0) setEpisodes(detail.episodes);
-          if (detail.related.length > 0) setRelatedAnime(detail.related);
-          setIsLoading(false);
-        }
+    // Hydrate from local data in the background while live detail requests run.
+    let liveAnimeLoaded = false;
+    const catalogPromise = loadCatalog().then((catalog) => {
+      const detail = extractAnimeDetail(slug, catalog);
+      if (detail && !liveAnimeLoaded) {
+        setAnime(detail.anime);
+        if (detail.episodes.length > 0) setEpisodes(detail.episodes);
+        if (detail.related.length > 0) setRelatedAnime(detail.related);
+        setIsLoading(false);
       }
-    } catch {}
+      return detail;
+    }).catch(() => null);
 
     try {
       const decodedSlug = decodeURIComponent(slug).trim();
+      // The episode route accepts the same slug, so fetch it alongside anime
+      // detail instead of waiting for the first request to finish.
+      const episodesPromise = api.get(`/anime/${encodeURIComponent(decodedSlug)}/episodes`)
+        .then((response) => Array.isArray(response.data) ? response.data as Episode[] : [])
+        .catch(() => [] as Episode[]);
       let animeData: Anime | null = null;
-      let epsData: Episode[] = [];
 
       try {
         const animeRes = await api.get(`/anime/${decodedSlug}`);
@@ -110,7 +113,11 @@ export function DetailPage() {
       }
 
       if (animeData) {
+        liveAnimeLoaded = true;
         setAnime(animeData);
+        const relatedPromise = api.get('/anime?per_page=6&sort=popular')
+          .then((response) => response.data?.items?.filter((a: Anime) => a.id !== animeData!.id).slice(0, 5) || [])
+          .catch(() => [] as Anime[]);
 
         // Load saved rating from localStorage or backend
         try {
@@ -142,16 +149,24 @@ export function DetailPage() {
           }
         } catch {}
 
-        try {
-          const epsRes = await api.get(`/anime/${animeData.slug || animeData.id}/episodes`);
-          epsData = epsRes.data || [];
-        } catch {
-          epsData = [];
+        let epsData = await episodesPromise;
+        if (epsData.length === 0 && animeData.slug && animeData.slug !== decodedSlug) {
+          epsData = await api.get(`/anime/${encodeURIComponent(animeData.slug)}/episodes`)
+            .then((response) => Array.isArray(response.data) ? response.data as Episode[] : [])
+            .catch(() => [] as Episode[]);
         }
-        setEpisodes(epsData);
+        if (epsData.length > 0) {
+          setEpisodes(epsData);
+        } else {
+          // Keep a populated local catalog visible if the live API is cold or
+          // temporarily returns an empty response.
+          const localDetail = await catalogPromise;
+          if (localDetail?.anime.slug === animeData.slug && localDetail.episodes.length > 0) {
+            setEpisodes(localDetail.episodes);
+          }
+        }
 
-        const relatedRes = await api.get('/anime?per_page=6&sort=popular').catch(() => ({ data: { items: [] } }));
-        setRelatedAnime(relatedRes.data?.items?.filter((a: Anime) => a.id !== animeData!.id).slice(0, 5) || []);
+        setRelatedAnime(await relatedPromise);
 
         // Fetch comments
         fetchComments(animeData.id);
