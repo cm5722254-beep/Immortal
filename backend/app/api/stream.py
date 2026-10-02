@@ -515,6 +515,7 @@ async def import_episode_csv(
         parsed_rows[key] = {
             "anime_id": anime.id,
             "anime_title": anime.title,
+            "anime_slug": anime.slug,
             "episode_number": episode_number,
             "episode_title": (row.get("Episode Title") or row.get("title") or f"ភាគ {episode_number}").strip(),
             "video_url": video_url,
@@ -576,12 +577,11 @@ async def import_episode_csv(
         affected_anime_ids = {item["anime_id"] for item in preview if item["action"] == "add"}
         for anime_id in affected_anime_ids:
             anime = anime_by_id[anime_id]
+            await db.flush()
             episode_count = await db.scalar(
                 select(func.count()).where(Episode.anime_id == anime_id, Episode.is_published == True)
             )
-            anime.episode_count = (episode_count or 0) + sum(
-                1 for item in preview if item["anime_id"] == anime_id and item["action"] == "add"
-            )
+            anime.episode_count = episode_count or 0
         await db.commit()
         try:
             from app.core.redis import delete_cache_pattern

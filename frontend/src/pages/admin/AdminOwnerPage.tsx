@@ -234,7 +234,16 @@ export function AdminOwnerPage() {
         clearApiCache('episodes');
       }
       setVideoCsvPreview(response.data);
-      showSuccess(apply ? 'CSV video links imported successfully.' : 'CSV preview is ready.');
+      const counts = response.data?.counts || {};
+      const changed = (counts.add || 0) + (counts.update || 0);
+      const skipped = response.data?.skipped?.length || 0;
+      if (apply && changed === 0 && (counts.unchanged || 0) === 0) {
+        showError(`No video links were imported. ${skipped} CSV row(s) were skipped; check the reasons below.`);
+      } else if (apply) {
+        showSuccess(`Import complete: ${counts.add || 0} added, ${counts.update || 0} updated, ${counts.unchanged || 0} unchanged, ${skipped} skipped.`);
+      } else {
+        showSuccess('CSV preview is ready. Confirm the anime title and slug before applying.');
+      }
     } catch (e: any) {
       const detail = e?.response?.data?.detail;
       setVideoCsvPreview(detail?.conflicts ? { conflicts: detail.conflicts, counts: detail.preview } : null);
@@ -628,7 +637,7 @@ export function AdminOwnerPage() {
                     {(videoCsvPreview.preview || []).slice(0, 100).map((row: any, index: number) => (
                       <div key={`${row.anime_id}-${row.episode_number}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 border-b border-white/5 px-3 py-2 text-xs last:border-0">
                         <div className="min-w-0">
-                          <span className="block truncate text-gray-200">{row.anime_title} · Ep {row.episode_number}</span>
+                          <span className="block truncate text-gray-200">{row.anime_title} · {row.anime_slug} · Ep {row.episode_number}</span>
                           {!!row.video_qualities?.length && <span className="mt-1 block truncate text-[10px] text-cyan-300">Quality: {row.video_qualities.map((quality: { label: string }) => quality.label).join(', ')}</span>}
                         </div>
                         <span className={row.action === 'add' ? 'text-emerald-300' : row.action === 'update' ? 'text-amber-300' : 'text-gray-500'}>{row.action}</span>
@@ -636,7 +645,14 @@ export function AdminOwnerPage() {
                     ))}
                     {videoCsvPreview.preview_truncated && <p className="p-3 text-xs text-gray-500">Preview limited to 500 records.</p>}
                   </div>
-                  {!!videoCsvPreview.skipped?.length && <p className="text-xs text-gray-500">Skipped rows: {videoCsvPreview.skipped.length}. Pending and unmatched records are left untouched.</p>}
+                  {!!videoCsvPreview.skipped?.length && (
+                    <div className="max-h-48 overflow-auto rounded-lg border border-amber-400/20 bg-amber-400/5 p-3 text-xs text-amber-200">
+                      <p className="font-bold">Skipped rows: {videoCsvPreview.skipped.length}</p>
+                      {videoCsvPreview.skipped.slice(0, 20).map((item: any, index: number) => (
+                        <p key={`${item.row}-${index}`} className="mt-1 text-amber-100/80">Row {item.row}: {item.title ? `${item.title} — ` : ''}{item.reason}</p>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </section>
