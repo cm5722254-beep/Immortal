@@ -123,7 +123,19 @@ export function AdminSeriesDownloader({ items }: { items: Anime[] }) {
           continue;
         }
         try {
-          const response = await fetch(url.href, { signal: abort.signal, headers: { 'Cache-Control': 'no-cache' } });
+          // Fetch remote video through our API proxy. Direct browser requests
+          // fail for R2 and most video hosts because their CORS policy blocks
+          // cross-origin downloads, even when the source URL is valid.
+          const proxyUrl = api.getUri({ url: '/stream/proxy', params: { url: url.href } });
+          const token = localStorage.getItem('access_token');
+          const response = await fetch(proxyUrl, {
+            signal: abort.signal,
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          });
           if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
           const folder = await root.getDirectoryHandle(safeName(anime.title), { create: true });
           const extension = url.pathname.match(/\.(mp4|m4v|mov|webm|mkv)$/i)?.[1] || 'mp4';
