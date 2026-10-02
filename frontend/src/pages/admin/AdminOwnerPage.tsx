@@ -242,6 +242,23 @@ export function AdminOwnerPage() {
     }
   };
 
+  const downloadVideoQualityTemplate = () => {
+    const csv = [
+      'Clean Movie Title,Episode Number,Source Type,Quality,Public URL,Status',
+      'Anime Title Episode 1,1,primary,,https://example.com/episode-default.mp4,completed',
+      'Anime Title Episode 1,1,quality,720p,https://example.com/episode-720p.mp4,completed',
+      'Anime Title Episode 1,1,quality,1080p,https://example.com/episode-1080p.mp4,completed',
+    ].join('\r\n');
+    const downloadUrl = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = downloadUrl;
+    anchor.download = 'video_quality_template.csv';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(downloadUrl);
+  };
+
   const exportVideoCsv = async () => {
     setVideoCsvBusy(true);
     try {
@@ -558,7 +575,8 @@ export function AdminOwnerPage() {
             <section className="rounded-2xl border border-amber-500/25 bg-dark-card p-5 sm:p-6 space-y-4">
               <div>
                 <h3 className="text-sm font-black text-white">Import video links</h3>
-                <p className="mt-1 text-xs text-gray-400">Completed rows are matched against existing anime and episode records. Pending rows are skipped; ambiguous titles or conflicting duplicate URLs block applying.</p>
+                <p className="mt-1 text-xs text-gray-400">Completed rows are matched against existing anime and episode records. To add selectable encodes, include a Quality column (for example 720p) and one row per URL. Add Source Type with primary for the default link and quality for alternate links. Preview checks the links before applying.</p>
+                <button type="button" onClick={downloadVideoQualityTemplate} className="mt-2 rounded-lg border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-400/10">Download Quality CSV template</button>
               </div>
               <label className="block text-xs font-bold text-gray-300">CSV file
                 <input type="file" accept=".csv,text/csv" onChange={(event) => { setVideoCsvFile(event.target.files?.[0] || null); setVideoCsvPreview(null); }} className="mt-2 block w-full rounded-lg border border-white/10 bg-dark-bg p-3 text-xs text-gray-200 file:mr-3 file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white" />
@@ -580,7 +598,10 @@ export function AdminOwnerPage() {
                   <div className="max-h-80 overflow-auto border border-white/10">
                     {(videoCsvPreview.preview || []).slice(0, 100).map((row: any, index: number) => (
                       <div key={`${row.anime_id}-${row.episode_number}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 border-b border-white/5 px-3 py-2 text-xs last:border-0">
-                        <span className="truncate text-gray-200">{row.anime_title} · Ep {row.episode_number}</span>
+                        <div className="min-w-0">
+                          <span className="block truncate text-gray-200">{row.anime_title} · Ep {row.episode_number}</span>
+                          {!!row.video_qualities?.length && <span className="mt-1 block truncate text-[10px] text-cyan-300">Quality: {row.video_qualities.map((quality: { label: string }) => quality.label).join(', ')}</span>}
+                        </div>
                         <span className={row.action === 'add' ? 'text-emerald-300' : row.action === 'update' ? 'text-amber-300' : 'text-gray-500'}>{row.action}</span>
                       </div>
                     ))}

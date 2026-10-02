@@ -289,7 +289,10 @@ async def export_episode_csv(
         "Episode ID",
         "Episode Number",
         "Episode Title",
+        "Source Type",
+        "Quality",
         "video_url",
+        "Public URL",
         "Status",
     ])
     writer.writeheader()
@@ -304,6 +307,22 @@ async def export_episode_csv(
             "video_url": video_url,
             "Status": "completed" if video_url else "NO_LINK",
         })
+        for quality in episode.video_qualities or []:
+            quality_url = (quality.get("src") or "").strip()
+            if not quality_url:
+                continue
+            writer.writerow({
+                "Anime ID": anime.id,
+                "Clean Movie Title": f"{anime.title} ភាគ {episode.episode_number}",
+                "Episode ID": episode.id,
+                "Episode Number": episode.episode_number,
+                "Episode Title": episode.title or f"ភាគ {episode.episode_number}",
+                "Source Type": "quality",
+                "Quality": (quality.get("label") or "").strip(),
+                "video_url": "",
+                "Public URL": quality_url,
+                "Status": "completed",
+            })
     return Response(
         content=output.getvalue(),
         media_type="text/csv; charset=utf-8",
@@ -347,6 +366,10 @@ async def import_episode_csv(
             if normalized:
                 title_index.setdefault(normalized, []).append(anime)
 
+    has_quality_columns = any(
+        field.strip().casefold() in {"quality", "source type", "source_type"}
+        for field in reader.fieldnames
+    )
     parsed_rows: dict[tuple[int, int], dict] = {}
     skipped: list[dict] = []
     conflicts: list[dict] = []
@@ -362,6 +385,16 @@ async def import_episode_csv(
             continue
         if not re.match(r"^https?://", video_url, re.IGNORECASE):
             skipped.append({"row": line_number, "reason": "video URL must use http or https"})
+            continue
+
+        source_type = (row.get("Source Type") or row.get("source_type") or "").strip().casefold()
+        quality_label = (row.get("Quality") or row.get("quality") or "").strip()
+        is_quality_source = source_type in {"quality", "alternate", "alternate quality"} or bool(quality_label)
+        if is_quality_source and not quality_label:
+            conflicts.append({"row": line_number, "reason": "quality source is missing its Quality label"})
+            continue
+        if source_type and source_type not in {"primary", "main", "default", "original", "quality", "alternate", "alternate quality"}:
+            conflicts.append({"row": line_number, "reason": f"unsupported source type: {source_type}"})
             continue
 
         parsed = _parse_csv_episode(row)
@@ -395,6 +428,18 @@ async def import_episode_csv(
 
         key = (anime.id, episode_number)
         previous = parsed_rows.get(key)
+        if previous and is_quality_source:
+            same_label = next((quality for quality in previous["video_qualities"] if quality["label"].casefold() == quality_label.casefold()), None)
+            if same_label and same_label["src"] != video_url:
+                conflicts.append({"row": line_number, "title": series_title, "episode_number": episode_number, "reason": f"quality {quality_label} has different video URLs"})
+            elif not same_label:
+                previous["video_qualities"].append({"label": quality_label, "src": video_url})
+            previous["quality_data_provided"] = True
+            continue
+        if previous and not is_quality_source and previous.get("primary_is_quality_fallback"):
+            previous["video_url"] = video_url
+            previous["primary_is_quality_fallback"] = False
+            continue
         if previous and previous["video_url"] != video_url:
             conflicts.append({"row": line_number, "title": series_title, "episode_number": episode_number, "reason": "duplicate episode has different video URLs"})
             parsed_rows.pop(key, None)
@@ -405,6 +450,9 @@ async def import_episode_csv(
             "episode_number": episode_number,
             "episode_title": (row.get("Episode Title") or row.get("title") or f"ភាគ {episode_number}").strip(),
             "video_url": video_url,
+            "video_qualities": ([{"label": quality_label, "src": video_url}] if is_quality_source else []),
+            "quality_data_provided": has_quality_columns,
+            "primary_is_quality_fallback": is_quality_source,
         }
 
     keys = list(parsed_rows)
@@ -424,7 +472,13 @@ async def import_episode_csv(
         if len(existing) > 1:
             conflicts.append({"title": item["anime_title"], "episode_number": item["episode_number"], "reason": "database contains duplicate episode numbers"})
             continue
-        action = "add" if not existing else ("unchanged" if existing[0].video_url == item["video_url"] else "update")
+        source_changed = bool(existing and existing[0].video_url != item["video_url"])
+        qualities_changed = bool(
+            existing
+            and item["quality_data_provided"]
+            and (existing[0].video_qualities or []) != item["video_qualities"]
+        )
+        action = "add" if not existing else ("update" if source_changed or qualities_changed else "unchanged")
         preview.append({**item, "action": action})
 
     counts = {action: sum(1 for item in preview if item["action"] == action) for action in ("add", "update", "unchanged")}
@@ -438,12 +492,15 @@ async def import_episode_csv(
             existing = existing_by_key.get(key, [])
             if existing:
                 existing[0].video_url = item["video_url"]
+                if item["quality_data_provided"]:
+                    existing[0].video_qualities = item["video_qualities"]
             else:
                 db.add(Episode(
                     anime_id=item["anime_id"],
                     episode_number=item["episode_number"],
                     title=item["episode_title"],
                     video_url=item["video_url"],
+                    video_qualities=item["video_qualities"],
                     duration_seconds=1200,
                     is_published=True,
                     is_free=item["episode_number"] <= 3,
