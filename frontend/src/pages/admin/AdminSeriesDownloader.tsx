@@ -4,6 +4,7 @@ import api from '../../services/api';
 import type { Anime, Episode } from '../../types';
 
 type DownloadJob = { anime: Anime; episode: Episode };
+const DOWNLOAD_CONCURRENCY = 3;
 
 const safeName = (value: string) => value.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').replace(/[. ]+$/g, '').slice(0, 120) || 'untitled';
 
@@ -105,13 +106,13 @@ export function AdminSeriesDownloader({ items }: { items: Anime[] }) {
     try {
       const jobs: DownloadJob[] = selectedJobs;
 
-      for (let batchStart = 0; batchStart < jobs.length; batchStart += 4) {
+      for (let batchStart = 0; batchStart < jobs.length; batchStart += DOWNLOAD_CONCURRENCY) {
         if (abort.signal.aborted) break;
-        const batch = jobs.slice(batchStart, batchStart + 4);
+        const batch = jobs.slice(batchStart, batchStart + DOWNLOAD_CONCURRENCY);
         await Promise.all(batch.map(async ({ anime, episode }, offset) => {
           const index = batchStart + offset;
           const rawUrl = episode.video_url!.trim();
-          setProgress(`Downloading ${index + 1}/${jobs.length} (up to 4 at once) · ${anime.title} · Episode ${episode.episode_number}`);
+          setProgress(`Downloading ${index + 1}/${jobs.length} (up to ${DOWNLOAD_CONCURRENCY} at once) · ${anime.title} · Episode ${episode.episode_number}`);
           let url: URL;
           try {
             const apiOrigin = new URL(api.defaults.baseURL || window.location.origin, window.location.origin).origin;
