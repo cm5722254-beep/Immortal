@@ -66,6 +66,14 @@ CSV_TITLE_ALIASES = {
     "ហានលី": 3,
 }
 
+# Additional uploader titles found in the R2 CSV. These map to existing
+# catalog entries by stable slug, so aliases remain valid across database IDs.
+CSV_TITLE_ALIASES.update({
+    "អមតៈភាពក្បាច់គុន": 27,
+    "អាថ៌កំបាំងលំហ": 35,
+    "ហាន់ទ័រ": 45,
+})
+
 # CSV title aliases were originally resolved through local database IDs. Those
 # IDs can differ between seed data and production, so keep their stable slugs
 # alongside the aliases and resolve by slug first.
@@ -94,6 +102,7 @@ CSV_ALIAS_ID_TO_SLUG = {
     24: "ever-night",
     25: "my-heroic-husband",
     26: "martial-universe-season-6",
+    27: "immortality-season-5",
     28: "walking-the-way-all-alone",
     29: "apotheosis",
     30: "back-as-immortal-lord",
@@ -101,10 +110,12 @@ CSV_ALIAS_ID_TO_SLUG = {
     32: "blades-of-the-guardians",
     33: "the-ravanges-of-time",
     34: "the-gate-of-mystical-realm",
+    35: "the-other-side-of-deep-space",
     37: "the-degenerate-drawing-jianghu-season-7",
     38: "ling-cage",
     40: "martial-gods-asura-season-2",
     41: "jade-dynasty-season-4",
+    45: "hunter-x-hunter",
     49: "slay-the-gods-season-2",
     50: "urban-miracle-doctor",
     54: "immortal-goddesses",
