@@ -63,20 +63,6 @@ export function AdminOwnerPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [saving, setSaving] = useState(false);
-  const [paymentSettings, setPaymentSettings] = useState({
-    enabled: false,
-    method: 'khqr' as 'khqr' | 'link' | 'both',
-    display_name: 'VIP Membership',
-    instructions: '',
-    payment_link: '',
-    qr_image_url: '',
-    merchant_name: '',
-    currency: 'KHR',
-    accent_color: '#D5A63C',
-    background_color: '#101318',
-  });
-  const [pendingPayments, setPendingPayments] = useState<any[]>([]);
-  const [paymentBusy, setPaymentBusy] = useState(false);
   const [videoCsvFile, setVideoCsvFile] = useState<File | null>(null);
   const [videoCsvPreview, setVideoCsvPreview] = useState<any>(null);
   const [videoCsvBusy, setVideoCsvBusy] = useState(false);
@@ -122,13 +108,6 @@ export function AdminOwnerPage() {
       if (statsRes.data) setStats(statsRes.data);
       const allUsers = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data?.items || [];
       setAdmins(allUsers.filter((u: any) => u.role === 'ADMIN' || u.role === 'STAFF' || u.role === 'OWNER'));
-
-      const [paymentSettingsRes, pendingPaymentsRes] = await Promise.all([
-        api.get('/payment/settings').catch(() => ({ data: null })),
-        api.get('/payment/admin/manual/pending').catch(() => ({ data: [] })),
-      ]);
-      if (paymentSettingsRes.data) setPaymentSettings((current) => ({ ...current, ...paymentSettingsRes.data }));
-      setPendingPayments(Array.isArray(pendingPaymentsRes.data) ? pendingPaymentsRes.data : []);
 
       // Check system health
       await checkSystemHealth();
@@ -176,46 +155,6 @@ export function AdminOwnerPage() {
         loadData();
       },
     });
-  };
-
-  const savePaymentSettings = async () => {
-    setPaymentBusy(true);
-    try {
-      await api.put('/payment/admin/settings', paymentSettings);
-      showSuccess('KHQR/payment settings saved. VIP page updated.');
-    } catch (e: any) {
-      showError(e?.response?.data?.detail || 'Could not save payment settings');
-    } finally {
-      setPaymentBusy(false);
-    }
-  };
-
-  const deletePaymentSettings = async () => {
-    if (!window.confirm('Delete the saved VIP payment settings?')) return;
-    setPaymentBusy(true);
-    try {
-      await api.delete('/payment/admin/settings');
-      setPaymentSettings((current) => ({ ...current, enabled: false, payment_link: '', qr_image_url: '' }));
-      showSuccess('Saved payment settings deleted.');
-    } catch (e: any) {
-      showError(e?.response?.data?.detail || 'Could not delete payment settings');
-    } finally {
-      setPaymentBusy(false);
-    }
-  };
-
-  const reviewManualPayment = async (transactionId: string, approved: boolean) => {
-    setPaymentBusy(true);
-    try {
-      await api.post(`/payment/admin/manual/${encodeURIComponent(transactionId)}/review`, { approved });
-      const response = await api.get('/payment/admin/manual/pending');
-      setPendingPayments(response.data || []);
-      showSuccess(approved ? 'Payment approved and VIP activated.' : 'Payment declined.');
-    } catch (e: any) {
-      showError(e?.response?.data?.detail || 'Could not review payment');
-    } finally {
-      setPaymentBusy(false);
-    }
   };
 
   const importVideoCsv = async (apply: boolean) => {
@@ -322,10 +261,10 @@ export function AdminOwnerPage() {
     }
   };
 
-  const openPaymentManagement = () => {
+  const openVipPlans = () => {
     setActiveTab('platform');
     window.setTimeout(() => {
-      document.getElementById('owner-khqr-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('owner-vip-plans')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
 
@@ -446,13 +385,12 @@ export function AdminOwnerPage() {
             </button>
           ))}
           <button
-            onClick={openPaymentManagement}
+            onClick={openVipPlans}
             className="flex shrink-0 items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/20"
-            title="Open KHQR configuration and pending payment reviews"
+            title="View VIP plans and prices"
           >
-            <DollarSign className="h-3.5 w-3.5" />
-            KHQR / Payments
-            {pendingPayments.length > 0 && <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] text-white">{pendingPayments.length}</span>}
+            <Crown className="h-3.5 w-3.5" />
+            VIP Plans
           </button>
           <button
             onClick={loadData}
@@ -500,14 +438,14 @@ export function AdminOwnerPage() {
                 ))}
               </div>
               <button
-                onClick={openPaymentManagement}
+                onClick={openVipPlans}
                 className="mt-3 flex w-full items-center justify-between gap-4 rounded-xl border border-emerald-400/30 bg-emerald-500/[0.07] p-4 text-left transition hover:border-emerald-300/60 hover:bg-emerald-500/[0.12]"
               >
                 <span className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300"><DollarSign className="h-5 w-5" /></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-300"><Crown className="h-5 w-5" /></span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-black text-white">KHQR / VIP Payments</span>
-                    <span className="mt-0.5 block text-xs text-gray-400">{paymentSettings.enabled ? 'ទទួលសំណើទូទាត់កំពុងបើក' : 'រៀបចំ QR, payment link និងបើកការទូទាត់'} · {pendingPayments.length} សំណើរង់ចាំ</span>
+                    <span className="block text-sm font-black text-white">VIP Plans & Prices</span>
+                    <span className="mt-0.5 block text-xs text-gray-400">Pro $2 · Plus $3 · Premium $5 / month · Purchases go to Telegram Admin</span>
                   </span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-emerald-300" />
@@ -1067,31 +1005,6 @@ export function AdminOwnerPage() {
                   <Crown className="w-3.5 h-3.5 text-amber-400" /> VIP & Monetization
                 </h3>
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-1.5">VIP Price (KHR)</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={platformSettings.vip_price_khr}
-                        onChange={e => setPlatformSettings(p => ({ ...p, vip_price_khr: parseInt(e.target.value) || 0 }))}
-                        className="flex-1 bg-dark-bg border border-white/10 focus:border-amber-500 text-white rounded-xl px-3 py-2.5 text-xs focus:outline-none"
-                      />
-                      <span className="text-sm text-amber-300 font-bold">៛</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-1.5">VIP Price (USD)</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number" step="0.5"
-                        value={platformSettings.vip_price_usd}
-                        onChange={e => setPlatformSettings(p => ({ ...p, vip_price_usd: parseFloat(e.target.value) || 0 }))}
-                        className="flex-1 bg-dark-bg border border-white/10 focus:border-amber-500 text-white rounded-xl px-3 py-2.5 text-xs focus:outline-none"
-                      />
-                      <span className="text-sm text-emerald-300 font-bold">$</span>
-                    </div>
-                  </div>
-
                   {/* Toggles */}
                   <div className="space-y-2 pt-2">
                     {[
@@ -1116,81 +1029,24 @@ export function AdminOwnerPage() {
               </div>
             </div>
 
-            <div id="owner-khqr-settings" className="scroll-mt-6 rounded-2xl border border-amber-500/25 bg-dark-card p-5 space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-black text-amber-300">VIP Payment & KHQR</h3>
-                  <p className="mt-1 text-[11px] text-gray-400">Controls the payment block shown to users on the VIP page.</p>
-                </div>
-                <label className="flex items-center gap-2 text-xs font-bold text-gray-200">
-                  <input type="checkbox" checked={paymentSettings.enabled} onChange={(event) => setPaymentSettings((value) => ({ ...value, enabled: event.target.checked }))} className="h-4 w-4 accent-amber-500" />
-                  Accept submissions
-                </label>
+            <div id="owner-vip-plans" className="scroll-mt-6 rounded-2xl border border-amber-500/25 bg-dark-card p-5 space-y-4">
+              <div>
+                <h3 className="text-sm font-black text-amber-300">VIP Plans</h3>
+                <p className="mt-1 text-[11px] text-gray-400">អ្នកប្រើប្រាស់ជ្រើសរើសកញ្ចប់ ហើយផ្ញើសារទៅ Admin តាម Telegram។ មិនប្រើ QR នៅក្នុងផ្លូវទិញទេ។</p>
               </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="text-[11px] font-bold text-gray-400">Checkout name
-                  <input value={paymentSettings.display_name} onChange={(event) => setPaymentSettings((value) => ({ ...value, display_name: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
-                </label>
-                <label className="text-[11px] font-bold text-gray-400">Merchant / account name
-                  <input value={paymentSettings.merchant_name} onChange={(event) => setPaymentSettings((value) => ({ ...value, merchant_name: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
-                </label>
-                <label className="text-[11px] font-bold text-gray-400">Payment method
-                  <select value={paymentSettings.method} onChange={(event) => setPaymentSettings((value) => ({ ...value, method: event.target.value as typeof value.method }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white">
-                    <option value="khqr">KHQR image</option><option value="link">Payment link</option><option value="both">QR + link</option>
-                  </select>
-                </label>
-                <label className="text-[11px] font-bold text-gray-400">Currency
-                  <select value={paymentSettings.currency} onChange={(event) => setPaymentSettings((value) => ({ ...value, currency: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white">
-                    <option value="KHR">KHR (៛)</option><option value="USD">USD ($)</option>
-                  </select>
-                </label>
-                <label className="text-[11px] font-bold text-gray-400">KHQR image URL
-                  <input type="url" value={paymentSettings.qr_image_url} onChange={(event) => setPaymentSettings((value) => ({ ...value, qr_image_url: event.target.value }))} placeholder="https://... or /uploads/..." className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
-                </label>
-                <label className="text-[11px] font-bold text-gray-400">Payment URL
-                  <input type="url" value={paymentSettings.payment_link} onChange={(event) => setPaymentSettings((value) => ({ ...value, payment_link: event.target.value }))} placeholder="https://..." className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
-                </label>
-                <label className="text-[11px] font-bold text-gray-400 sm:col-span-2">Instructions for users
-                  <textarea rows={3} value={paymentSettings.instructions} onChange={(event) => setPaymentSettings((value) => ({ ...value, instructions: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/10 bg-dark-bg px-3 py-2.5 text-xs text-white" />
-                </label>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400">Accent color
-                  <input type="color" value={paymentSettings.accent_color} onChange={(event) => setPaymentSettings((value) => ({ ...value, accent_color: event.target.value }))} className="h-8 w-10 cursor-pointer border-0 bg-transparent" />
-                  <span className="font-mono text-gray-300">{paymentSettings.accent_color}</span>
-                </label>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400">Panel background
-                  <input type="color" value={paymentSettings.background_color} onChange={(event) => setPaymentSettings((value) => ({ ...value, background_color: event.target.value }))} className="h-8 w-10 cursor-pointer border-0 bg-transparent" />
-                  <span className="font-mono text-gray-300">{paymentSettings.background_color}</span>
-                </label>
-              </div>
-
-              <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
-                <button onClick={savePaymentSettings} disabled={paymentBusy} className="rounded-lg bg-amber-400 px-4 py-2.5 text-xs font-black text-black disabled:opacity-50">Save payment settings</button>
-                <button onClick={deletePaymentSettings} disabled={paymentBusy} className="rounded-lg border border-red-400/30 px-4 py-2.5 text-xs font-bold text-red-300 disabled:opacity-50">Delete settings</button>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-emerald-500/20 bg-dark-card p-5 space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-black text-emerald-300">Manual payment review</h3>
-                  <p className="mt-1 text-[11px] text-gray-500">Approving activates VIP. QR display alone never confirms payment.</p>
-                </div>
-                <span className="font-mono text-xs text-gray-400">{pendingPayments.length} pending</span>
-              </div>
-              {pendingPayments.length === 0 ? <p className="py-4 text-xs text-gray-500">No pending payment submissions.</p> : pendingPayments.map((payment) => (
-                <div key={payment.transaction_id} className="grid gap-3 border-t border-white/10 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
-                  <div className="min-w-0 text-xs">
-                    <p className="font-bold text-white">{payment.username || `User #${payment.user_id}`} · {payment.plan_title} · {Number(payment.amount_khr).toLocaleString()} ៛</p>
-                    <p className="mt-1 break-all font-mono text-gray-400">{payment.reference} · {payment.transaction_id}</p>
-                    {payment.proof_url && <a href={payment.proof_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-emerald-300 underline">Open proof</a>}
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  { name: "Pro", price: "$2 / month", details: "Watch all episodes · No offline downloads" },
+                  { name: "Plus", price: "$3 / month", details: "Watch all episodes · Up to 10 offline downloads" },
+                  { name: "Premium", price: "$5 / month", details: "Watch all episodes · Unlimited offline downloads" },
+                ].map((plan) => (
+                  <div key={plan.name} className="rounded-xl border border-white/10 bg-dark-bg p-4">
+                    <p className="text-sm font-black text-white">{plan.name}</p>
+                    <p className="mt-1 text-sm font-bold text-amber-300">{plan.price}</p>
+                    <p className="mt-2 text-[11px] leading-5 text-gray-400">{plan.details}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => reviewManualPayment(payment.transaction_id, true)} disabled={paymentBusy} className="rounded-md bg-emerald-500 px-3 py-2 text-xs font-bold text-black disabled:opacity-50">Approve</button>
-                    <button onClick={() => reviewManualPayment(payment.transaction_id, false)} disabled={paymentBusy} className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-bold text-red-300 disabled:opacity-50">Decline</button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Platform Info */}

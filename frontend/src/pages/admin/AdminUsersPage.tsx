@@ -997,54 +997,42 @@ export function AdminUsersPage() {
                   ជ្រើសរើសរយៈពេល VIP ដែលចង់ផ្ដល់ឱ្យអ្នកប្រើប្រាស់នេះ៖
                 </p>
 
-                {/* VIP Duration Buttons */}
+                {/* VIP tier buttons */}
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
-                    onClick={() => handleSetVip(vipModalUser, '1month')}
+                    onClick={() => handleSetVip(vipModalUser, 'pro')}
                     disabled={saving}
-                    className="p-3.5 rounded-2xl bg-white/5 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 text-left transition-all group"
+                    className="p-3.5 rounded-2xl bg-white/5 hover:bg-sky-500/20 border border-white/10 hover:border-sky-500/40 text-left transition-all group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white group-hover:text-amber-300">1 Month Plan</span>
-                      <span className="badge bg-amber-500/20 text-amber-300 text-[9px]">30 Days</span>
+                      <span className="text-xs font-bold text-white group-hover:text-sky-300">Pro · $2/month</span>
+                      <span className="badge bg-sky-500/20 text-sky-300 text-[9px]">30 Days</span>
                     </div>
-                    <span className="text-[10px] text-gray-400 block mt-1">+30 ថ្ងៃ VIP Access</span>
+                    <span className="text-[10px] text-gray-400 block mt-1">ទស្សនាគ្រប់ភាគ · មិនអាចទាញយក</span>
                   </button>
 
                   <button
-                    onClick={() => handleSetVip(vipModalUser, '3month')}
+                    onClick={() => handleSetVip(vipModalUser, 'plus')}
+                    disabled={saving}
+                    className="p-3.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-left transition-all group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-300">Plus · $3/month</span>
+                      <span className="badge bg-emerald-500/30 text-emerald-300 text-[9px]">30 Days</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-200/80 block mt-1">ទាញយកក្រៅបណ្ដាញបាន ១០ ភាគ</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleSetVip(vipModalUser, 'premium')}
                     disabled={saving}
                     className="p-3.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-left transition-all group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-300">3 Months Plan</span>
-                      <span className="badge bg-amber-500/30 text-amber-300 text-[9px]">90 Days</span>
+                      <span className="text-xs font-bold text-amber-300">Premium · $5/month</span>
+                      <span className="badge bg-amber-500/30 text-amber-300 text-[9px]">30 Days</span>
                     </div>
-                    <span className="text-[10px] text-amber-200/80 block mt-1">+90 ថ្ងៃ (ពេញនិយម)</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleSetVip(vipModalUser, '6month')}
-                    disabled={saving}
-                    className="p-3.5 rounded-2xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-left transition-all group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white group-hover:text-cyan-300">6 Months Plan</span>
-                      <span className="badge bg-cyan-500/20 text-cyan-300 text-[9px]">180 Days</span>
-                    </div>
-                    <span className="text-[10px] text-gray-400 block mt-1">+180 ថ្ងៃ VIP Access</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleSetVip(vipModalUser, '1year')}
-                    disabled={saving}
-                    className="p-3.5 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/40 text-left transition-all group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-purple-300">1 Year Plan</span>
-                      <span className="badge bg-purple-500/30 text-purple-300 text-[9px]">365 Days</span>
-                    </div>
-                    <span className="text-[10px] text-purple-200/80 block mt-1">+365 ថ្ងៃ VIP Access</span>
+                    <span className="text-[10px] text-amber-200/80 block mt-1">ទាញយកមិនកំណត់</span>
                   </button>
                 </div>
 
