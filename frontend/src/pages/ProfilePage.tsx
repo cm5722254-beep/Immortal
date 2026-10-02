@@ -84,7 +84,7 @@ export function ProfilePage() {
         showToast(`${translate('Subtitles', language)} ${translate(next ? 'enabled' : 'disabled', language)}`);
       } },
       { label: 'Settings', icon: Settings, to: '/settings' },
-      { label: 'App appearance', icon: SlidersHorizontal, action: () => setShowPlatformModal(true) },
+      ...(!isTelegram ? [{ label: 'App appearance', icon: SlidersHorizontal, action: () => setShowPlatformModal(true) }] : []),
       { label: 'VIP Membership', icon: Gift, to: '/vip' },
       { label: 'Friend Referral Rewards', icon: Gift, to: '/referrals' },
       { label: 'Help and Feedback', icon: MessageSquare, to: '/help' },
@@ -96,7 +96,7 @@ export function ProfilePage() {
           <div className="mini-profile-tools">
             <Link aria-label="Scan QR code" to="/scan"><QrCode /></Link>
             <Link aria-label="Notifications" to="/notifications"><Bell /></Link>
-            <button aria-label="Display settings" onClick={() => setShowPlatformModal(true)}><SlidersHorizontal /></button>
+            {!isTelegram && <button aria-label="Display settings" onClick={() => setShowPlatformModal(true)}><SlidersHorizontal /></button>}
           </div>
           <div className="mini-profile-identity">
             <Link to="/account" className="mini-profile-avatar" aria-label="Personal data">{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : userName.slice(0, 1).toUpperCase()}</Link>
@@ -135,7 +135,7 @@ export function ProfilePage() {
           </div>
         </section>
         <p className="mini-profile-version">Huang Anime · Mobile</p>
-        <PlatformSwitcherModal isOpen={showPlatformModal} onClose={() => setShowPlatformModal(false)} />
+         {!isTelegram && <PlatformSwitcherModal isOpen={showPlatformModal} onClose={() => setShowPlatformModal(false)} />}
         {toastMessage && <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-[#24252b] border border-white/10 text-white text-xs px-4 py-3 rounded-xl shadow-2xl whitespace-nowrap">{toastMessage}</div>}
       </main>
     );

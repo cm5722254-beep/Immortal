@@ -15,6 +15,10 @@ interface PlatformState {
 
 function detectPlatform(): 'web' | 'telegram' | 'mobile' {
   if (typeof window !== 'undefined') {
+    // Telegram Mini Apps always keep their native compact UI. Ignore preview
+    // query parameters and saved platform overrides inside the Telegram shell.
+    if (isTelegramWebApp()) return 'telegram';
+
     // 1. URL Query Parameter Override (?platform=web | ?platform=telegram | ?platform=mobile | ?mode=...)
     try {
       const params = new URLSearchParams(window.location.search);
@@ -42,11 +46,6 @@ function detectPlatform(): 'web' | 'telegram' | 'mobile' {
   // 4. Capacitor native platform
   if (Capacitor.isNativePlatform() || Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
     return 'mobile';
-  }
-
-  // 5. Telegram WebApp detection
-  if (isTelegramWebApp()) {
-    return 'telegram';
   }
 
   // 6. Default to Web
