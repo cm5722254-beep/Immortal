@@ -650,7 +650,7 @@ export function WatchPage() {
                 </div>
               ) : epViewMode === 'grid' ? (
                 /* Compact Pill Grid (Instant 1-tap jump on Mobile & Desktop) */
-                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-1.5 p-1">
+                <div className="grid grid-cols-4 gap-2 p-1">
                   {filteredEpisodes.map((ep) => {
                     const isActive = ep.episode_number === epNum;
                     const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
@@ -659,21 +659,19 @@ export function WatchPage() {
                       <button
                         key={ep.id}
                         onClick={() => goToEp(ep.episode_number)}
-                        className={`relative py-2.5 px-1 rounded-xl text-center font-bold text-xs transition-all duration-150 active:scale-95 flex flex-col items-center justify-center ${
+                        className={`group relative aspect-square rounded-xl border flex items-center justify-center text-white transition-all duration-200 active:scale-95 ${
                           isActive
-                            ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30 scale-[1.02] border border-amber-400'
-                            : isEpVip
-                            ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
-                            : 'bg-[#111] hover:bg-[#222] text-gray-200 border border-white/5'
+                            ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30 border-amber-400'
+                            : 'bg-[#10192e]/90 hover:bg-gradient-to-br hover:from-rose-600 hover:to-pink-600 border-white/10 hover:border-rose-400/50 hover:shadow-lg hover:shadow-rose-500/25'
                         }`}
                         title={`${translate('Episode', appLanguage)} ${ep.episode_number}`}
                       >
                         {isEpVip && (
-                          <span className="absolute top-1 right-1">
-                            <Crown className={`w-2.5 h-2.5 ${isActive ? 'fill-black text-black' : 'fill-amber-400 text-amber-400'}`} />
+                          <span className={`absolute top-1 right-1 grid h-3.5 w-3.5 place-items-center rounded-full ${isActive ? 'bg-black/15' : 'bg-gradient-to-tr from-amber-400 to-yellow-300 shadow'}`}>
+                            <Crown className={`w-2 h-2 ${isActive ? 'fill-black text-black' : 'fill-black text-black'}`} />
                           </span>
                         )}
-                        <span className="leading-none">{ep.episode_number}</span>
+                        <span className="font-display text-sm font-black sm:text-base">{ep.episode_number}</span>
                       </button>
                     );
                   })}
