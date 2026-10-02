@@ -116,7 +116,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
   const { isWeb, isTelegram, isMobileApp } = usePlatform();
   const isMiniAppLanding = (isTelegram || isMobileApp) && ['/', '/profile', '/me'].includes(location.pathname);
-  const showMiniHeader = (isTelegram || isMobileApp) && ['/explore', '/free', '/donghua', '/anime', '/drama', '/movies', '/movie', '/search'].includes(location.pathname);
+  const showMiniHeader = (isTelegram || isMobileApp) && ['/', '/explore', '/free', '/donghua', '/anime', '/drama', '/movies', '/movie', '/search'].includes(location.pathname);
   const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active;
 
   // 🔒 Website Maintenance Lock: If enabled, check if VIP only or full lock

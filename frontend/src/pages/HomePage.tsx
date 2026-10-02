@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Star, ChevronRight, Search, Bookmark, ChevronLeft } from 'lucide-react';
+import { Play, Star, ChevronRight, Bookmark, ChevronLeft } from 'lucide-react';
 import api from '../services/api';
 import { getLocalCatalogSync, loadCatalog, extractHomeData } from '../services/catalogService';
 import type { Anime, WatchHistoryItem } from '../types';
@@ -9,7 +9,6 @@ import { usePlatform } from '../utils/platform';
 import { AnimeCard } from '../components/home/AnimeCard';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
 import { useAuthStore } from '../store/authStore';
-import { getVipContactUrl } from '../utils/vip';
 import { translate, useLanguageStore } from '../store/languageStore';
 
 function getLocalContinueHistory(): WatchHistoryItem[] {
@@ -184,17 +183,6 @@ export function HomePage() {
 
     return (
       <main className="mini-home min-h-screen bg-[#111216] text-white pb-5">
-        <header className="mini-home-header">
-          <Link to="/" className="mini-brand" aria-label="Huang Anime home">Huang<span>+</span></Link>
-          <Link to="/search" className="mini-search" aria-label={translate('Search', language)}><span>{translate('Search anime and drama', language)}</span><Search className="w-5 h-5" /></Link>
-          <a href={getVipContactUrl()} target="_blank" rel="noopener noreferrer" className="mini-vip">VIP</a>
-        </header>
-        <nav className="mini-categories" aria-label="Browse categories">
-          {[
-            ['For You', '/'], ['Donghua', '/donghua'], ['Anime', '/anime'],
-            ['Drama', '/drama'], ['Movies', '/movies'], ['Explore', '/explore'],
-          ].map(([label, to]) => <Link key={to} to={to}>{label}</Link>)}
-        </nav>
         {heroItem && (
           <section className="mini-hero">
             <Link to={`/${heroItem.type === 'ANIME' ? 'anime' : heroItem.type === 'DRAMA' ? 'drama' : heroItem.type === 'MOVIE' ? 'movie' : 'donghua'}/${heroItem.slug}`} className="mini-hero-art">
