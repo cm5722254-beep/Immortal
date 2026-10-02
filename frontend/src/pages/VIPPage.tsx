@@ -17,9 +17,7 @@ export function VIPPage() {
     : null;
 
   const telegramUrl = (plan: string) => {
-    const message = isKhmer
-      ? `សួស្តី ខ្ញុំចង់ទិញកញ្ចប់ VIP ${plan} តម្លៃ $${plans.find((item) => item.key === plan)?.price}/ខែ។ ឈ្មោះគណនី៖ ${user?.username || 'មិនទាន់ចូលគណនី'}`
-      : `Hello, I would like to buy the ${plan} VIP plan ($${plans.find((item) => item.key === plan)?.price}/month). Username: ${user?.username || 'Guest'}`;
+    const message = `សួស្តី Admin ខ្ញុំចង់ទិញកញ្ចប់ VIP ${plan} តម្លៃ $${plans.find((item) => item.key === plan)?.price}/ខែ។ ឈ្មោះគណនី៖ ${user?.username || 'មិនទាន់ចូលគណនី'}`;
     return `https://t.me/watchflixanimeadmin?text=${encodeURIComponent(message)}`;
   };
 
@@ -31,7 +29,7 @@ export function VIPPage() {
     limit: isKhmer ? 'ទាញយកក្រៅបណ្ដាញបាន ១០ ភាគ' : 'Up to 10 episodes offline',
     unlimited: isKhmer ? 'ទាញយកក្រៅបណ្ដាញមិនកំណត់' : 'Unlimited offline downloads',
     month: isKhmer ? '/ ១ ខែ' : '/ month',
-    buy: isKhmer ? 'ទិញតាម Telegram' : 'Buy on Telegram',
+    select: isKhmer ? 'ជ្រើសរើស និងផ្ញើទៅ Admin' : 'Select and message admin',
     active: isKhmer ? 'គណនីរបស់អ្នកមាន VIP សកម្ម' : 'VIP is active on your account',
     expiry: isKhmer ? 'ផុតកំណត់' : 'Expires',
     account: isKhmer ? 'ចូលគណនីមុនទិញ ដើម្បីភ្ជាប់ VIP ទៅគណនីរបស់អ្នក។' : 'Sign in before buying so VIP can be linked to your account.',
@@ -70,7 +68,7 @@ export function VIPPage() {
                   {limit !== 0 && <li className="flex items-center gap-2 text-xs text-white/50"><Smartphone className="h-3.5 w-3.5" />{copy.local}</li>}
                 </ul>
                 <a href={telegramUrl(key)} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-sky-400">
-                  <Send className="h-4 w-4" />{copy.buy}
+                  <Send className="h-4 w-4" />{copy.select}
                 </a>
               </article>
             );
