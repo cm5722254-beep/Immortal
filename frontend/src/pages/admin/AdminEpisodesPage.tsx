@@ -37,6 +37,7 @@ export function AdminEpisodesPage() {
   const [converterError, setConverterError] = useState('');
   const [editEp, setEditEp] = useState<Episode | null>(null);
   const [form, setForm] = useState({ ...EMPTY_EP });
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrackForm[]>([]);
   const [videoQualities, setVideoQualities] = useState<VideoQualityForm[]>([]);
   const [primaryQuality, setPrimaryQuality] = useState('');
@@ -60,6 +61,24 @@ export function AdminEpisodesPage() {
   // Usability additions: Filter tabs & In-Dashboard Video Player Modal
   const [episodeFilterTab, setEpisodeFilterTab] = useState<'ALL' | 'FREE' | 'VIP' | 'MISSING'>('ALL');
   const [previewVideoEp, setPreviewVideoEp] = useState<Episode | null>(null);
+
+  const uploadEpisodeThumbnail = async (file: File) => {
+    setIsUploadingThumbnail(true);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      const response = await api.post('/admin/upload-image', data, { timeout: 60000 });
+      if (!response.data?.url) throw new Error('Image upload did not return a URL.');
+      const baseUrl = (api.defaults.baseURL || 'http://localhost:8000/api').replace(/\/api\/?$/, '');
+      const imageUrl = response.data.url.startsWith('http') ? response.data.url : `${baseUrl}${response.data.url}`;
+      setForm((current) => ({ ...current, thumbnail_url: imageUrl }));
+    } catch (uploadError: any) {
+      const detail = uploadError?.response?.data?.detail;
+      alert(typeof detail === 'string' ? detail : uploadError?.message || 'Could not upload episode thumbnail.');
+    } finally {
+      setIsUploadingThumbnail(false);
+    }
+  };
 
   const fetchEpisodes = async (animeId: number) => {
     setIsLoading(true);
@@ -194,7 +213,7 @@ export function AdminEpisodesPage() {
       ...EMPTY_EP,
       anime_id: selectedAnime || 0,
       episode_number: maxEp + 1,
-      thumbnail_url: currentAnime?.poster_url || '',
+      thumbnail_url: '',
       is_vip: true,
       is_free: false,
     });
@@ -634,7 +653,7 @@ export function AdminEpisodesPage() {
             title: `Episode ${epNum}`,
             video_url: batchUrlPattern,
             duration_seconds: 1440,
-            thumbnail_url: currentAnime?.poster_url || '',
+            thumbnail_url: '',
             is_published: true,
             is_free: !batchIsVip,
             is_vip: batchIsVip,
@@ -1655,6 +1674,23 @@ export function AdminEpisodesPage() {
                   className="input"
                   placeholder="https://.../subtitles-kh.vtt"
                 />
+              </div>
+
+              <div>
+                <label className="label">រូបភាពតំណាងភាគ (Episode Thumbnail URL)</label>
+                <input
+                  type="url"
+                  value={form.thumbnail_url}
+                  onChange={(e) => setForm((f) => ({ ...f, thumbnail_url: e.target.value }))}
+                  className="input font-mono text-xs"
+                  placeholder="https://.../episode-02.jpg"
+                />
+                <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-gray-200 hover:bg-white/10">
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" disabled={isUploadingThumbnail} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadEpisodeThumbnail(file); event.currentTarget.value = ''; }} />
+                  {isUploadingThumbnail ? 'កំពុង Upload រូបភាព…' : 'Upload រូបភាពភាគ'}
+                </label>
+                <p className="mt-1 text-[11px] text-gray-400">បញ្ចូល URL រូបភាព frame ពិតរបស់ភាគនេះ។ សម្រាប់ YouTube អាចប្រើប៊ូតុង Thumbnail ខាងលើ។</p>
+                {form.thumbnail_url.trim() && <img src={form.thumbnail_url} alt="Episode thumbnail preview" onError={(event) => { event.currentTarget.style.display = 'none'; }} onLoad={(event) => { event.currentTarget.style.display = 'block'; }} className="mt-2 aspect-video max-h-36 w-auto rounded-lg border border-white/10 object-cover" />}
               </div>
 
               <div>

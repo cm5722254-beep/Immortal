@@ -830,6 +830,7 @@ export function DetailPage() {
               /* Sleek Compact Number Grid (5 per row on mobile, up to 10 on desktop) */
               <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-2.5">
                 {displayedEpisodes.map((ep) => {
+                  const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime.poster_url && ep.thumbnail_url !== anime.banner_url ? ep.thumbnail_url : undefined;
                   const isEpVip = !hasSeriesTrial && (ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false));
 
                   return (
@@ -837,16 +838,18 @@ export function DetailPage() {
                       key={ep.id}
                       to={`/watch/${anime.slug}/${ep.episode_number}`}
                       onClick={() => triggerHaptic('light')}
-                      className="group relative aspect-square flex flex-col items-center justify-center rounded-xl bg-[#10192e]/90 hover:bg-gradient-to-br hover:from-rose-600 hover:to-pink-600 border border-white/10 hover:border-rose-400/50 text-white transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-rose-500/25 hover:scale-105 active:scale-95 cursor-pointer select-none"
+                      className="group relative aspect-square overflow-hidden flex flex-col items-center justify-center rounded-xl bg-[#10192e]/90 hover:bg-gradient-to-br hover:from-rose-600 hover:to-pink-600 border border-white/10 hover:border-rose-400/50 text-white transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-rose-500/25 hover:scale-105 active:scale-95 cursor-pointer select-none"
                     >
+                      {episodeThumb && <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full rounded-xl object-cover" />}
+                      {episodeThumb && <span aria-hidden="true" className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/75 via-black/15 to-black/10" />}
                       {/* VIP Crown Indicator */}
                       {isEpVip && (
-                        <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center shadow">
+                        <div className="absolute top-1 right-1 z-10 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center shadow">
                           <Crown className="w-2 h-2 text-black fill-black" />
                         </div>
                       )}
 
-                      <span className="font-display font-black text-sm sm:text-base group-hover:text-white transition-colors">
+                      <span className="relative z-10 rounded-md bg-black/55 px-2 py-1 font-display font-black text-sm sm:text-base group-hover:text-white transition-colors">
                         {ep.episode_number}
                       </span>
                     </Link>
@@ -857,6 +860,7 @@ export function DetailPage() {
               /* List Mode with Episode Name & Quick Play */
               <div className="space-y-2">
                 {displayedEpisodes.map((ep) => {
+                  const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime.poster_url && ep.thumbnail_url !== anime.banner_url ? ep.thumbnail_url : undefined;
                   const isEpVip = !hasSeriesTrial && (ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false));
 
                   return (
@@ -867,9 +871,9 @@ export function DetailPage() {
                       className="group flex items-center justify-between p-3 rounded-2xl bg-[#10192e]/90 hover:bg-[#15203a] border border-white/10 hover:border-rose-500/40 transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-black text-sm text-white group-hover:bg-rose-500 group-hover:text-white group-hover:border-rose-400 transition-colors shrink-0">
+                        {episodeThumb ? <img src={episodeThumb} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="h-12 w-20 shrink-0 rounded-lg border border-white/10 object-cover" /> : <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-black text-sm text-white group-hover:bg-rose-500 group-hover:text-white group-hover:border-rose-400 transition-colors shrink-0">
                           {ep.episode_number}
-                        </div>
+                        </div>}
                         <div className="min-w-0">
                           <p className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-rose-300 transition-colors">
                             {ep.title || `ភាគទី ${ep.episode_number}`}

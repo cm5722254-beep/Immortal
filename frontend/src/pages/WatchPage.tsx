@@ -654,25 +654,28 @@ export function WatchPage() {
                 <div className="grid grid-cols-4 gap-2 p-1">
                   {filteredEpisodes.map((ep) => {
                     const isActive = ep.episode_number === epNum;
+                    const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime?.poster_url && ep.thumbnail_url !== anime?.banner_url ? ep.thumbnail_url : undefined;
                     const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
 
                     return (
                       <button
                         key={ep.id}
                         onClick={() => goToEp(ep.episode_number)}
-                        className={`group relative aspect-square rounded-xl border flex items-center justify-center text-white transition-all duration-200 active:scale-95 ${
+                        className={`group relative aspect-square overflow-hidden rounded-xl border flex items-center justify-center text-white transition-all duration-200 active:scale-95 ${
                           isActive
                             ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30 border-amber-400'
                             : 'bg-[#10192e]/90 hover:bg-gradient-to-br hover:from-rose-600 hover:to-pink-600 border-white/10 hover:border-rose-400/50 hover:shadow-lg hover:shadow-rose-500/25'
                         }`}
                         title={`${translate('Episode', appLanguage)} ${ep.episode_number}`}
                       >
+                        {episodeThumb && <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full object-cover" />}
+                        {episodeThumb && <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/10" />}
                         {isEpVip && (
-                          <span className={`absolute top-1 right-1 grid h-3.5 w-3.5 place-items-center rounded-full ${isActive ? 'bg-black/15' : 'bg-gradient-to-tr from-amber-400 to-yellow-300 shadow'}`}>
+                          <span className={`absolute top-1 right-1 z-10 grid h-3.5 w-3.5 place-items-center rounded-full ${isActive ? 'bg-black/15' : 'bg-gradient-to-tr from-amber-400 to-yellow-300 shadow'}`}>
                             <Crown className={`w-2 h-2 ${isActive ? 'fill-black text-black' : 'fill-black text-black'}`} />
                           </span>
                         )}
-                        <span className="font-display text-sm font-black sm:text-base">{ep.episode_number}</span>
+                        <span className="relative z-10 rounded-md bg-black/55 px-2 py-1 font-display text-sm font-black text-white sm:text-base">{ep.episode_number}</span>
                       </button>
                     );
                   })}
@@ -681,6 +684,7 @@ export function WatchPage() {
                 /* Detailed List View */
                 filteredEpisodes.map((ep) => {
                   const isActive = ep.episode_number === epNum;
+                  const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime?.poster_url && ep.thumbnail_url !== anime?.banner_url ? ep.thumbnail_url : undefined;
                   const isEpVip = ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false);
                   return (
                     <div
@@ -695,7 +699,7 @@ export function WatchPage() {
                         onClick={() => goToEp(ep.episode_number)}
                         className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
                       >
-                        <div
+                        {episodeThumb ? <img src={episodeThumb} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="h-10 w-16 shrink-0 rounded-lg border border-white/10 object-cover" /> : <div
                           className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
                             isActive
                               ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
@@ -705,7 +709,7 @@ export function WatchPage() {
                           }`}
                         >
                           {isActive ? <Play className="w-3.5 h-3.5 fill-current" /> : isEpVip ? <Crown className="w-3.5 h-3.5 fill-amber-400" /> : ep.episode_number}
-                        </div>
+                        </div>}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <p className={`text-xs font-bold truncate ${isActive ? 'text-amber-400' : 'text-gray-100'}`}>
