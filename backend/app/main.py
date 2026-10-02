@@ -10,7 +10,7 @@ if hasattr(sys.stderr, "reconfigure"):
 from app.core.license_guard import validate_license, get_authorized_origins
 validate_license()  # ❌ Process exits here if license invalid
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -23,6 +23,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.redis import init_redis, close_redis, get_redis_stats, delete_cache_pattern
+from app.dependencies.auth import require_admin
 from app.api import auth, users, anime, episodes, favorites, history, comments, ratings, search, admin, genres, danmaku, schedule, ws, stream, theme, notifications, site_settings, payment, api_keys, external_catalog
 
 
@@ -177,13 +178,14 @@ async def cache_stats():
 
 
 @app.post("/api/cache/clear", tags=["Cache"])
-async def clear_cache():
-    """Flush all Redis and memory cache keys."""
-    deleted_count = await delete_cache_pattern("*")
+async def clear_cache(admin=Depends(require_admin)):
+    """Clear application catalog caches for an administrator."""
+    patterns = ("anime:*", "episodes:*", "search:*", "genres:*")
+    cleared = {pattern: await delete_cache_pattern(pattern) for pattern in patterns}
     return {
         "status": "ok",
-        "message": f"Successfully flushed {deleted_count} cache keys.",
-        "cleared_at": str(settings.APP_NAME)
+        "cleared_keys": sum(cleared.values()),
+        "details": cleared,
     }
 
 

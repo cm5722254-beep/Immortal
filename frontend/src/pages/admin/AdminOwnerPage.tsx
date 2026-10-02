@@ -251,7 +251,7 @@ export function AdminOwnerPage() {
   const clearApplicationCache = async () => {
     setCacheBusy(true);
     try {
-      const response = await api.post('/admin/cache/clear');
+      const response = await api.post('/cache/clear');
       clearApiCache();
       clearLocalCatalogCache();
       showSuccess(`Cache cleared (${response.data?.cleared_keys ?? 0} server entries). Reload the website to fetch fresh data.`);
