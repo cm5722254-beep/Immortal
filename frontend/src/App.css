@@ -131,7 +131,8 @@
 .mini-profile-identity h1 { margin: 0; max-width: 250px; overflow: hidden; text-overflow: ellipsis; font-size: 21px; font-weight: 750; }
 .mini-profile-identity-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .mini-profile-identity-name h1 { min-width: 0; }
-.mini-verified-badge { width: 17px; height: 17px; flex: 0 0 auto; color: #38bdf8; stroke-width: 2.6; }
+.mini-verified-badge { display: grid; width: 20px; height: 20px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #0284c7; color: #fff; box-shadow: 0 0 0 2px rgba(56,189,248,.16); }
+.mini-verified-badge svg { width: 15px; height: 15px; stroke-width: 2.7; }
 .mini-profile-identity p { margin: 3px 0 0; overflow: hidden; max-width: 230px; text-overflow: ellipsis; color: #aaaab1; font-size: 12px; }
 .mini-vip-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 17px; padding: 11px 13px; border: 1px solid rgba(242,193,120,.4); border-radius: 7px; background: #1a1b20; color: #f1d29d; }
 .mini-vip-status.active { border-color: rgba(32,197,90,.36); color: #b6edc6; }

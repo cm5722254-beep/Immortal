@@ -11,7 +11,7 @@ export function MobileNav() {
   const { isMobileApp, isTelegram } = usePlatform();
   const language = useLanguageStore((state) => state.language);
   const isVipUser = isVip || user?.is_vip_active;
-  const isPremiumVerified = user?.is_vip_active === true && user.vip_plan?.trim().toLowerCase() === 'premium';
+  const isPremiumVerified = Boolean(user?.is_vip_active && user.vip_plan?.trim().toLowerCase() === 'premium');
 
   if (location.pathname.startsWith('/watch') || ['/vip', '/settings', '/account', '/help', '/scan', '/referrals', '/notifications'].includes(location.pathname)) return null;
 
