@@ -13,6 +13,7 @@ import { AdminLayout } from './AdminLayout';
 import { useAuthStore } from '../../store/authStore';
 import { triggerConfirm } from '../../store/confirmStore';
 import api, { clearApiCache } from '../../services/api';
+import { clearLocalCatalogCache } from '../../services/catalogService';
 
 function StatCard({ icon: Icon, label, value, color, bgColor, sub, trend }: any) {
   return (
@@ -79,6 +80,7 @@ export function AdminOwnerPage() {
   const [videoCsvFile, setVideoCsvFile] = useState<File | null>(null);
   const [videoCsvPreview, setVideoCsvPreview] = useState<any>(null);
   const [videoCsvBusy, setVideoCsvBusy] = useState(false);
+  const [cacheBusy, setCacheBusy] = useState(false);
 
   // Platform Settings State
   const [platformSettings, setPlatformSettings] = useState({
@@ -243,6 +245,20 @@ export function AdminOwnerPage() {
       }
     } finally {
       setVideoCsvBusy(false);
+    }
+  };
+
+  const clearApplicationCache = async () => {
+    setCacheBusy(true);
+    try {
+      const response = await api.post('/admin/cache/clear');
+      clearApiCache();
+      clearLocalCatalogCache();
+      showSuccess(`Cache cleared (${response.data?.cleared_keys ?? 0} server entries). Reload the website to fetch fresh data.`);
+    } catch (e: any) {
+      showError(e?.response?.data?.detail || 'Could not clear the application cache.');
+    } finally {
+      setCacheBusy(false);
     }
   };
 
@@ -562,6 +578,17 @@ export function AdminOwnerPage() {
               title="Import / Export Video Links CSV"
               subtitle="Match episodes by anime ID or exact title and episode number. Preview before applying changes."
               color="text-emerald-400"
+              actions={
+                <button
+                  type="button"
+                  onClick={clearApplicationCache}
+                  disabled={cacheBusy}
+                  className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-400/10 disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${cacheBusy ? 'animate-spin' : ''}`} />
+                  {cacheBusy ? 'Clearing...' : 'Clear Cache'}
+                </button>
+              }
             />
 
             <section className="rounded-2xl border border-emerald-500/25 bg-dark-card p-5 sm:p-6 space-y-4">

@@ -9,6 +9,7 @@ import uuid
 import shutil
 
 from app.core.database import get_db
+from app.core.redis import delete_cache_pattern
 from app.dependencies.auth import require_admin, require_staff_or_admin
 from app.models.user import User, UserRole
 from app.models.anime import Anime, AnimeType
@@ -27,6 +28,14 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
 MAX_IMAGE_SIZE_MB = 10
+
+
+@router.post("/cache/clear")
+async def clear_application_cache(admin: User = Depends(require_admin)):
+    """Clear cached catalog and episode data without touching other Redis data."""
+    patterns = ("anime:*", "episodes:*", "search:*", "genres:*")
+    cleared = {pattern: await delete_cache_pattern(pattern) for pattern in patterns}
+    return {"cleared_keys": sum(cleared.values()), "details": cleared}
 
 
 @router.post("/upload-image")
