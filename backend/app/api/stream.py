@@ -66,6 +66,53 @@ CSV_TITLE_ALIASES = {
     "ហានលី": 3,
 }
 
+# CSV title aliases were originally resolved through local database IDs. Those
+# IDs can differ between seed data and production, so keep their stable slugs
+# alongside the aliases and resolve by slug first.
+CSV_ALIAS_ID_TO_SLUG = {
+    1: "renegade-immortal",
+    2: "perfect-world",
+    3: "a-record-of-a-mortals-journey-to-immortality",
+    4: "battle-through-the-heavens",
+    5: "soul-land-2-the-peerless-tang-clan",
+    8: "a-will-eternal",
+    9: "big-brother",
+    10: "the-wealth-gods",
+    11: "orientalmartialacademy",
+    12: "a-good-day-to-ascend",
+    13: "one-slash-to-the-heavens",
+    14: "talesofherdinggods",
+    15: "tomb-of-failen-god-season-3",
+    16: "threads-of-fate-a-war-untold",
+    17: "sword-of-coming",
+    18: "slay-the-gods",
+    19: "sword-and-fairy",
+    20: "beyondtimesgaze",
+    21: "in-search-of-gods",
+    22: "alian-among-immortal",
+    23: "coiling-dragon",
+    24: "ever-night",
+    25: "my-heroic-husband",
+    26: "martial-universe-season-6",
+    28: "walking-the-way-all-alone",
+    29: "apotheosis",
+    30: "back-as-immortal-lord",
+    31: "way-of-choices",
+    32: "blades-of-the-guardians",
+    33: "the-ravanges-of-time",
+    34: "the-gate-of-mystical-realm",
+    37: "the-degenerate-drawing-jianghu-season-7",
+    38: "ling-cage",
+    40: "martial-gods-asura-season-2",
+    41: "jade-dynasty-season-4",
+    49: "slay-the-gods-season-2",
+    50: "urban-miracle-doctor",
+    54: "immortal-goddesses",
+    56: "law-of-the-devil",
+    67: "disaster-war",
+    68: "emperor-war",
+}
+
 
 def _normalize_csv_title(value: str) -> str:
     value = unicodedata.normalize("NFC", value)
@@ -359,6 +406,7 @@ async def import_episode_csv(
     anime_result = await db.execute(select(Anime).where(Anime.is_published == True))
     anime_list = anime_result.scalars().all()
     anime_by_id = {anime.id: anime for anime in anime_list}
+    anime_by_slug = {_normalize_csv_title(anime.slug or ""): anime for anime in anime_list if anime.slug}
     title_index: dict[str, list[Anime]] = {}
     for anime in anime_list:
         for title in (anime.title, anime.alt_title, anime.slug):
@@ -407,23 +455,26 @@ async def import_episode_csv(
         series_title, episode_number = parsed
 
         anime_id_value = (row.get("Anime ID") or row.get("anime_id") or row.get("ID" if "Public URL" not in row else "") or "").strip()
+        normalized_series_title = _normalize_csv_title(series_title)
+        matches = title_index.get(normalized_series_title, [])
+        unique_matches = {candidate.id: candidate for candidate in matches}
         anime = None
-        if anime_id_value.isdigit() and int(anime_id_value) in anime_by_id:
-            anime = anime_by_id[int(anime_id_value)]
+        if len(unique_matches) == 1:
+            anime = next(iter(unique_matches.values()))
+        elif len(unique_matches) > 1:
+            conflicts.append({"row": line_number, "title": series_title, "reason": "anime title matches multiple catalog entries"})
+            continue
         else:
-            matches = title_index.get(_normalize_csv_title(series_title), [])
-            unique_matches = {candidate.id: candidate for candidate in matches}
-            if not unique_matches:
-                alias_id = next(
-                    (anime_id for alias, anime_id in CSV_TITLE_ALIASES.items() if _normalize_csv_title(alias) == _normalize_csv_title(series_title)),
-                    None,
-                )
-                anime = anime_by_id.get(alias_id) if alias_id else None
-            elif len(unique_matches) == 1:
-                anime = next(iter(unique_matches.values()))
-            else:
-                conflicts.append({"row": line_number, "title": series_title, "reason": "anime title matches multiple catalog entries"})
-                continue
+            alias_id = next(
+                (alias_id for alias, alias_id in CSV_TITLE_ALIASES.items() if _normalize_csv_title(alias) == normalized_series_title),
+                None,
+            )
+            alias_slug = CSV_ALIAS_ID_TO_SLUG.get(alias_id) if alias_id is not None else None
+            anime = anime_by_slug.get(_normalize_csv_title(alias_slug or "")) if alias_slug else None
+            # Explicit IDs remain useful for CSVs whose title is not in the
+            # alias catalog, but are lower priority than stable title matches.
+            if anime is None and anime_id_value.isdigit():
+                anime = anime_by_id.get(int(anime_id_value))
 
         if anime is None:
             skipped.append({"row": line_number, "title": series_title, "reason": "anime title did not match the catalog"})
