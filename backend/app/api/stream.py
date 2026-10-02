@@ -389,11 +389,14 @@ async def import_episode_csv(
 
         source_type = (row.get("Source Type") or row.get("source_type") or "").strip().casefold()
         quality_label = (row.get("Quality") or row.get("quality") or "").strip()
-        is_quality_source = source_type in {"quality", "alternate", "alternate quality"} or bool(quality_label)
+        primary_source_types = {"primary", "main", "default", "original"}
+        alternate_source_types = {"quality", "alternate", "alternate quality"}
+        is_primary_quality = source_type in primary_source_types and bool(quality_label)
+        is_quality_source = source_type in alternate_source_types or (bool(quality_label) and not source_type)
         if is_quality_source and not quality_label:
             conflicts.append({"row": line_number, "reason": "quality source is missing its Quality label"})
             continue
-        if source_type and source_type not in {"primary", "main", "default", "original", "quality", "alternate", "alternate quality"}:
+        if source_type and source_type not in primary_source_types | alternate_source_types:
             conflicts.append({"row": line_number, "reason": f"unsupported source type: {source_type}"})
             continue
 
@@ -428,6 +431,20 @@ async def import_episode_csv(
 
         key = (anime.id, episode_number)
         previous = parsed_rows.get(key)
+        if previous and is_primary_quality:
+            if previous.get("primary_is_quality_fallback"):
+                previous["video_url"] = video_url
+                previous["primary_is_quality_fallback"] = False
+            elif previous["video_url"] != video_url:
+                conflicts.append({"row": line_number, "title": series_title, "episode_number": episode_number, "reason": "duplicate episode has different primary video URLs"})
+                continue
+            same_label = next((quality for quality in previous["video_qualities"] if quality["label"].casefold() == quality_label.casefold()), None)
+            if same_label and same_label["src"] != video_url:
+                conflicts.append({"row": line_number, "title": series_title, "episode_number": episode_number, "reason": f"quality {quality_label} has different video URLs"})
+            elif not same_label:
+                previous["video_qualities"].append({"label": quality_label, "src": video_url})
+            previous["quality_data_provided"] = True
+            continue
         if previous and is_quality_source:
             same_label = next((quality for quality in previous["video_qualities"] if quality["label"].casefold() == quality_label.casefold()), None)
             if same_label and same_label["src"] != video_url:
@@ -450,7 +467,7 @@ async def import_episode_csv(
             "episode_number": episode_number,
             "episode_title": (row.get("Episode Title") or row.get("title") or f"ភាគ {episode_number}").strip(),
             "video_url": video_url,
-            "video_qualities": ([{"label": quality_label, "src": video_url}] if is_quality_source else []),
+            "video_qualities": ([{"label": quality_label, "src": video_url}] if is_quality_source or is_primary_quality else []),
             "quality_data_provided": has_quality_columns,
             "primary_is_quality_fallback": is_quality_source,
         }

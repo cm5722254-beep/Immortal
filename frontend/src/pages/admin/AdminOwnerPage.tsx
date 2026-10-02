@@ -245,9 +245,7 @@ export function AdminOwnerPage() {
   const downloadVideoQualityTemplate = () => {
     const csv = [
       'Clean Movie Title,Episode Number,Source Type,Quality,Public URL,Status',
-      'Anime Title Episode 1,1,primary,,https://example.com/episode-default.mp4,completed',
-      'Anime Title Episode 1,1,quality,720p,https://example.com/episode-720p.mp4,completed',
-      'Anime Title Episode 1,1,quality,1080p,https://example.com/episode-1080p.mp4,completed',
+      'Anime Title Episode 1,1,primary,1080p,https://example.com/episode.mp4,completed',
     ].join('\r\n');
     const downloadUrl = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
     const anchor = document.createElement('a');
@@ -575,7 +573,7 @@ export function AdminOwnerPage() {
             <section className="rounded-2xl border border-amber-500/25 bg-dark-card p-5 sm:p-6 space-y-4">
               <div>
                 <h3 className="text-sm font-black text-white">Import video links</h3>
-                <p className="mt-1 text-xs text-gray-400">Completed rows are matched against existing anime and episode records. To add selectable encodes, include a Quality column (for example 720p) and one row per URL. Add Source Type with primary for the default link and quality for alternate links. Preview checks the links before applying.</p>
+                <p className="mt-1 text-xs text-gray-400">Use one row and one Public URL per episode. Set Source Type to primary and Quality to the source resolution (for example 1080p). This labels the one link without needing extra URLs. Add quality rows only when you have separate encoded files. Preview checks the links before applying.</p>
                 <button type="button" onClick={downloadVideoQualityTemplate} className="mt-2 rounded-lg border border-cyan-400/30 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-400/10">Download Quality CSV template</button>
               </div>
               <label className="block text-xs font-bold text-gray-300">CSV file

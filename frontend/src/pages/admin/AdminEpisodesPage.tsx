@@ -39,6 +39,8 @@ export function AdminEpisodesPage() {
   const [form, setForm] = useState({ ...EMPTY_EP });
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrackForm[]>([]);
   const [videoQualities, setVideoQualities] = useState<VideoQualityForm[]>([]);
+  const [primaryQuality, setPrimaryQuality] = useState('');
+  const [isDetectingQuality, setIsDetectingQuality] = useState(false);
   const [batchCount, setBatchCount] = useState(12);
   const [batchUrlPattern, setBatchUrlPattern] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
   const [batchIsVip, setBatchIsVip] = useState(true);
@@ -139,6 +141,52 @@ export function AdminEpisodesPage() {
 
   const currentAnime = animeList.find((a) => a.id === selectedAnime);
 
+  const detectPrimaryQuality = () => {
+    const source = form.video_url.trim();
+    if (!source) {
+      setError('Add the video URL before detecting its quality.');
+      return;
+    }
+
+    setError('');
+    setIsDetectingQuality(true);
+    const probe = document.createElement('video');
+    probe.preload = 'metadata';
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timeoutId);
+      probe.removeAttribute('src');
+      probe.load();
+      setIsDetectingQuality(false);
+    };
+    const timeoutId = window.setTimeout(() => {
+      finish();
+      setError('Could not read video quality from this link. Check that the R2 URL is public and supports video playback.');
+    }, 20000);
+
+    probe.onloadedmetadata = () => {
+      const width = probe.videoWidth;
+      const height = probe.videoHeight;
+      if (!height) {
+        finish();
+        setError('The video link did not report its resolution.');
+        return;
+      }
+      setPrimaryQuality(`${height}p`);
+      setStatusMessage(`Detected ${height}p${width ? ` (${width}×${height})` : ''}.`);
+      window.setTimeout(() => setStatusMessage(''), 3500);
+      finish();
+    };
+    probe.onerror = () => {
+      finish();
+      setError('Could not read video quality from this link. Check that the R2 URL is public and supports video playback.');
+    };
+    probe.src = source;
+    probe.load();
+  };
+
   const openCreate = () => {
     setEditEp(null);
     const maxEp = episodes.length > 0 ? Math.max(...episodes.map((e) => e.episode_number)) : 0;
@@ -152,6 +200,7 @@ export function AdminEpisodesPage() {
     });
     setSubtitleTracks([]);
     setVideoQualities([]);
+    setPrimaryQuality('');
     setError('');
     setShowModal(true);
   };
@@ -172,7 +221,9 @@ export function AdminEpisodesPage() {
       is_free: !isVip,
     });
     setSubtitleTracks(ep.subtitle_tracks?.length ? ep.subtitle_tracks.map((track) => ({ ...track })) : (ep.subtitle_url ? [{ label: 'Subtitles', lang: 'und', src: ep.subtitle_url }] : []));
-    setVideoQualities(ep.video_qualities?.map((quality) => ({ ...quality })) || []);
+    const primaryQualitySource = ep.video_qualities?.find((quality) => quality.src === ep.video_url);
+    setPrimaryQuality(primaryQualitySource?.label || '');
+    setVideoQualities(ep.video_qualities?.filter((quality) => quality.src !== ep.video_url).map((quality) => ({ ...quality })) || []);
     setError('');
     setShowModal(true);
   };
@@ -533,7 +584,10 @@ export function AdminEpisodesPage() {
         title: form.title?.trim() || null,
         description: (form as any).description?.trim() || null,
         video_url: form.video_url?.trim() || null,
-        video_qualities: videoQualities.filter((quality) => quality.src.trim()).map((quality) => ({ label: quality.label.trim(), src: quality.src.trim() })),
+        video_qualities: [
+          ...(primaryQuality.trim() && form.video_url?.trim() ? [{ label: primaryQuality.trim(), src: form.video_url.trim() }] : []),
+          ...videoQualities.filter((quality) => quality.src.trim() && quality.src.trim() !== form.video_url?.trim()).map((quality) => ({ label: quality.label.trim(), src: quality.src.trim() })),
+        ],
         subtitle_url: form.subtitle_url?.trim() || null,
         subtitle_tracks: subtitleTracks.filter((track) => track.src.trim()).map((track) => ({ ...track, src: track.src.trim(), lang: track.lang.trim() || 'und', label: track.label.trim() || track.lang.trim() || 'Subtitles' })),
         thumbnail_url: form.thumbnail_url?.trim() || null,
@@ -1521,7 +1575,11 @@ export function AdminEpisodesPage() {
                 <input
                   type="text"
                   value={form.video_url}
-                  onChange={(e) => setForm((f) => ({ ...f, video_url: e.target.value }))}
+                  onChange={(e) => {
+                    const nextUrl = e.target.value;
+                    setForm((f) => ({ ...f, video_url: nextUrl }));
+                    if (nextUrl.trim() !== form.video_url.trim()) setPrimaryQuality('');
+                  }}
                   className="input font-mono text-xs"
                   placeholder="https://www.facebook.com/... ឬ YouTube ឬ MP4 / m3u8"
                   required
@@ -1611,6 +1669,17 @@ export function AdminEpisodesPage() {
                   </div>)}
                 </div>
                 <button type="button" className="mt-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-emerald-300 hover:bg-white/5" onClick={() => setSubtitleTracks((items) => [...items, { label: '', lang: '', src: '' }])}>+ Add subtitle language</button>
+              </div>
+
+              <div>
+                <label className="label" htmlFor="primary-video-quality">Quality of the main video link</label>
+                <p className="mb-2 text-xs text-gray-400">Detect the resolution from this video link or enter its label. This uses the one source URL and does not create other encodes.</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input id="primary-video-quality" className="input flex-1" value={primaryQuality} onChange={(event) => setPrimaryQuality(event.target.value)} placeholder="1080p" />
+                  <button type="button" onClick={detectPrimaryQuality} disabled={isDetectingQuality || !form.video_url.trim() || isYouTubeUrl(form.video_url) || isFacebookUrl(form.video_url)} className="rounded-lg border border-cyan-400/30 px-3 py-2 text-sm font-bold text-cyan-300 disabled:opacity-50">
+                    {isDetectingQuality ? 'Reading video…' : 'Detect from link'}
+                  </button>
+                </div>
               </div>
 
               <div>
