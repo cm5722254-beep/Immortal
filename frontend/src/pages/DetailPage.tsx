@@ -439,6 +439,14 @@ export function DetailPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent h-24" />
 
+          <Link
+            to={`/watch/${anime.slug}/${firstEpNum}`}
+            aria-label="Play"
+            className="detail-center-play"
+          >
+            <Play className="w-8 h-8 fill-current" />
+          </Link>
+
           {/* Floating Top App Action Bar (Mobile Back & Share) */}
           <div className="detail-top-controls absolute top-3 inset-x-3 sm:inset-x-6 flex items-center justify-between z-30 pt-[max(0rem,env(safe-area-inset-top))]">
             <button
@@ -1224,6 +1232,13 @@ export function DetailPage() {
         isOpen={showTrailerModal}
         onClose={() => setShowTrailerModal(false)}
       />
+
+      {(isTelegram || isMobileApp) && (
+        <Link to={`/watch/${anime.slug}/${firstEpNum}`} className="detail-bottom-play">
+          <Play className="w-5 h-5 fill-current" />
+          <span>ចាប់ផ្តើមមើល</span>
+        </Link>
+      )}
     </main>
   );
 }

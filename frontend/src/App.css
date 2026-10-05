@@ -1207,3 +1207,49 @@
 }
 .mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a p:first-child { color:#f3f4ff; font-size:14px; }
 .mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a > div:last-child { color:#aab5d8; }
+
+/* Detail screen actions match the focused single-title Mini App reference. */
+.mini-app-layout .mini-detail.is-mini-app { padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important; }
+.mini-app-layout .mini-detail.is-mini-app .detail-hero-art { isolation: isolate; }
+.mini-app-layout .mini-detail.is-mini-app .detail-center-play {
+  position: absolute;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 50%;
+  background: rgba(10,12,28,.72);
+  color: white;
+  box-shadow: 0 8px 32px rgba(93,54,255,.45), 0 0 0 7px rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
+  transition: transform .18s ease, background .18s ease;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-center-play:hover { transform: translate(-50%, -50%) scale(1.06); background: rgba(31,22,85,.88); }
+.mini-app-layout .mini-detail.is-mini-app .detail-bottom-play {
+  position: fixed;
+  z-index: 45;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  display: flex;
+  width: min(500px, calc(100% - 32px));
+  min-height: 54px;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(184,158,255,.25);
+  border-radius: 999px;
+  background: linear-gradient(105deg, #4120bd, #21107a 55%, #160d50);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 8px 26px rgba(38,15,145,.42), inset 0 1px rgba(255,255,255,.13);
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-bottom-play svg { color: #fff; }
+.mini-app-layout:has(.mini-detail.is-mini-app) nav[aria-label="Mobile application navigation"] { display: none !important; }
