@@ -60,6 +60,7 @@ export function DetailPage() {
   const [activeTab, setActiveTab] = useState<'episodes' | 'story' | 'comments' | 'related'>('episodes');
   const [selectedRange, setSelectedRange] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const RANGE_SIZE = 30;
 
@@ -425,10 +426,10 @@ export function DetailPage() {
   return (
     <main className={`mini-detail ${!isTelegram && !isMobileApp ? 'website-detail' : ''} min-h-screen pb-24 md:pb-16 bg-black text-gray-100 selection:bg-rose-500 selection:text-white ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
       {/* ── 1. Full-Bleed Cinematic Hero Banner (Mobile & Desktop App Style) ── */}
-      <div className="relative w-full overflow-hidden bg-black">
+      <div className="detail-hero relative w-full overflow-hidden bg-black">
         
         {/* Full-Bleed Backdrop Image */}
-        <div className="relative aspect-[16/10] sm:aspect-[21/9] md:h-[420px] w-full overflow-hidden">
+        <div className="detail-hero-art relative aspect-[16/10] sm:aspect-[21/9] md:h-[420px] w-full overflow-hidden">
           <img
             src={anime.banner_url || anime.poster_url}
             alt=""
@@ -439,7 +440,7 @@ export function DetailPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent h-24" />
 
           {/* Floating Top App Action Bar (Mobile Back & Share) */}
-          <div className="absolute top-3 inset-x-3 sm:inset-x-6 flex items-center justify-between z-30 pt-[max(0rem,env(safe-area-inset-top))]">
+          <div className="detail-top-controls absolute top-3 inset-x-3 sm:inset-x-6 flex items-center justify-between z-30 pt-[max(0rem,env(safe-area-inset-top))]">
             <button
               onClick={() => {
                 triggerHaptic('light');
@@ -483,10 +484,10 @@ export function DetailPage() {
         </div>
 
         {/* ── Content Card & Metadata Section (Asymmetrical Mobile / Side-by-side Desktop) ── */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-20 sm:-mt-24 pb-4">
+        <div className="detail-hero-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-20 sm:-mt-24 pb-4">
           <div className="flex flex-row items-end gap-3.5 sm:gap-6">
             {/* Poster Card */}
-            <div className="w-28 sm:w-40 md:w-52 shrink-0">
+            <div className="detail-poster w-28 sm:w-40 md:w-52 shrink-0">
               <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.9)] border-2 border-white/20 bg-[#0d1526]">
                 <img
                   src={anime.poster_url || anime.banner_url}
@@ -503,7 +504,7 @@ export function DetailPage() {
             </div>
 
             {/* Title & Key Meta on the Right */}
-            <div className="flex-1 min-w-0 pb-1 space-y-1 sm:space-y-2">
+            <div className="detail-meta flex-1 min-w-0 pb-1 space-y-1 sm:space-y-2">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/25 border border-rose-400/40 text-rose-300">
                   {anime.type === 'ANIME' ? '🇯🇵 Anime ជប៉ុន' : anime.type === 'MOVIE' ? '🍿 ភាពយន្តដុំ' : '🐉 Donghua 3D'}
@@ -534,7 +535,7 @@ export function DetailPage() {
           </div>
 
           {/* ── Primary Action Buttons Bar (Sleek Global App Style) ── */}
-          <div className="mt-4 pt-2 border-t border-white/[0.08] space-y-3">
+          <div className="detail-actions mt-4 pt-2 border-t border-white/[0.08] space-y-3">
             {/* Primary Watch / Movie CTA */}
             <div className="flex items-center gap-2 sm:gap-3">
               {anime.type === 'MOVIE' && !hasMovieAccess ? (
@@ -575,7 +576,7 @@ export function DetailPage() {
             </div>
 
             {/* Quick Action Icon Pills Row (Compact & Non-Cluttering) */}
-            <div className="flex items-center justify-between sm:justify-start gap-2 pt-1 text-xs">
+            <div className="detail-quick-actions flex items-center justify-between sm:justify-start gap-2 pt-1 text-xs">
               {/* My List */}
               <button
                 onClick={() => {
@@ -667,7 +668,24 @@ export function DetailPage() {
       </div>
 
       {/* ── 2. Tab Navigation & Content Section ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+      <div className="detail-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+        <section className="detail-synopsis" aria-label="Story summary">
+          <div className="detail-genre-list">
+            {(anime.genres || []).slice(0, 4).map((genre) => (
+              <span key={genre.id}>{genre.name}</span>
+            ))}
+            {anime.year && <span>{anime.year}</span>}
+          </div>
+          <h2>រឿងសង្ខេប</h2>
+          <p className={showFullDescription ? 'expanded' : ''}>
+            {anime.description || 'មិនមានការពិពណ៌នាសាច់រឿងលម្អិតនៅឡើយទេ។'}
+          </p>
+          {(anime.description?.length || 0) > 150 && (
+            <button type="button" onClick={() => setShowFullDescription((value) => !value)}>
+              {showFullDescription ? 'បង្រួម' : 'អានបន្ថែម'}
+            </button>
+          )}
+        </section>
         {anime.type !== 'MOVIE' && user?.role !== 'ADMIN' && user?.role !== 'OWNER' && user?.role !== 'STAFF' && !user?.is_vip_active && (
           <section className="flex flex-col gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.07] p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -740,7 +758,7 @@ export function DetailPage() {
         {activeTab === 'episodes' && (
           <div className="space-y-4">
             {/* Episode Toolbar (Search + Range Selector + Sort + View Mode) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0a0a0a]/90 border border-white/10 backdrop-blur-xl shadow-lg">
+            <div className="detail-episode-toolbar flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0a0a0a]/90 border border-white/10 backdrop-blur-xl shadow-lg">
               {/* Left: Search input */}
               <div className="relative flex-1 max-w-sm">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -768,7 +786,7 @@ export function DetailPage() {
                 </button>
 
                 {/* View Mode Toggle (Grid / List) */}
-                <div className="flex items-center bg-[#131d36] p-0.5 rounded-xl border border-white/10">
+                <div className="detail-view-toggle flex items-center bg-[#131d36] p-0.5 rounded-xl border border-white/10">
                   <button
                     onClick={() => {
                       triggerHaptic('light');
@@ -858,7 +876,7 @@ export function DetailPage() {
               </div>
             ) : (
               /* List Mode with Episode Name & Quick Play */
-              <div className="space-y-2">
+              <div className="detail-episode-list space-y-2">
                 {displayedEpisodes.map((ep) => {
                   const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime.poster_url && ep.thumbnail_url !== anime.banner_url ? ep.thumbnail_url : undefined;
                   const isEpVip = !hasSeriesTrial && (ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false));

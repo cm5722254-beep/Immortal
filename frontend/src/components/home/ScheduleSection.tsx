@@ -100,7 +100,7 @@ export function ScheduleSection() {
           {itemsForDay.map((anime) => (
             <Link
               key={anime.id}
-              to={`/anime/${anime.slug}`}
+              to={`/watch/${anime.slug}/1`}
               className="card card-shine group block rounded-2xl overflow-hidden bg-[#0d0a1a] border border-white/10 hover:border-cyan-400/50 hover:shadow-[0_10px_25px_rgba(56,189,248,0.2)] transition-all duration-300 hover:-translate-y-1.5"
             >
               {/* Poster */}

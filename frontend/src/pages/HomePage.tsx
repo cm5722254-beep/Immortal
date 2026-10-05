@@ -185,7 +185,7 @@ export function HomePage() {
       <main className="mini-home min-h-screen bg-[#111216] text-white pb-5">
         {heroItem && (
           <section className="mini-hero">
-            <Link to={`/${heroItem.type === 'ANIME' ? 'anime' : heroItem.type === 'DRAMA' ? 'drama' : heroItem.type === 'MOVIE' ? 'movie' : 'donghua'}/${heroItem.slug}`} className="mini-hero-art">
+            <Link to={`/watch/${heroItem.slug}/1`} className="mini-hero-art">
               <img src={heroItem.banner_url || heroItem.poster_url || ''} alt={heroItem.title} />
               <div className="mini-hero-shade" />
               <div className="mini-hero-copy">
@@ -204,7 +204,7 @@ export function HomePage() {
           <div className="mini-shelf-heading"><h2>{section.title}</h2><Link to="/explore">{translate('More', language)} <ChevronRight className="w-4 h-4" /></Link></div>
               <div className="mini-poster-row">
                 {section.items.slice(0, 9).map((anime) => (
-                  <Link key={`${section.title}-${anime.id}`} to={`/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DRAMA' ? 'drama' : anime.type === 'MOVIE' ? 'movie' : 'donghua'}/${anime.slug}`} className="mini-poster-card">
+                  <Link key={`${section.title}-${anime.id}`} to={`/watch/${anime.slug}/1`} className="mini-poster-card">
                     <div className="mini-poster-art"><img src={anime.poster_url || anime.banner_url || ''} alt={anime.title} loading="lazy" />
                       {!anime.is_free && <span className="mini-poster-badge">VIP</span>}
                       {anime.status === 'ONGOING' && <span className="mini-poster-update">Updated · {anime.episode_count || 'New'}</span>}

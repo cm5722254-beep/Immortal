@@ -289,7 +289,7 @@ export function SearchPage() {
               {autocompleteSuggestions.map((item) => (
                 <Link
                   key={item.id}
-                  to={`/anime/${item.slug}`}
+                  to={`/watch/${item.slug}/1`}
                   onClick={() => setShowSuggestions(false)}
                   className="flex items-center gap-3 p-3 hover:bg-white/10 transition-colors group cursor-pointer"
                 >

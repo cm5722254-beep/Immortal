@@ -62,7 +62,7 @@ export function TrendingRankCarousel({ items, isLoading }: TrendingRankCarouselP
       >
         {topItems.map((anime, index) => {
           const rank = index + 1;
-          const detailUrl = anime.type === 'DONGHUA' ? `/donghua/${anime.slug}` : `/anime/${anime.slug}`;
+          const detailUrl = `/watch/${anime.slug}/1`;
 
           return (
             <Link

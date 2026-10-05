@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Plus, Check, Star } from 'lucide-react';
+import { Play, Plus, Check, Star, Info } from 'lucide-react';
 import type { Anime } from '../../types';
 import { triggerHaptic } from '../../utils/telegram';
 import { translate, useLanguageStore } from '../../store/languageStore';
@@ -66,7 +66,7 @@ export function AnimeCard({
     <div 
       onClick={() => {
         triggerHaptic('light');
-        navigate(detailUrl);
+        navigate(watchUrl);
       }}
       className="group relative rounded-[20px] sm:rounded-3xl overflow-hidden bg-[#0a0a0a] border border-white/5 cursor-pointer transition-all duration-500 hover:scale-[1.03] hover:border-white/20 hover:shadow-2xl hover:shadow-white/10 aspect-[3/4] col-span-1 flex flex-col"
     >
@@ -96,6 +96,18 @@ export function AnimeCard({
             title={translate(isBookmarked ? 'Remove from My List' : 'Add to My List', language)}
           >
             {isBookmarked ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Plus className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              triggerHaptic('light');
+              navigate(detailUrl);
+            }}
+            aria-label="Details"
+            title="Details"
+            className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md text-white border border-white/20 flex items-center justify-center transition-colors active:scale-95"
+          >
+            <Info className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

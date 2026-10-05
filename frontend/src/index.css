@@ -32,9 +32,9 @@
     --bg-card: #151b23;
     --bg-card-subtle: #1c2530;
     --border-subtle: rgba(190, 205, 225, 0.14);
-    --accent-primary: #ffffff;
-    --color-brand: 255 255 255;
-    --color-brand-light: 240 240 240;
+    --accent-primary: #20c55a;
+    --color-brand: 32 197 90;
+    --color-brand-light: 110 231 154;
     --color-accent-red: 255 69 58;
     --color-accent-rose: 255 105 97;
     --color-accent-cyan: 100 210 255;
@@ -109,12 +109,12 @@
     background: #000000;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 77, 109, 0.35);
+    background: rgba(32, 197, 90, 0.35);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #ff4d6d;
-    box-shadow: 0 0 14px rgba(255, 77, 109, 0.7);
+    background: #20c55a;
+    box-shadow: 0 0 14px rgba(32, 197, 90, 0.45);
   }
 }
 
@@ -219,8 +219,8 @@
     transition: all 0.25s ease;
   }
   .input-pill:focus {
-    border-color: #e8452c;
-    box-shadow: 0 0 16px rgba(232, 69, 44, 0.25);
+    border-color: #20c55a;
+    box-shadow: 0 0 16px rgba(32, 197, 90, 0.2);
   }
 
 

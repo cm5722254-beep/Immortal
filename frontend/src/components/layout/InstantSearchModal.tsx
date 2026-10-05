@@ -96,7 +96,7 @@ export function InstantSearchModal({ isOpen, onClose }: InstantSearchModalProps)
             results.map((anime) => (
               <Link
                 key={anime.id}
-                to={`/anime/${anime.slug}`}
+                  to={`/watch/${anime.slug}/1`}
                 onClick={onClose}
                 className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group"
               >

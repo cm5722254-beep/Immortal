@@ -40,7 +40,7 @@ export function TopRankSection({ items, isLoading }: TopRankSectionProps) {
             return (
               <Link
                 key={anime.id}
-                to={`/anime/${anime.slug}`}
+                to={`/watch/${anime.slug}/1`}
                 className={`relative card p-3.5 flex items-center gap-3.5 group transition-all duration-300 rounded-2xl bg-[#0e0b1c] hover:-translate-y-1 ${
                   index === 0
                     ? 'border-amber-500/50 shadow-[0_4px_20px_rgba(245,158,11,0.2)] bg-gradient-to-r from-amber-500/10 to-[#0e0b1c]'

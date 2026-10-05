@@ -8,17 +8,17 @@ export default {
     extend: {
       colors: {
         brand: {
-          50:  '#fff1f2',
-          100: '#ffe4e6',
-          200: '#fecdd3',
-          300: '#fda4af',
-          400: '#fb7185',
-          500: '#ff4d6d',
-          600: '#e11d48',
-          700: '#be123c',
-          800: '#9f1239',
-          900: '#881337',
-          950: '#4c0519',
+          50:  '#ecfdf3',
+          100: '#d1fae0',
+          200: '#a7f3c1',
+          300: '#6ee79a',
+          400: '#34d875',
+          500: '#20c55a',
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#166534',
+          900: '#14532d',
+          950: '#052e16',
         },
         surface: {
           50:  '#1a2540',
@@ -62,8 +62,8 @@ export default {
         shimmer:   { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
         scaleIn:   { from: { transform: 'scale(0.92)', opacity: '0' }, to: { transform: 'scale(1)', opacity: '1' } },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(124,58,237,0.25)', borderColor: 'rgba(124,58,237,0.4)' },
-          '50%':      { boxShadow: '0 0 45px rgba(239,68,68,0.4)', borderColor: 'rgba(239,68,68,0.6)' }
+          '0%, 100%': { boxShadow: '0 0 20px rgba(32,197,90,0.18)', borderColor: 'rgba(32,197,90,0.35)' },
+          '50%':      { boxShadow: '0 0 40px rgba(32,197,90,0.32)', borderColor: 'rgba(32,197,90,0.55)' }
         },
         pulseSubtle: {
           '0%, 100%': { opacity: '0.85' },
