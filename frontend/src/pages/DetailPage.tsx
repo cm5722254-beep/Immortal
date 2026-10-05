@@ -59,7 +59,7 @@ export function DetailPage() {
   const [epSearch, setEpSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'episodes' | 'story' | 'comments' | 'related'>('episodes');
   const [selectedRange, setSelectedRange] = useState(0);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showRatingModal, setShowRatingModal] = useState(false);
   const RANGE_SIZE = 30;
 
@@ -868,10 +868,10 @@ export function DetailPage() {
                       key={ep.id}
                       to={`/watch/${anime.slug}/${ep.episode_number}`}
                       onClick={() => triggerHaptic('light')}
-                      className="group flex items-center justify-between p-3 rounded-2xl bg-[#10192e]/90 hover:bg-[#15203a] border border-white/10 hover:border-rose-500/40 transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer"
+                      className="group flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl bg-[#10192e]/90 hover:bg-[#15203a] border border-white/10 hover:border-rose-500/40 transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        {episodeThumb ? <img src={episodeThumb} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="h-12 w-20 shrink-0 rounded-lg border border-white/10 object-cover" /> : <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-black text-sm text-white group-hover:bg-rose-500 group-hover:text-white group-hover:border-rose-400 transition-colors shrink-0">
+                        {episodeThumb ? <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="h-[58px] w-[102px] sm:h-16 sm:w-28 shrink-0 rounded-lg border border-white/10 bg-black object-cover" /> : <div className="h-[58px] w-[102px] sm:h-16 sm:w-28 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-display font-black text-sm text-white group-hover:bg-rose-500 group-hover:text-white group-hover:border-rose-400 transition-colors shrink-0">
                           {ep.episode_number}
                         </div>}
                         <div className="min-w-0">

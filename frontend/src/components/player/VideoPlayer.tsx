@@ -63,7 +63,6 @@ export function VideoPlayer({
   const hlsRef = useRef<Hls | null>(null);
   const progressReportRef = useRef<number | undefined>(undefined);
   const hideControlsTimer = useRef<number | undefined>(undefined);
-  const autoNextTimerRef = useRef<number | undefined>(undefined);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const isPlayingRef = useRef(isPlaying);
@@ -103,7 +102,6 @@ export function VideoPlayer({
   }, [showSettings]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null);
   const [buffered, setBuffered] = useState(0);
 
   const { user } = useAuthStore();
@@ -465,10 +463,6 @@ export function VideoPlayer({
     };
   }, [isPlaying, resetControlsTimer]);
 
-  useEffect(() => () => {
-    if (autoNextTimerRef.current !== undefined) window.clearInterval(autoNextTimerRef.current);
-  }, []);
-
   // When settings menu is closed while playing, start 3s timer
   useEffect(() => {
     if (!showSettings && isPlaying) {
@@ -488,31 +482,12 @@ export function VideoPlayer({
     if (video.buffered.length > 0) {
       setBuffered((video.buffered.end(video.buffered.length - 1) / video.duration) * 100);
     }
-    if (hasNext && video.duration > 0 && video.duration - video.currentTime < 25 && video.duration - video.currentTime > 0) {
-      setAutoNextCountdown(Math.ceil(video.duration - video.currentTime));
-    }
   };
 
   const handleEnded = () => {
     setIsPlaying(false);
     onEnded?.();
-    if (autoNext && hasNext) {
-      if (autoNextTimerRef.current !== undefined) window.clearInterval(autoNextTimerRef.current);
-      let countdown = 5;
-      setAutoNextCountdown(countdown);
-      autoNextTimerRef.current = window.setInterval(() => {
-        countdown--;
-        setAutoNextCountdown(countdown);
-        if (countdown <= 0) {
-          if (autoNextTimerRef.current !== undefined) window.clearInterval(autoNextTimerRef.current);
-          autoNextTimerRef.current = undefined;
-          setAutoNextCountdown(null);
-          onNextEpisode?.();
-        }
-      }, 1000);
-    } else {
-      setAutoNextCountdown(null);
-    }
+    if (autoNext && hasNext) onNextEpisode?.();
   };
 
   const togglePlay = () => {
@@ -1045,59 +1020,6 @@ export function VideoPlayer({
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-fade-in">
           <div className="px-3.5 py-1.5 rounded-full bg-black/85 text-white text-xs sm:text-sm font-semibold border border-brand-500/50 shadow-2xl backdrop-blur-md flex items-center gap-2">
             <span>{hudMessage}</span>
-          </div>
-        </div>
-      )}
-
-      {/* ─── NETFLIX-STYLE AUTO-NEXT EPISODE COUNTDOWN OVERLAY ─── */}
-      {autoNextCountdown !== null && autoNextCountdown <= 10 && hasNext && (
-        <div
-          className="absolute bottom-20 right-4 sm:right-6 max-w-xs sm:max-w-sm bg-[#111726]/95 border border-rose-500/50 rounded-3xl p-5 text-sm z-40 animate-scale-in shadow-[0_15px_45px_rgba(0,0,0,0.85)] backdrop-blur-xl pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                </span>
-                <span className="text-white font-black text-sm">ភាគបន្ទាប់នឹងចាក់ក្នុង</span>
-              </div>
-              <p className="text-gray-400 text-xs mt-1">
-                ត្រៀមទស្សនាភាគបន្ទាប់ដោយស្វ័យប្រវត្តិ
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center font-black text-lg text-rose-300 shadow-inner">
-              {autoNextCountdown}s
-            </div>
-          </div>
-
-          {/* Linear countdown progress indicator */}
-          <div className="w-full bg-white/10 rounded-full h-1.5 mt-3.5 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-1000 ease-linear"
-              style={{ width: `${(autoNextCountdown / 10) * 100}%` }}
-            />
-          </div>
-
-          <div className="flex gap-2.5 mt-4">
-            <button
-              onClick={() => setAutoNextCountdown(null)}
-              className="flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-bold text-xs border border-white/10 transition active:scale-95 cursor-pointer"
-            >
-              បោះបង់
-            </button>
-            <button
-              onClick={() => {
-                setAutoNextCountdown(null);
-                onNextEpisode?.();
-              }}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-rose-500/30 transition active:scale-95 cursor-pointer"
-            >
-              <Play className="w-3.5 h-3.5 fill-white" />
-              <span>ចាក់ភ្លាម</span>
-            </button>
           </div>
         </div>
       )}

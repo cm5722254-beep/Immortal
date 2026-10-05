@@ -43,6 +43,7 @@ export function WatchPage() {
   const [downloadNotice, setDownloadNotice] = useState('');
 
   const wsRef = useRef<WebSocket | null>(null);
+  const skipEpisodeFetchRef = useRef<string | null>(null);
   const epNum = parseInt(episodeNumber || '1', 10);
 
   useEffect(() => {
@@ -75,6 +76,12 @@ export function WatchPage() {
   // Fetch anime & episodes
   useEffect(() => {
     if (!slug) return;
+    const routeKey = `${slug}/${epNum}`;
+    if (skipEpisodeFetchRef.current === routeKey) {
+      skipEpisodeFetchRef.current = null;
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setAnime(null);
     setEpisodes([]);
@@ -286,7 +293,27 @@ export function WatchPage() {
 
   const goToEp = (epNumber: number) => {
     triggerHaptic('light');
-    navigate(`/watch/${slug}/${epNumber}`);
+    const episode = episodes.find((item) => item.episode_number === epNumber);
+    if (!episode) {
+      navigate(`/watch/${slug}/${epNumber}`, { replace: true });
+      return;
+    }
+    const routeKey = `${slug}/${epNumber}`;
+    skipEpisodeFetchRef.current = routeKey;
+    setIsLoading(false);
+    setResumeAt(0);
+    setOfflineVideoUrl(null);
+    setCurrentEp(episode);
+    try {
+      const savedTime = Number(localStorage.getItem(`resume_${slug}_${epNumber}`) || 0);
+      if (savedTime > 15) setResumeAt(savedTime);
+    } catch { /* Continue from the beginning. */ }
+    if (anime) {
+      void downloadService.getOfflineVideoUrl(anime.id, epNumber).then((url) => {
+        if (window.location.pathname === `/watch/${slug}/${epNumber}`) setOfflineVideoUrl(url);
+      });
+    }
+    navigate(`/watch/${slug}/${epNumber}`, { replace: true });
   };
 
   const prevEp = episodes.find((e) => e.episode_number === epNum - 1);
