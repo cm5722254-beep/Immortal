@@ -1021,3 +1021,189 @@
   .mini-detail.is-mini-app .detail-episode-list > a > div:last-child,
   .website-detail .detail-episode-list > a > div:last-child { color:#aab5d8; }
 }
+
+/* Telegram renders Mini Apps in a narrow pane even when the browser viewport is wide.
+   Apply the app detail composition by platform, not only by the device breakpoint. */
+.mini-app-layout .mini-detail.is-mini-app {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding-bottom: calc(74px + env(safe-area-inset-bottom));
+  background: #080d1b;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-hero {
+  position: relative;
+  height: clamp(500px, 62svh, 650px);
+  min-height: 500px;
+  background: #070d20;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-hero-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-hero-art > img {
+  object-position: center 24%;
+  opacity: .78 !important;
+  filter: none !important;
+  transform: scale(1.02) !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-hero-art > div:first-of-type {
+  background: linear-gradient(180deg,rgba(5,10,25,.12) 12%,rgba(5,10,25,.25) 42%,#080d1b 100%) !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-hero-art > div:nth-of-type(2) {
+  height: 130px;
+  background: linear-gradient(180deg,rgba(3,7,17,.52),transparent) !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-hero-content {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  width: 100%;
+  margin: 0;
+  padding: 0 20px 20px;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-top-controls {
+  top: max(12px,env(safe-area-inset-top));
+  right: 18px;
+  left: 18px;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-top-controls > button,
+.mini-app-layout .mini-detail.is-mini-app .detail-top-controls > div button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(4,8,22,.72);
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-top-controls > button span,
+.mini-app-layout .mini-detail.is-mini-app .detail-poster { display: none; }
+.mini-app-layout .mini-detail.is-mini-app .detail-meta { padding: 0 0 10px; }
+.mini-app-layout .mini-detail.is-mini-app .detail-meta h1 {
+  margin: 8px 0 2px;
+  font-size: clamp(25px,7vw,34px);
+  line-height: 1.25 !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-actions {
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-actions > div:first-child { gap: 10px; }
+.mini-app-layout .mini-detail.is-mini-app .detail-actions > div:first-child > a {
+  min-height: 48px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-actions > div:first-child > a:first-child {
+  background: linear-gradient(110deg,#5537ef,#3122bf) !important;
+  box-shadow: 0 8px 22px rgba(64,45,219,.32) !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 6px;
+  padding-top: 8px;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-quick-actions > button {
+  min-width: 0;
+  min-height: 45px;
+  padding: 6px 3px;
+  flex-direction: column;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  color: #e1e4ef;
+  font-size: 10px;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-quick-actions > button svg {
+  width: 20px;
+  height: 20px;
+  color: #dbe2ff !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 520px;
+  gap: 20px;
+  padding: 18px 20px calc(30px + env(safe-area-inset-bottom));
+  background: #080d1b;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-synopsis { display: block; }
+.mini-app-layout .mini-detail.is-mini-app .detail-genre-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-genre-list span {
+  padding: 6px 12px;
+  border: 1px solid rgba(119,91,255,.8);
+  border-radius: 999px;
+  background: rgba(66,47,180,.19);
+  color: #eef0ff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-synopsis h2 {
+  margin: 0 0 6px;
+  color: #f7f8ff;
+  font-size: 21px;
+  font-weight: 800;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-synopsis p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #d0d5e3;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-synopsis p.expanded { display: block; }
+.mini-app-layout .mini-detail.is-mini-app .detail-synopsis > button {
+  display: block;
+  margin: 8px auto 0;
+  color: #b3a7ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-content > section:not(.detail-synopsis) { display: none; }
+.mini-app-layout .mini-detail.is-mini-app .detail-view-toggle { display: none; }
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-toolbar {
+  gap: 10px;
+  padding: 12px;
+  border-radius: 15px;
+  background: #101522 !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-list { display: flex; flex-direction: column; gap: 12px; }
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a {
+  min-height: 84px;
+  padding: 8px;
+  border-color: rgba(255,255,255,.07);
+  border-radius: 13px;
+  background: #101522 !important;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a img,
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a > div:first-child > div:first-child {
+  width: 128px;
+  height: 72px;
+  border-radius: 9px;
+  object-fit: cover;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a > div:first-child > div:first-child {
+  border-color: rgba(255,255,255,.08) !important;
+  background: #141c32 !important;
+  color: #f3f4ff;
+}
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a p:first-child { color:#f3f4ff; font-size:14px; }
+.mini-app-layout .mini-detail.is-mini-app .detail-episode-list > a > div:last-child { color:#aab5d8; }
