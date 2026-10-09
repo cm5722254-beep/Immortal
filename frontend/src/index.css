@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import ANIMEKH Design Tokens */
+@import "./styles/design-tokens.css";
+
 .mini-player-seek {
   appearance: none;
   height: 4px;
@@ -28,6 +31,7 @@
 
 @layer base {
   :root {
+    /* Base theme variables (will be overridden by theme system) */
     --bg-base: #0b0f14;
     --bg-card: #151b23;
     --bg-card-subtle: #1c2530;
@@ -39,10 +43,20 @@
     --color-accent-rose: 255 105 97;
     --color-accent-cyan: 100 210 255;
     --color-accent-gold: 255 214 10;
+
+    /* ANIMEKH Premium Theme Overrides (when active) */
+    --animekh-bg-base: #08090D;
+    --animekh-bg-card: #11131B;
+    --animekh-bg-card-subtle: #171A24;
+    --animekh-accent-primary: #8B5CF6;
+    --animekh-accent-secondary: #38BDF8;
+    --animekh-text-primary: #F8FAFC;
+    --animekh-text-secondary: #9CA3AF;
+    --animekh-border-subtle: rgba(255, 255, 255, 0.1);
   }
 
   body {
-    background-color: #0b0f14;
+    background-color: var(--bg-base);
     background-image: none;
     background-attachment: fixed;
     color: #ffffff;
@@ -195,7 +209,7 @@
   .pill-tag {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-center;
     padding: 0.2rem 0.6rem;
     border-radius: 9999px;
     background: linear-gradient(135deg, #e8452c 0%, #d63720 100%);
@@ -246,7 +260,6 @@
   .glow-dragon {
     box-shadow: 0 8px 24px rgba(239, 68, 68, 0.15), 0 4px 12px rgba(245, 158, 11, 0.1);
   }
-
   /* Text gradient */
   .text-gradient {
     background: linear-gradient(to right, #a78bfa, #d8b4fe, #38bdf8);
@@ -496,9 +509,9 @@
   scrollbar-width: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════════
    NETFLIX DESIGN SYSTEM & ANIMATIONS
-   ═══════════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 
 /* Netflix Billboard Ambient & Vignette Overlays */
 .netflix-billboard-vignette {
@@ -585,9 +598,9 @@
   animation: rose-glow 3s infinite ease-in-out;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    3D ROTATING CIRCULAR CAROUSEL (BANNER 3D វិលជារង្វង់)
-   ═══════════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .scene-3d {
   perspective: 1200px;
   perspective-origin: 50% 48%;
@@ -622,9 +635,9 @@
 }
 
 
-/* ═══════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    WATCHFLIX ANIME — FAST 3D ANIMATION SYSTEM
-   ═══════════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 
 /* Logo spin */
 @keyframes logo-spin {
@@ -710,7 +723,7 @@
 }
 
 /* Fade in */
-@keyframes fade-in {
+@keyfade fade-in {
   0%   { opacity: 0; }
   100% { opacity: 1; }
 }
@@ -839,9 +852,9 @@
   transform: scale(1.05);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    CLEAN & MINIMALIST UI MODE (របៀបសាមញ្ញ មិនរញេរញៃ)
-   ═══════════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .clean-ui-mode .animate-pulse {
   animation: none !important;
 }
@@ -860,7 +873,7 @@
 .reduce-motion-mode *,
 .reduce-motion-mode *::before,
 .reduce-motion-mode *::after {
-  animation-duration: 0.01ms !important;
+  animation-dduration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;

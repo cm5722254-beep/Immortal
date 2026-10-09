@@ -1,16 +1,12 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Navbar } from './components/layout/Navbar';
-import { Footer } from './components/layout/Footer';
-import { MobileNav } from './components/layout/MobileNav';
-import { MiniAppHeader } from './components/layout/MiniAppHeader';
 import { NotFoundPage, ForbiddenPage, ServerErrorPage } from './pages/ErrorPages';
 import { ContactDeveloperButton } from './components/common/ContactDeveloperButton';
 import { ConfirmDialog } from './components/common/ConfirmDialog';
 import { PwaInstallPrompt } from './components/common/PwaInstallPrompt';
 import { PromoCountdownBanner } from './components/layout/PromoCountdownBanner';
 import { SystemUpdateModal } from './components/common/SystemUpdateModal';
-import { MaintenancePage } from './pages/MaintenancePage';
+import { Layout } from './components/layout/Layout';
 import { useAuthStore } from './store/authStore';
 import { useThemeStore } from './store/themeStore';
 import { useSystemUpdateStore } from './store/systemUpdateStore';
@@ -109,14 +105,10 @@ function OwnerGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Layout wrapper for public pages
-function PublicLayout({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
+// Layout wrapper for public pages with Maintenance Lock
+function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { config } = useSystemUpdateStore();
   const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
-  const { isWeb, isTelegram, isMobileApp } = usePlatform();
-  const isMiniAppLanding = (isTelegram || isMobileApp) && ['/', '/profile', '/me'].includes(location.pathname);
-  const showMiniHeader = (isTelegram || isMobileApp) && ['/', '/explore', '/free', '/donghua', '/anime', '/drama', '/movies', '/movie', '/search'].includes(location.pathname);
   const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active;
 
   // 🔒 Website Maintenance Lock: If enabled, check if VIP only or full lock
@@ -129,35 +121,9 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`streaming-site min-h-screen flex flex-col text-gray-100 ${isTelegram || isMobileApp ? 'mini-app-layout' : ''} ${isWeb ? 'website-iqiyi-layout' : ''} ${isTelegram ? 'telegram-app-layout' : ''} ${isMobileApp ? 'apk-app-layout' : ''} ${
-      isTelegram ? 'bg-black tg-theme-wrapper' : isMobileApp ? 'bg-black apk-wrapper' : 'bg-black'
-    }`}>
-      {/* Promo banner on Desktop Website */}
-      {isWeb && (
-        <div className="hidden md:block">
-          <PromoCountdownBanner />
-        </div>
-      )}
-
-      {/* Main Navigation Bar */}
-      {!isTelegram && !isMobileApp && !isMiniAppLanding && <Navbar />}
-      {showMiniHeader && <MiniAppHeader />}
-
-      <div className={`flex-1 ${isWeb ? 'pb-24 md:pb-0' : 'pb-20'}`}>
-        {children}
-      </div>
-
-      {/* Desktop Website Footer (Hidden inside Telegram Mini App and Android APK) */}
-      {isWeb && (
-        <div className="hidden md:block">
-          <ContactDeveloperButton />
-          <Footer />
-        </div>
-      )}
-
-      {/* Bottom Dock Navigation for Mobile / Telegram / APK */}
-      <MobileNav />
-    </div>
+    <Layout>
+      {children}
+    </Layout>
   );
 }
 
@@ -180,31 +146,6 @@ function TelegramBackButtonHandler() {
 
   return null;
 }
-
-// Layout wrapper for watch page with Maintenance Lock
-function PublicWatchLayout({ children }: { children: React.ReactNode }) {
-  const { config } = useSystemUpdateStore();
-  const { isAdmin, isOwner, isStaff, isVip, user } = useAuthStore();
-  const { isTelegram, isMobileApp } = usePlatform();
-  const isVipUser = isAdmin || isOwner || isStaff || isVip || user?.is_vip_active;
-
-  if (config.enabled && !isAdmin && !isOwner && !isStaff) {
-    if (config.allow_vip && isVipUser) {
-      // 👑 Allowed: VIP users can watch normally!
-    } else {
-      return <MaintenancePage isVipOnlyMode={Boolean(config.allow_vip)} />;
-    }
-  }
-
-  return (
-    <>
-      {!isTelegram && !isMobileApp && <Navbar />}
-      {children}
-      <MobileNav />
-    </>
-  );
-}
-
 
 export default function App() {
   const { fetchMe, loginWithTelegram, isAdmin } = useAuthStore();
@@ -322,43 +263,43 @@ export default function App() {
           <Route path="/admin/owner" element={<OwnerGuard><AdminOwnerPage /></OwnerGuard>} />
 
           {/* Watch page (with Maintenance Lock protection) */}
-          <Route path="/watch/:slug" element={<PublicWatchLayout><WatchPage /></PublicWatchLayout>} />
-          <Route path="/watch/:slug/:episodeNumber" element={<PublicWatchLayout><WatchPage /></PublicWatchLayout>} />
+          <Route path="/watch/:slug" element={<ProtectedLayout><WatchPage /></ProtectedLayout>} />
+          <Route path="/watch/:slug/:episodeNumber" element={<ProtectedLayout><WatchPage /></ProtectedLayout>} />
 
           {/* Public pages with standard layout */}
-          <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
-          <Route path="/explore" element={<PublicLayout><ExplorePage /></PublicLayout>} />
-          <Route path="/free" element={<PublicLayout><ExplorePage isFreeOnly={true} /></PublicLayout>} />
-          <Route path="/donghua" element={<PublicLayout><ExplorePage defaultType="DONGHUA" /></PublicLayout>} />
-          <Route path="/drama" element={<PublicLayout><ExplorePage defaultType="DRAMA" /></PublicLayout>} />
-          <Route path="/movies" element={<PublicLayout><ExplorePage defaultType="MOVIE" /></PublicLayout>} />
-          <Route path="/movie" element={<PublicLayout><ExplorePage defaultType="MOVIE" /></PublicLayout>} />
-          <Route path="/anime" element={<PublicLayout><ExplorePage defaultType="ANIME" /></PublicLayout>} />
-          <Route path="/anime/:slug" element={<PublicLayout><DetailPage /></PublicLayout>} />
-          <Route path="/donghua/:slug" element={<PublicLayout><DetailPage /></PublicLayout>} />
-          <Route path="/drama/:slug" element={<PublicLayout><DetailPage /></PublicLayout>} />
-          <Route path="/movie/:slug" element={<PublicLayout><DetailPage /></PublicLayout>} />
-          <Route path="/search" element={<PublicLayout><SearchPage /></PublicLayout>} />
-          <Route path="/favorites" element={<PublicLayout><FavoritesPage /></PublicLayout>} />
-          <Route path="/history" element={<PublicLayout><HistoryPage /></PublicLayout>} />
-          <Route path="/notifications" element={<PublicLayout><NotificationsPage /></PublicLayout>} />
-          <Route path="/profile" element={<PublicLayout><ProfilePage /></PublicLayout>} />
-          <Route path="/me" element={<PublicLayout><ProfilePage /></PublicLayout>} />
-          <Route path="/vip" element={<PublicLayout><VIPPage /></PublicLayout>} />
-          <Route path="/downloads" element={<PublicLayout><DownloadsPage /></PublicLayout>} />
-          <Route path="/shorts" element={<PublicLayout><ShortsPage /></PublicLayout>} />
-          <Route path="/account" element={<PublicLayout><AccountPage /></PublicLayout>} />
-          <Route path="/settings" element={<PublicLayout><SettingsPage /></PublicLayout>} />
-          <Route path="/help" element={<PublicLayout><HelpPage /></PublicLayout>} />
-          <Route path="/referrals" element={<PublicLayout><ReferralPage /></PublicLayout>} />
-          <Route path="/scan" element={<PublicLayout><ScanPage /></PublicLayout>} />
+          <Route path="/" element={<ProtectedLayout><HomePage /></ProtectedLayout>} />
+          <Route path="/explore" element={<ProtectedLayout><ExplorePage /></ProtectedLayout>} />
+          <Route path="/free" element={<ProtectedLayout><ExplorePage isFreeOnly={true} /></ProtectedLayout>} />
+          <Route path="/donghua" element={<ProtectedLayout><ExplorePage defaultType="DONGHUA" /></ProtectedLayout>} />
+          <Route path="/drama" element={<ProtectedLayout><ExplorePage defaultType="DRAMA" /></ProtectedLayout>} />
+          <Route path="/movies" element={<ProtectedLayout><ExplorePage defaultType="MOVIE" /></ProtectedLayout>} />
+          <Route path="/movie" element={<ProtectedLayout><ExplorePage defaultType="MOVIE" /></ProtectedLayout>} />
+          <Route path="/anime" element={<ProtectedLayout><ExplorePage defaultType="ANIME" /></ProtectedLayout>} />
+          <Route path="/anime/:slug" element={<ProtectedLayout><DetailPage /></ProtectedLayout>} />
+          <Route path="/donghua/:slug" element={<ProtectedLayout><DetailPage /></ProtectedLayout>} />
+          <Route path="/drama/:slug" element={<ProtectedLayout><DetailPage /></ProtectedLayout>} />
+          <Route path="/movie/:slug" element={<ProtectedLayout><DetailPage /></ProtectedLayout>} />
+          <Route path="/search" element={<ProtectedLayout><SearchPage /></ProtectedLayout>} />
+          <Route path="/favorites" element={<ProtectedLayout><FavoritesPage /></ProtectedLayout>} />
+          <Route path="/history" element={<ProtectedLayout><HistoryPage /></ProtectedLayout>} />
+          <Route path="/notifications" element={<ProtectedLayout><NotificationsPage /></ProtectedLayout>} />
+          <Route path="/profile" element={<ProtectedLayout><ProfilePage /></ProtectedLayout>} />
+          <Route path="/me" element={<ProtectedLayout><ProfilePage /></ProtectedLayout>} />
+          <Route path="/vip" element={<ProtectedLayout><VIPPage /></ProtectedLayout>} />
+          <Route path="/downloads" element={<ProtectedLayout><DownloadsPage /></ProtectedLayout>} />
+          <Route path="/shorts" element={<ProtectedLayout><ShortsPage /></ProtectedLayout>} />
+          <Route path="/account" element={<ProtectedLayout><AccountPage /></ProtectedLayout>} />
+          <Route path="/settings" element={<ProtectedLayout><SettingsPage /></ProtectedLayout>} />
+          <Route path="/help" element={<ProtectedLayout><HelpPage /></ProtectedLayout>} />
+          <Route path="/referrals" element={<ProtectedLayout><ReferralPage /></ProtectedLayout>} />
+          <Route path="/scan" element={<ProtectedLayout><ScanPage /></ProtectedLayout>} />
 
-          <Route path="/library" element={<PublicLayout><FavoritesPage /></PublicLayout>} />
+          <Route path="/library" element={<ProtectedLayout><FavoritesPage /></ProtectedLayout>} />
 
           {/* Error pages */}
-          <Route path="/403" element={<PublicLayout><ForbiddenPage /></PublicLayout>} />
-          <Route path="/500" element={<PublicLayout><ServerErrorPage /></PublicLayout>} />
-          <Route path="*" element={<PublicLayout><NotFoundPage /></PublicLayout>} />
+          <Route path="/403" element={<ProtectedLayout><ForbiddenPage /></ProtectedLayout>} />
+          <Route path="/500" element={<ProtectedLayout><ServerErrorPage /></ProtectedLayout>} />
+          <Route path="*" element={<ProtectedLayout><NotFoundPage /></ProtectedLayout>} />
         </Routes>
       </Suspense>
     </BrowserRouter>
@@ -386,7 +327,7 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
   const handleSubmitAppeal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !reason.trim()) {
-      setErrorMsg('សូមបំពេញឈ្មោះគណនី និងមូលហេតុស្នើសុំដោះសោរ');
+      setErrorMsg('សូមបំពេញឈ្មោះគណនី និងមូលហេតុស្នើស្ដោះសោរ');
       return;
     }
 
@@ -425,10 +366,10 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
         setSubmittedMsg(msg);
       } else {
         // Confirmed saved locally
-        setSubmittedMsg('សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ! Admin នឹងពិនិត្យដោះសោរជូនក្នុងពេលឆាប់ៗ។');
+        setSubmittedMsg('សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ! Admin នឹងពិនិត់ដោះសោរជូនក្នុងពេលឆាប់ៗ។');
       }
     } catch {
-      setSubmittedMsg('សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ! Admin នឹងពិនិត្យដោះសោរជូនក្នុងពេលឆាប់ៗ។');
+      setSubmittedMsg('សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ! Admin នឹងពិនិត់ដោះសោរជ៼នក្នុងពេលឆាប់ៗ។');
     } finally {
       setIsSubmitting(false);
     }
@@ -448,85 +389,5 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
           ⚠️ មូលហេតុ៖ ប៉ុនប៉ងបំពានប្រព័ន្ធការពារ ({banReason})
         </p>
         <p className="text-xs text-gray-400 leading-relaxed mb-6">
-          ប្រព័ន្ធបានចាក់សោរបិទឧបករណ៍ និងគណនីរបស់អ្នកជាស្ថាពរ។ លោកអ្នកអាចផ្ញើសំណើស្នើសុំទៅកាន់ <strong className="text-amber-400">Admin</strong> ដើម្បីសុំការដោះសោរ (Unban) បានតាមទម្រង់ខាងក្រោម៖
+          ប្រព័ន្ធបានចាក់សោរបិទឧបករណ៍ និងគណនីរបស់អ្នកជាស្ថាពរ។ លោកអ្នកអំផ្ញើសំណើស្នើស្នើសុំទៅកាន់ <strong className="text-amber-400">Admin</strong> ដើម្បីសុំក្រាជោគជ័យបានត្រូវបាន (Unban)
         </p>
-
-        {submittedMsg ? (
-          <div className="bg-emerald-500/15 border border-emerald-500/40 rounded-2xl p-5 text-emerald-300 text-xs sm:text-sm font-bold animate-fade-in space-y-2">
-            <p className="text-base">✅ {submittedMsg}</p>
-            <p className="text-gray-300 font-normal text-xs">
-              សូមរង់ចាំ Admin ពិនិត្យ និងដោះសោរជូន។ ឬអាចទាក់ទង Admin តាម Telegram ផ្ទាល់បន្ថែម៖
-            </p>
-            <div className="pt-2">
-              <a
-                href="https://t.me/watchflixanimeadmin"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 bg-[#229ED9] text-white text-xs font-bold py-2 px-4 rounded-xl"
-              >
-                💬 @watchflixanimeadmin (Telegram)
-              </a>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmitAppeal} className="space-y-3.5 text-left">
-            {errorMsg && (
-              <div className="bg-red-500/15 border border-red-500/40 text-red-300 text-xs p-2.5 rounded-xl text-center">
-                {errorMsg}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                ឈ្មោះគណនី / Email / លេខទូរសព្ទរបស់អ្នក៖
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="ឧ. username, email ឬ 012345678"
-                required
-                className="w-full bg-[#080306] border border-white/10 focus:border-red-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                មូលហេតុស្នើសុំដោះសោរ (Appeal Message)៖
-              </label>
-              <textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="ឧ. សូមទោស Admin ខ្ញុំច្រឡំដៃចុច F12 / Shortcut សូមមេត្តាជួយដោះសោរឱ្យខ្ញុំវិញផង..."
-                rows={3}
-                required
-                className="w-full bg-[#080306] border border-white/10 focus:border-red-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                ព័ត៌មានទំនាក់ទំនង (Telegram / Phone) [Optional]៖
-              </label>
-              <input
-                type="text"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder="ឧ. @my_telegram ឬ 098765432"
-                className="w-full bg-[#080306] border border-white/10 focus:border-red-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs py-3 rounded-xl shadow-lg shadow-red-600/30 transition-all active:scale-95 disabled:opacity-50"
-            >
-              {isSubmitting ? 'កំពុងផ្ញើសំណើ...' : '📩 ផ្ញើសំណើស្នើសុំដោះសោរទៅកាន់ Admin (Submit Appeal)'}
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-}

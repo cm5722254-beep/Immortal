@@ -121,4 +121,16 @@ export const SITE_THEMES: SiteTheme[] = [
     accent: '#94A3B8',
     description: 'Sleek industrial titanium and stealth carbon steel',
   },
+  // ANIMEKH V2 PREMIUM THEME - Added as per redesign specification
+  {
+    id: 'animekh-premium',
+    name: 'ANIMEKH Premium (អ៊ីនូម៉ែខហ្វេ)',
+    name_en: 'ANIMEKH Premium',
+    bg_base: '#08090D',           /* Near-black background */
+    bg_card: '#11131B',           /* Elevated surfaces */
+    bg_card_subtle: '#171A24',    /* Card background */
+    border: 'rgba(255, 255, 255, 0.1)', /* Subtle borders */
+    accent: '#8B5CF6',            /* Electric violet */
+    description: 'Premium cinematic dark theme with electric violet accents',
+  },
 ];

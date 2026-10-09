@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Star, ChevronRight, Bookmark, ChevronLeft } from 'lucide-react';
+import { Play, Star, ChevronRight, ChevronLeft, Bookmark, Clock, Bell, X } from 'lucide-react';
 import api from '../services/api';
 import { getLocalCatalogSync, loadCatalog, extractHomeData } from '../services/catalogService';
 import type { Anime, WatchHistoryItem } from '../types';
@@ -33,71 +33,292 @@ function getLocalContinueHistory(): WatchHistoryItem[] {
   }
 }
 
-// A completely new, ultra-modern Bento Box / Magazine style card
-function BentoCard({ anime, isLarge = false }: { anime: Anime; isLarge?: boolean }) {
+// Premium Hero Banner Component
+function PremiumHeroBanner({ anime }: { anime: Anime }) {
   const navigate = useNavigate();
   const detailUrl = `/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DONGHUA' ? 'donghua' : anime.type === 'DRAMA' ? 'drama' : 'movie'}/${anime.slug}`;
   const watchUrl = `/watch/${anime.slug}/1`;
 
-  const tagText = anime.status === 'COMPLETED' ? `ចប់ត្រឹម ${anime.episode_count || 16} ភាគ` : anime.episode_count ? `ភាគ ${anime.episode_count}` : 'ថ្មីៗ';
+  const tagText = anime.status === 'COMPLETED' ? `Complete ${anime.episode_count || 16} Episodes` : anime.episode_count ? `${anime.episode_count} Episodes` : 'New Release';
 
   return (
-    <div 
-      onClick={() => {
-        triggerHaptic('light');
-        navigate(detailUrl);
-      }}
-      className={`group relative rounded-3xl overflow-hidden bg-[#0a0a0a] border border-white/5 cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:border-white/20 hover:shadow-2xl hover:shadow-white/10 ${isLarge ? 'aspect-[4/5] sm:aspect-[16/9] md:aspect-[4/3] lg:aspect-[16/9] col-span-2 row-span-2' : 'aspect-[3/4] col-span-1'}`}
-    >
-      <img
-        src={anime.poster_url || anime.banner_url || ''}
-        alt={anime.title}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
-      
-      <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between z-10">
-        <div className="flex justify-between items-start">
-          <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full border border-white/10">
-            {tagText}
-          </span>
-          {!anime.is_free && (
-            <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-1 rounded-lg">
-              VIP
-            </span>
-          )}
-        </div>
+    <div className="relative w-full h-[600px] bg-gradient-to-b from-[var(--animekh-bg-base)] via-[var(--animekh-bg-base)/80] to-transparent">
+      <div className="absolute inset-0">
+        <img
+          src={anime.banner_url || anime.poster_url || ''}
+          alt={anime.title}
+          className="w-full h-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--animekh-bg-base)] via-[var(--animekh-bg-base)/60] to-transparent" />
+      </div>
 
-        <div>
-          <h3 className={`font-display font-black text-white leading-tight mb-2 group-hover:text-amber-300 transition-colors ${isLarge ? 'text-2xl sm:text-4xl' : 'text-sm sm:text-lg'}`}>
-            {anime.title}
-          </h3>
-          <div className="flex items-center gap-2 text-[10px] sm:text-xs text-gray-400 font-medium mb-4">
-            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> {anime.average_rating?.toFixed(1) || '9.5'}</span>
-            <span>•</span>
-            <span>{anime.year || '2024'}</span>
-            <span>•</span>
-            <span className="truncate">{anime.type === 'DONGHUA' ? 'រឿងចិន 3D' : anime.type === 'ANIME' ? 'រឿងជប៉ុន' : 'ភាពយន្ត'}</span>
+      <div className="relative z-10 flex h-full items-end pb-[var(--animekh-spacing-12)] px-6 lg:px-12">
+        <div className="max-w-4xl space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="animekh-badge">{{tagText}}</span>
+            {!anime.is_free && (
+              <span className="animekh-badge animekh-badge-outline">VIP</span>
+            )}
           </div>
 
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(watchUrl);
-            }}
-            className="w-full flex items-center justify-center gap-2 bg-white text-black font-bold py-2.5 sm:py-3 rounded-xl hover:bg-gray-200 transition-colors active:scale-95 text-xs sm:text-sm"
-          >
-            <Play className="w-4 h-4 fill-black" />
-            ចាក់ទស្សនា
-          </button>
+          <h1 className="animekh-font-display text-5xl sm:text-6xl font-black text-text-primary mb-4">
+            {anime.title}
+          </h1>
+
+          <p className="animekh-text-secondary max-w-xl line-clamp-3">
+            {anime.description || `Discover ${anime.title}, now streaming on ANIMEKH.`}
+          </p>
+
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-2 text-text-secondary">
+              <Star className="h-4 w-4 text-accent-primary" />
+              <span>{anime.average_rating?.toFixed(1) || '9.5'} • </span>
+              <span>{anime.year || '2024'} • </span>
+              <span className="truncate">
+                {anime.type === 'DONGHUA' ? 'Chinese Animation 3D' :
+                 anime.type === 'ANIME' ? 'Japanese Anime' :
+                 'Movie/Drama'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Link
+              to={watchUrl}
+              onClick={() => triggerHaptic('light')}
+              className="animekh-btn-primary flex-1 sm:flex-none py-3 sm:px-8 text-lg font-semibold hover:bg-accent-primary/90"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Watch Now
+            </Link>
+
+            <Link
+              to={detailUrl}
+              onClick={() => triggerHaptic('light')}
+              className="animekh-btn-secondary flex-1 sm:flex-none py-3 sm:px-8 text-lg font-semibold hover:bg-accent-primary/10"
+            >
+              <Bookmark className="h-4 w-4 mr-2" />
+              More Info
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+// Premium Section Header
+function SectionHeader({ title, description, viewAllLink }: {
+  title: string;
+  description?: string;
+  viewAllLink?: string
+}) {
+  return (
+    <div className="animekh-section-header">
+      <div className="space-y-2">
+        <h2 className="animekh-section-title">{title}</h2>
+        {description && <p className="animekh-section-description">{description}</p>}
+      </div>
+      {viewAllLink && (
+        <Link
+          to={viewAllLink}
+          className="animekh-btn-ghost hover:text-accent-primary"
+        >
+          View All <ChevronRight className="h-4 w-4 ml-2" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+// Premium Anime Card (Updated for V2)
+function PremiumAnimeCard({ anime, isFeatured = false }: { anime: Anime; isFeatured?: boolean }) {
+  const navigate = useNavigate();
+  const detailUrl = `/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DONGHUA' ? 'donghua' : anime.type === 'DRAMA' ? 'drama' : 'movie'}/${anime.slug}`;
+  const watchUrl = `/watch/${anime.slug}/1`;
+
+  return (
+    <Link
+      to={detailUrl}
+      onClick={(e) => {
+        e.stopPropagation();
+        triggerHaptic('light');
+        navigate(detailUrl);
+      }}
+      className="group relative w-full cursor-pointer"
+    >
+      <div className="relative overflow-hidden rounded-xl border border-border-subtle bg-bg-card hover:border-accent-primary/30 transition-all duration-300">
+        {/* Poster Image */}
+        <div className="relative h-[200px] w-full">
+          <img
+            src={anime.poster_url || anime.banner_url || ''}
+            alt={anime.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          {!anime.is_free && (
+            <div className="absolute top-3 left-3 animekh-badge animekh-badge-outline">
+              VIP
+            </div>
+          )}
+          {anime.status === 'ONGOING' && (
+            <div className="absolute top-3 left-3 animekh-badge">
+              Updated • {anime.episode_count || 'New'}
+            </div>
+          )}
+
+          {/* Play Button on hover */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <Play className="h-6 w-6 text-accent-primary bg-accent-primary/20 rounded-full hover:bg-accent-primary/30"
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                navigate(watchUrl);
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-4">
+          <div className="flex justify-between items-start mb-2">
+            <span className="animekh-badge">{anime.status === 'COMPLETED' ? 'Complete' : 'Ongoing'}</span>
+            <span className="animekh-badge animekh-badge-outline">{anime.type}</span>
+          </div>
+
+          <h3 className="animekh-font-display text-lg font-semibold text-text-primary mb-2 line-clamp-2 hover:text-accent-primary transition-colors duration-200">
+            {anime.title}
+          </h3>
+
+          <div className="flex items-center gap-2 text-text-secondary/80 text-sm mb-3">
+            <Star className="h-3 w-3 text-accent-primary" />
+            <span>{anime.average_rating?.toFixed(1) || '9.5'}</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-text-secondary text-sm">
+            <span>{anime.year || '2024'}</span>
+            <span>•</span>
+            <span>{anime.episode_count || 'New'} Episodes</span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              triggerHaptic('light');
+              navigate(watchUrl);
+            }}
+            className="w-full animekh-btn-primary hover:bg-accent-primary/90"
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Watch
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// Premium Continue Watching Section
+function PremiumContinueWatchingSection({ items }: { items: WatchHistoryItem[] }) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="animekh-section">
+      <SectionHeader
+        title="Continue Watching"
+        description="Pick up where you left off"
+      />
+      <div className="overflow-x-auto space-x-4 pb-8">
+        <div className="flex space-x-4">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex-shrink-0 w-[200px] min-w-[200px]"
+            >
+              <Link
+                to={`/watch/${item.anime_slug}/${item.episode_number}`}
+                onClick={() => triggerHaptic('light')}
+                className="group block"
+              >
+                <div className="relative overflow-hidden rounded-lg border border-border-subtle bg-bg-card hover:border-accent-primary/30 transition-all duration-300">
+                  <div className="relative h-[112px] w-full">
+                    <img
+                      src={item.anime_poster || ''}
+                      alt={item.anime_title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+
+                    {/* Progress Overlay */}
+                    {item.progress_seconds > 0 && item.duration_seconds > 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <div className="relative w-10 h-10">
+                          <div className="absolute inset-0">
+                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                              <path
+                                d="M18 2.0845
+                                   a 15.9155 15.9155 0 0 1 0 31.831
+                                   a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="#fff"
+                                strokeWidth="3"
+                              />
+                              <path
+                                d="M18 2.0845
+                                   a 15.9155 15.9155 0 0 1 {item.progress_seconds / item.duration_seconds * 31.831} 0
+                                   a 2.0845 2.0845 0 0 0 0 4.169
+                                   a 15.9155 15.9155 0 0 0 {-item.progress_seconds / item.duration_seconds * 31.831} 0
+                                   a 2.0845 2.0845 0 0 0 0 -4.169"
+                                fill="none"
+                                stroke="var(--animekh-accent-primary)"
+                                strokeWidth="3"
+                              />
+                              <circle cx="18" cy="18" r="2.0845" fill="var(--animekh-accent-primary)" />
+                            </svg>
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center text-text-xs font-medium text-text-primary">
+                            {Math.round((item.progress_seconds / item.duration_seconds) * 100)}%
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Play className="h-5 w-5 text-accent-primary bg-accent-primary/20 rounded-full hover:bg-accent-primary/30"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerHaptic('light');
+                          navigate(`/watch/${item.anime_slug}/${item.episode_number}`);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-3">
+                    <h4 className="font-semibold text-text-primary mb-1 line-clamp-2 hover:text-accent-primary transition-colors duration-200">
+                      {item.anime_title}
+                    </h4>
+                    <p className="text-text-secondary/70 text-sm">
+                      Episode {item.episode_number} •
+                      {Math.floor(item.progress_seconds / 60)}:{String(Math.floor(item.progress_seconds % 60)).padStart(2, '0')}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
-  void BentoCard;
+  void PremiumAnimeCard;
   const language = useLanguageStore((state) => state.language);
   const { isTelegram, isMobileApp } = usePlatform();
   const { isAuthenticated } = useAuthStore();
@@ -201,7 +422,7 @@ export function HomePage() {
           <ContinueWatchingSection items={continueItems} />
           {miniSections.map((section) => (
             <section key={section.title} className="mini-shelf">
-          <div className="mini-shelf-heading"><h2>{section.title}</h2><Link to="/explore">{translate('More', language)} <ChevronRight className="w-4 h-4" /></Link></div>
+              <div className="mini-shelf-heading"><h2>{section.title}</h2><Link to="/explore">{translate('More', language)} <ChevronRight className="w-4 h-4" /></Link></div>
               <div className="mini-poster-row">
                 {section.items.slice(0, 9).map((anime) => (
                   <Link key={`${section.title}-${anime.id}`} to={`/watch/${anime.slug}/1`} className="mini-poster-card">
@@ -221,29 +442,212 @@ export function HomePage() {
   }
 
   return (
-    <main className="website-home min-h-screen bg-[#111216] text-gray-100 pb-24 font-sans selection:bg-white/20">
-      {heroItem && <section className="website-hero" style={{ backgroundImage: `linear-gradient(90deg,rgba(12,19,36,.98) 0%,rgba(12,19,36,.84) 28%,rgba(12,19,36,.12) 67%,rgba(12,19,36,.5) 100%),linear-gradient(0deg,#111216 0%,transparent 29%),url('${heroItem.banner_url || heroItem.poster_url || ''}')` }}>
-        <div className="website-hero-copy">
-          <div className="website-hero-eyebrow"><span>TOP {heroIndex + 1}</span><span>{heroItem.is_free ? 'Limited free' : 'VIP'}</span><span>{heroItem.type === 'ANIME' ? 'Anime' : heroItem.type === 'DRAMA' ? 'Drama' : 'Popular'}</span></div>
-          <h1>{heroItem.title}</h1>
-          <div className="website-hero-meta"><b>★ {(heroItem.average_rating || 9.6).toFixed(1)}</b><i />{heroItem.year || '2026'}<i />13+<i />{heroItem.episode_count || 12} Episodes</div>
-          <div className="website-hero-tags">{[heroItem.type === 'ANIME' ? 'Japan' : 'Chinese Mainland', heroItem.type === 'ANIME' ? 'Japanese' : 'Mandarin', 'Adventure'].map((tag) => <span key={tag}>{tag}</span>)}</div>
-          <p>{heroItem.description || `Discover ${heroItem.title}, now streaming on Huang Anime.`}</p>
-          <div className="website-hero-actions"><Link to={`/watch/${heroItem.slug}/1`} className="website-play"><Play fill="currentColor" /></Link><button type="button" className="website-save" onClick={() => { const saved = JSON.parse(localStorage.getItem('nami_my_list') || '[]'); const next = saved.includes(heroItem.id) ? saved.filter((id: number) => id !== heroItem.id) : [...saved, heroItem.id]; localStorage.setItem('nami_my_list', JSON.stringify(next)); }} aria-label="Add to My List"><Bookmark /></button></div>
+    <main className="min-h-screen bg-[var(--animekh-bg-base)] text-[var(--animekh-text-primary)]">
+      {/* Premium Hero Banner */}
+      {heroItem && <PremiumHeroBanner anime={heroItem} />}
+
+      {/* Main Content */}
+      <div className="relative z-10 pt-[var(--animekh-spacing-20)] pb-[var(--animekh-spacing-16)]">
+        <div className="animekh-container">
+          {/* Continue Watching Section */}
+          {continueItems.length > 0 && <PremiumContinueWatchingSection items={continueItems} />}
+
+          {/* Trending Now Section */}
+          <section className="animekh-section">
+            <SectionHeader
+              title="Trending Now"
+              description="What's hot on ANIMEKH this week"
+              viewAllLink="/explore"
+            />
+            <div className="overflow-x-auto space-x-4 pb-8">
+              <div className="flex space-x-4">
+                {[...popularDonghua, ...animeList]
+                  .slice(0, 8)
+                  .map((anime) => (
+                    <PremiumAnimeCard key={anime.id} anime={anime} />
+                  ))}
+              </div>
+            </div>
+          </section>
+
+          {/* For You (Personalized) Section */}
+          <section className="animekh-section">
+            <SectionHeader
+              title="For You"
+              description="Personalized recommendations based on your taste"
+              viewAllLink="/explore"
+            />
+            <div className="overflow-x-auto space-x-4 pb-8">
+              <div className="flex space-x-4">
+                {[...forYouDonghua, ...popularDonghua]
+                  .slice(0, 8)
+                  .map((anime) => (
+                    <PremiumAnimeCard key={anime.id} anime={anime} />
+                  ))}
+              </div>
+            </div>
+          </section>
+
+          {/* New & Popular Section */}
+          <section className="animekh-section">
+            <SectionHeader
+              title="New & Popular"
+              description="Latest releases and fan favorites"
+              viewAllLink="/anime"
+            />
+            <div className="overflow-x-auto space-x-4 pb-8">
+              <div className="flex space-x-4">
+                {[...animeList, ...movies]
+                  .slice(0, 8)
+                  .map((anime) => (
+                    <PremiumAnimeCard key={anime.id} anime={anime} />
+                  ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Genre Sections */}
+          <section className="animekh-section">
+            <SectionHeader
+              title="Genres"
+              description="Explore by genre"
+              viewAllLink="/explore"
+            />
+            <div className="grid gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3">
+              {/* Action & Adventure */}
+              <Link
+                to="/explore?genre=action"
+                className="animekh-card hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center bg-accent-primary/20 rounded-lg">
+                        <Play className="h-4 w-4 text-accent-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-text-primary">Action & Adventure</h3>
+                        <p className="text-text-secondary/60 text-sm">Epic battles and thrilling journeys</p>
+                      </div>
+                    </div>
+                    <span className="text-text-secondary/40">→</span>
+                  </div>
+                  <p className="text-text-secondary/60 mt-2">Discover heart-pounding action series and adventure epics</p>
+                </div>
+              </Link>
+
+              /* Romance */
+              <Link
+                to="/explore?genre=romance"
+                className="animekh-card hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center bg-accent-primary/20 rounded-lg">
+                        <Star className="h-4 w-4 text-accent-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-text-primary">Romance</h3>
+                        <p className="text-text-secondary/60 text-sm">Love stories that touch the heart</p>
+                      </div>
+                    </div>
+                    <span className="text-text-secondary/40">→</span>
+                  </div>
+                  <p className="text-text-secondary/60 mt-2">From sweet first loves to dramatic passionate tales</p>
+                </div>
+              </Link>
+
+              /* Fantasy */
+              <Link
+                to="/explore?genre=fantasy"
+                className="animekh-card hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center bg-accent-primary/20 rounded-lg">
+                        <Bell className="h-4 w-4 text-accent-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-text-primary">Fantasy</h3>
+                        <p className="text-text-secondary/60 text-sm">Magical worlds and mythical creatures</p>
+                      </div>
+                    </div>
+                    <span className="text-text-secondary/40">→</span>
+                  </div>
+                  <p className="text-text-secondary/60 mt-2">Enter realms of wonder and enchantment</p>
+                </div>
+              </Link>
+
+              /* Comedy */
+              <Link
+                to="/explore?genre=comedy"
+                className="animekh-card hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center bg-accent-primary/20 rounded-lg">
+                        <X className="h-4 w-4 text-accent-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-text-primary">Comedy</h3>
+                        <p className="text-text-secondary/60 text-sm">Laugh-out-loud moments and hilarious situations</p>
+                      </div>
+                    </div>
+                    <span className="text-text-secondary/40">→</span>
+                  </div>
+                  <p className="text-text-secondary/60 mt-2">Light-hearted series that will brighten your day</p>
+                </div>
+              </Link>
+
+              /* Drama */
+              <Link
+                to="/explore?genre=drama"
+                className="animekh-card hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center bg-accent-primary/20 rounded-lg">
+                        <Bookmark className="h-4 w-4 text-accent-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-text-primary">Drama</h3>
+                        <p className="text-text-secondary/60 text-sm">Intense emotional stories and character studies</p>
+                      </div>
+                    </div>
+                    <span className="text-text-secondary/40">→</span>
+                  </div>
+                  <p className="text-text-secondary/60 mt-2">Powerful storytelling that resonates deeply</p>
+                </div>
+              </Link>
+
+              /* Horror/Thriller */
+              <Link
+                to="/explore?genre=horror"
+                className="animekh-card hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center bg-accent-primary/20 rounded-lg">
+                        <Star className="h-4 w-4 text-accent-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-text-primary">Horror & Thriller</h3>
+                        <p className="text-text-secondary/60 text-sm">Suspenseful tales that will keep you on edge</p>
+                      </div>
+                    </div>
+                    <span className="text-text-secondary/40">→</span>
+                  </div>
+                  <p className="text-text-secondary/60 mt-2">Chilling horror and pulse-pounding thrillers</p>
+                </div>
+              </Link>
+            </div>
+          </section>
         </div>
-        {heroItems.length > 1 && <><button className="website-hero-arrow prev" onClick={() => setHeroIndex((heroIndex - 1 + heroItems.length) % heroItems.length)} aria-label="Previous"><ChevronLeft /></button><button className="website-hero-arrow next" onClick={() => setHeroIndex((heroIndex + 1) % heroItems.length)} aria-label="Next"><ChevronRight /></button><div className="website-hero-dots">{heroItems.map((item, index) => <button key={item.id} onClick={() => setHeroIndex(index)} className={index === heroIndex ? 'active' : ''} aria-label={`Show ${item.title}`} />)}</div></>}
-      </section>}
-      <div className="website-home-content">
-        <ContinueWatchingSection items={continueItems} />
-        {[
-          { title: translate('Popular on Huang Anime', language), items: [...popularDonghua, ...animeList], to: '/explore' },
-          { title: translate('Trending Chinese Animation', language), items: popularDonghua, to: '/donghua' },
-          { title: translate('Latest Release', language), items: animeList, to: '/anime' },
-          { title: translate('Movies & drama', language), items: movies, to: '/movies' },
-        ].filter((section) => section.items.length > 0).map((section) => <section className="website-shelf" key={section.title}>
-          <div className="website-shelf-heading"><h2>{section.title}</h2><Link to={section.to}>More <ChevronRight size={16}/></Link></div>
-          <div className="website-shelf-row">{section.items.slice(0, 10).map((anime) => <div className="website-shelf-card" key={`${section.title}-${anime.id}`}><AnimeCard anime={anime}/><span>{anime.title}</span></div>)}</div>
-        </section>)}
       </div>
     </main>
   );
