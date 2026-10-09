@@ -3,12 +3,10 @@ import {
   KNOWN_PROVIDERS,
   TYPE_LABEL,
   TYPE_COLOR,
-  buildRegion,
   type StreamingProvider,
   type RegionAvailability
 } from './streamingAvailabilityData';
 
-export { buildRegion };
 
 // ── Main Component ────────────────────────────────────────────────────────────
 interface StreamingAvailabilityHubProps {

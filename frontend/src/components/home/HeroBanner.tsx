@@ -12,6 +12,9 @@ interface HeroBannerProps {
 export function HeroBanner({ banners, anime }: HeroBannerProps) {
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<number | undefined>(undefined);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const slides = banners.length > 0
     ? banners.map((b) => ({ banner: b, animeItem: anime.find((a) => a.id === b.anime_id) }))
@@ -26,10 +29,6 @@ export function HeroBanner({ banners, anime }: HeroBannerProps) {
   }, [current, slides.length]);
 
   if (slides.length === 0) return null;
-
-  const [isPlayingVideo, setIsPlayingVideo] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const slide = slides[current];
   const item = slide.animeItem;

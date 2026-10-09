@@ -14,14 +14,20 @@ export function HistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchHistory = useCallback(() => {
-    if (!isAuthenticated) { setIsLoading(false); return; }
+    if (!isAuthenticated) { return; }
     api.get('/history')
       .then((res) => setHistory(res.data))
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, [isAuthenticated]);
 
-  useEffect(() => { fetchHistory(); }, [fetchHistory]);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+    fetchHistory();
+  }, [fetchHistory, isAuthenticated]);
 
   const deleteItem = async (id: number) => {
     await api.delete(`/history/${id}`);

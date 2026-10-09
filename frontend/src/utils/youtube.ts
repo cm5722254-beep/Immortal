@@ -70,7 +70,7 @@ export function parseFacebookVideoId(url: string | null | undefined): string | n
   const target = iframeMatch ? iframeMatch[1] : cleanUrl;
 
   // Match /videos/.../123456789 or /videos/123456789
-  const videosMatch = target.match(/\/videos\/(?:[^\/?#]+\/)?(\d+)/i);
+  const videosMatch = target.match(/(?:\/videos\/(?:[^/#]+\/)?(\d+))/i);
   if (videosMatch && videosMatch[1]) return videosMatch[1];
 
   // Match /watch/?v=123456789

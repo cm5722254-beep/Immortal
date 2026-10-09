@@ -15,7 +15,7 @@ export function AdminTelegramPage() {
     try {
       const res = await api.get('/admin/telegram/status');
       setStatus(res.data);
-    } catch (err: any) {
+    } catch {
       setError('Could not fetch Telegram Bot status');
     } finally {
       setLoading(false);

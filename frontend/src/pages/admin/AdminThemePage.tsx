@@ -47,7 +47,7 @@ export function AdminThemePage() {
       await saveAdminTheme(defaultTheme.id);
       setSuccessMessage(`✅ បានត្រឡប់មកកាន់ពណ៌ដើម "${defaultTheme.name}" វិញជោគជ័យ!`);
       setTimeout(() => setSuccessMessage(''), 4000);
-    } catch (err) {
+    } catch {
       // ignore
     }
   };

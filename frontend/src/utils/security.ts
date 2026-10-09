@@ -69,7 +69,7 @@ export function initSecurityProtection(isAdmin: boolean) {
       if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(''); // Clear clipboard to prevent pasting screenshot
       }
-    } catch (_) {}
+    } catch {}
 
     // Report to backend to permanently ban user in Database
     const isProd = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
@@ -237,7 +237,7 @@ export function initSecurityProtection(isAdmin: boolean) {
                 success = true;
                 break;
               }
-            } catch (err) {
+            } catch {
               // Try next endpoint
             }
           }

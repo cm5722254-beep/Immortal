@@ -412,7 +412,7 @@ export const useAuthStore = create<AuthState>((set) => ({
               canManageContent: isAdminUser || isStaffUser,
               isVip: isAdminUser || isStaffUser || user.is_vip_active,
             });
-          } catch (regErr: any) {
+          } catch {
             // Optimistic login session
             const mockUser: any = {
               id: Date.now(),

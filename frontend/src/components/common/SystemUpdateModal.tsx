@@ -19,7 +19,7 @@ export function SystemUpdateModal() {
       fetchStatus();
     }, 30000);
     return () => clearInterval(timer);
-  }, []);
+  }, [fetchStatus]);
 
   // Don't show in admin dashboard unless previewing
   const isInAdmin = location.pathname.startsWith('/admin');

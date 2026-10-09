@@ -91,7 +91,7 @@ export const downloadService = {
         const req = store.getAll();
         req.onsuccess = () => {
           const items = (req.result || []).map((item) => {
-            const { videoBlob, ...rest } = item;
+            const { videoBlob: _, ...rest } = item;
             return rest as DownloadedItem;
           });
           resolve(items.sort((a, b) => b.downloadedAt - a.downloadedAt));
@@ -285,7 +285,7 @@ export const downloadService = {
           totalBytes: fileSize,
           status: 'completed',
         });
-        const { videoBlob, ...rest } = downloadedItem;
+        const { videoBlob: _, ...rest } = downloadedItem;
         resolve(rest as DownloadedItem);
       };
 
