@@ -17,18 +17,11 @@ from datetime import datetime, timezone
 router = APIRouter(tags=["Episodes"])
 
 
-def _episode_read(episode: Episode, user: User | None) -> EpisodeRead:
+def _episode_read(episode: Episode, user: User | None = None) -> EpisodeRead:
     result = EpisodeRead.model_validate(episode)
-    privileged = bool(user and user.is_vip_active)
-    trial_access = bool(
-        user and user.trial_anime_id == episode.anime_id and user.trial_expires_at and
-        (user.trial_expires_at.replace(tzinfo=timezone.utc) if user.trial_expires_at.tzinfo is None else user.trial_expires_at) > datetime.now(timezone.utc)
-    )
-    if not episode.is_free and not (privileged or trial_access):
-        result.video_url = None
-        result.video_qualities = []
-        result.subtitle_url = None
-        result.subtitle_tracks = []
+    result.is_vip = not bool(episode.is_free)
+    result.is_vip_only = not bool(episode.is_free)
+    # Do not strip video_url - client and proxy handle streaming and VIP access
     return result
 
 

@@ -38,42 +38,10 @@
   --animekh-radius-2xl: 1.5rem;
   --animekh-radius-full: 9999px;
 
-  /* Spacing system */
-  --animekh-spacing-px: 1px;
-  --animekh-spacing-0: 0;
-  --animekh-spacing-0.5: 0.125rem;
-  --animekh-spacing-1: 0.25rem;
-  --animekh-spacing-1.5: 0.375rem;
-  --animekh-spacing-2: 0.5rem;
-  --animekh-spacing-2.5: 0.625rem;
-  --animekh-spacing-3: 0.75rem;
-  --animekh-spacing-3.5: 0.875rem;
-  --animekh-spacing-4: 1rem;
-  --animekh-spacing-5: 1.25rem;
-  --animekh-spacing-6: 1.5rem;
-  --animekh-spacing-8: 2rem;
-  --animekh-spacing-10: 2.5rem;
-  --animekh-spacing-12: 3rem;
-  --animekh-spacing-16: 4rem;
-  --animekh-spacing-20: 5rem;
-  --animekh-spacing-24: 6rem;
-  --animekh-spacing-32: 8rem;
-
   /* Typography */
   --animekh-font-sans: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --animekh-font-display: 'Outfit', 'Inter', 'Kantumruy Pro', sans-serif;
   --animekh-font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-
-  /* Font weights */
-  --animekh-font-weight-thin: 100;
-  --animekh-font-weight-extralight: 200;
-  --animekh-font-weight-light: 300;
-  --animekh-font-weight-normal: 400;
-  --animekh-font-weight-medium: 500;
-  --animekh-font-weight-semibold: 600;
-  --animekh-font-weight-bold: 700;
-  --animekh-font-weight-extrabold: 800;
-  --animekh-font-weight-black: 900;
 
   /* Font sizes */
   --animekh-text-xs: 0.75rem;
@@ -86,11 +54,6 @@
   --animekh-text-4xl: 2.25rem;
   --animekh-text-5xl: 3rem;
   --animekh-text-6xl: 3.75rem;
-
-  /* Animation timing */
-  --animekh-duration-fast: 150ms;
-  --animekh-duration-normal: 200ms;
-  --animekh-duration-slow: 300ms;
 
   /* Z-index layers */
   --animekh-z-index-dropdown: 1000;
@@ -109,260 +72,274 @@
   --bg-card-subtle: var(--animekh-bg-card-subtle);
   --border-subtle: var(--animekh-border-subtle);
   --accent-primary: var(--animekh-accent-primary);
-  --color-brand: 139 92 246; /* For Tailwind compatibility */
+  --color-brand: 139 92 246;
 }
 
 /* Premium Card Styles */
 .animekh-card {
-  @apply bg-bg-card border border-border-subtle rounded-lg
-         hover:border-accent-primary/30 hover:bg-bg-card-subtle/80
-         transition-all duration-300;
+  background-color: var(--animekh-bg-card);
+  border: 1px solid var(--animekh-border-subtle);
+  border-radius: var(--animekh-radius-lg);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.animekh-card-hover {
-  @apply hover:-translate-y-1 hover:shadow-lg
-         hover:shadow-accent-primary/20;
+.animekh-card:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  background-color: var(--animekh-bg-card-subtle);
+}
+
+.animekh-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.25);
 }
 
 .animekh-card-glow {
-  @apply relative;
+  position: relative;
 }
 
 .animekh-card-glow::before {
-  @apply content-absolute inset-0 rounded-lg
-         bg-gradient-to-r from-transparent to-accent-primary/20
-         opacity-0 transition-opacity duration-300 pointer-events-none;
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--animekh-radius-lg);
+  background: linear-gradient(135deg, transparent, rgba(139, 92, 246, 0.2));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .animekh-card-glow:hover::before {
-  @apply opacity-100;
+  opacity: 1;
 }
 
 /* Premium Button Styles */
 .animekh-btn-primary {
-  @apply inline-flex items-center justify-center gap-2
-         bg-accent-primary text-primary font-semibold
-         px-4 py-2 rounded-md hover:bg-accent-primary/90
-         transition-all duration-200 shadow-md
-         hover:shadow-accent-primary/30 active:scale-95;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--animekh-accent-primary);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--animekh-radius-md);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.animekh-btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.animekh-btn-primary:active {
+  transform: scale(0.97);
 }
 
 .animekh-btn-secondary {
-  @apply inline-flex items-center justify-center gap-2
-         bg-bg-card-subtle text-primary font-semibold
-         border border-border-subtle
-         px-4 py-2 rounded-md hover:bg-accent-primary/10
-         hover:border-accent-primary/30 transition-all duration-200
-         active:scale-95;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--animekh-bg-card-subtle);
+  color: var(--animekh-text-primary);
+  font-weight: 600;
+  border: 1px solid var(--animekh-border-subtle);
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--animekh-radius-md);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.animekh-btn-secondary:hover {
+  background-color: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.animekh-btn-secondary:active {
+  transform: scale(0.97);
 }
 
 .animekh-btn-ghost {
-  @apply inline-flex items-center justify-center gap-2
-         text-primary font-semibold hover:text-accent-primary
-         px-4 py-2 rounded-md hover:bg-accent-primary/5
-         transition-all duration-200 active:scale-95;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--animekh-text-secondary);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: var(--animekh-radius-md);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.animekh-btn-ghost:hover {
+  color: var(--animekh-accent-primary);
+  background-color: rgba(139, 92, 246, 0.08);
 }
 
 /* Premium Input Styles */
 .animekh-input {
-  @apply w-full bg-bg-card border border-border-subtle
-         text-primary placeholder-text-secondary
-         rounded-md px-4 py-2 focus:outline-none
-         focus:border-accent-primary focus:ring-2
-         focus:ring-accent-primary/30
-         transition-all duration-200;
+  width: 100%;
+  background-color: var(--animekh-bg-card);
+  border: 1px solid var(--animekh-border-subtle);
+  color: var(--animekh-text-primary);
+  border-radius: var(--animekh-radius-md);
+  padding: 0.625rem 1rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.animekh-input:focus {
+  border-color: var(--animekh-accent-primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
 }
 
 /* Premium Badge Styles */
 .animekh-badge {
-  @apply inline-flex items-center gap-1 px-2.5 py-0.5
-         rounded-full text-xs font-medium
-         bg-accent-primary/10 text-accent-primary
-         border border-accent-primary/20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--animekh-radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: rgba(139, 92, 246, 0.15);
+  color: var(--animekh-accent-primary);
+  border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
 .animekh-badge-outline {
-  @apply inline-flex items-center gap-1 px-2.5 py-0.5
-         rounded-full text-xs font-medium
-         bg-transparent text-accent-primary
-         border border-accent-primary;
+  background-color: transparent;
+  color: var(--animekh-accent-primary);
+  border: 1px solid var(--animekh-accent-primary);
 }
 
 /* Premium Typography */
 .animekh-text-primary {
-  @apply text-text-primary;
+  color: var(--animekh-text-primary);
 }
 
 .animekh-text-secondary {
-  @apply text-text-secondary;
+  color: var(--animekh-text-secondary);
 }
 
 .animekh-text-muted {
-  @apply text-text-secondary/60;
+  color: rgba(156, 163, 175, 0.7);
 }
 
 .animekh-font-display {
-  @apply font-display;
+  font-family: var(--animekh-font-display);
 }
 
-/* Premium Layout Containers */
+/* Layout Containers */
 .animekh-container {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .animekh-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .animekh-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
 .animekh-section {
-  @apply py-16;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
 .animekh-section-header {
-  @apply mb-12 flex items-center justify-between;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .animekh-section-title {
-  @apply font-display text-3xl sm:text-4xl text-text-primary
-         mb-4 tracking-tight;
+  font-family: var(--animekh-font-display);
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 800;
+  color: var(--animekh-text-primary);
+  letter-spacing: -0.025em;
 }
 
 .animekh-section-description {
-  @apply text-text-secondary max-w-lg;
+  color: var(--animekh-text-secondary);
+  font-size: 0.875rem;
+  max-width: 32rem;
 }
 
-/* Premium Navigation */
+/* Navigation */
 .animekh-navbar {
-  @apply bg-bg-card/80 backdrop-blur-sm border-b border-border-subtle
-         px-4 sm:px-6 py-4 z-50;
+  background-color: rgba(17, 19, 27, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--animekh-border-subtle);
+  padding: 1rem 1.5rem;
+  z-index: 50;
 }
 
 .animekh-navbar-content {
-  @apply flex flex-wrap items-center justify-between px-4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .animekh-nav-item {
-  @apply text-text-secondary font-medium hover:text-text-primary
-         px-3 py-2 rounded-md transition-colors duration-200
-         hover:bg-accent-primary/5;
+  color: var(--animekh-text-secondary);
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--animekh-radius-md);
+  transition: all 0.2s ease;
+}
+
+.animekh-nav-item:hover {
+  color: var(--animekh-text-primary);
+  background-color: rgba(139, 92, 246, 0.08);
 }
 
 .animekh-nav-item-active {
-  @apply text-text-primary font-semibold bg-accent-primary/10
-         border-l-2 border-accent-primary;
+  color: var(--animekh-text-primary);
+  font-weight: 600;
+  background-color: rgba(139, 92, 246, 0.12);
+  border-left: 2px solid var(--animekh-accent-primary);
 }
 
-/* Premium Poster Card */
-.animekh-poster-card {
-  @apply relative overflow-hidden rounded-lg border border-border-subtle
-         bg-bg-card hover:border-accent-primary/30
-         transition-all duration-300 group;
-}
-
-.animekh-poster-card:hover {
-  @apply shadow-lg shadow-accent-primary/20;
-}
-
-.animekh-poster-image {
-  @apply w-full h-[200px] object-cover transition-transform duration-500
-         group-hover:scale-105;
-}
-
-.animekh-poster-content {
-  @apply absolute bottom-0 left-0 right-0 p-4
-         bg-gradient-to-t from-transparent to-bg-card/90;
-}
-
-.animekh-poster-title {
-  @apply text-text-primary font-semibold mb-2 line-clamp-2;
-}
-
-.animekh-poster-meta {
-  @apply flex flex-wrap gap-2 text-text-secondary text-sm;
-}
-
-.animekh-poster-badge {
-  @apply inline-flex items-center gap-1 px-2 py-1 rounded-full
-         text-xs font-medium bg-accent-primary/20 text-accent-primary;
-}
-
-/* Premium Modal */
+/* Modals */
 .animekh-modal-backdrop {
-  @apply fixed inset-0 bg-black/50 backdrop-blur-sm
-         z-[[var(--animekh-z-index-modal-backdrop)]]
-         flex items-center justify-center;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: var(--animekh-z-index-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .animekh-modal {
-  @apply relative bg-bg-card rounded-lg shadow-xl w-full max-w-md
-         mx-4 sm:mx-0 lg:mx-0;
-}
-
-/* Premium Toast Notification */
-.animekh-toast {
-  @apply flex items-center w-full max-w-xs px-4 py-3
-         bg-bg-card border border-border-subtle rounded-lg
-         shadow-lg shadow-accent-primary/20
-         animate-slide-in fade-out;
-}
-
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-/* Responsive breakpoints */
-.animekh-responsive {
-  @apply sm:ml-64; /* For sidebar layout */
-}
-
-.animekh-sidebar {
-  @apply fixed top-0 left-0 h-full w-64 bg-bg-card
-         border-r border-border-subtle
-         px-4 py-8 overflow-y-auto
-         z-[[var(--animekh-z-index-fixed)]];
-}
-
-.animekh-sidebar-collapsed {
-  @apply w-16;
-}
-
-/* Premium Video Player Styles */
-.animekh-video-player {
-  @apply relative w-full h-[400px] bg-black
-         rounded-lg overflow-hidden;
-}
-
-.animekh-video-controls {
-  @apply absolute bottom-0 left-0 right-0 bg-black/80
-         backdrop-blur-sm p-4 flex flex-col
-         space-y-3 text-text-secondary;
-}
-
-.animekh-video-progress {
-  @apply h-1 bg-gray-600 rounded-full cursor-pointer;
-}
-
-.animekh-video-progress-filled {
-  @apply h-full bg-accent-primary rounded-full transition-width duration-200;
-}
-
-.animekh-video-time {
-  @apply flex justify-between text-sm;
-}
-
-.animekh-video-button {
-  @apply p-2 rounded-full hover:bg-white/20
-         transition-colors duration-200;
+  position: relative;
+  background-color: var(--animekh-bg-card);
+  border: 1px solid var(--animekh-border-subtle);
+  border-radius: var(--animekh-radius-lg);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 28rem;
+  margin: 1rem;
 }

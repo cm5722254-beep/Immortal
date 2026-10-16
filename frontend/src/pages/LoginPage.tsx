@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Sparkles, AlertTriangle, Play, Smartphone, Send,
-  Lock, Eye, EyeOff, ArrowLeft, X, KeyRound, Plus
+  Sparkles,
+  AlertTriangle,
+  Play,
+  ArrowLeft,
+  ShieldCheck,
+  Zap,
+  Film,
+  Send,
+  CheckCircle2,
 } from 'lucide-react';
 import { GoogleSignInButton } from '../components/common/GoogleSignInButton';
-import { PhoneAuthForm } from '../components/common/PhoneAuthForm';
 import { useAuthStore } from '../store/authStore';
 import { getTelegramInitData, getTelegramUser, triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
@@ -19,52 +25,19 @@ export function LoginPage() {
   const location = useLocation();
   const from = (location.state as any)?.from || '/';
 
-  const { login, loginWithTelegram, isLoading } = useAuthStore();
-
-  const [loginMethod, setLoginMethod] = useState<'phone' | 'google'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const { loginWithTelegram, isLoading } = useAuthStore();
   const [error, setError] = useState('');
-
-  // Unban Appeal Form states
-  const [showAppeal, setShowAppeal] = useState(false);
-  const [appealUsername, setAppealUsername] = useState('');
-  const [appealReason, setAppealReason] = useState('');
-  const [appealContact, setAppealContact] = useState('');
-  const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
-  const [appealSuccess, setAppealSuccess] = useState('');
-
-  const handlePhoneLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanPhone = phoneNumber.replace(/\s+/g, '').trim();
-    if (!cleanPhone || !password.trim()) {
-      setError(t('សូមបញ្ចូលលេខទូរសព្ទ និងពាក្យសម្ងាត់របស់អ្នក'));
-      return;
-    }
-
-    setError('');
-    triggerHaptic('medium');
-
-    try {
-      await login(cleanPhone, password.trim());
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      const d = err?.response?.data?.detail;
-      const msg = !err?.response
-        ? t('មិនអាចភ្ជាប់ទៅម៉ាស៊ីនមេបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។')
-        : typeof d === 'string'
-        ? d
-        : (d?.msg || err?.message || t('លេខទូរសព្ទ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវឡើយ'));
-      setError(msg);
-    }
-  };
+  const tgUser = getTelegramUser();
 
   const handleTelegramLogin = async () => {
-    const tgUser = getTelegramUser();
+    triggerHaptic('medium');
     const initData = getTelegramInitData();
-    if (!initData) {
-      setError(t('Open this mini app from Telegram to sign in.'));
+    if (!initData && !tgUser) {
+      setError(
+        language === 'km'
+          ? 'សូមបើកកម្មវិធីនេះតាមរយៈ Telegram ដើម្បីចូលប្រើប្រាស់ដោយផ្ទាល់។'
+          : 'Open this mini app from Telegram to sign in directly.'
+      );
       return;
     }
     setError('');
@@ -76,425 +49,261 @@ export function LoginPage() {
       photo_url: tgUser?.photo_url,
       init_data: initData,
     });
-    if (useAuthStore.getState().isAuthenticated) navigate(from, { replace: true });
-    else setError(t('Telegram sign-in failed. Please try again.'));
-  };
-
-
-  const handleAppealSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!appealUsername.trim() || !appealReason.trim()) return;
-
-    setIsSubmittingAppeal(true);
-    try {
-      const isProd = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
-      const apiBase = (window as any).__VITE_API_URL__ || (isProd ? 'https://immortal-s7ui.onrender.com' : 'http://localhost:8000');
-      const res = await fetch(`${apiBase}/api/auth/request-unban`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username_or_email: appealUsername.trim(),
-          reason: appealReason.trim(),
-          contact: appealContact.trim() || 'Not provided',
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setAppealSuccess(data.message || t('សំណើស្នើសុំដោះសោរត្រូវបានផ្ញើទៅកាន់ Admin រួចរាល់ហើយ!'));
-      } else {
-        setError(data.detail || t('មានបញ្ហាក្នុងការផ្ញើសំណើ'));
-      }
-    } catch {
-      setError(t('មិនអាចភ្ជាប់ទៅកាន់ Server បានទេ'));
-    } finally {
-      setIsSubmittingAppeal(false);
+    if (useAuthStore.getState().isAuthenticated) {
+      navigate(from, { replace: true });
+    } else {
+      setError(
+        language === 'km'
+          ? 'ការចូលតាម Telegram មិនទាន់ជោគជ័យ។ សូមព្យាយាមម្តងទៀត។'
+          : 'Telegram sign-in failed. Please try again.'
+      );
     }
   };
 
+  /* ─────────────────────────────────────────────────────────────
+     📱 TELEGRAM MINI APP NATIVE LOGIN VIEW
+  ───────────────────────────────────────────────────────────── */
   if (isTelegram) {
     return (
-      <TelegramMiniLogin
-        from={from}
-        navigate={navigate}
-        loginMethod={loginMethod}
-        setLoginMethod={setLoginMethod}
-        phoneNumber={phoneNumber}
-        setPhoneNumber={setPhoneNumber}
-        password={password}
-        setPassword={setPassword}
-        showPassword={showPassword}
-        setShowPassword={setShowPassword}
-        error={error}
-        setError={setError}
-        isLoading={isLoading}
-        onPasswordLogin={handlePhoneLogin}
-        onTelegramLogin={handleTelegramLogin}
-      />
+      <main className="fixed inset-0 z-50 flex flex-col justify-between bg-[#080B14] text-white overflow-y-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] select-none">
+        {/* Dynamic Glow Ambient Orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-gradient-to-br from-rose-500/20 via-blue-600/15 to-transparent blur-[100px]" />
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-amber-500/10 blur-[90px]" />
+        </div>
+
+        {/* Header Bar */}
+        <div className="relative z-10 flex items-center justify-between w-full">
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              navigate(from && from !== '/login' ? from : '/', { replace: true });
+            }}
+            className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition-all active:scale-95"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <span className="text-xs font-bold text-gray-400 tracking-wider uppercase">
+            Telegram Mini App
+          </span>
+          <div className="w-9" />
+        </div>
+
+        {/* Central Hero Branding & Login Card */}
+        <div className="relative z-10 my-auto py-6 flex flex-col items-center text-center max-w-sm mx-auto w-full">
+          <div className="relative mb-5 group">
+            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-rose-500 via-amber-500 to-blue-500 opacity-60 blur-lg group-hover:opacity-100 transition duration-500 animate-pulse" />
+            <img
+              src="/logo.png"
+              alt="ANIMEKH"
+              className="relative w-20 h-20 rounded-3xl object-cover border border-white/20 shadow-2xl"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+
+          <h1 className="font-display font-black text-2xl text-white tracking-tight mb-1.5">
+            ANIMEKH <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-300">4K</span>
+          </h1>
+          <p className="text-xs text-gray-300 max-w-xs leading-relaxed mb-6">
+            {language === 'km'
+              ? 'ទស្សនារឿងភាគដុងហួរ និងអានីម៉ែគុណភាពខ្ពស់ 4K Ultra HD ភ្លាមៗ'
+              : 'Stream Donghua & Anime in high-definition 4K Ultra HD instantly.'}
+          </p>
+
+          {/* Error Message */}
+          {error && (
+            <div className="w-full mb-4 p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 animate-fade-in shadow-lg">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Main Action Box */}
+          <div className="w-full bg-[#10172A]/90 border border-white/10 rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-2xl space-y-3.5">
+            <div className="text-center pb-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-[11px] font-bold text-rose-300">
+                <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+                {language === 'km' ? 'ចូលប្រើប្រាស់រហ័ស ១-Click' : 'Fast 1-Click Sign In'}
+              </span>
+            </div>
+
+            {/* Google Continue Button (Hero) */}
+            <div className="w-full flex justify-center pt-1">
+              <GoogleSignInButton
+                text="continue_with"
+                onSuccess={() => {
+                  triggerHaptic('medium');
+                  navigate(from, { replace: true });
+                }}
+                onError={(msg) => setError(msg)}
+              />
+            </div>
+
+            {/* Telegram 1-Click Native Login if opened inside TG */}
+            {tgUser && (
+              <button
+                type="button"
+                onClick={handleTelegramLogin}
+                disabled={isLoading}
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#2AABEE] to-[#229ED9] hover:from-[#259cdb] hover:to-[#1e8bc2] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-lg shadow-sky-500/25 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Send className="w-4 h-4 fill-white" />
+                <span>
+                  {language === 'km'
+                    ? `ចូលជាមួយ Telegram (@${tgUser.username || tgUser.first_name})`
+                    : `Continue as @${tgUser.username || tgUser.first_name}`}
+                </span>
+              </button>
+            )}
+
+            {/* Feature Pills */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[10.5px] text-gray-400 font-medium">
+              <div className="flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>{language === 'km' ? 'គ្មានលេខសម្ងាត់' : 'No Password'}</span>
+              </div>
+              <div className="flex items-center justify-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span>{language === 'km' ? 'សុវត្ថិភាពខ្ពស់' : '100% Secure'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="relative z-10 text-center">
+          <p className="text-[11px] text-gray-500">
+            {language === 'km'
+              ? 'ការចូលរួមមានន័យថាអ្នកយល់ព្រមតាម លក្ខខណ្ឌ និង គោលការណ៍ឯកជនភាព'
+              : 'By signing in, you agree to our Terms of Service & Privacy Policy.'}
+          </p>
+        </div>
+      </main>
     );
   }
 
+  /* ─────────────────────────────────────────────────────────────
+     🌐 WEB & RESPONSIVE DESKTOP/MOBILE VIEW
+  ───────────────────────────────────────────────────────────── */
   return (
-    <main className={`website-login min-h-screen ${isTelegram ? 'min-h-[100dvh] items-center px-4 py-5 sm:py-8' : 'items-center px-4 py-8 sm:py-12'} flex justify-center bg-[#080d1a] relative overflow-x-hidden overflow-y-auto select-none`}>
+    <main className="website-login min-h-screen flex items-center justify-center bg-[#070A12] relative overflow-hidden px-4 py-8 sm:py-12 select-none">
       {/* ── Dynamic Glowing Auroras ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[150px] ${isTelegram ? 'bg-gradient-to-br from-rose-500/25 via-violet-700/15 to-transparent' : 'bg-gradient-to-br from-rose-500/20 via-pink-600/15 to-transparent'}`} />
-        <div className={`absolute bottom-10 left-1/4 w-80 h-80 rounded-full blur-[110px] ${isTelegram ? 'bg-fuchsia-700/15' : 'bg-rose-700/15'}`} />
-        <div className={`absolute top-10 right-10 w-72 h-72 rounded-full blur-[100px] ${isTelegram ? 'bg-blue-600/10' : 'bg-amber-400/10'}`} />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[650px] h-[650px] rounded-full blur-[160px] bg-gradient-to-br from-rose-500/20 via-pink-600/10 to-transparent" />
+        <div className="absolute bottom-10 left-1/4 w-96 h-96 rounded-full blur-[120px] bg-rose-700/15" />
+        <div className="absolute top-10 right-10 w-80 h-80 rounded-full blur-[110px] bg-amber-400/10" />
       </div>
 
-      <div className={`relative w-full ${isTelegram ? 'max-w-[520px]' : 'max-w-md'} animate-scale-in z-10`}>
+      <div className="relative w-full max-w-md animate-scale-in z-10">
         {/* ── Brand Header & Logo ── */}
         <div className="text-center mb-6">
-          <Link to="/" className="inline-flex items-center gap-3 group transition-transform duration-300 hover:scale-105">
-            <img
-              src="/logo.png"
-              alt={t('ទស្សនារឿង')}
-              className="w-14 h-14 object-cover rounded-full border border-rose-500/40 drop-shadow-[0_0_25px_rgba(255,77,109,0.5)]"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
+          <Link
+            to="/"
+            className="inline-flex items-center gap-3.5 group transition-transform duration-300 hover:scale-105"
+          >
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 opacity-60 blur group-hover:opacity-100 transition duration-300" />
+              <img
+                src="/logo.png"
+                alt="ANIMEKH"
+                className="relative w-14 h-14 object-cover rounded-full border border-white/20 shadow-xl"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
             <div className="text-left">
               <span className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-                {t('ទស្សនា')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-300 to-amber-300">{t('រឿង')}</span>
+                ANIME<span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-300 to-amber-300">KH</span>
               </span>
               <p className="text-[10px] text-rose-300 font-bold uppercase tracking-widest flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-rose-400" /> {t('កម្មវិធីទស្សនារឿងកម្រិត 4K Ultra HD')}
+                <Sparkles className="w-3 h-3 text-rose-400" />
+                {t('កម្មវិធីទស្សនារឿងកម្រិត 4K Ultra HD')}
               </p>
             </div>
           </Link>
         </div>
 
         {/* ── Main Luxury Glass Card ── */}
-        <div className={`${isTelegram ? 'bg-[#101727]/95 border-[#293247] rounded-[26px] p-5 sm:p-7 shadow-[0_22px_70px_rgba(0,0,0,.62)]' : 'bg-[#0e1629]/95 border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85)]'} border backdrop-blur-2xl relative overflow-hidden`}>
-          
-          <div className="text-center mb-5">
-            <h1 className="font-display font-black text-xl sm:text-2xl text-white mb-1 tracking-tight">
+        <div className="bg-[#0D1322]/95 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_25px_70px_rgba(0,0,0,0.85)] backdrop-blur-2xl relative overflow-hidden">
+          {/* Subtle Accent Glow Line on Top */}
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-rose-500/80 to-transparent" />
+
+          <div className="text-center mb-6">
+            <h1 className="font-display font-black text-xl sm:text-2xl text-white mb-1.5 tracking-tight">
               {t('ចូលទស្សនារឿង')}
             </h1>
-            <p className="text-xs text-gray-300">
-              {t('ចូលគណនីតាមលេខទូរសព្ទ ឬ Google យ៉ាងងាយស្រួល')}
+            <p className="text-xs text-gray-300 leading-relaxed">
+              {language === 'km'
+                ? 'ចូលប្រើប្រាស់ដោយសុវត្ថិភាព ១-Click ជាមួយគណនី Google'
+                : 'Sign in securely with 1-click using your Google Account.'}
             </p>
-          </div>
-
-          {/* ── Tab Switcher: Phone vs Google ── */}
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/40 border border-white/10 rounded-2xl mb-5">
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setLoginMethod('phone');
-                setError('');
-              }}
-              className={`py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                loginMethod === 'phone'
-                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-500/30'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Smartphone className="w-3.5 h-3.5" /> {t('លេខទូរសព្ទ (Phone)')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setLoginMethod('google');
-                setError('');
-              }}
-              className={`py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                loginMethod === 'google'
-                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-500/30'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Play className="w-3.5 h-3.5" /> Google 1-Click
-            </button>
           </div>
 
           {/* Error Banner */}
           {error && (
-            <div className="p-3.5 mb-5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-bold text-center animate-fade-in space-y-2">
-              <div className="flex items-center justify-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                <p className="text-xs font-bold">{error}</p>
-              </div>
-              {(error.toLowerCase().includes('disabled') || error.toLowerCase().includes('banned') || error.toLowerCase().includes('403') || error.toLowerCase().includes('បិទ')) && (
-                <div className="pt-2 border-t border-rose-500/30">
-                  <p className="text-[11px] text-gray-300 font-normal mb-2">
-                    {t('គណនីរបស់អ្នកត្រូវបានផ្អាកដំណើរការ។ សូមដាក់ពាក្យស្នើសុំដោះសោរទៅកាន់ Admin៖')}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowAppeal(true)}
-                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs shadow-md transition-all active:scale-95"
-                  >
-                    📝 {t('ដាក់ពាក្យស្នើសុំដោះសោរ')}
-                  </button>
-                </div>
-              )}
+            <div className="p-3.5 mb-5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-bold text-center animate-fade-in flex items-center justify-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          {showAppeal ? (
-            /* ─── INLINE UNBAN APPEAL FORM ─── */
-            <div className="space-y-4 py-2 animate-slide-up text-left">
-              <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                  📝 {t('ពាក្យស្នើសុំដោះសោរគណនី')}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowAppeal(false)}
-                  className="text-xs text-gray-400 hover:text-white cursor-pointer"
-                >
-                  {t('បោះបង់')}
-                </button>
-              </div>
-
-              {appealSuccess ? (
-                <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs text-center font-bold space-y-2">
-                  <p>✅ {appealSuccess}</p>
-                  <p className="text-gray-300 font-normal text-[11px]">
-                    {t('Admin នឹងពិនិត្យ និងដោះសោរជូនអ្នកក្នុងពេលឆាប់ៗ!')}
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleAppealSubmit} className="space-y-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      {t('ឈ្មោះគណនី / Email របស់អ្នក៖')}
-                    </label>
-                    <input
-                      type="text"
-                      value={appealUsername}
-                      onChange={(e) => setAppealUsername(e.target.value)}
-                      placeholder={t('ឧ. your_email@gmail.com ឬ 012345678')}
-                      required
-                      className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      {t('មូលហេតុស្នើសុំដោះសោរ៖')}
-                    </label>
-                    <textarea
-                      value={appealReason}
-                      onChange={(e) => setAppealReason(e.target.value)}
-                      placeholder={t('ឧ. ខ្ញុំច្រឡំដៃចុច F12 / Shortcut សូម Admin ជួយដោះសោរគណនីខ្ញុំវិញផង...')}
-                      rows={3}
-                      required
-                      className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none resize-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 mb-1">
-                      {t('ព័ត៌មានទំនាក់ទំនង (Telegram ឬលេខទូរស័ព្ទ) [បើមាន]៖')}
-                    </label>
-                    <input
-                      type="text"
-                      value={appealContact}
-                      onChange={(e) => setAppealContact(e.target.value)}
-                      placeholder={t('ឧ. @my_telegram ឬ 012345678')}
-                      className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmittingAppeal}
-                    className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black text-xs py-2.5 rounded-xl shadow-lg shadow-rose-500/20 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-                  >
-                    {isSubmittingAppeal ? t('កំពុងផ្ញើសំណើ...') : `📩 ${t('ផ្ញើសំណើទៅកាន់ Admin')}`}
-                  </button>
-                </form>
-              )}
+          {/* ─── DIRECT GOOGLE 1-CLICK AUTH BOX ─── */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-white/[0.04] to-transparent border border-white/10 flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-3 shadow-md">
+              <Play className="w-5 h-5 fill-current ml-0.5" />
             </div>
-          ) : loginMethod === 'phone' ? (
-            /* ─── 📱 PHONE NUMBER & PASSWORD LOGIN FORM ─── */
-            <form onSubmit={handlePhoneLogin} className="space-y-4 text-left">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-300 mb-1.5 flex items-center gap-1">
-                  <Smartphone className="w-3.5 h-3.5 text-rose-400" /> {t('លេខទូរសព្ទរបស់អ្នក')}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
-                    🇰🇭 +855
-                  </span>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder={t('12 345 678 ឬ 012345678')}
-                    required
-                    className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-2xl pl-20 pr-4 py-3 text-xs sm:text-sm focus:outline-none transition-all placeholder:text-gray-500 font-mono"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-gray-300 mb-1.5 flex items-center gap-1">
-                  <Lock className="w-3.5 h-3.5 text-rose-400" /> {t('ពាក្យសម្ងាត់ (Password)')}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('បញ្ចូលពាក្យសម្ងាត់របស់អ្នក')}
-                    required
-                    className="w-full bg-[#131d36] border border-white/15 focus:border-rose-500 text-white rounded-2xl pl-4 pr-11 py-3 text-xs sm:text-sm focus:outline-none transition-all placeholder:text-gray-500 font-sans"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+            <p className="text-xs text-rose-300 font-bold mb-4 text-center">
+              ⚡ {t('ចុចប៊ូតុងខាងក្រោមដើម្បីចូលប្រើប្រាស់ភ្លាមៗ៖')}
+            </p>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn btn-primary h-12 w-full text-sm font-bold disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4 stroke-[2.5]" />
-                    <span>{t('ចូលគណនី (Login)')}</span>
-                  </>
-                )}
-              </button>
-
-              {/* Links below: Register & Guest */}
-              <div className="pt-3 border-t border-white/10 flex flex-col items-center gap-2.5 text-center text-xs">
-                <p className="text-gray-400">
-                  {t('មិនទាន់មានគណនីមែនទេ?')}{' '}
-                  <Link
-                    to="/register"
-                    state={{ from }}
-                    className="text-rose-400 font-black hover:text-rose-300 underline"
-                  >
-                    {t('បង្កើតគណនីថ្មី (ចុះឈ្មោះ)')}
-                  </Link>
-                </p>
-              </div>
-            </form>
-          ) : (
-            /* ─── DIRECT GOOGLE 1-CLICK LOGIN ─── */
-            <div className="space-y-5 text-center">
-              <div className="p-5 rounded-3xl bg-gradient-to-b from-rose-500/10 via-white/5 to-transparent border border-rose-500/30 shadow-inner flex flex-col items-center justify-center relative overflow-hidden">
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 mb-3 shadow-md">
-                  <Play className="w-6 h-6 fill-current ml-0.5" />
-                </div>
-                <p className="text-xs text-rose-300 font-bold mb-4">
-                  ⚡ {t('ចុចប៊ូតុងខាងក្រោមដើម្បីចូលប្រើប្រាស់ភ្លាមៗ៖')}
-                </p>
-
-                <div className="w-full flex justify-center animate-scale-in">
-                  <GoogleSignInButton
-                    text="continue_with"
-                    onSuccess={() => navigate(from, { replace: true })}
-                    onError={(msg) => setError(msg)}
-                  />
-                </div>
-              </div>
+            <div className="w-full flex justify-center animate-scale-in">
+              <GoogleSignInButton
+                text="continue_with"
+                onSuccess={() => {
+                  triggerHaptic('medium');
+                  navigate(from, { replace: true });
+                }}
+                onError={(msg) => setError(msg)}
+              />
             </div>
-          )}
+          </div>
 
+          {/* Value Highlights */}
+          <div className="mt-6 pt-5 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
+            <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+              <Zap className="w-4 h-4 text-amber-400 mx-auto" />
+              <p className="text-[10px] font-bold text-gray-200">{language === 'km' ? 'ចូលភ្លាមៗ' : 'Instant'}</p>
+              <p className="text-[9px] text-gray-400">{language === 'km' ? '១-Click' : '1-Click'}</p>
+            </div>
+            <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 mx-auto" />
+              <p className="text-[10px] font-bold text-gray-200">{language === 'km' ? 'សុវត្ថិភាព' : 'Secure'}</p>
+              <p className="text-[9px] text-gray-400">{language === 'km' ? 'ការពារ ១០០%' : 'Protected'}</p>
+            </div>
+            <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+              <Film className="w-4 h-4 text-rose-400 mx-auto" />
+              <p className="text-[10px] font-bold text-gray-200">{language === 'km' ? 'ភាពច្បាស់' : 'Quality'}</p>
+              <p className="text-[9px] text-gray-400">4K Ultra HD</p>
+            </div>
+          </div>
         </div>
 
         {/* ── Back to Home ── */}
         <div className="text-center mt-6 pb-2">
-          {isTelegram ? (
-            <a href="https://t.me/animeflickh_bot" className="text-sm tracking-wide text-gray-300/90 hover:text-rose-300 transition-colors">@animeflickh_bot</a>
-          ) : (
-            <Link to="/" className="text-xs text-gray-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1">
-              ← {t('ត្រឡប់ទៅទំព័រដើម')}
-            </Link>
-          )}
+          <Link
+            to="/"
+            className="text-xs text-gray-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1.5 font-medium"
+          >
+            ← {t('ត្រឡប់ទៅទំព័រដើម')}
+          </Link>
         </div>
       </div>
-    </main>
-  );
-}
-
-type TelegramMiniLoginProps = {
-  from: string;
-  navigate: (path: string, options?: { replace?: boolean }) => void;
-  loginMethod: 'phone' | 'google';
-  setLoginMethod: (method: 'phone' | 'google') => void;
-  phoneNumber: string;
-  setPhoneNumber: (value: string) => void;
-  password: string;
-  setPassword: (value: string) => void;
-  showPassword: boolean;
-  setShowPassword: (value: boolean) => void;
-  error: string;
-  setError: (value: string) => void;
-  isLoading: boolean;
-  onPasswordLogin: (event: React.FormEvent) => Promise<void>;
-  onTelegramLogin: () => Promise<void>;
-};
-
-function TelegramMiniLogin({
-  from, navigate, phoneNumber, setPhoneNumber, password, setPassword,
-  showPassword, setShowPassword, error, setError, isLoading, onPasswordLogin, onTelegramLogin,
-}: TelegramMiniLoginProps) {
-  const [screen, setScreen] = useState<'methods' | 'password' | 'phone'>('methods');
-  const language = useLanguageStore((state) => state.language);
-  const t = (text: string) => translate(text, language);
-
-  const close = () => navigate(from && from !== '/login' ? from : '/', { replace: true });
-
-  return (
-    <main className="mini-auth-page mini-login-page fixed inset-0 z-[100] flex flex-col justify-end overflow-hidden bg-[#07080b] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_25%,rgba(40,48,65,.35),transparent_62%)]" />
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/[0.06] px-5 text-white/70">
-          <button type="button" onClick={close} aria-label={t('Back')} className="p-1"><ArrowLeft className="h-5 w-5" /></button>
-          <span className="text-[15px] font-medium">{t('Switch accounts')}</span>
-        </header>
-        <div className="flex flex-1 flex-col px-5 pt-5">
-          <button type="button" onClick={() => setScreen('methods')} className="flex items-center gap-4 py-3 text-left text-white/70">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.06]"><Plus className="h-6 w-6" /></span>
-            <span className="text-sm">{t('Add account')}</span>
-          </button>
-        </div>
-      </div>
-
-      <section className="relative z-20 max-h-[88dvh] shrink-0 overflow-y-auto rounded-t-[24px] border-t border-white/[0.08] bg-[#15161b] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_60px_rgba(0,0,0,.6)]">
-        <div className="mb-5 flex items-center justify-between">
-          <button type="button" onClick={() => screen === 'methods' ? close() : (setError(''), setScreen('methods'))} aria-label={t('Back')} className="p-1 text-white/70">
-            {screen === 'methods' ? <span className="block h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
-          </button>
-          <h1 className="text-center text-base font-bold">{t('Login to unlock more content')}</h1>
-          <button type="button" onClick={close} aria-label={t('Close')} className="p-1 text-white/60"><X className="h-5 w-5" /></button>
-        </div>
-
-        {error && <p role="alert" className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-center text-xs text-red-300">{error}</p>}
-
-        {screen === 'methods' && <div className="space-y-3">
-          <button type="button" onClick={() => { setError(''); setScreen('password'); }} className="flex h-14 w-full items-center gap-4 rounded-lg bg-[#25262c] px-4 text-left text-[15px] font-semibold"><KeyRound className="h-5 w-5 text-white/70" />{t('Log in with password')}</button>
-          <button type="button" onClick={() => { setError(''); setScreen('phone'); }} className="flex h-14 w-full items-center gap-4 rounded-lg bg-[#25262c] px-4 text-left text-[15px] font-semibold"><Smartphone className="h-5 w-5 text-white/70" />{t('Log in with mobile number')}</button>
-          <button type="button" onClick={() => { void onTelegramLogin(); }} className="flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#229ed9] text-sm font-semibold text-white shadow-lg shadow-sky-500/20 active:scale-[0.99]"><Send className="h-4 w-4" />{t('Continue with Telegram')}</button>
-        </div>}
-
-        {screen === 'password' && <form onSubmit={onPasswordLogin} className="space-y-4">
-          <label className="block border-b border-white/10 pb-3"><span className="sr-only">{t('Phone number')}</span><input type="text" inputMode="email" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder={t('Email or mobile number')} autoComplete="username" autoCapitalize="none" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /></label>
-          <label className="flex items-center border-b border-white/10 pb-3"><span className="sr-only">{t('Password')}</span><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t('Enter password')} autoComplete="current-password" className="w-full bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-white/45" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')} className="text-white/60">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></label>
-          <button type="submit" disabled={isLoading || !phoneNumber.trim() || !password} className="btn btn-primary h-12 w-full text-sm font-bold disabled:opacity-45">{isLoading ? t('Signing in…') : t('Login')}</button>
-        </form>}
-
-        {screen === 'phone' && <PhoneAuthForm onSuccess={() => navigate(from, { replace: true })} />}
-
-        <p className="mt-7 text-center text-[11px] leading-5 text-white/45">{t('Login indicates you agree to the')} <span className="text-emerald-400">{t('Terms of Service')}</span> {t('and')} <span className="text-emerald-400">{t('Privacy Policy')}</span>.</p>
-        <Link to="/register" state={{ from }} className="-mx-5 mt-5 block border-t border-white/[0.08] py-4 text-center text-base font-medium">{t('Register')}</Link>
-      </section>
     </main>
   );
 }

@@ -7,6 +7,31 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ANIMEKH V2 Theme Tokens
+        'bg-base': 'var(--animekh-bg-base, #08090D)',
+        'bg-card': 'var(--animekh-bg-card, #11131B)',
+        'bg-card-subtle': 'var(--animekh-bg-card-subtle, #171A24)',
+        'accent-primary': 'var(--animekh-accent-primary, #8B5CF6)',
+        'accent-secondary': 'var(--animekh-accent-secondary, #38BDF8)',
+        'text-primary': 'var(--animekh-text-primary, #F8FAFC)',
+        'text-secondary': 'var(--animekh-text-secondary, #9CA3AF)',
+        'border-subtle': 'var(--animekh-border-subtle, rgba(255, 255, 255, 0.1))',
+        bg: {
+          base: 'var(--animekh-bg-base, #08090D)',
+          card: 'var(--animekh-bg-card, #11131B)',
+          'card-subtle': 'var(--animekh-bg-card-subtle, #171A24)',
+        },
+        text: {
+          primary: 'var(--animekh-text-primary, #F8FAFC)',
+          secondary: 'var(--animekh-text-secondary, #9CA3AF)',
+        },
+        border: {
+          subtle: 'var(--animekh-border-subtle, rgba(255, 255, 255, 0.1))',
+        },
+        accent: {
+          primary: 'var(--animekh-accent-primary, #8B5CF6)',
+          secondary: 'var(--animekh-accent-secondary, #38BDF8)',
+        },
         brand: {
           50:  '#ecfdf3',
           100: '#d1fae0',

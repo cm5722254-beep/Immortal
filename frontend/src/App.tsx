@@ -1,10 +1,9 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { NotFoundPage, ForbiddenPage, ServerErrorPage } from './pages/ErrorPages';
-import { ContactDeveloperButton } from './components/common/ContactDeveloperButton';
+import { MaintenancePage } from './pages/MaintenancePage';
 import { ConfirmDialog } from './components/common/ConfirmDialog';
 import { PwaInstallPrompt } from './components/common/PwaInstallPrompt';
-import { PromoCountdownBanner } from './components/layout/PromoCountdownBanner';
 import { SystemUpdateModal } from './components/common/SystemUpdateModal';
 import { Layout } from './components/layout/Layout';
 import { useAuthStore } from './store/authStore';
@@ -12,7 +11,6 @@ import { useThemeStore } from './store/themeStore';
 import { useSystemUpdateStore } from './store/systemUpdateStore';
 import { initSecurityProtection } from './utils/security';
 import { initTelegramWebApp, getTelegramUser, getTelegramInitData, isTelegramWebApp, setTelegramBackButton, triggerHaptic } from './utils/telegram';
-import { usePlatform } from './utils/platform';
 import { useLanguageStore } from './store/languageStore';
 
 // ─── 🚀 Fast Code-Splitted Pages (Lazy-Loaded) ───
@@ -389,5 +387,58 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
           ⚠️ មូលហេតុ៖ ប៉ុនប៉ងបំពានប្រព័ន្ធការពារ ({banReason})
         </p>
         <p className="text-xs text-gray-400 leading-relaxed mb-6">
-          ប្រព័ន្ធបានចាក់សោរបិទឧបករណ៍ និងគណនីរបស់អ្នកជាស្ថាពរ។ លោកអ្នកអំផ្ញើសំណើស្នើស្នើសុំទៅកាន់ <strong className="text-amber-400">Admin</strong> ដើម្បីសុំក្រាជោគជ័យបានត្រូវបាន (Unban)
+          ប្រព័ន្ធបានចាក់សោរបិទឧបករណ៍ និងគណនីរបស់អ្នកជាស្ថាពរ។ លោកអ្នកអំផ្ញើសំណើស្នើស៻ំទៅកាន់ <strong className="text-amber-400">Admin</strong> ដើម្បីសុំក្រាជោគជ័យបានត្រូវបាន (Unban)
         </p>
+
+        {submittedMsg ? (
+          <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 text-green-400 text-sm font-medium">
+            ✅ {submittedMsg}
+          </div>
+        ) : (
+          <form onSubmit={handleSubmitAppeal} className="text-left space-y-3">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1 font-medium">គណនី / Email *</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="username ឬ email"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1 font-medium">មូលហេតុស្នើស្ដោះសោរ *</label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="សូមពន្យល់ពីស្ថានការណ៍..."
+                rows={3}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1 font-medium">ទំនាក់ទំនង (Telegram / Phone)</label>
+              <input
+                type="text"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="@telegram ឬ លេខទូរស័ព្ទ"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
+              />
+            </div>
+            {errorMsg && (
+              <p className="text-red-400 text-xs font-medium">⚠️ {errorMsg}</p>
+            )}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+            >
+              {isSubmitting ? 'កំពុងផ្ញើ...' : '📨 ផ្ញើសំណើស្ដោះសោរ'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}

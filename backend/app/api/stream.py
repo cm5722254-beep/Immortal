@@ -1051,6 +1051,72 @@ async def stream_signed_video(
         raise HTTPException(status_code=502, detail="Failed to stream video from host")
 
 
+@router.head("/proxy")
+async def proxy_stream_head(url: str, request: Request):
+    real_url = url.strip()
+    client = get_http_client()
+    req_headers = build_upstream_headers(request, real_url)
+    try:
+        upstream_res = await client.head(real_url, headers=req_headers)
+        forward_headers = {
+            "Accept-Ranges": "bytes",
+            "Content-Type": upstream_res.headers.get("Content-Type", "video/mp4"),
+            "Access-Control-Allow-Origin": "*",
+        }
+        if "Content-Length" in upstream_res.headers:
+            forward_headers["Content-Length"] = upstream_res.headers["Content-Length"]
+        return Response(status_code=upstream_res.status_code, headers=forward_headers)
+    except Exception as e:
+        logger.error(f"Proxy stream head error for {real_url}: {e}")
+        return Response(status_code=200, headers={"Accept-Ranges": "bytes", "Content-Type": "video/mp4", "Access-Control-Allow-Origin": "*"})
+
+
+@router.get("/proxy")
+async def proxy_stream_video(url: str, request: Request):
+    real_url = url.strip()
+    if not real_url.startswith("http://") and not real_url.startswith("https://"):
+        raise HTTPException(status_code=400, detail="Invalid video URL")
+
+    client = get_http_client()
+    req_headers = build_upstream_headers(request, real_url)
+
+    try:
+        upstream_req = client.build_request("GET", real_url, headers=req_headers)
+        upstream_res = await client.send(upstream_req, stream=True)
+
+        content_type = upstream_res.headers.get("Content-Type", "video/mp4")
+        forward_headers = {
+            "Accept-Ranges": "bytes",
+            "Content-Type": content_type,
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=86400",
+        }
+
+        if "Content-Range" in upstream_res.headers:
+            forward_headers["Content-Range"] = upstream_res.headers["Content-Range"]
+        if "Content-Length" in upstream_res.headers:
+            forward_headers["Content-Length"] = upstream_res.headers["Content-Length"]
+
+        async def video_iterator():
+            try:
+                async for chunk in upstream_res.aiter_bytes(chunk_size=65536):
+                    yield chunk
+            except Exception:
+                pass
+            finally:
+                await upstream_res.aclose()
+
+        return StreamingResponse(
+            video_iterator(),
+            status_code=upstream_res.status_code,
+            headers=forward_headers,
+            media_type=content_type,
+        )
+    except Exception as e:
+        logger.error(f"Proxy stream error for {real_url}: {e}")
+        raise HTTPException(status_code=502, detail="Failed to stream video from host")
+
+
 @router.head("/{episode_id}")
 async def stream_head(
     episode_id: int,

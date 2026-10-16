@@ -1,237 +1,116 @@
-import { useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
-  Logo,
   Search,
-  Bell,
-  User as UserIcon,
-  Shield,
-  Crown,
-  LogOut,
-  Bookmark,
-  ChevronDown,
-  Send,
   Menu,
-  X,
+  Crown,
 } from 'lucide-react';
 
 import { useAuthStore } from '../../store/authStore';
-import { usePlatform } from '../../utils/platform';
-import { useLanguageStore } from '../../store/languageStore';
-import { getVipContactUrl } from '../../utils/vip';
-import { useThemeStore } from '../../store/themeStore';
+import { useNavStore } from '../../store/navStore';
 import { SearchModal } from './SearchModal';
 import { UserMenu } from './UserMenu';
 import { NotificationBadge } from './NotificationBadge';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
-interface TopNavProps {
+export interface TopNavProps {
   className?: string;
+  onSearchToggle?: () => void;
+  onNotificationToggle?: () => void;
+  onUserMenuToggle?: () => void;
 }
 
-export function TopNav({ className }: TopNavProps = {}) {
-  const { isWeb } = usePlatform();
-  const { user, isAuthenticated, isStaff, isOwner, isAdmin, canManageContent, logout } = useAuthStore();
-  const { fetchSiteTheme } = useThemeStore();
-  const { language } = useLanguageStore((state) => state.language);
+export function TopNav({
+  className = '',
+  onSearchToggle,
+  onNotificationToggle,
+}: TopNavProps) {
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const { toggleSidebar } = useNavStore();
+  const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Array<{ id: string; count: number }>>([]);
 
-  const isOwnerUser = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
-  const isAdminUser = isOwnerUser || isAdmin || user?.role === 'ADMIN';
-  const isStaffUser = isStaff || user?.role === 'STAFF';
-  const canManage = canManageContent || isAdminUser || isStaffUser;
-
-  // Navigation links based on user authentication and role
   const navLinks = [
-    { to: '/', label: 'home', key: 'home' },
-    { to: '/donghua', label: 'donghua', key: 'donghua' },
-    { to: '/anime', label: 'anime', key: 'anime' },
-    { to: '/movies', label: 'movies', key: 'movies' },
-    { to: '/drama', label: 'drama', key: 'drama' },
-    { to: '/explore', label: 'explore', key: 'explore' },
+    { to: '/', label: 'Home' },
+    { to: '/donghua', label: 'Donghua' },
+    { to: '/anime', label: 'Anime' },
+    { to: '/movies', label: 'Movies' },
+    { to: '/drama', label: 'Drama' },
+    { to: '/explore', label: 'Explore' },
   ];
 
-  // User menu items
-  const userMenuItems = [
-    {
-      label: 'profile',
-      to: '/profile',
-      icon: UserIcon,
-      visible: isAuthenticated,
-    },
-    {
-      label: 'watchlist',
-      to: '/favorites',
-      icon: Bookmark,
-      visible: isAuthenticated,
-    },
-    {
-      label: 'history',
-      to: '/history',
-      icon: 'clock', // We'll use a custom clock icon or from lucide
-      visible: isAuthenticated,
-    },
-    {
-      label: 'notifications',
-      to: '/notifications',
-      icon: Bell,
-      visible: isAuthenticated,
-    },
-    {
-      label: 'settings',
-      to: '/settings',
-      icon: 'settings', // We'll use settings icon
-      visible: isAuthenticated,
-    },
-    {
-      label: 'logout',
-      to: '#',
-      icon: LogOut,
-      visible: isAuthenticated,
-      onClick: (e: React.MouseEvent) => {
-        e.preventDefault();
-        logout();
-      },
-    },
-    // Admin-only items
-    {
-      label: 'admin_dashboard',
-      to: '/admin',
-      icon: Shield,
-      visible: isAdminUser || isOwnerUser,
-    },
-    {
-      label: 'content_management',
-      to: '/admin/anime',
-      icon: 'book-open', // We'll use book icon
-      visible: canManage,
-    },
-    {
-      label: 'users_management',
-      to: '/admin/users',
-      icon: 'users', // We'll use users icon
-      visible: isAdminUser || isOwnerUser,
-    },
-    // Owner-only items
-    {
-      label: 'owner_control',
-      to: '/admin/owner',
-      icon: Crown,
-      visible: isOwnerUser,
-    },
-  ];
-
-  // Handle search toggle
-  const handleSearchToggle = () => {
-    setIsSearchOpen(!isSearchOpen);
-  };
-
-  // Handle language change
-  const handleLanguageChange = (newLanguage: string) => {
-    // Language change logic would go here
-    console.log(`Language changed to: ${newLanguage}`);
-  };
-
-  // Fetch notifications (placeholder - would be replaced with actual API call)
-  useEffect(() => {
-    // Simulate fetching notifications
-    const fetchNotifications = async () => {
-      try {
-        // In a real app, this would call an API endpoint
-        // const response = await api.get('/notifications');
-        // setNotifications(response.data);
-
-        // For now, simulate some data
-        setNotifications([
-          { id: '1', count: 3 },
-          { id: '2', count: 1 },
-        ]);
-      } catch (error) {
-        console.error('Failed to fetch notifications:', error);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchNotifications();
+  const handleSearchClick = () => {
+    if (onSearchToggle) {
+      onSearchToggle();
+    } else {
+      setIsSearchOpen(true);
     }
-  }, [isAuthenticated]);
-
-  // Close search when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isSearchOpen && event.target instanceof HTMLElement) {
-        // Check if click is outside search modal and search button
-        const searchModal = document.getElementById('search-modal');
-        const searchButton = document.getElementById('search-button');
-
-        if (!searchModal?.contains(event.target as Node) &&
-            !searchButton?.contains(event.target as Node)) {
-          setIsSearchOpen(false);
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSearchOpen]);
+  };
 
   return (
-    <nav className={`top-nav bg-bg-card/80 backdrop-blur-sm border-b border-border-subtle px-4 sm:px-6 py-4 z-50 ${className}`}>
-      <div className="flex flex-wrap items-center justify-between px-4">
-        {/* Left Side - Logo and Navigation */}
+    <nav className={`top-nav sticky top-0 bg-bg-card/90 backdrop-blur-md border-b border-border-subtle px-4 sm:px-6 py-3 z-40 ${className}`}>
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
+        {/* Left Side: Toggle Sidebar & Brand & Desktop Nav Links */}
         <div className="flex items-center space-x-4">
-          {/* Logo */}
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-lg hover:bg-white/10 text-text-secondary hover:text-text-primary transition-colors duration-200"
+            aria-label="Toggle navigation menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
           <Link to="/" className="flex items-center space-x-2">
-            <Logo className="h-8 w-auto" />
-            <span className="font-display text-text-primary hidden md:block">
+            <span className="font-display font-extrabold text-xl tracking-wider bg-gradient-to-r from-accent-primary to-rose-400 bg-clip-text text-transparent">
               ANIMEKH
             </span>
           </Link>
 
-          {/* Navigation Links - Hidden on mobile */}
-          <div className="hidden md:flex md:space-x-6">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.key}
-                to={link.to}
-                className={`${link.to === location.pathname ? 'nav-link-active' : 'nav-link'}
-                           text-text-secondary font-medium hover:text-text-primary
-                           px-3 py-2 rounded-md transition-colors duration-200
-                           hover:bg-accent-primary/5`}
-                aria-current={link.to === location.pathname ? 'page' : undefined}
-              >
-                {link.label}
-              </NavLink>
-            ))}
+          <div className="hidden md:flex items-center space-x-1 pl-4">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.to;
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200
+                    ${isActive
+                      ? 'text-accent-primary bg-accent-primary/10 font-semibold'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}
+                >
+                  {link.label}
+                </NavLink>
+              );
+            })}
           </div>
         </div>
 
-        {/* Center - Search Button */}
-        <div className="flex items-center space-x-3">
-          {/* Search Button */}
+        {/* Right Side: Search, Notifications, Language, User */}
+        <div className="flex items-center space-x-2 sm:space-x-3">
           <button
             id="search-button"
-            onClick={handleSearchToggle}
-            className="p-2 rounded-full hover:bg-white/20 transition-colors duration-200"
+            onClick={handleSearchClick}
+            className="p-2 rounded-full hover:bg-white/10 text-text-secondary hover:text-text-primary transition-colors duration-200"
             aria-label="Search"
           >
-            <Search className="h-5 w-5 text-text-secondary" />
+            <Search className="h-5 w-5" />
           </button>
 
-          {/* Notification Badge */}
           <NotificationBadge
-            notifications={notifications}
-            className="relative"
+            onClick={onNotificationToggle}
+            className="text-text-secondary"
           />
 
-          {/* Language Switcher */}
-          <LanguageSwitcher
-            onLanguageChange={handleLanguageChange}
-            className="hidden md:block"
-          />
+          <Link
+            to="/vip"
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black shadow-md shadow-amber-500/20 transition-all hover:scale-105 active:scale-95"
+          >
+            <Crown className="w-3.5 h-3.5 fill-black" />
+            <span>VIP</span>
+          </Link>
 
-          {/* User Menu or Login/Register */}
+          <LanguageSwitcher className="hidden sm:block" />
+
           {isAuthenticated ? (
             <UserMenu
               user={user}
@@ -239,28 +118,32 @@ export function TopNav({ className }: TopNavProps = {}) {
               onLogout={logout}
             />
           ) : (
-            <>
+            <div className="flex items-center">
               <Link
                 to="/login"
-                className="btn btn-outline px-4 py-2 text-sm"
+                className="flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/15 text-white transition-all shadow-sm hover:scale-105 active:scale-95"
               >
-                Login
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>ចូលគណនី</span>
               </Link>
-              <Link
-                to="/register"
-                className="btn btn-primary px-4 py-2 text-sm ml-2"
-              >
-                Register
-              </Link>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Search Modal */}
       {isSearchOpen && (
         <SearchModal
+          isOpen={isSearchOpen}
           onClose={() => setIsSearchOpen(false)}
+          onSearch={(q) => {
+            setIsSearchOpen(false);
+            window.location.href = `/search?q=${encodeURIComponent(q)}`;
+          }}
         />
       )}
     </nav>

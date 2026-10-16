@@ -50,7 +50,7 @@
 .mini-poster-badge, .mini-poster-update { position: absolute; top: 0; right: 0; border-radius: 0 0 0 4px; padding: 3px 5px; background: #f2c178; color: #111; font-size: 9px; font-weight: 800; }
 .mini-poster-update { top: auto; left: 0; right: 0; bottom: 0; border-radius: 0; color: white; background: linear-gradient(transparent,rgba(0,0,0,.75)); font-size: 10px; font-weight: 500; }
 .mini-poster-title { display: -webkit-box; overflow: hidden; margin: 5px 2px 0; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #aeb0b6; font-size: 12px; line-height: 1.3; }
-.mini-bottom-nav { border-top: 1px solid rgba(255,255,255,.04); background: rgba(27,28,33,.97); }
+.mini-bottom-nav { border-top: 1px solid rgba(255,255,255,.08); background: rgba(13,17,28,.92); backdrop-filter: blur(24px); box-shadow: 0 -8px 30px rgba(0,0,0,0.65); }
 .mini-app-layout > header:not(.mini-app-chrome) { display: none; }
 .mini-app-layout { min-height: 100dvh; background: #111216; color: #f4f4f5; }
 .mini-app-chrome { position: sticky; top: 0; z-index: 35; flex: 0 0 auto; padding-top: max(4px, env(safe-area-inset-top)); background: rgba(29,30,35,.96); border-bottom: 1px solid rgba(255,255,255,.07); backdrop-filter: blur(18px); }

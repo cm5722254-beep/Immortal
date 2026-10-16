@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Info, Users,
-  Play, Lock, Crown, Send, Film, Download
+  Lock, Crown, Send, Film, Download
 } from 'lucide-react';
 import { VideoPlayer } from '../components/player/VideoPlayer';
 import { isMoviePurchased } from '../services/paymentService';
@@ -352,7 +352,7 @@ export function WatchPage() {
         <div className="flex flex-col gap-5">
           {/* Main Stream Area */}
           <div className="flex-1 min-w-0">
-            {!isAuthenticated ? (
+            {(!isAuthenticated && isLocked) ? (
               /* ─── 🔒 MANDATORY LOGIN GATE (មិនទាន់ LOGIN មិនអាចមើលបាន) ─── */
               <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#0F1424] via-[#0A0E17] to-[#12070e] border-2 border-amber-500/50 flex items-center justify-center p-6 text-center animate-scale-in">
                 {anime?.poster_url && (
@@ -501,7 +501,7 @@ export function WatchPage() {
                   </div>
                 )}
                 <VideoPlayer
-                  src={offlineVideoUrl || currentEp.video_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
+                  src={offlineVideoUrl || currentEp.video_url || ''}
                   subtitleUrl={currentEp.subtitle_url}
                   subtitleTracks={currentEp.subtitle_tracks}
                   qualitySources={currentEp.video_qualities}

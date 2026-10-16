@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Bell, X, Check, Clock, Bookmark } from 'lucide-react';
-import { useLanguageStore } from '../../store/languageStore';
-import { usePlatform } from '../../utils/platform';
+import { useState, useMemo } from 'react';
+import { Bell, X, Check, Clock, Bookmark, Play, CheckCheck, Sparkles, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useLanguageStore, translate } from '../../store/languageStore';
 
-interface NotificationItem {
+export interface NotificationItem {
   id: string;
   icon: string;
   title: string;
@@ -12,7 +12,7 @@ interface NotificationItem {
   link: string;
   avatarUrl?: string;
   tag?: string;
-  category?: string;
+  category?: 'episode' | 'watchlist' | 'system' | string;
   isRead?: boolean;
 }
 
@@ -27,195 +27,187 @@ export function NotificationModal({
   onMarkAllAsRead: () => void;
   totalUnread: number;
 }) {
-  const { language } = useLanguageStore((state) => state.language);
-  const { isWeb, isMobileApp } = usePlatform();
+  const navigate = useNavigate();
+  const language = useLanguageStore((state) => state.language);
+  const [activeTab, setActiveTab] = useState<'all' | 'episode' | 'watchlist' | 'system'>('all');
 
-  // Group notifications by category
-  const groupedNotifications = notifications.reduce((acc, notif) => {
-    const category = notif.category || 'other';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(notif);
-    return acc;
-  }, {} as Record<string, NotificationItem[]>);
+  const filteredItems = useMemo(() => {
+    if (activeTab === 'all') return notifications;
+    return notifications.filter((n) => n.category === activeTab);
+  }, [notifications, activeTab]);
 
-  // Handle marking a single notification as read
-  const handleMarkAsRead = (id: string) => {
-    // In a real app, this would call an API endpoint
-    // await api.post(`/notifications/${id}/read`);
-    // For now, we'll just filter it out locally
-    // setNotificationList(notifications.filter(n => n.id !== id));
-  };
-
-  // Handle clearing all notifications
-  const handleClearAll = () => {
-    // In a real app, this would call an API endpoint
-    // await api.delete('/notifications');
-    onMarkAllAsRead();
-  };
-
-  // Get icon component based on icon name
-  const getIconComponent = (iconName: string) => {
+  const getIcon = (iconName: string) => {
     switch (iconName) {
-      case 'bell': return Bell;
       case 'bookmark': return Bookmark;
       case 'clock': return Clock;
       case 'check': return Check;
-      default: return Bell; // Default fallback
+      case 'play': return Play;
+      default: return Bell;
+    }
+  };
+
+  const handleItemClick = (link: string) => {
+    onClose();
+    if (link) {
+      navigate(link);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[[var(--animekh-z-index-modal-backdrop)]] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="relative bg-bg-card w-full max-w-2xl mx-4 sm:mx-0 lg:mx-0 rounded-lg shadow-xl border border-border-subtle">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtl">
-          <div className="flex items-center space-x-3">
-            <Bell className="h-5 w-5 text-accent-primary" />
-            <h2 className="font-display text-text-primary">
-              Notifications
-            </h2>
+    <div
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-[#121318] text-white w-full max-w-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden mt-8 sm:mt-0"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center">
+              <Bell className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="font-display font-bold text-white text-base">
+                {language === 'km' ? 'ការជូនដំណឹង' : 'Notifications'}
+              </h2>
+              {totalUnread > 0 ? (
+                <span className="text-[11px] text-amber-400 font-medium">
+                  {language === 'km' ? `${totalUnread} មិនទាន់អាន` : `${totalUnread} unread updates`}
+                </span>
+              ) : (
+                <span className="text-[11px] text-gray-400 font-normal">
+                  {language === 'km' ? 'បានអានទាំងអស់' : 'All caught up'}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={onMarkAllAsRead}
-              className="px-3 py-1 text-text-xs font-medium bg-accent-primary/10 text-accent-primary rounded-hover"
-              disabled={totalUnread === 0}
-            >
-              Mark all as read
-            </button>
-            <button
-              onClick={handleClearAll}
-              className="px-3 py-1 text-text-xs font-medium bg-accent-primary/10 text-accent-primary rounded-hover"
-              disabled={notifications.length === 0}
-            >
-              Clear all
-            </button>
+
+          <div className="flex items-center gap-2">
+            {totalUnread > 0 && (
+              <button
+                onClick={onMarkAllAsRead}
+                className="px-2.5 py-1 text-xs font-semibold bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 rounded-lg flex items-center gap-1 transition-colors"
+                title="Mark all as read"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">
+                  {language === 'km' ? 'អានទាំងអស់' : 'Mark read'}
+                </span>
+              </button>
+            )}
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-white/20 transition-colors duration-200"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
               aria-label="Close"
             >
-              <X className="h-5 w-5 text-text-secondary" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6">
-          {/* Empty State */}
-          {notifications.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-primary/10">
-                <Bell className="h-8 w-8 text-accent-primary" />
-              </div>
-              <p className="text-text-secondary">No notifications</p>
-              {totalUnread > 0 && (
-                <p className="mt-2 text-text-secondary/50">
-                  You have {totalUnread} new notifications
-                </p>
-              )}
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1 px-5 pt-3 border-b border-white/5 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'all', label: language === 'km' ? 'ទាំងអស់' : 'All' },
+            { id: 'episode', label: language === 'km' ? 'ភាគថ្មី' : 'Episodes' },
+            { id: 'watchlist', label: language === 'km' ? 'បញ្ជីតាមដាន' : 'Watchlist' },
+            { id: 'system', label: language === 'km' ? 'ប្រព័ន្ធ' : 'System' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap mb-2.5 ${
+                activeTab === tab.id
+                  ? 'bg-amber-400 text-black'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Body Items */}
+        <div className="max-h-[55vh] overflow-y-auto p-4 space-y-2">
+          {filteredItems.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <Sparkles className="w-9 h-9 mx-auto text-gray-600 mb-2" />
+              <p className="text-sm">
+                {language === 'km' ? 'គ្មានការជូនដំណឹងនៅឡើយទេ' : 'No notifications in this category'}
+              </p>
             </div>
-          )}
+          ) : (
+            filteredItems.map((item) => {
+              const IconComp = getIcon(item.icon);
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => handleItemClick(item.link)}
+                  className={`flex items-start gap-3.5 p-3 rounded-xl cursor-pointer transition-all border ${
+                    !item.isRead
+                      ? 'bg-amber-400/[0.07] border-amber-400/30 hover:bg-amber-400/[0.12]'
+                      : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.06]'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center bg-white/10 text-amber-400 mt-0.5">
+                    <IconComp className="w-4 h-4" />
+                  </div>
 
-          {/* Notification List */}
-          {notifications.length > 0 && (
-            <div className="space-y-4">
-              {Object.entries(groupedNotifications).map(([category, items]) => (
-                <div key={category} className="mb-4">
-                  <h3 className="font-medium text-text-secondary mb-2">
-                    {/* Category names would be localized in a real app */}
-                    {category === 'episode' && 'New Episodes'}
-                    {category === 'watchlist' && 'Watchlist Updates'}
-                    {category === 'system' && 'System Notifications'}
-                    {(!['episode', 'watchlist', 'system'].includes(category)) && 'Other'}
-                  </h3>
-                  <div className="space-y-2">
-                    {items.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`flex items-start space-x-3 p-3 bg-bg-card-subtle rounded-lg
-                                   ${!notification.isRead ? 'border-l-2 border-accent-primary' : ''}`}
-                      >
-                        {/* Avatar or Icon */}
-                        <div className="flex-shrink-0 mt-0.5">
-                          {notification.avatarUrl ? (
-                            <img
-                              src={notification.avatarUrl}
-                              alt={notification.title}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-accent-primary/20">
-                              <getIconComponent(notification.icon)
-                                className="h-4 w-4 text-accent-primary"
-                              />
-                            </div>
-                          )}
-                        </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                      <h4 className="text-xs sm:text-sm font-semibold text-white truncate">
+                        {item.title}
+                      </h4>
+                      <span className="text-[10px] text-gray-400 shrink-0">
+                        {item.time}
+                      </span>
+                    </div>
 
-                        {/* Notification Content */}
-                        <div className="flex-1 space-y-1">
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-semibold text-text-primary line-clamp-1">
-                              {notification.title}
-                            </h4>
-                            <span className="text-text-xs text-text-secondary/50">
-                              {notification.time}
-                            </span>
-                          </div>
-                          <p className="text-text-secondary/80 line-clamp-2">
-                            {notification.subtitle}
-                          </p>
-                          {notification.tag && (
-                            <span className="mt-1 inline-flex items-center px-2 py-0.5 text-text-xs font-medium
-                                      bg-accent-primary/10 text-accent-primary rounded-full">
-                              {notification.tag}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                    <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
+                      {item.subtitle}
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {item.tag && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300">
+                          {item.tag}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-amber-400/80 hover:text-amber-300 flex items-center gap-0.5 ml-auto">
+                        {language === 'km' ? 'ទស្សនា' : 'View'}
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ))}
-
-              {/* Show "View All" link if there are more notifications */}
-              {notifications.length > 5 && (
-                <div className="mt-4 text-center">
-                  <button
-                    onClick={() => {
-                      // In a real app, this would navigate to notifications page
-                      onClose();
-                      // navigate('/notifications');
-                    }}
-                    className="text-text-xs font-medium text-accent-primary hover:underline"
-                  >
-                    View all {notifications.length} notifications
-                  </button>
-                </div>
-              )}
-            </div>
+              );
+            })
           )}
         </div>
 
-        {/* Modal Footer */}
-        {notifications.length > 0 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-border-subtl">
-            <span className="text-text-xs text-text-secondary/50">
-              Showing {Math.min(notifications.length, 5)} of {notifications.length} notifications
-            </span>
-            <button
-              onClick={onMarkAllAsRead}
-              className="px-4 py-2 text-sm font-medium bg-accent-primary text-text-primary rounded-hover hover:bg-accent-primary/90 disabled:opacity-50"
-              disabled={totalUnread === 0}
-            >
-              Mark all as read ({totalUnread})
-            </button>
-          </div>
-        )}
+        {/* Footer */}
+        <div className="px-5 py-3 bg-black/40 border-t border-white/5 flex items-center justify-between text-xs text-gray-400">
+          <button
+            onClick={() => {
+              onClose();
+              navigate('/notifications');
+            }}
+            className="text-amber-400 hover:underline font-semibold"
+          >
+            {language === 'km' ? 'មើលទំព័រការជូនដំណឹងពេញលេញ' : 'View full notifications page'}
+          </button>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            {translate('Close', language) || 'Close'}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
+export default NotificationModal;

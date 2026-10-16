@@ -16,10 +16,12 @@ import api from '../services/api';
 import { loadCatalog, extractAnimeDetail } from '../services/catalogService';
 import type { Anime, Episode, Comment } from '../types';
 import { usePlatform } from '../utils/platform';
+import { translate, useLanguageStore } from '../store/languageStore';
 
 type MyListStatus = 'NONE' | 'WATCHING' | 'PLAN_TO_WATCH' | 'COMPLETED' | 'FAVORITE';
 
 export function DetailPage() {
+  const appLanguage = useLanguageStore((state) => state.language);
   const { isTelegram, isMobileApp } = usePlatform();
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();

@@ -17,7 +17,7 @@ interface NavState {
   clearStack: () => void;
 }
 
-export const useNavStore = create<NavState>((set, get) => ({
+export const useNavStore = create<NavState>((set) => ({
   // Initial state
   isSidebarOpen: false,
   isTopNavScrolled: false,

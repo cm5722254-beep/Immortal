@@ -13,7 +13,7 @@ export function MobileNav() {
   const isVipUser = isVip || user?.is_vip_active;
   const isPremiumVerified = Boolean(user?.is_vip_active && user.vip_plan?.trim().toLowerCase() === 'premium');
 
-  if (location.pathname.startsWith('/watch') || ['/vip', '/settings', '/account', '/help', '/scan', '/referrals', '/notifications'].includes(location.pathname)) return null;
+  if (location.pathname.startsWith('/watch') || ['/login', '/register', '/vip', '/settings', '/account', '/help', '/scan', '/referrals', '/notifications'].includes(location.pathname)) return null;
 
   const miniApp = isMobileApp || isTelegram;
   const tabs = miniApp

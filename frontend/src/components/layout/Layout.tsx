@@ -1,169 +1,141 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAuthStore } from '../../store/authStore';
-import { useLanguageStore } from '../../store/languageStore';
-import { useNavStore } from '../../store/navStore';
-import { Link, useLocation } from 'react-router-dom';
-import {
-  TopNav
-} from './TopNav';
-import {
-  SearchModal
-} from './SearchModal';
-import {
-  NotificationBadge
-} from './NotificationBadge';
-import {
-  NotificationModal
-} from './NotificationModal';
-import {
-  UserMenu
-} from './UserMenu';
-import {
-  LanguageSwitcher
-} from './LanguageSwitcher';
-import {
-  Sidebar
-} from './Sidebar';
+import { useNavigate } from 'react-router-dom';
+import { TopNav } from './TopNav';
+import { SearchModal } from './SearchModal';
+import { NotificationModal } from './NotificationModal';
+import { Sidebar } from './Sidebar';
+import { MobileNav } from './MobileNav';
 
-// Mock notifications data - in a real app, this would come from API
-const mockNotifications = [
+const realNotifications = [
   {
     id: '1',
     icon: 'bell',
-    title: 'New Episode Available',
-    subtitle: 'Attack on Titan Final Season Episode 12 is now available',
-    time: '2m ago',
-    link: '/anime/attack-on-titan-final-season',
+    title: 'ភាគថ្មីទើបចេញ • Episode Released',
+    subtitle: 'លេបផ្កាយ (Swallowed Star) ភាគថ្មីត្រូវបានបន្ថែមហើយ',
+    time: '5m ago',
+    link: '/watch/swallowed-star/1',
     category: 'episode',
+    tag: 'HD 4K',
     isRead: false,
   },
   {
     id: '2',
     icon: 'bookmark',
-    title: 'Added to Your Watchlist',
-    subtitle: 'You added Demon Slayer to your watchlist',
-    time: '15m ago',
-    link: '/favorites',
+    title: 'ពេញនិយមខ្លាំង • Trending Pick',
+    subtitle: 'គុជអមតះធៀននី (Renegade Immortal) វគ្គសង្គ្រាមព្រះ',
+    time: '30m ago',
+    link: '/donghua/renegade-immortal',
     category: 'watchlist',
+    tag: 'Xianxia',
     isRead: false,
   },
   {
     id: '3',
     icon: 'clock',
-    title: 'Continue Watching',
-    subtitle: 'You stopped watching Jujutsu Kaisen at 12:34',
-    time: '1h ago',
+    title: 'បន្តការទស្សនា • Resume Watching',
+    subtitle: 'ចូលទស្សនាភាគដែលអ្នកបានទុកចោលមុននេះ',
+    time: '2h ago',
     link: '/history',
     category: 'system',
+    isRead: true,
+  },
+  {
+    id: '4',
+    icon: 'check',
+    title: 'សមាជិក VIP • Premium Benefits',
+    subtitle: 'ទស្សនាដោយគ្មានការរំខាន ជាមួយកម្រិតច្បាស់ 4K Ultra HD',
+    time: '1d ago',
+    link: '/vip',
+    category: 'system',
+    tag: 'VIP',
     isRead: true,
   },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, onLogout } = useAuthStore();
-  const { language } = useLanguageStore((state) => state.language);
-  const { isSidebarOpen, toggleSidebar } = useNavStore();
-  const location = useLocation();
+  const navigate = useNavigate();
 
   // Modal states
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState(realNotifications);
 
-  // Handle modal toggles
-  const handleSearchToggle = () => setIsSearchOpen(!isSearchOpen);
-  const handleNotificationToggle = () => setIsNotificationOpen(!isNotificationOpen);
-  const handleUserMenuToggle = () => setIsUserMenuOpen(!isUserMenuOpen);
+  const handleSearchToggle = () => setIsSearchOpen((prev) => !prev);
+  const handleNotificationToggle = () => setIsNotificationOpen((prev) => !prev);
 
-  // Handle modal closes
   const handleSearchClose = () => setIsSearchOpen(false);
   const handleNotificationClose = () => setIsNotificationOpen(false);
-  const handleUserMenuClose = () => setIsUserMenuOpen(false);
 
-  // Handle mark all as read
   const handleMarkAllAsRead = () => {
-    // In a real app, this would call an API
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setIsNotificationOpen(false);
   };
 
   return (
-    <>
-      {/* Sidebar */}
+    <div className="min-h-screen bg-bg-base text-text-primary flex flex-col">
+      {/* Sidebar Navigation */}
       <Sidebar />
 
-      {/* Main Content Wrapper */}
-      <div className={`min-h-screen bg-bg-base transition-all duration-300
-                   ${isSidebarOpen ? 'ml-[256px]' : 'ml-0'}
-                   z-[[var(--animekh-z-index-default)]]`}
-      >
-        {/* Top Navigation */}
-        <TopNav
-          onSearchToggle={handleSearchToggle}
-          onNotificationToggle={handleNotificationToggle}
-          onUserMenuToggle={handleUserMenuToggle}
-        />
+      {/* Top Navigation */}
+      <TopNav
+        onSearchToggle={handleSearchToggle}
+        onNotificationToggle={handleNotificationToggle}
+      />
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 sm:p-8">
-          {children}
-        </main>
+      {/* Main Content */}
+      <main className="flex-1 w-full pb-16 md:pb-0">
+        {children}
+      </main>
 
-        {/* Footer */}
-        <footer className="border-t border-border-subtle bg-bg-card/50 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 py-6 text-center">
-            <p className="text-text-xs text-text-secondary/50">
-              © {new Date().getFullYear()} ANIMEKH. All rights reserved.
-            </p>
-            <div className="mt-4 space-x-4 justify-center">
-              <a href="#" className="text-text-xs text-text-secondary/50 hover:text-text-secondary">
-                Terms of Service
-              </a>
-              <a href="#" className="text-text-xs text-text-secondary/50 hover:text-text-secondary">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-text-xs text-text-secondary/50 hover:text-text-secondary">
-                Contact Us
-              </a>
-            </div>
+      {/* Mobile & Telegram Mini App Bottom Navigation Bar */}
+      <MobileNav />
+
+      {/* Footer */}
+      <footer className="border-t border-border-subtle bg-bg-card/40 backdrop-blur-sm mt-auto">
+        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-text-secondary/60">
+          <p>© {new Date().getFullYear()} ANIMEKH • Huang Anime. All rights reserved.</p>
+          <div className="mt-3 flex items-center justify-center space-x-6 text-text-secondary/70">
+            <a href="/explore" className="hover:text-text-primary transition-colors">
+              Explore
+            </a>
+            <a href="/vip" className="hover:text-text-primary transition-colors">
+              VIP Plans
+            </a>
+            <a href="/help" className="hover:text-text-primary transition-colors">
+              Help & Support
+            </a>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
 
       {/* Search Modal Portal */}
-      {createPortal(
-        <SearchModal
-          isOpen={isSearchOpen}
-          onClose={handleSearchClose}
-          onSearch={(query: string) => {
-            console.log('Searching for:', query);
-            // In a real app, this would navigate to search results
-            handleSearchClose();
-          }}
-        />,
-        document.body
-      )}
+      {isSearchOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <SearchModal
+            isOpen={isSearchOpen}
+            onClose={handleSearchClose}
+            onSearch={(query: string) => {
+              handleSearchClose();
+              navigate(`/search?q=${encodeURIComponent(query)}`);
+            }}
+          />,
+          document.body
+        )}
 
       {/* Notification Modal Portal */}
-      {createPortal(
-        <NotificationModal
-          notifications={mockNotifications}
-          onClose={handleNotificationClose}
-          onMarkAllAsRead={handleMarkAllAsRead}
-          totalUnread={mockNotifications.filter(n => !n.isRead).length}
-        />,
-        document.body
-      )}
-
-      {/* User Menu Portal */}
-      {createPortal(
-        <UserMenu
-          user={user || {}}
-          isAuthenticated={isAuthenticated}
-          onLogout={onLogout}
-        />,
-        document.body
-      )}
-    </>
+      {isNotificationOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <NotificationModal
+            notifications={notifications}
+            onClose={handleNotificationClose}
+            onMarkAllAsRead={handleMarkAllAsRead}
+            totalUnread={notifications.filter((n) => !n.isRead).length}
+          />,
+          document.body
+        )}
+    </div>
   );
 }
