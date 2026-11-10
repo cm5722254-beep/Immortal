@@ -46,7 +46,7 @@ DEFAULT_API_ID = 2040
 DEFAULT_API_HASH = "b18441a1ff607e10a989891a5462e627"
 DEFAULT_SESSION_STRING = os.getenv(
     "TELEGRAM_USER_SESSION",
-    "1BVtsOKsBuxkcO5m-_WR8iDdRU5zsNTGEITJ0driMwtEeZ3mCkFX5qopkGR7TN3IrK1u0TGRM0vnX3a1R-P2Yjb2SmhuECjChrZ6MCQaPy6K5OYin6GhPLW9cg_p0d_lFfqMWDQ7zqcg39R_VB0toi8Vrg3HurDtigKEf3j6FCaOy5UlDiRNEh5Tfx-xbZRTa4thtoMNRtLwOqdho-cVk4lQ3m-aUGOS8fBIfWZ2oLINRwz36X_uJBAq2T8WBuJ1f-fhmxcgwKX6ZYbTN4tcDaSmhkj9JcFRcJOMd-NW1fRIlE7sgnUKmSz6nQR0xiII95PcZO1OnxAQgph_tTp2nuEKr28g8_I4=",
+    "1BVtsOKsBuwSSlAqvCrWgTXUi86-t0cF3vF7h7dIXXk-LOrs9fIgQ-zP4bWOYgUF040JMiWa0oz_1lLLgzpVyq9jp_QwMleCuHI7OWDZibd5fa-1idlJi4DxIYt3YVZs0KNQ0EVRkKXtN4hu18mzci9ZtiZBcP4gXYcjZxAb4G1KMSQxPBXjpbdFD-yVmKHsIpIw9HUIl386qR-fNnbW6RJXmh2daU9pO4FSnq7OKN_vmj9NRc_PtmlgTJMFNgk4LLfxE55ikVY0QmLvjbrnmcLLJ0dPV4gqsiUNsu47RLj1zHy4obcqT2ad2UH6i44YJry2kp_m3c3Q0ANuvEJcbSB1JkBET0xM=",
 )
 
 DEFAULT_CAPTION_TEMPLATE = (
@@ -893,6 +893,10 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
             if not video_url or ep_num in existing_in_channel:
                 continue
 
+            if "EP000.mp4" in video_url or "{id}" in video_url or "%7Bid%7D" in video_url:
+                add_log(f"[ភាគ {ep_num}] វីដេអូជាគំរូ Placeholder (EP000.mp4 មិនទាន់មានភាគពេញ) -> រំលងដើម្បីកុំឲ្យ Upload ខុស", "warn")
+                continue
+
             sync_state["current_ep"] = ep_num
             sync_state["step_progress"] = 0.0
 
@@ -914,6 +918,10 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
                 final_video, dur_sec, w, h, thumb_path = await asyncio.to_thread(
                     compress_video_sync, src_video_path, opt_temp_path, preset
                 )
+
+                if dur_sec < 60:
+                    add_log(f"[ភាគ {ep_num}] វីដេអូមានប្រវែងក្រោម ៦០ វិនាទី ({dur_sec}s ជា Trailer/Sample) -> រំលងមិន Upload ទេ", "warn")
+                    continue
 
                 if sync_state["should_stop"]:
                     break
