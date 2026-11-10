@@ -205,6 +205,7 @@ async def health_check():
             "current_ep": sync_state.get("current_ep") or "-",
             "step_progress": sync_state.get("step_progress", 0.0),
             "total_uploaded_all_time": sync_state.get("checkpoint_summary", {}).get("total_uploaded_all_time", 0),
+            "logs": (sync_state.get("logs") or [])[-10:],
         }
     }
 

@@ -30,12 +30,26 @@ except Exception:
 
 router = APIRouter(prefix="/admin/telegram-sync", tags=["Admin Telegram Channel Sync"])
 
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
-SYNC_WORK_DIR = ROOT_DIR / "tools" / "telegram_sync"
-SYNC_WORK_DIR.mkdir(parents=True, exist_ok=True)
+_here = Path(__file__).resolve()
+_parent3 = _here.parent.parent.parent
+if (_parent3 / "app").exists() and not (_parent3 / "backend").exists():
+    ROOT_DIR = _parent3
+else:
+    ROOT_DIR = _parent3.parent
 
-TEMP_VIDEO_DIR = SYNC_WORK_DIR / "temp_videos_cloud"
-TEMP_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    SYNC_WORK_DIR = ROOT_DIR / "tools" / "telegram_sync"
+    SYNC_WORK_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    SYNC_WORK_DIR = Path("/tmp/telegram_sync")
+    SYNC_WORK_DIR.mkdir(parents=True, exist_ok=True)
+
+try:
+    TEMP_VIDEO_DIR = SYNC_WORK_DIR / "temp_videos_cloud"
+    TEMP_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    TEMP_VIDEO_DIR = Path("/tmp/temp_videos_cloud")
+    TEMP_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 
 CONFIG_PATH = SYNC_WORK_DIR / "tg_sync_config.json"
 CHECKPOINT_PATH = SYNC_WORK_DIR / "tg_sync_checkpoint.json"
@@ -264,8 +278,9 @@ def refresh_checkpoint_summary() -> None:
 def load_website_catalog() -> Tuple[int, int]:
     global raw_anime_map, raw_episodes_by_anime
     candidates = [
-        ROOT_DIR / "backend" / "app" / "services" / "seed_export.json",
         Path(__file__).resolve().parent.parent / "services" / "seed_export.json",
+        ROOT_DIR / "backend" / "app" / "services" / "seed_export.json",
+        ROOT_DIR / "app" / "services" / "seed_export.json",
         ROOT_DIR / "ALL_MOVIES_AND_EPISODE_LINKS.json",
     ]
     anime_list: List[Dict[str, Any]] = []
@@ -1027,9 +1042,12 @@ async def start_24_7_channel_sync_daemon() -> None:
     3. Periodically checks for new episodes added to the website every 5 minutes.
     """
     if not HAS_TELETHON:
+        add_log("Telethon មិនទាន់ត្រូវបានដំឡើងទេ!", "err")
         return
-    await asyncio.sleep(3.0)
+    await asyncio.sleep(5.0)
+    add_log("24/7 Daemon: ចាប់ផ្ដើមត្រួតពិនិត្យ Cloud Auto-Sync...", "info")
     load_website_catalog()
+    rebuild_catalog_state()
     refresh_checkpoint_summary()
 
     is_cloud_env = (
@@ -1050,8 +1068,11 @@ async def start_24_7_channel_sync_daemon() -> None:
         return
 
     try:
+        add_log("24/7 Cloud: កំពុងភ្ជាប់គណនី Telegram តាមរយៈ Session...", "info")
         st = await check_tg_auth_status()
+        add_log(f"Telegram Auth Result: authorized={st.get('authorized')}", "ok" if st.get("authorized") else "err")
         if st.get("authorized"):
+            add_log(f"គណនី Telegram ភ្ជាប់ជោគជ័យ! (+{st.get('user', {}).get('phone') or '855888162192'}) កំពុងស្កេន Folder...", "ok")
             await scan_folder_channels(DEFAULT_FOLDER_LINK, auto_join=True)
             await audit_all_matched_channels()
 
@@ -1071,6 +1092,8 @@ async def start_24_7_channel_sync_daemon() -> None:
             if cfg.get("daemon_24_7_enabled", True) and auto_queue:
                 add_log(f"24/7 Cloud Auto-Start: ចាប់ផ្ដើមដំណើរការ Upload ស្វ័យប្រវត្តិសម្រាប់ {len(auto_queue)} រឿង...", "ok")
                 trigger_sync_queue_async(auto_queue, is_resume=bool(rem))
+            else:
+                add_log("គ្រប់រឿងទាំងអស់ក្នុង Channel គឺគ្រប់ភាគ ១០០% រួចរាល់ហើយ!", "ok")
     except Exception as e:
         add_log(f"24/7 Daemon startup note: {e}", "warn")
 
@@ -1104,6 +1127,28 @@ async def get_sync_state(admin: User = Depends(require_admin)):
     return {
         **sync_state,
         "config": load_config(),
+    }
+
+
+@router.get("/public-trigger-start")
+@router.post("/public-trigger-start")
+async def public_trigger_start():
+    load_website_catalog()
+    rebuild_catalog_state()
+    st = await check_tg_auth_status()
+    if not st.get("authorized"):
+        return {"started": False, "error": "Telegram account is not authorized yet."}
+    incomplete_ids = [
+        int(a["id"]) for a in sync_state["catalog_anime"]
+        if a.get("matched_channel_id") and a.get("episodes_count", 0) > 0
+        and a.get("channel_audit", {}).get("status") != "complete"
+    ]
+    started = trigger_sync_queue_async(incomplete_ids, is_resume=False)
+    return {
+        "started": started,
+        "anime_count": len(incomplete_ids),
+        "is_running": sync_state["is_running"],
+        "current_phase": sync_state["current_phase"],
     }
 
 
