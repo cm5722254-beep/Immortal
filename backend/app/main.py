@@ -192,11 +192,20 @@ app.mount("/uploads", StaticFiles(directory=_UPLOADS_DIR), name="uploads")
 @app.get("/api/health", tags=["Health"])
 async def health_check():
     redis_stats = await get_redis_stats()
+    from app.api.telegram_channel_sync import sync_state
     return {
         "status": "ok",
         "app": "MER DONGHUA",
         "version": "1.0.0",
-        "cache": redis_stats
+        "cache": redis_stats,
+        "telegram_sync_24_7": {
+            "is_running": bool(sync_state.get("is_running")),
+            "current_phase": sync_state.get("current_phase") or "Idle",
+            "current_anime": sync_state.get("current_anime") or "-",
+            "current_ep": sync_state.get("current_ep") or "-",
+            "step_progress": sync_state.get("step_progress", 0.0),
+            "total_uploaded_all_time": sync_state.get("checkpoint_summary", {}).get("total_uploaded_all_time", 0),
+        }
     }
 
 

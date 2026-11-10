@@ -1032,12 +1032,17 @@ async def start_24_7_channel_sync_daemon() -> None:
     load_website_catalog()
     refresh_checkpoint_summary()
 
-    is_cloud_env = bool(
-        os.getenv("RENDER")
-        or os.getenv("RENDER_EXTERNAL_URL")
-        or os.getenv("RAILWAY_ENVIRONMENT")
-        or os.getenv("ENVIRONMENT", "").lower() == "production"
-        or os.getenv("ENABLE_24_7_SYNC") == "1"
+    is_cloud_env = (
+        os.name != "nt"  # Linux / Docker on Render Cloud
+        or bool(
+            os.getenv("RENDER")
+            or os.getenv("RENDER_EXTERNAL_URL")
+            or os.getenv("RENDER_SERVICE_ID")
+            or os.getenv("RAILWAY_ENVIRONMENT")
+            or os.getenv("PORT") == "10000"
+            or os.getenv("ENVIRONMENT", "").lower() == "production"
+            or os.getenv("ENABLE_24_7_SYNC") == "1"
+        )
     )
     if not is_cloud_env:
         sync_state["current_phase"] = "Standby លើ Local (Render Cloud កំពុងដំណើរការ 24/7 ឬចុច Start ដើម្បីរត់លើម៉ាស៊ីននេះ)"
