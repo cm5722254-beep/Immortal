@@ -240,7 +240,7 @@ async def start_telegram_bot_polling():
 
 
 def _send_telegram_photo_multipart(chat_id: str, photo_url: str, caption: str, reply_markup: Optional[dict] = None) -> dict:
-    token = getattr(settings, "TELEGRAM_BOT_TOKEN", "8681184116:AAFkgxxF6VS-9N0R7zs9GnTEx8ktpDTiPVc")
+    token = getattr(settings, "TELEGRAM_BOT_TOKEN", "9100071539:AAFqOrDTNuaE7MsTVaqXYpbsA2nBWFFK5_o")
     
     # 1. Download photo bytes if http or read from local disk if file path
     img_bytes = None

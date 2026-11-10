@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     REDIS_CACHE_ENABLED: bool = os.getenv("REDIS_CACHE_ENABLED", "true").lower() in ("true", "1", "yes")
 
     # Telegram Bot & Mini App
-    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "8681184116:AAFkgxxF6VS-9N0R7zs9GnTEx8ktpDTiPVc")
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "9100071539:AAFqOrDTNuaE7MsTVaqXYpbsA2nBWFFK5_o")
     TELEGRAM_BOT_USERNAME: str = os.getenv("TELEGRAM_BOT_USERNAME", "animeflickh_bot")
     TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "")
     TELEGRAM_NOTIFY_ENABLED: bool = True
