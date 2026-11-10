@@ -87,6 +87,7 @@ backend/venv/
 *.session-journal
 tools/telegram_sync/temp_videos/
 tools/telegram_sync/temp_videos_cloud/
+tools/telegram_sync/login_scratch.json
 
 # =============================================================================
 # 📦 NODE / FRONTEND
