@@ -177,18 +177,18 @@ export async function sendPaymentAlertToTelegramGroup(data: {
   const timeStr = now.toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   const message =
-`👑 <b>ការទូទាត់ VIP ជោគជ័យ (NEW VIP PAYMENT)</b>
+`<b>[VIP] ការទូទាត់ VIP ជោគជ័យ (NEW VIP PAYMENT)</b>
 ━━━━━━━━━━━━━━━━━━━━━
-👤 <b>អតិថិជន:</b> <code>${data.username || 'VIP Member'}</code>
-💎 <b>គម្រោង:</b> <b>${data.planTitle}</b>
-💵 <b>ទឹកប្រាក់:</b> <b>$${data.amountUsd.toFixed(2)}</b> (≈ ${data.amountKhr.toLocaleString()} ៛)
-🧾 <b>Bill Number:</b> <code>${data.billNumber}</code>
-🆔 <b>Transaction ID:</b> <code>${data.transactionId}</code>
-🏦 <b>ទូទាត់តាម:</b> Canadia Bank / NBC Bakong KHQR (KAING BUNCHHAY)
-⏳ <b>សុពលភាព:</b> ${data.durationDays} ថ្ងៃ
-📅 <b>កាលបរិច្ឆេទ:</b> ${dateStr} ម៉ោង ${timeStr}
+<b>អតិថិជន:</b> <code>${data.username || 'VIP Member'}</code>
+<b>គម្រោង:</b> <b>${data.planTitle}</b>
+<b>ទឹកប្រាក់:</b> <b>$${data.amountUsd.toFixed(2)}</b> (≈ ${data.amountKhr.toLocaleString()} ៛)
+<b>Bill Number:</b> <code>${data.billNumber}</code>
+<b>Transaction ID:</b> <code>${data.transactionId}</code>
+<b>ទូទាត់តាម:</b> Canadia Bank / NBC Bakong KHQR (KAING BUNCHHAY)
+<b>សុពលភាព:</b> ${data.durationDays} ថ្ងៃ
+<b>កាលបរិច្ឆេទ:</b> ${dateStr} ម៉ោង ${timeStr}
 ━━━━━━━━━━━━━━━━━━━━━
-✨ <i>ប្រព័ន្ធបានបើកសិទ្ធិ VIP លើគណនីដោយស្វ័យប្រវត្តិរួចរាល់ 100%!</i>`;
+<i>ប្រព័ន្ធបានបើកសិទ្ធិ VIP លើគណនីដោយស្វ័យប្រវត្តិរួចរាល់ 100%!</i>`;
 
   try {
     const url = `https://api.telegram.org/bot${TELEGRAM_NOTIFY_CONFIG.botToken}/sendMessage`;
@@ -246,7 +246,7 @@ export function createMovieKHQROrder(movieSlug: string, movieTitle: string): {
     transaction_id: `TXN_${billNumber}`,
     bill_number: billNumber,
     plan_type: `movie_${movieSlug}`,
-    plan_title: `🍿 រឿងភាពយន្ត Movie: ${movieTitle}`,
+    plan_title: `រឿងភាពយន្ត Movie: ${movieTitle}`,
     duration_days: 0, // Lifetime access to this movie
     amount: amount,
     currency: 'KHR',
@@ -273,18 +273,18 @@ export async function sendMoviePaymentAlertToTelegramGroup(data: {
   const timeStr = now.toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   const message =
-`🍿 <b>ការទិញរឿង MOVIE ជោគជ័យ (MOVIE PURCHASED)</b>
+`<b>[MOVIE] ការទិញរឿង MOVIE ជោគជ័យ (MOVIE PURCHASED)</b>
 ━━━━━━━━━━━━━━━━━━━━━
-👤 <b>អតិថិជន:</b> <code>${data.username || 'Movie Buyer'}</code>
-🎬 <b>ចំណងជើងរឿង:</b> <b>${data.movieTitle}</b>
-💵 <b>តម្លៃលក់:</b> <b>$1.00</b> (≈ 4,000 ៛)
-🧾 <b>Bill Number:</b> <code>${data.billNumber}</code>
-🆔 <b>Transaction ID:</b> <code>${data.transactionId}</code>
-🏦 <b>ទូទាត់តាម:</b> Canadia Bank / NBC Bakong KHQR (KAING BUNCHHAY)
-⏳ <b>សិទ្ធិទស្សនា:</b> មួយជីវិត (Lifetime Access)
-📅 <b>កាលបរិច្ឆេទ:</b> ${dateStr} ម៉ោង ${timeStr}
+<b>អតិថិជន:</b> <code>${data.username || 'Movie Buyer'}</code>
+<b>ចំណងជើងរឿង:</b> <b>${data.movieTitle}</b>
+<b>តម្លៃលក់:</b> <b>$1.00</b> (≈ 4,000 ៛)
+<b>Bill Number:</b> <code>${data.billNumber}</code>
+<b>Transaction ID:</b> <code>${data.transactionId}</code>
+<b>ទូទាត់តាម:</b> Canadia Bank / NBC Bakong KHQR (KAING BUNCHHAY)
+<b>សិទ្ធិទស្សនា:</b> មួយជីវិត (Lifetime Access)
+<b>កាលបរិច្ឆេទ:</b> ${dateStr} ម៉ោង ${timeStr}
 ━━━━━━━━━━━━━━━━━━━━━
-✨ <i>ប្រព័ន្ធបានបើកសិទ្ធិមើលរឿង Movie នេះដោយស្វ័យប្រវត្តិរួចរាល់ 100%!</i>`;
+<i>ប្រព័ន្ធបានបើកសិទ្ធិមើលរឿង Movie នេះដោយស្វ័យប្រវត្តិរួចរាល់ 100%!</i>`;
 
   try {
     const url = `https://api.telegram.org/bot${TELEGRAM_NOTIFY_CONFIG.botToken}/sendMessage`;

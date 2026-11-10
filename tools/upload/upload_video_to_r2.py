@@ -32,7 +32,7 @@ except ImportError:
 
 
 def load_r2_config():
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     cfg_file = os.path.join(root_dir, "r2_config.json")
     if os.path.exists(cfg_file):
         with open(cfg_file, "r", encoding="utf-8") as f:

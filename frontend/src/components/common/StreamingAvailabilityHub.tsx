@@ -29,7 +29,6 @@ export function StreamingAvailabilityHub({
   const displayRegions: RegionAvailability[] = regions ?? [
     {
       region: 'Global',
-      flag: '🌐',
       providers: [{ ...KNOWN_PROVIDERS['merdonghua'], url: merDonghuaUrl }],
     },
   ];
@@ -52,7 +51,7 @@ export function StreamingAvailabilityHub({
         </div>
         {hasAnyFree && (
           <span className="ml-auto text-xs font-bold bg-green-500/20 text-green-300 border border-green-500/30 px-2.5 py-1 rounded-full">
-            🆓 Free Available
+            Free Available
           </span>
         )}
       </div>
@@ -129,11 +128,11 @@ function RegionRow({ region }: { region: RegionAvailability }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <span className="text-lg">{region.flag}</span>
+        <Globe className="w-4 h-4 text-blue-400" />
         <span className="text-sm font-semibold text-gray-200">{region.region}</span>
         <span className="text-xs text-gray-500">({region.providers.length} provider{region.providers.length !== 1 ? 's' : ''})</span>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pl-7">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
         {region.providers.map(p => <ProviderBadge key={p.name} provider={p} />)}
       </div>
     </div>

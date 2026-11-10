@@ -178,6 +178,51 @@ async def sync_telegram_subscribers() -> List[str]:
                         if (now - last_time) > 15.0:
                             _chat_last_welcome[chat_id] = now
                             await handle_welcome_message(chat_id, first_name)
+                    elif text.startswith(("/sync_status", "/sync_start", "/sync_stop", "/sync_audit")):
+                        try:
+                            from app.api.telegram_channel_sync import (
+                                sync_state,
+                                trigger_sync_queue_async,
+                                audit_all_matched_channels,
+                            )
+                            cmd = text.split()[0].lower()
+                            if cmd == "/sync_status":
+                                matched = [a for a in sync_state["catalog_anime"] if a.get("matched_channel_id") and a.get("episodes_count", 0) > 0]
+                                c_comp = sum(1 for a in matched if a.get("channel_audit", {}).get("status") == "complete")
+                                c_need = len(matched) - c_comp
+                                reply_txt = (
+                                    f"📊 <b>24/7 TELEGRAM CHANNEL AUTO-SYNC STATUS</b>\n\n"
+                                    f"• <b>ស្ថានភាព:</b> {sync_state['current_phase']}\n"
+                                    f"• <b>កំពុងដំណើរការ:</b> {'បាទ (Running)' if sync_state['is_running'] else 'រង់ចាំ (Idle)'}\n"
+                                    f"• <b>រឿងបច្ចុប្បន្ន:</b> {sync_state['current_anime'] or '-'} (ភាគ {sync_state['current_ep']} — {sync_state['step_progress']}%)\n"
+                                    f"• <b>រឿងក្នុង Folder សរុប:</b> {len(matched)} រឿង (គ្រប់ភាគ: {c_comp}, ត្រូវ Upload បន្ត: {c_need})\n"
+                                    f"• <b>Upload ជោគជ័យសរុប:</b> {sync_state.get('checkpoint_summary', {}).get('total_uploaded_all_time', 0)} ភាគ\n\n"
+                                    f"ពាក្យបញ្ជាលើ Telegram Web:\n"
+                                    f"/sync_start — ចាប់ផ្ដើម Upload 24/7\n"
+                                    f"/sync_stop — ផ្អាក និងរក្សាទុក Checkpoint\n"
+                                    f"/sync_audit — ស្កេនឆែកមើលភាគក្នុង Channel"
+                                )
+                                await asyncio.to_thread(_call_telegram_api, "sendMessage", {"chat_id": chat_id, "text": reply_txt, "parse_mode": "HTML"})
+                            elif cmd == "/sync_start":
+                                ids = [
+                                    int(a["id"]) for a in sync_state["catalog_anime"]
+                                    if a.get("matched_channel_id") and a.get("episodes_count", 0) > 0
+                                    and a.get("channel_audit", {}).get("status") != "complete"
+                                ]
+                                started = trigger_sync_queue_async(ids, is_resume=False)
+                                msg_txt = f"✅ បានចាប់ផ្ដើមដំណើរការ 24/7 Auto-Sync សម្រាប់ {len(ids)} រឿងរួចរាល់!" if started else "⚠️ ប្រព័ន្ធកំពុងតែដំណើរការរួចហើយ!"
+                                await asyncio.to_thread(_call_telegram_api, "sendMessage", {"chat_id": chat_id, "text": msg_txt, "parse_mode": "HTML"})
+                            elif cmd == "/sync_stop":
+                                sync_state["should_stop"] = True
+                                await asyncio.to_thread(_call_telegram_api, "sendMessage", {"chat_id": chat_id, "text": "⏸ កំពុងផ្អាកដំណើរការ និងរក្សាទុកក្នុង Checkpoint!", "parse_mode": "HTML"})
+                            elif cmd == "/sync_audit":
+                                await asyncio.to_thread(_call_telegram_api, "sendMessage", {"chat_id": chat_id, "text": "🔍 កំពុងស្កេនឆែកមើលភាគក្នុងគ្រប់ Channel ទាំងអស់...", "parse_mode": "HTML"})
+                                await audit_all_matched_channels()
+                                matched = [a for a in sync_state["catalog_anime"] if a.get("matched_channel_id") and a.get("episodes_count", 0) > 0]
+                                c_comp = sum(1 for a in matched if a.get("channel_audit", {}).get("status") == "complete")
+                                await asyncio.to_thread(_call_telegram_api, "sendMessage", {"chat_id": chat_id, "text": f"✅ ស្កេនគ្រប់ Channel ({len(matched)} រឿង) រួចរាល់! គ្រប់ភាគ ១០០%: {c_comp} រឿង។", "parse_mode": "HTML"})
+                        except Exception as cmd_err:
+                            logger.warning(f"Bot sync cmd error: {cmd_err}")
 
         _save_subscribers(list(subscribers))
         return list(subscribers)

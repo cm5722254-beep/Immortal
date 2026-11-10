@@ -76,10 +76,17 @@ htmlcov/
 
 # Virtual environments
 venv/
+venv-py313/
 .venv/
 env/
 ENV/
 backend/venv/
+
+# Telegram local session & temp video buffers
+*.session
+*.session-journal
+tools/telegram_sync/temp_videos/
+tools/telegram_sync/temp_videos_cloud/
 
 # =============================================================================
 # 📦 NODE / FRONTEND

@@ -1,20 +1,21 @@
 import { useNavStore } from '../../store/navStore';
 import { useAuthStore } from '../../store/authStore';
+import { useLanguageStore, translate } from '../../store/languageStore';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Layout,
+  Home,
+  Compass,
   Film,
   Play,
   Bookmark,
   Clock,
   Bell,
   User as UserIcon,
-  Settings,
   Shield,
   Crown,
   X,
 } from 'lucide-react';
+import { triggerHaptic } from '../../utils/telegram';
 
 interface SidebarItem {
   label: string;
@@ -28,22 +29,23 @@ export function Sidebar() {
   const { isSidebarOpen, toggleSidebar } = useNavStore();
   const { user, isAuthenticated, isStaff, isOwner, isAdmin } = useAuthStore();
   const location = useLocation();
+  const language = useLanguageStore((state) => state.language);
 
-  const isOwnerUser = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
-  const isAdminUser = isOwnerUser || isAdmin || user?.role === 'ADMIN';
-  const isStaffUser = isStaff || user?.role === 'STAFF';
+  const isOwnerUser = Boolean(isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com');
+  const isAdminUser = Boolean(isOwnerUser || isAdmin || user?.role === 'ADMIN');
+  const isStaffUser = Boolean(isStaff || user?.role === 'STAFF');
 
   const sidebarItems: SidebarItem[] = [
     {
       label: 'Home',
       to: '/',
-      icon: LayoutDashboard,
+      icon: Home,
       visible: true,
     },
     {
       label: 'Explore',
       to: '/explore',
-      icon: Layout,
+      icon: Compass,
       visible: true,
     },
     {
@@ -76,36 +78,31 @@ export function Sidebar() {
       icon: Bell,
       visible: isAuthenticated,
     },
-    // Admin section
+    // Admin section - only for authorized staff/admins
     {
-      label: 'Admin',
+      label: 'Admin Portal',
       to: '/admin',
       icon: Shield,
-      visible: Boolean(isAdminUser || isOwnerUser),
+      visible: Boolean(isAdminUser || isOwnerUser || isStaffUser),
       children: [
         {
           label: 'Dashboard',
           to: '/admin',
-          icon: LayoutDashboard,
+          icon: Home,
         },
         {
-          label: 'Content',
+          label: 'Content (Donghua & Anime)',
           to: '/admin/anime',
           icon: Film,
         },
         {
-          label: 'Users',
+          label: 'Users & VIPs',
           to: '/admin/users',
           icon: UserIcon,
         },
-        {
-          label: 'Theme & Settings',
-          to: '/admin/theme',
-          icon: Settings,
-        },
       ],
     },
-    // Owner section
+    // Owner section - strictly for owner
     {
       label: 'Owner Control',
       to: '/admin/owner',
@@ -119,31 +116,40 @@ export function Sidebar() {
       {/* Backdrop for mobile */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-[990] md:hidden backdrop-blur-xs transition-opacity"
+          className="fixed inset-0 bg-slate-900/40 z-[990] md:hidden backdrop-blur-xs transition-opacity"
           onClick={toggleSidebar}
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-bg-card border-r border-border-subtle
-                   px-4 py-6 overflow-y-auto transition-transform duration-300
+        className={`fixed top-0 left-0 h-full w-72 bg-white/95 backdrop-blur-2xl border-r border-slate-200/90
+                   px-5 py-6 overflow-y-auto transition-transform duration-300 shadow-2xl
                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                    z-[995] flex flex-col justify-between`}
       >
         <div>
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between px-3 py-2 mb-6 border-b border-border-subtle">
-            <Link to="/" onClick={() => isSidebarOpen && toggleSidebar()} className="flex items-center space-x-3">
-              <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-primary text-white font-black text-sm">
-                A
-              </div>
-              <h3 className="font-display font-bold text-text-primary text-lg tracking-wider">
-                ANIMEKH
-              </h3>
+          <div className="flex items-center justify-between px-2 py-1 mb-6 border-b border-slate-100 pb-4">
+            <Link
+              to="/"
+              onClick={() => {
+                triggerHaptic('light');
+                if (isSidebarOpen) toggleSidebar();
+              }}
+              className="flex items-center gap-2.5"
+            >
+              <img
+                src="/logo.png"
+                alt=""
+                className="w-8 h-8 rounded-xl object-cover ring-1 ring-slate-200 shadow-xs"
+              />
+              <span className="font-display font-black text-lg text-slate-900 tracking-tight">
+                Mer<span className="text-blue-600">Donghua</span>
+              </span>
             </Link>
             <button
               onClick={toggleSidebar}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-text-secondary hover:text-text-primary transition-colors duration-200"
+              className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
               aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
@@ -151,7 +157,7 @@ export function Sidebar() {
           </div>
 
           {/* Sidebar Navigation */}
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
             {sidebarItems
               .filter((item) => item.visible)
               .map((item) => {
@@ -162,14 +168,18 @@ export function Sidebar() {
                   <div key={item.label} className="space-y-1">
                     <Link
                       to={item.to}
-                      onClick={() => toggleSidebar()}
-                      className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200
-                                ${isActive
-                                  ? 'bg-accent-primary text-white shadow-md'
-                                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}`}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        toggleSidebar();
+                      }}
+                      className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-150 cursor-pointer ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100/80'
+                      }`}
                     >
-                      <IconComp className="h-4 w-4 shrink-0" />
-                      <span>{item.label}</span>
+                      <IconComp className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                      <span>{translate(item.label, language)}</span>
                     </Link>
 
                     {item.children && (
@@ -181,11 +191,15 @@ export function Sidebar() {
                             <Link
                               key={sub.to}
                               to={sub.to}
-                              onClick={() => toggleSidebar()}
-                              className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-                                        ${isSubActive
-                                          ? 'text-accent-primary bg-accent-primary/10'
-                                          : 'text-text-secondary/80 hover:text-text-primary hover:bg-white/5'}`}
+                              onClick={() => {
+                                triggerHaptic('light');
+                                toggleSidebar();
+                              }}
+                              className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                                isSubActive
+                                  ? 'text-blue-600 bg-blue-50 font-bold'
+                                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                              }`}
                             >
                               <SubIcon className="h-3.5 w-3.5 shrink-0" />
                               <span>{sub.label}</span>
@@ -200,18 +214,22 @@ export function Sidebar() {
           </nav>
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="pt-4 border-t border-border-subtle">
-          <div className="flex items-center space-x-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-accent-primary/20 flex items-center justify-center text-accent-primary font-bold text-xs">
-              {(user?.username || user?.email?.split('@')[0] || 'G').toUpperCase().charAt(0)}
+        {/* Sidebar Footer User Info */}
+        <div className="pt-4 border-t border-slate-100">
+          <div className="flex items-center space-x-3 px-2 py-2 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt="" className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                (user?.username || user?.email?.split('@')[0] || 'G').toUpperCase().charAt(0)
+              )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-text-primary truncate">
-                {user?.username || user?.email?.split('@')[0] || 'Guest'}
+              <p className="text-xs font-bold text-slate-900 truncate">
+                {user?.username || user?.email?.split('@')[0] || (isAuthenticated ? 'Member' : 'Guest Viewer')}
               </p>
-              <p className="text-[10px] text-text-secondary/70 truncate">
-                {isOwnerUser ? 'Owner' : isAdminUser ? 'Admin' : isStaffUser ? 'Staff' : isAuthenticated ? 'Member' : 'Visitor'}
+              <p className="text-[10px] text-slate-500 font-medium truncate">
+                {isOwnerUser ? 'Platform Owner' : isAdminUser ? 'Administrator' : isStaffUser ? 'Staff' : user?.is_vip_active ? 'VIP Member' : 'Standard'}
               </p>
             </div>
           </div>
@@ -220,3 +238,5 @@ export function Sidebar() {
     </>
   );
 }
+
+export default Sidebar;

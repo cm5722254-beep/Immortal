@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { Sparkles, ChevronRight } from 'lucide-react';
 
 const REALTIME_UPDATES = [
-  { id: 1, text: '🔥 អ្នកបួសបះបោរ (Renegade Immortal) — ភាគថ្មីចាក់ផ្សាយកម្រិត 4K Ultra HD សំឡេងខ្មែរ!', slug: 'renegade-immortal', ep: 12 },
-  { id: 2, text: '⚡ ពិភពដ៏ល្អឥតខ្ចោះ (Perfect World) — ស៊ីហាវ បញ្ចេញក្បាច់គុណគុនប៉េងបំបែកមេឃា!', slug: 'perfect-world', ep: 10 },
-  { id: 3, text: '⚔️ ដាវទេពប្រយុទ្ធមេឃា (BTTH) — សៀវយាន ស្រូបយកអណ្តាតភ្លើងឋានសួគ៌ជោគជ័យ!', slug: 'battle-through-the-heavens', ep: 8 },
-  { id: 4, text: '🌟 ដំណើរផ្សងព្រេងរបស់បុរសសាមញ្ញ (RMJI) — ហានលី ឈានជើងចូលក្នុងពិភពមន្តអាគមថ្មី!', slug: 'a-record-of-a-mortals-journey-to-immortality', ep: 10 },
+  { id: 1, text: 'អ្នកបួសបះបោរ (Renegade Immortal) — ភាគថ្មីចាក់ផ្សាយកម្រិត 4K Ultra HD សំឡេងខ្មែរ!', slug: 'renegade-immortal', ep: 12 },
+  { id: 2, text: 'ពិភពដ៏ល្អឥតខ្ចោះ (Perfect World) — ស៊ីហាវ បញ្ចេញក្បាច់គុណគុនប៉េងបំបែកមេឃា!', slug: 'perfect-world', ep: 10 },
+  { id: 3, text: 'ដាវទេពប្រយុទ្ធមេឃា (BTTH) — សៀវយាន ស្រូបយកអណ្តាតភ្លើងឋានសួគ៌ជោគជ័យ!', slug: 'battle-through-the-heavens', ep: 8 },
+  { id: 4, text: 'ដំណើរផ្សងព្រេងរបស់បុរសសាមញ្ញ (RMJI) — ហានលី ឈានជើងចូលក្នុងពិភពមន្តអាគមថ្មី!', slug: 'a-record-of-a-mortals-journey-to-immortality', ep: 10 },
 ];
 
 export function LiveTicker() {

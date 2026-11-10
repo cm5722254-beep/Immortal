@@ -23,8 +23,8 @@ export function MovieTrailersSection({ items }: MovieTrailersSectionProps) {
             <Film className="w-4 h-4" />
           </span>
           <div>
-            <h2 className="font-display font-black text-lg sm:text-xl md:text-2xl text-white tracking-wide flex items-center gap-2">
-              <span>🎬 ឈុតខ្លីៗភាពយន្តថ្មីៗ (Movie Trailers)</span>
+            <h2 className="font-display font-black text-lg sm:text-xl md:text-2xl text-text-primary tracking-wide flex items-center gap-2">
+              <span>ឈុតខ្លីៗភាពយន្តថ្មីៗ (Movie Trailers)</span>
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 hidden sm:inline">
                 NEW TRAILERS
               </span>

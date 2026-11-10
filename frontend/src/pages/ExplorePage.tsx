@@ -103,35 +103,35 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
   const title = isFreeOnly
     ? 'Free Zone'
     : defaultType === 'DONGHUA'
-    ? '🇨🇳 Donghua 3D'
+    ? 'Donghua 3D'
     : defaultType === 'DRAMA'
-    ? '🎭 Drama'
+    ? 'Drama'
     : defaultType === 'MOVIE'
-    ? '🎬 Movies'
+    ? 'Movies'
     : defaultType === 'ANIME'
-    ? '🇯🇵 Japanese anime'
+    ? 'Japanese anime'
     : 'All titles';
 
   return (
-    <main className="website-catalog min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-black text-gray-100">
+    <main className="website-catalog min-h-screen pt-16 sm:pt-20 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-bg-base text-text-primary">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight mb-1">{translate(title, appLanguage)}</h1>
-        <p className="text-gray-400 text-xs sm:text-sm">{total.toLocaleString()} {translate('Total titles', appLanguage)}</p>
+        <h1 className="font-display font-black text-2xl sm:text-3xl text-text-primary tracking-tight mb-1">{translate(title, appLanguage)}</h1>
+        <p className="text-text-secondary text-xs sm:text-sm">{total.toLocaleString()} {translate('Total titles', appLanguage)}</p>
       </div>
 
       {/* ── Responsive Khmer Filter Toolbar ── */}
-      <div className="mb-8 space-y-3 bg-[#0a0a0a]/90 p-3.5 sm:p-4 rounded-2xl border border-white/5 backdrop-blur-xl shadow-lg">
+      <div className="mb-8 space-y-3 bg-bg-card p-3.5 sm:p-4 rounded-2xl border border-border-subtle backdrop-blur-xl shadow-sm">
         {/* Type selector (Only if not fixed by route) */}
         {!defaultType && !isFreeOnly && (
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            <span className="text-xs font-bold text-gray-400 mr-1 shrink-0">{translate('Category:', appLanguage)}</span>
+            <span className="text-xs font-bold text-text-secondary mr-1 shrink-0">{translate('Category:', appLanguage)}</span>
             {[
               { id: 'ALL', label: 'All' },
-              { id: 'DONGHUA', label: '🇨🇳 Donghua 3D' },
-              { id: 'ANIME', label: '🇯🇵 Japanese anime' },
-              { id: 'MOVIE', label: '🍿 Movies' },
-              { id: 'DRAMA', label: '🎭 Drama' },
+              { id: 'DONGHUA', label: 'Donghua 3D' },
+              { id: 'ANIME', label: 'Japanese anime' },
+              { id: 'MOVIE', label: 'Movies' },
+              { id: 'DRAMA', label: 'Drama' },
             ].map((t) => {
               const active = (!type && t.id === 'ALL') || type === t.id;
               return (
@@ -140,8 +140,8 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
                   onClick={() => updateFilter('type', t.id)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                     active
-                      ? 'bg-gradient-to-r from-gray-800 to-gray-700 text-white shadow-md'
-                      : 'bg-[#111] hover:bg-white/10 text-gray-300 border border-white/5'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/80 shadow-xs'
                   }`}
                 >
                   {translate(t.label, appLanguage)}
@@ -156,11 +156,11 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
           {/* Access Filter */}
           {!isFreeOnly && (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-gray-400">{translate('Access:', appLanguage)}</span>
+              <span className="text-xs font-bold text-slate-500">{translate('Access:', appLanguage)}</span>
               {[
                 { id: 'ALL', label: 'All' },
-                { id: 'free', label: '🆓 Free' },
-                { id: 'vip', label: '⭐ VIP' },
+                { id: 'free', label: 'Free' },
+                { id: 'vip', label: 'VIP' },
               ].map((a) => {
                 const active = (!access && a.id === 'ALL') || access === a.id;
                 return (
@@ -169,8 +169,8 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
                     onClick={() => updateFilter('access', a.id)}
                     className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                       active
-                        ? 'bg-amber-500/25 text-amber-300 border border-amber-400/50 shadow'
-                        : 'bg-[#131d36] hover:bg-white/10 text-gray-300 border border-white/5'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-xs'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/80 shadow-xs'
                     }`}
                   >
                     {translate(a.label, appLanguage)}
@@ -180,29 +180,29 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
             </div>
           )}
 
-          {genres.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">{translate('Genre', appLanguage)}
-            <select value={genre} onChange={(event) => updateFilter('genre', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
+          {genres.length > 0 && <label className="flex items-center gap-2 text-xs text-slate-500">{translate('Genre', appLanguage)}
+            <select value={genre} onChange={(event) => updateFilter('genre', event.target.value)} className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 shadow-xs focus:ring-1 focus:ring-blue-500">
               <option value="">{translate('All genres', appLanguage)}</option>{genres.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}
             </select>
           </label>}
-          <label className="flex items-center gap-2 text-xs text-gray-400">{translate('Year', appLanguage)}
-            <select value={year} onChange={(event) => updateFilter('year', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
+          <label className="flex items-center gap-2 text-xs text-slate-500">{translate('Year', appLanguage)}
+            <select value={year} onChange={(event) => updateFilter('year', event.target.value)} className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 shadow-xs focus:ring-1 focus:ring-blue-500">
               <option value="">{translate('All years', appLanguage)}</option>{Array.from({ length: 10 }, (_, index) => new Date().getFullYear() - index).map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
-          {countries.length > 0 && <label className="flex items-center gap-2 text-xs text-gray-400">{translate('Region', appLanguage)}
-            <select value={country} onChange={(event) => updateFilter('country', event.target.value)} className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white">
+          {countries.length > 0 && <label className="flex items-center gap-2 text-xs text-slate-500">{translate('Region', appLanguage)}
+            <select value={country} onChange={(event) => updateFilter('country', event.target.value)} className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 shadow-xs focus:ring-1 focus:ring-blue-500">
               <option value="">{translate('All regions', appLanguage)}</option>{countries.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>}
 
           {/* Sort Selector */}
           <div className="flex items-center gap-1.5 ml-auto">
-            <span className="text-xs font-bold text-gray-400">{translate('Sort:', appLanguage)}</span>
+            <span className="text-xs font-bold text-slate-500">{translate('Sort:', appLanguage)}</span>
             <select
               value={sort}
               onChange={(e) => updateFilter('sort', e.target.value)}
-              className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-gray-500 transition-colors cursor-pointer"
+              className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 shadow-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors cursor-pointer"
             >
               <option value="latest">{translate('Latest', appLanguage)}</option>
               <option value="popular">{translate('Popular', appLanguage)}</option>

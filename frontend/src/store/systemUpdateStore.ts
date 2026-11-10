@@ -28,7 +28,7 @@ interface SystemUpdateState {
 const DEFAULT_CONFIG: SystemUpdateConfig = {
   enabled: false,
   allow_vip: false,
-  title: '🚀 Website កំពុង Update ជំនាន់ថ្មី',
+  title: 'Website កំពុង Update ជំនាន់ថ្មី',
   message: 'យើងខ្ញុំកំពុងធ្វើការអាប់ដេតប្រព័ន្ធ និងបន្ថែមមុខងារថ្មីៗ ដើម្បីផ្ដល់នូវបទពិសោធន៍ទស្សនាកាន់តែរលូន និងល្អបំផុតជូនប្រិយមិត្តទាំងអស់គ្នា! សូមអភ័យទោសចំពោះការរំខាន។',
   version: 'v2.5.0 Update',
   eta: 'នឹងរួចរាល់ក្នុងពេលឆាប់ៗនេះ',

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Info, ChevronLeft, ChevronRight, Star, Sparkles, Flame, Film, Crown, Send } from 'lucide-react';
+import { Play, Info, ChevronLeft, ChevronRight, Star, Sparkles, Flame, Film, Crown, Send, Volume2, VolumeX, Pause } from 'lucide-react';
 import type { Banner, Anime } from '../../types';
 import { getVipContactUrl } from '../../utils/vip';
 
@@ -71,13 +71,15 @@ export function HeroBanner({ banners, anime }: HeroBannerProps) {
             className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-bold border border-white/20 backdrop-blur-md transition flex items-center gap-1.5 shadow-lg"
             title={isMuted ? "បើកសំឡេង" : "បិទសំឡេង"}
           >
-            {isMuted ? "🔇 សំឡេងបិទ" : "🔊 សំឡេងបើក"}
+            {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            <span>{isMuted ? "សំឡេងបិទ" : "សំឡេងបើក"}</span>
           </button>
           <button
             onClick={() => setIsPlayingVideo(!isPlayingVideo)}
             className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-bold border border-white/20 backdrop-blur-md transition flex items-center gap-1.5 shadow-lg"
           >
-            {isPlayingVideo ? "⏸️ មើលរូបភាព" : "▶️ មើលវីដេអូ"}
+            {isPlayingVideo ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            <span>{isPlayingVideo ? "មើលរូបភាព" : "មើលវីដេអូ"}</span>
           </button>
         </div>
       )}
@@ -99,7 +101,7 @@ export function HeroBanner({ banners, anime }: HeroBannerProps) {
             <div className="flex flex-wrap items-center gap-2">
               <span className="badge bg-gradient-to-r from-red-600 to-amber-600 text-white font-black text-xs py-1 px-3 shadow-lg shadow-red-600/30 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 fill-white" />
-                {item?.type === 'DONGHUA' ? '🇨🇳 DONGHUA 3D' : '🇯🇵 ANIME'}
+                {item?.type === 'DONGHUA' ? 'DONGHUA 3D' : 'ANIME'}
               </span>
 
               <span className="badge-4k">4K UHD</span>

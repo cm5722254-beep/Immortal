@@ -17,6 +17,19 @@ THEMES_FILE = os.path.join(os.path.dirname(__file__), "..", "core", "site_theme.
 
 SUPPORTED_THEMES = [
     {
+        "id": "pure-white",
+        "name": "iOS Pure White Glass (ពណ៌ស)",
+        "name_en": "iOS Pure White Glass",
+        "bg_base": "#F8FAFC",
+        "bg_card": "#FFFFFF",
+        "bg_card_subtle": "#F1F5F9",
+        "border": "#E2E8F0",
+        "accent": "#2563EB",
+        "text_primary": "#0F172A",
+        "text_secondary": "#64748B",
+        "description": "Ultra clean modern iOS white frosted glass theme"
+    },
+    {
         "id": "midnight-slate",
         "name": "Midnight Slate (លំនាំដើម)",
         "name_en": "Midnight Slate (Default)",
@@ -146,12 +159,12 @@ def load_theme_setting() -> str:
         if os.path.exists(THEMES_FILE):
             with open(THEMES_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                theme_id = data.get("theme_id", "midnight-slate")
+                theme_id = data.get("theme_id", "pure-white")
                 if any(t["id"] == theme_id for t in SUPPORTED_THEMES):
                     return theme_id
     except Exception as e:
         logger.warning(f"Failed to read theme file: {e}")
-    return "midnight-slate"
+    return "pure-white"
 
 
 def save_theme_setting(theme_id: str):

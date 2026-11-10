@@ -119,7 +119,7 @@ export function MaintenancePage({ isVipOnlyMode }: { isVipOnlyMode?: boolean } =
         {/* Primary Heading */}
         <h2 className="font-display font-black text-2xl sm:text-4xl text-white tracking-tight leading-tight max-w-2xl">
           {isVipMode
-            ? '👑 Website បើកសម្រាប់តែសមាជិក VIP ប៉ុណ្ណោះ'
+            ? 'Website បើកសម្រាប់តែសមាជិក VIP ប៉ុណ្ណោះ'
             : (config.title || 'Website កំពុង Update ជំនាន់ថ្មី')}
         </h2>
 

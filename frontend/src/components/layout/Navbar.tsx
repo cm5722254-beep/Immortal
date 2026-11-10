@@ -600,7 +600,7 @@ export function Navbar() {
                       }`}
                     >
                       <Shield className={`w-4 h-4 ${isOwnerUser ? 'text-amber-400 fill-amber-400/20' : isStaffUser ? 'text-cyan-400' : 'text-amber-400'}`} />
-                      <span>{isOwnerUser ? '👑 ផ្ទាំងគ្រប់គ្រង Owner' : isStaffUser ? 'ផ្ទាំងគ្រប់គ្រង Staff' : 'ផ្ទាំងគ្រប់គ្រង Admin'}</span>
+                      <span>{isOwnerUser ? 'ផ្ទាំងគ្រប់គ្រង Owner' : isStaffUser ? 'ផ្ទាំងគ្រប់គ្រង Staff' : 'ផ្ទាំងគ្រប់គ្រង Admin'}</span>
                     </Link>
                   )}
 

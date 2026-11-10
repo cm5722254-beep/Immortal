@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import {
   Key, Plus, Copy, Check, Trash2, ToggleLeft, ToggleRight,
-  Play, Sparkles, RefreshCw, Layers, Database, Lock, AlertCircle
+  Play, Sparkles, RefreshCw, Layers, Database, Lock, AlertCircle, X
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { apiKeyService } from '../../services/apiKeyService';
 import type { ApiKeyItem, SignStreamResult } from '../../services/apiKeyService';
+
+const INPUT_CLASS =
+  'w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all';
 
 export function AdminApiKeysPage() {
   const [activeTab, setActiveTab] = useState<'keys' | 'stream' | 'bulk' | 'csv'>('keys');
@@ -77,13 +80,12 @@ export function AdminApiKeysPage() {
       setKeyName('');
       loadKeys();
     } catch (e: any) {
-      console.error("Create API Key error:", e);
+      console.error('Create API Key error:', e);
       showNotification(e.response?.data?.detail || 'បរាជ័យក្នុងការបង្កើត API Key', 'error');
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleToggleKey = async (id: number) => {
     try {
@@ -202,34 +204,40 @@ export function AdminApiKeysPage() {
         {/* Toast Notification Alert */}
         {feedbackMsg && (
           <div
-            className={`p-3 rounded-xl text-xs font-semibold flex items-center justify-between border transition-all animate-in fade-in slide-in-from-top-2 ${
+            className={`p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between border transition-all ${
               feedbackMsg.type === 'success'
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                : 'bg-red-500/20 text-red-300 border-red-500/30'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-rose-50 text-rose-700 border-rose-200'
             }`}
           >
             <span>{feedbackMsg.text}</span>
-            <button onClick={() => setFeedbackMsg(null)} className="text-white/60 hover:text-white ml-4">✕</button>
+            <button
+              onClick={() => setFeedbackMsg(null)}
+              className="text-current opacity-60 hover:opacity-100 ml-4 p-1 rounded-lg transition-opacity"
+              aria-label="Close notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
         {/* Top Header Card */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-900/40 via-dark-card to-purple-950/40 border border-brand-500/20 p-4 sm:p-6">
+        <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-4 sm:p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-400 border border-brand-500/30">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                   DEVELOPER & STREAM API
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   HMAC-SHA256 Ready
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-                <Key className="w-6 h-6 text-brand-400" />
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <Key className="w-6 h-6 text-blue-600" />
                 API & Video Stream Generator Suite
               </h1>
-              <p className="text-xs sm:text-sm text-gray-400 mt-1">
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 គ្រប់គ្រង API Keys សម្រាប់កម្មវិធី Mobile/Bots, បង្កើត Signed Video URLs ការពារ Hotlinking និង Bulk Import ពី Cloudflare R2
               </p>
             </div>
@@ -240,7 +248,7 @@ export function AdminApiKeysPage() {
                   setCreatedKeyData(null);
                   setNewKeyModal(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm transition-all shadow-lg shadow-brand-500/20 active:scale-95"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all shadow-sm active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 បង្កើត API Key ថ្មី
@@ -249,13 +257,13 @@ export function AdminApiKeysPage() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center gap-2 mt-6 border-b border-dark-border/60 pb-px">
+          <div className="flex flex-wrap items-center gap-2 mt-6 border-b border-slate-200 pb-px">
             <button
               onClick={() => setActiveTab('keys')}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
                 activeTab === 'keys'
-                  ? 'border-brand-500 text-brand-400'
-                  : 'border-transparent text-gray-400 hover:text-white'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
             >
               <Key className="w-4 h-4" />
@@ -264,10 +272,10 @@ export function AdminApiKeysPage() {
 
             <button
               onClick={() => setActiveTab('stream')}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
                 activeTab === 'stream'
-                  ? 'border-brand-500 text-brand-400'
-                  : 'border-transparent text-gray-400 hover:text-white'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
             >
               <Lock className="w-4 h-4" />
@@ -276,18 +284,23 @@ export function AdminApiKeysPage() {
 
             <button
               onClick={() => setActiveTab('bulk')}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
                 activeTab === 'bulk'
-                  ? 'border-brand-500 text-brand-400'
-                  : 'border-transparent text-gray-400 hover:text-white'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
             >
               <Layers className="w-4 h-4" />
               R2 Bulk Importer
             </button>
+
             <button
               onClick={() => setActiveTab('csv')}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-all ${activeTab === 'csv' ? 'border-brand-500 text-brand-400' : 'border-transparent text-gray-400 hover:text-white'}`}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
+                activeTab === 'csv'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
             >
               <Database className="w-4 h-4" /> CSV Match & Import
             </button>
@@ -297,30 +310,31 @@ export function AdminApiKeysPage() {
         {/* TAB 1: API KEYS LIST */}
         {activeTab === 'keys' && (
           <div className="space-y-4">
-            <div className="bg-dark-card border border-dark-border rounded-xl overflow-hidden shadow-xl">
-              <div className="p-4 border-b border-dark-border flex items-center justify-between">
+            <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Key className="w-4 h-4 text-brand-400" />
-                  <h2 className="text-sm font-semibold text-white">បញ្ជី Active API Keys ទាំងអស់</h2>
+                  <Key className="w-4 h-4 text-blue-600" />
+                  <h2 className="text-sm font-semibold text-slate-900">បញ្ជី Active API Keys ទាំងអស់</h2>
                 </div>
                 <button
                   onClick={loadKeys}
                   disabled={loading}
-                  className="p-1.5 rounded-lg bg-dark-bg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+                  className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900 transition-colors"
+                  title="Refresh"
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 </button>
               </div>
 
               {loading && keys.length === 0 ? (
-                <div className="p-12 text-center text-gray-400">កំពុងទាញយកទិន្នន័យ...</div>
+                <div className="p-12 text-center text-slate-500 text-sm">កំពុងទាញយកទិន្នន័យ...</div>
               ) : keys.length === 0 ? (
                 <div className="p-12 text-center">
-                  <Key className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">មិនទាន់មាន API Key ណាមួយត្រូវបានបង្កើតនៅឡើយទេ</p>
+                  <Key className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500 text-sm">មិនទាន់មាន API Key ណាមួយត្រូវបានបង្កើតនៅឡើយទេ</p>
                   <button
                     onClick={() => setNewKeyModal(true)}
-                    className="mt-3 inline-flex items-center gap-1.5 text-xs text-brand-400 hover:underline"
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:underline"
                   >
                     <Plus className="w-3.5 h-3.5" /> ចុចទីនេះដើម្បីបង្កើត Key ដំបូង
                   </button>
@@ -328,7 +342,7 @@ export function AdminApiKeysPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="bg-dark-bg/60 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-dark-border">
+                    <thead className="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="py-3 px-4">ឈ្មោះ Key</th>
                         <th className="py-3 px-4">Key Prefix</th>
@@ -339,33 +353,33 @@ export function AdminApiKeysPage() {
                         <th className="py-3 px-4 text-right">សកម្មភាព</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-dark-border">
+                    <tbody className="divide-y divide-slate-100">
                       {keys.map((k) => (
-                        <tr key={k.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="py-3.5 px-4 font-medium text-white">
+                        <tr key={k.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3.5 px-4 font-medium text-slate-900">
                             {k.name}
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-xs text-brand-300">
+                          <td className="py-3.5 px-4 font-mono text-xs text-blue-600">
                             <code>{k.key_prefix}...</code>
                           </td>
                           <td className="py-3.5 px-4">
                             <div className="flex flex-wrap gap-1">
                               {k.scopes.split(',').map((s) => (
-                                <span key={s} className="px-2 py-0.5 rounded text-[11px] bg-dark-bg border border-dark-border text-gray-300">
+                                <span key={s} className="px-2 py-0.5 rounded text-[11px] bg-slate-50 border border-slate-200 text-slate-700">
                                   {s}
                                 </span>
                               ))}
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-xs text-gray-400">
+                          <td className="py-3.5 px-4 text-xs text-slate-500">
                             <div>បង្កើត៖ {new Date(k.created_at).toLocaleDateString('km-KH')}</div>
                             {k.expires_at ? (
-                              <div className="text-amber-400">ផុតកំណត់៖ {new Date(k.expires_at).toLocaleDateString('km-KH')}</div>
+                              <div className="text-amber-700 font-medium">ផុតកំណត់៖ {new Date(k.expires_at).toLocaleDateString('km-KH')}</div>
                             ) : (
-                              <div className="text-emerald-400">គ្មានថ្ងៃផុតកំណត់</div>
+                              <div className="text-emerald-600 font-medium">គ្មានថ្ងៃផុតកំណត់</div>
                             )}
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-xs text-gray-300">
+                          <td className="py-3.5 px-4 font-mono text-xs text-slate-700">
                             {k.request_count.toLocaleString()} calls
                           </td>
                           <td className="py-3.5 px-4">
@@ -373,8 +387,8 @@ export function AdminApiKeysPage() {
                               onClick={() => handleToggleKey(k.id)}
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
                                 k.is_active
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                  : 'bg-red-500/10 text-red-400 border-red-500/30'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
                               }`}
                             >
                               {k.is_active ? <ToggleRight className="w-3.5 h-3.5" /> : <ToggleLeft className="w-3.5 h-3.5" />}
@@ -384,7 +398,7 @@ export function AdminApiKeysPage() {
                           <td className="py-3.5 px-4 text-right">
                             <button
                               onClick={() => handleDeleteKey(k.id)}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                               title="Revoke / Delete Key"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -399,19 +413,19 @@ export function AdminApiKeysPage() {
             </div>
 
             {/* Quick Integration Docs */}
-            <div className="bg-dark-card border border-dark-border rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-blue-600" />
                 របៀបប្រើប្រាស់ API Key ក្នុង Client / Mobile App
               </h3>
-              <p className="text-xs text-gray-400 mb-3">
+              <p className="text-xs text-slate-500 mb-3">
                 បញ្ចូល API Key ក្នុង HTTP Header តាមវិធីមួយក្នុងចំណោមពីរខាងក្រោម៖
               </p>
-              <div className="bg-dark-bg rounded-lg p-3 font-mono text-xs text-gray-300 space-y-1.5 border border-dark-border">
-                <p className="text-brand-400"># ជម្រើស ១៖ បញ្ចូលតាម X-API-Key Header</p>
-                <p className="text-emerald-300">curl -H "X-API-Key: rit_live_your_key_here" https://yourdomain.com/api/anime</p>
-                <p className="text-brand-400 pt-2"># ជម្រើស ២៖ បញ្ចូលតាម Bearer Token</p>
-                <p className="text-emerald-300">curl -H "Authorization: Bearer rit_live_your_key_here" https://yourdomain.com/api/anime</p>
+              <div className="bg-slate-50 rounded-xl p-3.5 font-mono text-xs text-slate-700 space-y-1.5 border border-slate-200 overflow-x-auto">
+                <p className="text-slate-500"># ជម្រើស ១៖ បញ្ចូលតាម X-API-Key Header</p>
+                <p className="text-blue-700">curl -H "X-API-Key: rit_live_your_key_here" https://yourdomain.com/api/anime</p>
+                <p className="text-slate-500 pt-2"># ជម្រើស ២៖ បញ្ចូលតាម Bearer Token</p>
+                <p className="text-blue-700">curl -H "Authorization: Bearer rit_live_your_key_here" https://yourdomain.com/api/anime</p>
               </div>
             </div>
           </div>
@@ -420,36 +434,36 @@ export function AdminApiKeysPage() {
         {/* TAB 2: SIGNED STREAM GENERATOR */}
         {activeTab === 'stream' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-dark-card border border-dark-border rounded-xl p-6 shadow-xl space-y-4">
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-brand-400" />
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-blue-600" />
                   បង្កើត Signed Stream URL សម្រាប់ Episode
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   បង្កើត URL ដែលមានសុពលភាពតាមម៉ោងកំណត់ (ការពារការលួចចម្លង និង Hotlink ពី Website ដទៃ)
                 </p>
               </div>
 
               <form onSubmit={handleGenerateSignedStream} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Episode ID (លេខសម្គាល់ភាគ):</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Episode ID (លេខសម្គាល់ភាគ):</label>
                   <input
                     type="number"
                     value={streamEpId}
                     onChange={(e) => setStreamEpId(e.target.value ? Number(e.target.value) : '')}
                     placeholder="ឧទាហរណ៍៖ 1, 10, 105..."
                     required
-                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 font-mono"
+                    className={`${INPUT_CLASS} font-mono`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">សុពលភាព (Duration):</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">សុពលភាព (Duration):</label>
                   <select
                     value={streamExpiryHours}
                     onChange={(e) => setStreamExpiryHours(Number(e.target.value))}
-                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
+                    className={INPUT_CLASS}
                   >
                     <option value={1}>១ ម៉ោង (1 Hour)</option>
                     <option value={6}>៦ ម៉ោង (6 Hours)</option>
@@ -462,7 +476,7 @@ export function AdminApiKeysPage() {
                 <button
                   type="submit"
                   disabled={signLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-all shadow-lg shadow-brand-500/20 active:scale-95 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-50"
                 >
                   {signLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   Generate Signed Video URL
@@ -471,61 +485,61 @@ export function AdminApiKeysPage() {
             </div>
 
             {/* Signed Stream Result Card */}
-            <div className="bg-dark-card border border-dark-border rounded-xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-3">
-                  <Play className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-3">
+                  <Play className="w-4 h-4 text-emerald-600" />
                   លទ្ធផល Signed Stream Link
                 </h3>
 
                 {signResult ? (
                   <div className="space-y-4">
                     <div>
-                      <span className="text-xs text-gray-400 block mb-1">Full Signed Stream URL:</span>
-                      <div className="flex items-center gap-2 bg-dark-bg border border-brand-500/30 rounded-xl p-3">
+                      <span className="text-xs text-slate-500 block mb-1.5">Full Signed Stream URL:</span>
+                      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
                         <input
                           type="text"
                           readOnly
                           value={signResult.signed_url}
-                          className="w-full bg-transparent text-xs text-emerald-400 font-mono focus:outline-none"
+                          className="w-full bg-transparent text-xs text-blue-700 font-mono focus:outline-none"
                         />
                         <button
                           onClick={() => handleCopy(signResult.signed_url, 'signed_url')}
-                          className="p-1.5 rounded-lg bg-brand-500/20 hover:bg-brand-500/30 text-brand-300"
+                          className="p-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors"
                           title="Copy Link"
                         >
-                          {copiedKey === 'signed_url' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          {copiedKey === 'signed_url' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs bg-dark-bg/60 p-3 rounded-xl border border-dark-border">
+                    <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200">
                       <div>
-                        <span className="text-gray-500 block">Episode ID:</span>
-                        <span className="text-white font-mono">{signResult.episode_id}</span>
+                        <span className="text-slate-500 block">Episode ID:</span>
+                        <span className="text-slate-900 font-mono font-semibold">{signResult.episode_id}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500 block">ផុតកំណត់នៅ៖</span>
-                        <span className="text-amber-400 font-mono">
+                        <span className="text-slate-500 block">ផុតកំណត់នៅ៖</span>
+                        <span className="text-amber-700 font-mono font-medium">
                           {new Date(signResult.expires_at * 1000).toLocaleString('km-KH')}
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <span className="text-xs text-gray-400 block mb-1">Test Playback in Browser:</span>
+                      <span className="text-xs text-slate-500 block mb-1.5">Test Playback in Browser:</span>
                       <video
                         src={signResult.signed_url}
                         controls
-                        className="w-full rounded-xl bg-black max-h-44 object-contain border border-dark-border"
+                        className="w-full rounded-xl bg-slate-900 max-h-44 object-contain border border-slate-200"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="h-64 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-dark-border rounded-xl">
-                    <Lock className="w-10 h-10 text-gray-600 mb-2" />
-                    <p className="text-sm text-gray-400">មិនទាន់មានលទ្ធផលនៅឡើយទេ</p>
-                    <p className="text-xs text-gray-500 mt-1">សូមបញ្ចូល Episode ID រួចចុច Generate នៅខាងឆ្វេង</p>
+                  <div className="h-64 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
+                    <Lock className="w-10 h-10 text-slate-300 mb-2" />
+                    <p className="text-sm font-medium text-slate-600">មិនទាន់មានលទ្ធផលនៅឡើយទេ</p>
+                    <p className="text-xs text-slate-500 mt-1">សូមបញ្ចូល Episode ID រួចចុច Generate នៅខាងឆ្វេង</p>
                   </div>
                 )}
               </div>
@@ -535,32 +549,32 @@ export function AdminApiKeysPage() {
 
         {/* TAB 3: BULK R2 IMPORTER */}
         {activeTab === 'bulk' && (
-          <div className="bg-dark-card border border-dark-border rounded-xl p-6 shadow-xl space-y-4">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Layers className="w-5 h-5 text-brand-400" />
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-blue-600" />
                 Bulk Episode Importer ពី Cloudflare R2
               </h2>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 បិទភ្ជាប់ (Paste) បញ្ជី Link វីដេអូច្រើនភាគក្នុងពេលតែមួយ ដើម្បី Add ចូល Database ស្វ័យប្រវត្តិតែមួយ Click
               </p>
             </div>
 
             <form onSubmit={handleBulkImport} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Target Anime ID:</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Target Anime ID:</label>
                 <input
                   type="number"
                   value={bulkAnimeId}
                   onChange={(e) => setBulkAnimeId(e.target.value ? Number(e.target.value) : '')}
                   placeholder="លេខសម្គាល់ Anime ID..."
                   required
-                  className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 font-mono"
+                  className={`${INPUT_CLASS} font-mono`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   បញ្ជី Link វីដេអូ (១ ជួរ = ១ ភាគ ឬទម្រង់ "1: https://..."):
                 </label>
                 <textarea
@@ -569,14 +583,14 @@ export function AdminApiKeysPage() {
                   onChange={(e) => setBulkText(e.target.value)}
                   placeholder={`ឧទាហរណ៍៖\n1: https://pub-fce349e1462e4f23abc8af60429b3126.r2.dev/episode_1.mp4\n2: https://pub-fce349e1462e4f23abc8af60429b3126.r2.dev/episode_2.mp4\n3: https://pub-fce349e1462e4f23abc8af60429b3126.r2.dev/episode_3.mp4`}
                   required
-                  className="w-full bg-dark-bg border border-dark-border rounded-xl p-4 text-xs font-mono text-emerald-400 focus:outline-none focus:border-brand-500 leading-relaxed"
+                  className="w-full bg-white border border-slate-200 rounded-xl p-4 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 leading-relaxed transition-all"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={bulkLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-purple-600 hover:from-brand-600 hover:to-purple-700 text-white font-semibold text-sm transition-all shadow-lg shadow-brand-500/20 active:scale-95 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-50"
               >
                 {bulkLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
                 Import គ្រប់ភាគទាំងអស់ចូល Database
@@ -584,44 +598,107 @@ export function AdminApiKeysPage() {
             </form>
 
             {bulkResult && (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300">
-                🎉 បាន Import ជោគជ័យ៖ បន្ថែមថ្មី <strong>{bulkResult.added}</strong> ភាគ និង Update <strong>{bulkResult.updated}</strong> ភាគ!
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700">
+                បាន Import ជោគជ័យ៖ បន្ថែមថ្មី <strong>{bulkResult.added}</strong> ភាគ និង Update <strong>{bulkResult.updated}</strong> ភាគ!
               </div>
             )}
           </div>
         )}
 
+        {/* TAB 4: CSV IMPORT */}
         {activeTab === 'csv' && (
-          <div className="max-w-4xl space-y-4 rounded-xl border border-dark-border bg-dark-card p-5 shadow-xl sm:p-6">
+          <div className="max-w-4xl space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
             <div>
-              <h2 className="flex items-center gap-2 text-lg font-bold text-white"><Database className="h-5 w-5 text-emerald-400" /> CSV Episode Link Import</h2>
-              <p className="mt-1 text-xs leading-relaxed text-gray-400">Match by Anime ID or exact catalog title / verified alias plus episode number. Pending uploads are skipped. Preview first; applying updates existing links and adds missing episodes.</p>
+              <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                <Database className="h-5 w-5 text-blue-600" /> CSV Episode Link Import
+              </h2>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                Match by Anime ID or exact catalog title / verified alias plus episode number. Pending uploads are skipped. Preview first; applying updates existing links and adds missing episodes.
+              </p>
             </div>
-            <label className="block text-xs font-semibold text-gray-300">Upload CSV file
-              <input type="file" accept=".csv,text/csv" onChange={(event) => { setCsvFile(event.target.files?.[0] || null); setCsvPreview(null); }} className="mt-2 block w-full rounded-lg border border-dark-border bg-dark-bg p-3 text-xs text-gray-200 file:mr-3 file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white" />
+            <label className="block text-xs font-semibold text-slate-700">
+              Upload CSV file
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={(event) => {
+                  setCsvFile(event.target.files?.[0] || null);
+                  setCsvPreview(null);
+                }}
+                className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-100"
+              />
             </label>
-            {csvFile && <p className="font-mono text-xs text-gray-400">{csvFile.name} · {(csvFile.size / 1024).toFixed(1)} KB</p>}
+            {csvFile && (
+              <p className="font-mono text-xs text-slate-500">
+                {csvFile.name} · {(csvFile.size / 1024).toFixed(1)} KB
+              </p>
+            )}
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => handleCsvImport(false)} disabled={csvLoading || !csvFile} className="rounded-lg border border-emerald-400/30 px-4 py-2.5 text-xs font-bold text-emerald-300 disabled:opacity-50">{csvLoading ? 'Checking…' : 'Preview matches'}</button>
-              <button onClick={() => handleCsvImport(true)} disabled={csvLoading || !csvFile || !csvPreview?.counts || (csvPreview?.conflicts?.length ?? 0) > 0} className="rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-black disabled:opacity-50">Apply CSV updates</button>
+              <button
+                onClick={() => handleCsvImport(false)}
+                disabled={csvLoading || !csvFile}
+                className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 transition-colors disabled:opacity-50"
+              >
+                {csvLoading ? 'Checking...' : 'Preview matches'}
+              </button>
+              <button
+                onClick={() => handleCsvImport(true)}
+                disabled={csvLoading || !csvFile || !csvPreview?.counts || (csvPreview?.conflicts?.length ?? 0) > 0}
+                className="rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+              >
+                Apply CSV updates
+              </button>
             </div>
             {csvPreview?.counts && (
-              <div className="space-y-3 border-t border-white/10 pt-4">
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="bg-white/5 p-3"><strong className="block text-emerald-300">{csvPreview.counts.add}</strong><span className="text-gray-400">Add</span></div>
-                  <div className="bg-white/5 p-3"><strong className="block text-amber-300">{csvPreview.counts.update}</strong><span className="text-gray-400">Update</span></div>
-                  <div className="bg-white/5 p-3"><strong className="block text-gray-300">{csvPreview.counts.unchanged}</strong><span className="text-gray-400">Unchanged</span></div>
+              <div className="space-y-3 border-t border-slate-200 pt-4">
+                <div className="grid grid-cols-3 gap-2.5 text-center text-xs">
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                    <strong className="block text-base text-emerald-700">{csvPreview.counts.add}</strong>
+                    <span className="text-slate-500">Add</span>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                    <strong className="block text-base text-amber-700">{csvPreview.counts.update}</strong>
+                    <span className="text-slate-500">Update</span>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                    <strong className="block text-base text-slate-700">{csvPreview.counts.unchanged}</strong>
+                    <span className="text-slate-500">Unchanged</span>
+                  </div>
                 </div>
-                {!!csvPreview.conflicts?.length && <div className="border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-200">Conflicts must be resolved before applying: {csvPreview.conflicts.length}</div>}
-                <div className="max-h-72 overflow-auto border border-white/10">
+                {!!csvPreview.conflicts?.length && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+                    Conflicts must be resolved before applying: {csvPreview.conflicts.length}
+                  </div>
+                )}
+                <div className="max-h-72 overflow-auto rounded-xl border border-slate-200 divide-y divide-slate-100">
                   {(csvPreview.preview || []).slice(0, 100).map((item: any, index: number) => (
-                    <div key={`${item.anime_id}-${item.episode_number}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 border-b border-white/5 px-3 py-2 text-xs last:border-0">
-                      <span className="truncate text-gray-200">{item.anime_title} · Ep {item.episode_number}</span><span className={item.action === 'add' ? 'text-emerald-300' : item.action === 'update' ? 'text-amber-300' : 'text-gray-500'}>{item.action}</span>
+                    <div
+                      key={`${item.anime_id}-${item.episode_number}-${index}`}
+                      className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 text-xs hover:bg-slate-50"
+                    >
+                      <span className="truncate text-slate-800">{item.anime_title} · Ep {item.episode_number}</span>
+                      <span
+                        className={`font-semibold ${
+                          item.action === 'add'
+                            ? 'text-emerald-700'
+                            : item.action === 'update'
+                            ? 'text-amber-700'
+                            : 'text-slate-500'
+                        }`}
+                      >
+                        {item.action}
+                      </span>
                     </div>
                   ))}
-                  {csvPreview.preview_truncated && <p className="p-3 text-xs text-gray-500">Preview truncated to 500 rows.</p>}
+                  {csvPreview.preview_truncated && (
+                    <p className="p-3 text-xs text-slate-500">Preview truncated to 500 rows.</p>
+                  )}
                 </div>
-                {!!csvPreview.skipped?.length && <p className="text-xs text-gray-500">Skipped rows: {csvPreview.skipped.length}. Unmatched or pending rows stay untouched.</p>}
+                {!!csvPreview.skipped?.length && (
+                  <p className="text-xs text-slate-500">
+                    Skipped rows: {csvPreview.skipped.length}. Unmatched or pending rows stay untouched.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -629,30 +706,30 @@ export function AdminApiKeysPage() {
 
         {/* Modal: New Key Created Showcase */}
         {createdKeyData && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-dark-card border border-brand-500/40 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-              <div className="flex items-center gap-3 text-emerald-400">
-                <div className="p-2.5 bg-emerald-500/20 rounded-xl">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-lg w-full shadow-xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl">
                   <Key className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-base">API Key ត្រូវបានបង្កើតជោគជ័យ!</h3>
-                  <p className="text-xs text-gray-400">សូមចម្លងទុកឥឡូវនេះ (វានឹងមិនបង្ហាញម្ដងទៀតឡើយ)</p>
+                  <h3 className="font-bold text-slate-900 text-base">API Key ត្រូវបានបង្កើតជោគជ័យ!</h3>
+                  <p className="text-xs text-slate-500">សូមចម្លងទុកឥឡូវនេះ (វានឹងមិនបង្ហាញម្ដងទៀតឡើយ)</p>
                 </div>
               </div>
 
-              <div className="bg-dark-bg border border-emerald-500/30 rounded-xl p-4 space-y-2">
-                <span className="text-xs text-gray-400 block font-semibold">Your Full Secret API Key:</span>
+              <div className="bg-slate-50 border border-emerald-200 rounded-xl p-4 space-y-2">
+                <span className="text-xs text-slate-600 block font-semibold">Your Full Secret API Key:</span>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     readOnly
                     value={createdKeyData.raw_api_key}
-                    className="w-full bg-transparent font-mono text-sm text-emerald-400 font-bold focus:outline-none"
+                    className="w-full bg-transparent font-mono text-sm text-emerald-700 font-bold focus:outline-none"
                   />
                   <button
                     onClick={() => handleCopy(createdKeyData.raw_api_key || '', 'modal_key')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-all shrink-0"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all shrink-0"
                   >
                     {copiedKey === 'modal_key' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     Copy
@@ -660,14 +737,14 @@ export function AdminApiKeysPage() {
                 </div>
               </div>
 
-              <div className="text-xs text-amber-300/80 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="text-xs text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-200 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
                 <span>ដើម្បីសុវត្ថិភាព API Key ពេញលេញត្រូវបានបង្ហាញតែម្ដងគត់។ ប្រសិនបើបាត់បង់ អ្នកត្រូវ Revoke និងបង្កើត Key ថ្មី។</span>
               </div>
 
               <button
                 onClick={() => setCreatedKeyData(null)}
-                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-sm transition-colors"
+                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-colors"
               >
                 យល់ព្រម និងបិទផ្ទាំងនេះ
               </button>
@@ -677,58 +754,59 @@ export function AdminApiKeysPage() {
 
         {/* Modal: Create Key Form */}
         {newKeyModal && !createdKeyData && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-dark-card border border-dark-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-dark-border pb-3">
-                <h3 className="font-bold text-white text-base flex items-center gap-2">
-                  <Key className="w-5 h-5 text-brand-400" />
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                  <Key className="w-5 h-5 text-blue-600" />
                   បង្កើត API Key ថ្មី
                 </h3>
                 <button
                   onClick={() => setNewKeyModal(false)}
-                  className="text-gray-400 hover:text-white text-sm"
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               <form onSubmit={handleCreateKey} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">ឈ្មោះសម្គាល់ (Friendly Name):</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">ឈ្មោះសម្គាល់ (Friendly Name):</label>
                   <input
                     type="text"
                     value={keyName}
                     onChange={(e) => setKeyName(e.target.value)}
                     placeholder="ឧ. Mobile App Key, Telegram Bot..."
                     required
-                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
+                    className={INPUT_CLASS}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">ថ្ងៃផុតកំណត់ (Expiration in Days):</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">ថ្ងៃផុតកំណត់ (Expiration in Days):</label>
                   <input
                     type="number"
                     value={keyExpiryDays}
                     onChange={(e) => setKeyExpiryDays(e.target.value ? Number(e.target.value) : '')}
                     placeholder="ទទេរសម្រាប់គ្មានថ្ងៃផុតកំណត់"
-                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 font-mono"
+                    className={`${INPUT_CLASS} font-mono`}
                   />
-                  <span className="text-[11px] text-gray-500 mt-1 block">ដាក់ទទេរ ឬ 0 ប្រសិនបើចង់ឱ្យ Key ប្រើបានរហូត</span>
+                  <span className="text-[11px] text-slate-500 mt-1 block">ដាក់ទទេរ ឬ 0 ប្រសិនបើចង់ឱ្យ Key ប្រើបានរហូត</span>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-dark-border">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setNewKeyModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs text-gray-400 hover:text-white"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors"
                   >
                     បោះបង់
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs transition-all shadow-lg shadow-brand-500/20 active:scale-95 disabled:opacity-50"
+                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-all shadow-sm active:scale-95 disabled:opacity-50"
                   >
                     បង្កើត Key ឥឡូវនេះ
                   </button>

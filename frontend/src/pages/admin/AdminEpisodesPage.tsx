@@ -13,6 +13,11 @@ import { loadCatalog } from '../../services/catalogService';
 import type { Anime, Episode } from '../../types';
 import { parseYouTubeVideoId, isYouTubeUrl, getYouTubeThumbnail, isFacebookUrl } from '../../utils/youtube';
 
+const INPUT_CLASS =
+  'w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all';
+const LABEL_CLASS =
+  'block text-xs font-semibold text-slate-700 mb-1.5';
+
 const EMPTY_EP = {
   anime_id: 0, episode_number: 1, title: '',
   video_url: '', subtitle_url: '', thumbnail_url: '',
@@ -185,7 +190,7 @@ export function AdminEpisodesPage() {
           try {
             const response = await api.post(`/stream/episodes/${episode.id}/generate-thumbnail`, {}, { timeout: 45000 });
             return { episodeId: episode.id, thumbnailUrl: response.data.thumbnail_url as string, ok: true };
-          } catch (requestError: any) {
+          } catch {
             failed += 1;
             return { episodeId: episode.id, thumbnailUrl: '', ok: false };
           }
@@ -195,7 +200,7 @@ export function AdminEpisodesPage() {
           const result = results.find((item) => item.episodeId === episode.id && item.ok);
           return result?.ok && result.thumbnailUrl ? { ...episode, thumbnail_url: result.thumbnailUrl } : episode;
         }));
-        setStatusMessage(`Generating episode images… ${Math.min(i + batch.length, pending.length)} / ${pending.length}`);
+        setStatusMessage(`Generating episode images... ${Math.min(i + batch.length, pending.length)} / ${pending.length}`);
       }
       setStatusMessage(`Generated ${generated} episode thumbnails${failed ? `; ${failed} failed` : ''}.`);
     } finally {
@@ -238,7 +243,7 @@ export function AdminEpisodesPage() {
         return;
       }
       setPrimaryQuality(`${height}p`);
-      setStatusMessage(`Detected ${height}p${width ? ` (${width}×${height})` : ''}.`);
+      setStatusMessage(`Detected ${height}p${width ? ` (${width}x${height})` : ''}.`);
       window.setTimeout(() => setStatusMessage(''), 3500);
       finish();
     };
@@ -283,10 +288,18 @@ export function AdminEpisodesPage() {
       is_vip: isVip,
       is_free: !isVip,
     });
-    setSubtitleTracks(ep.subtitle_tracks?.length ? ep.subtitle_tracks.map((track) => ({ ...track })) : (ep.subtitle_url ? [{ label: 'Subtitles', lang: 'und', src: ep.subtitle_url }] : []));
+    setSubtitleTracks(
+      ep.subtitle_tracks?.length
+        ? ep.subtitle_tracks.map((track) => ({ ...track }))
+        : ep.subtitle_url
+        ? [{ label: 'Subtitles', lang: 'und', src: ep.subtitle_url }]
+        : []
+    );
     const primaryQualitySource = ep.video_qualities?.find((quality) => quality.src === ep.video_url);
     setPrimaryQuality(primaryQualitySource?.label || '');
-    setVideoQualities(ep.video_qualities?.filter((quality) => quality.src !== ep.video_url).map((quality) => ({ ...quality })) || []);
+    setVideoQualities(
+      ep.video_qualities?.filter((quality) => quality.src !== ep.video_url).map((quality) => ({ ...quality })) || []
+    );
     setError('');
     setShowModal(true);
   };
@@ -300,7 +313,6 @@ export function AdminEpisodesPage() {
         is_vip: newIsVip,
         is_vip_only: newIsVip,
       });
-      // Optimistic update
       setEpisodes((prev) =>
         prev.map((e) =>
           e.id === ep.id
@@ -308,7 +320,7 @@ export function AdminEpisodesPage() {
             : e
         )
       );
-      setStatusMessage(`Episode ${ep.episode_number} ${newIsVip ? 'locked to VIP 👑' : 'set to Free 🟢'}`);
+      setStatusMessage(`Episode ${ep.episode_number} ${newIsVip ? 'locked to VIP' : 'set to Free'}`);
       setTimeout(() => setStatusMessage(''), 3000);
     } catch (err: any) {
       alert(err?.response?.data?.detail || 'Failed to update VIP status');
@@ -323,14 +335,12 @@ export function AdminEpisodesPage() {
       confirmText: 'Yes, Set ALL Free Globally',
       variant: 'info',
       onConfirm: async () => {
-        // 1. Instant 0ms Optimistic UI Update
         setEpisodes((prev) =>
           prev.map((ep) => ({ ...ep, is_free: true, is_vip: false, is_vip_only: false }))
         );
-        setStatusMessage('✅ All episodes of ALL anime series are now set to Free (គ្រប់រឿងដាក់ Free ទាំងអស់)!');
+        setStatusMessage('All episodes of ALL anime series are now set to Free (គ្រប់រឿងដាក់ Free ទាំងអស់)!');
         setTimeout(() => setStatusMessage(''), 4000);
 
-        // 2. Background sync
         try {
           try {
             await api.put('/admin/episodes/set-all-free');
@@ -363,17 +373,15 @@ export function AdminEpisodesPage() {
       confirmText: 'Yes, Apply to ALL Series',
       variant: 'info',
       onConfirm: async () => {
-        // 1. Instant 0ms Optimistic UI Update
         setEpisodes((prev) =>
           prev.map((ep) => {
             const isFree = ep.episode_number <= 3;
             return { ...ep, is_free: isFree, is_vip: !isFree, is_vip_only: !isFree };
           })
         );
-        setStatusMessage('✅ Episodes 1-3 set to Free & Ep 4+ locked to VIP for ALL series!');
+        setStatusMessage('Episodes 1-3 set to Free & Ep 4+ locked to VIP for ALL series!');
         setTimeout(() => setStatusMessage(''), 4000);
 
-        // 2. Background sync
         try {
           try {
             await api.put('/admin/episodes/set-free-3-episodes-all');
@@ -407,14 +415,12 @@ export function AdminEpisodesPage() {
       confirmText: 'Yes, Lock ALL to VIP',
       variant: 'warning',
       onConfirm: async () => {
-        // 1. Instant 0ms Optimistic UI Update
         setEpisodes((prev) =>
           prev.map((ep) => ({ ...ep, is_free: false, is_vip: true, is_vip_only: true }))
         );
-        setStatusMessage('👑 All episodes of ALL series are now locked to VIP (គ្រប់រឿងជាប់ VIP ទាំងអស់)!');
+        setStatusMessage('All episodes of ALL series are now locked to VIP (គ្រប់រឿងជាប់ VIP ទាំងអស់)!');
         setTimeout(() => setStatusMessage(''), 4000);
 
-        // 2. Background sync
         try {
           try {
             await api.put('/admin/episodes/set-all-vip');
@@ -449,14 +455,13 @@ export function AdminEpisodesPage() {
       confirmText: 'Set Free 3 Episodes',
       variant: 'info',
       onConfirm: async () => {
-        // Instant UI update
         setEpisodes((prev) =>
           prev.map((ep) => {
             const isFree = ep.episode_number <= 3;
             return { ...ep, is_free: isFree, is_vip: !isFree, is_vip_only: !isFree };
           })
         );
-        setStatusMessage('Episodes 1, 2 & 3 set to Free 🟢 (Ep 4+ locked to VIP 👑)');
+        setStatusMessage('Episodes 1, 2 & 3 set to Free (Ep 4+ locked to VIP)');
         setTimeout(() => setStatusMessage(''), 3000);
 
         try {
@@ -488,7 +493,6 @@ export function AdminEpisodesPage() {
       confirmText: lockAllToVip ? 'Lock All to VIP' : 'Set All Free',
       variant: lockAllToVip ? 'warning' : 'info',
       onConfirm: async () => {
-        // Instant UI update
         setEpisodes((prev) =>
           prev.map((ep) => ({
             ...ep,
@@ -497,7 +501,7 @@ export function AdminEpisodesPage() {
             is_vip_only: lockAllToVip,
           }))
         );
-        setStatusMessage(lockAllToVip ? 'All episodes locked to VIP 👑' : 'All episodes set to Free 🟢');
+        setStatusMessage(lockAllToVip ? 'All episodes locked to VIP' : 'All episodes set to Free');
         setTimeout(() => setStatusMessage(''), 3000);
 
         try {
@@ -541,10 +545,9 @@ export function AdminEpisodesPage() {
       variant: 'danger',
       onConfirm: async () => {
         const toDelete = [...selectedEpisodeIds];
-        // Instant Optimistic Update
         setEpisodes((prev) => prev.filter((e) => !toDelete.includes(e.id)));
         setSelectedEpisodeIds([]);
-        setStatusMessage(`✅ បានលុប ${count} ភាគដោយជោគជ័យ!`);
+        setStatusMessage(`បានលុប ${count} ភាគដោយជោគជ័យ!`);
         setTimeout(() => setStatusMessage(''), 3500);
 
         try {
@@ -561,7 +564,7 @@ export function AdminEpisodesPage() {
     try {
       setBroadcastingEpId(ep.id);
       const res = await api.post(`/episodes/${ep.id}/broadcast-telegram`);
-      setStatusMessage(res.data?.message || `📢 បានផ្ញើសារដំណឹង ភាគ ${ep.episode_number} ទៅកាន់ Telegram រួចរាល់!`);
+      setStatusMessage(res.data?.message || `បានផ្ញើសារដំណឹង ភាគ ${ep.episode_number} ទៅកាន់ Telegram រួចរាល់!`);
       setTimeout(() => setStatusMessage(''), 4000);
     } catch (err: any) {
       alert(err?.response?.data?.detail || 'បរាជ័យក្នុងការផ្ញើសារទៅ Telegram');
@@ -576,7 +579,7 @@ export function AdminEpisodesPage() {
     try {
       setIsBroadcastingBatch(true);
       const res = await api.post('/episodes/batch-broadcast-telegram', { episode_ids: selectedEpisodeIds });
-      setStatusMessage(res.data?.message || `🎉 បានផ្សាយដំណឹង ${count} ភាគដែលបានរើសទៅ Telegram រួចរាល់!`);
+      setStatusMessage(res.data?.message || `បានផ្សាយដំណឹង ${count} ភាគដែលបានរើសទៅ Telegram រួចរាល់!`);
       setSelectedEpisodeIds([]);
       setTimeout(() => setStatusMessage(''), 5000);
     } catch (err: any) {
@@ -603,10 +606,10 @@ export function AdminEpisodesPage() {
     try {
       setIsSavingBackup(true);
       const res = await api.post('/admin/backup/sync');
-      setStatusMessage(`💾 បានរក្សាទុកទិន្នន័យ (${res.data.counts?.episodes || episodes.length} ភាគ) ជាប់រហូត 100%!`);
+      setStatusMessage(`បានរក្សាទុកទិន្នន័យ (${res.data.counts?.episodes || episodes.length} ភាគ) ជាប់រហូត 100%!`);
       setTimeout(() => setStatusMessage(''), 4000);
-    } catch (err: any) {
-      setStatusMessage(`⚠️ បរាជ័យក្នុងការរក្សាទុកទិន្នន័យ`);
+    } catch {
+      setStatusMessage('បរាជ័យក្នុងការរក្សាទុកទិន្នន័យ');
       setTimeout(() => setStatusMessage(''), 4000);
     } finally {
       setIsSavingBackup(false);
@@ -623,11 +626,11 @@ export function AdminEpisodesPage() {
         try {
           setIsRecovering(true);
           const res = await api.post('/admin/backup/recover-missing');
-          setStatusMessage(`🎉 បានស្តារភាគដែលបាត់បង់មកវិញជោគជ័យ! (+${res.data.added_counts?.episodes || 0} ភាគ, +${res.data.added_counts?.anime || 0} រឿង)`);
+          setStatusMessage(`បានស្តារភាគដែលបាត់បង់មកវិញជោគជ័យ! (+${res.data.added_counts?.episodes || 0} ភាគ, +${res.data.added_counts?.anime || 0} រឿង)`);
           if (selectedAnime) fetchEpisodes(selectedAnime);
           setTimeout(() => setStatusMessage(''), 5000);
-        } catch (err: any) {
-          setStatusMessage(`⚠️ បរាជ័យក្នុងការស្តារទិន្នន័យ`);
+        } catch {
+          setStatusMessage('បរាជ័យក្នុងការស្តារទិន្នន័យ');
           setTimeout(() => setStatusMessage(''), 4000);
         } finally {
           setIsRecovering(false);
@@ -649,10 +652,19 @@ export function AdminEpisodesPage() {
         video_url: form.video_url?.trim() || null,
         video_qualities: [
           ...(primaryQuality.trim() && form.video_url?.trim() ? [{ label: primaryQuality.trim(), src: form.video_url.trim() }] : []),
-          ...videoQualities.filter((quality) => quality.src.trim() && quality.src.trim() !== form.video_url?.trim()).map((quality) => ({ label: quality.label.trim(), src: quality.src.trim() })),
+          ...videoQualities
+            .filter((quality) => quality.src.trim() && quality.src.trim() !== form.video_url?.trim())
+            .map((quality) => ({ label: quality.label.trim(), src: quality.src.trim() })),
         ],
         subtitle_url: form.subtitle_url?.trim() || null,
-        subtitle_tracks: subtitleTracks.filter((track) => track.src.trim()).map((track) => ({ ...track, src: track.src.trim(), lang: track.lang.trim() || 'und', label: track.label.trim() || track.lang.trim() || 'Subtitles' })),
+        subtitle_tracks: subtitleTracks
+          .filter((track) => track.src.trim())
+          .map((track) => ({
+            ...track,
+            src: track.src.trim(),
+            lang: track.lang.trim() || 'und',
+            label: track.label.trim() || track.lang.trim() || 'Subtitles',
+          })),
         thumbnail_url: form.thumbnail_url?.trim() || null,
         duration_seconds: Number(form.duration_seconds) || 1440,
         is_published: Boolean(form.is_published),
@@ -754,16 +766,16 @@ export function AdminEpisodesPage() {
     <AdminLayout title="Episode Stream & VIP Management">
       <div className="space-y-6">
         {/* ── Global Website-Wide VIP & Free Controls (គ្រប់រឿងទាំងអស់) ── */}
-        <div className="card p-5 bg-gradient-to-r from-[#161f33] via-[#111726] to-[#161f33] border border-amber-500/30 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0 border border-amber-500/40 shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
               <Globe className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
+              <h3 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
                 Global Controls — អនុវត្តលើគ្រប់រឿង និងគ្រប់ភាគទាំងអស់ ({animeList.length} រឿង)
               </h3>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-500">
                 កំណត់សិទ្ធិទស្សនា VIP / Free លើគ្រប់រឿងទាំងអស់ក្នុង Website តែ ១ ឃ្លីកប៉ុណ្ណោះ
               </p>
             </div>
@@ -773,61 +785,61 @@ export function AdminEpisodesPage() {
             {/* Global Set All Free */}
             <button
               onClick={handleGlobalSetAllFree}
-              className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition active:scale-95 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-95 cursor-pointer"
               title="Set ALL episodes of ALL series to Free"
             >
-              <Unlock className="w-4 h-4 stroke-[2.5]" /> 🟢 ដាក់ Free គ្រប់រឿង (All Free)
+              <Unlock className="w-4 h-4" /> ដាក់ Free គ្រប់រឿង (All Free)
             </button>
 
             {/* Global Free 3 Episodes */}
             <button
               onClick={handleGlobalSetFree3Episodes}
-              className="px-3.5 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/50 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
               title="Free 3 Episodes on ALL Series, and VIP for remaining"
             >
-              <Sparkles className="w-4 h-4 text-cyan-400" /> ✨ Free ៣ ភាគដំបូងគ្រប់រឿង
+              <Sparkles className="w-4 h-4 text-blue-600" /> Free ៣ ភាគដំបូងគ្រប់រឿង
             </button>
 
             {/* Global Lock All VIP */}
             <button
               onClick={handleGlobalSetAllVip}
-              className="px-3.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
               title="Lock ALL episodes of ALL series to VIP"
             >
-              <Crown className="w-4 h-4 fill-amber-400" /> 👑 ដាក់ VIP គ្រប់រឿងទាំងអស់
+              <Crown className="w-4 h-4 fill-amber-500 text-amber-600" /> ដាក់ VIP គ្រប់រឿងទាំងអស់
             </button>
 
             {/* Quick Backup & Recover */}
             <button
               onClick={handleSaveBackup}
               disabled={isSavingBackup}
-              className="px-3.5 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50"
               title="រក្សាទុកភាគ និងទិន្នន័យទាំងអស់ជាប់រហូត"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSavingBackup ? 'animate-spin' : ''}`} />
-              <span>{isSavingBackup ? 'កំពុងរក្សា...' : '💾 Save Data'}</span>
+              <span>{isSavingBackup ? 'កំពុងរក្សា...' : 'Save Data'}</span>
             </button>
 
             <button
               onClick={handleRecoverMissing}
               disabled={isRecovering}
-              className="px-3.5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-semibold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50"
               title="ស្តារភាគ និងរឿងដែលបាត់បង់មកវិញ"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isRecovering ? 'animate-spin' : ''}`} />
-              <span>{isRecovering ? 'កំពុងស្តារ...' : '🔄 ស្តារភាគដែលបាត់'}</span>
+              <span>{isRecovering ? 'កំពុងស្តារ...' : 'ស្តារភាគដែលបាត់'}</span>
             </button>
           </div>
         </div>
 
-        {/* ── CATEGORY SEPARATION TABS (Donghua ផ្សេង, Anime ផ្សេង, Movie ផ្សេង...) ── */}
+        {/* ── CATEGORY SEPARATION TABS ── */}
         <div className="flex items-center gap-2 pt-1 pb-2 overflow-x-auto no-scrollbar scroll-smooth -mx-3 px-3 sm:mx-0 sm:px-0 shrink-0">
           {[
-            { id: 'DONGHUA', label: '🇨🇳 Donghua (រឿងចិន)', count: animeList.filter(a => a.type === 'DONGHUA').length },
-            { id: 'ANIME', label: '🇯🇵 Anime (រឿងជប៉ុន)', count: animeList.filter(a => a.type === 'ANIME').length },
-            { id: 'MOVIE', label: '🍿 Movie (ភាពយន្តដុំ)', count: animeList.filter(a => a.type === 'MOVIE').length },
-            { id: 'DRAMA', label: '🎭 Drama (រឿងភាគ)', count: animeList.filter(a => a.type === 'DRAMA').length },
-            { id: 'ALL', label: '✨ ទាំងអស់ (All Series)', count: animeList.length },
+            { id: 'DONGHUA', label: 'Donghua (រឿងចិន)', count: animeList.filter(a => a.type === 'DONGHUA').length },
+            { id: 'ANIME', label: 'Anime (រឿងជប៉ុន)', count: animeList.filter(a => a.type === 'ANIME').length },
+            { id: 'MOVIE', label: 'Movie (ភាពយន្តដុំ)', count: animeList.filter(a => a.type === 'MOVIE').length },
+            { id: 'DRAMA', label: 'Drama (រឿងភាគ)', count: animeList.filter(a => a.type === 'DRAMA').length },
+            { id: 'ALL', label: 'ទាំងអស់ (All Series)', count: animeList.length },
           ].map((tab) => {
             const isTabActive = selectedCategory === tab.id;
             return (
@@ -842,16 +854,18 @@ export function AdminEpisodesPage() {
                     fetchEpisodes(firstMatch.id);
                   }
                 }}
-                className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                   isTabActive
-                    ? 'bg-[#E50914] text-white shadow-lg shadow-red-600/40 ring-2 ring-red-500/50'
-                    : 'bg-[#181818] hover:bg-[#252525] text-gray-300 border border-white/10'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200'
                 }`}
               >
                 <span className="whitespace-nowrap">{tab.label}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-black ${
-                  isTabActive ? 'bg-black/40 text-white' : 'bg-black/60 text-gray-300'
-                }`}>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    isTabActive ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
                   {tab.count}
                 </span>
               </button>
@@ -859,59 +873,57 @@ export function AdminEpisodesPage() {
           })}
         </div>
 
-        {/* ── VISUAL SERIES POSTER SHELF (រើសរឿងតាម Poster ងាយស្រួលចុច 1-Click) ── */}
+        {/* ── VISUAL SERIES POSTER SHELF ── */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
             <span className="flex items-center gap-1.5">
-              <Film className="w-3.5 h-3.5 text-[#E50914]" /> ចុចលើ Poster រឿងដើម្បីជ្រើសរើស ({filteredAnimeList.length} រឿង)
+              <Film className="w-3.5 h-3.5 text-blue-600" /> ចុចលើ Poster រឿងដើម្បីជ្រើសរើស ({filteredAnimeList.length} រឿង)
             </span>
             {seriesSearch && (
               <button
                 onClick={() => setSeriesSearch('')}
-                className="text-[11px] text-amber-400 hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
               >
-                លុបការស្វែងរក ✕
+                <span>លុបការស្វែងរក</span>
+                <X className="w-3 h-3" />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar scroll-smooth py-1 -mx-3 px-3 sm:mx-0 sm:px-0">
+          <div className="flex items-stretch gap-2.5 overflow-x-auto no-scrollbar scroll-smooth py-1 -mx-3 px-3 sm:mx-0 sm:px-0">
             {filteredAnimeList.map((a) => {
               const isSelected = a.id === selectedAnime;
               return (
                 <button
                   key={a.id}
                   onClick={() => fetchEpisodes(a.id)}
-                  className={`group relative flex-shrink-0 w-24 sm:w-28 rounded-xl overflow-hidden border-2 transition-all cursor-pointer text-left ${
+                  className={`group relative flex-shrink-0 w-24 sm:w-28 rounded-xl overflow-hidden bg-white border-2 transition-all cursor-pointer text-left flex flex-col ${
                     isSelected
-                      ? 'border-[#E50914] ring-2 ring-red-500/50 shadow-lg shadow-red-600/30 scale-105 z-10'
-                      : 'border-white/10 hover:border-white/40 opacity-75 hover:opacity-100 hover:scale-102'
+                      ? 'border-blue-600 ring-2 ring-blue-500/20 shadow-md z-10'
+                      : 'border-slate-200 hover:border-slate-300 shadow-sm'
                   }`}
                   title={a.title}
                 >
-                  <div className="aspect-[3/4] w-full bg-dark-muted relative">
+                  <div className="aspect-[3/4] w-full bg-slate-100 relative overflow-hidden">
                     <img
                       src={a.poster_url || a.banner_url}
                       alt={a.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent pointer-events-none" />
-
                     {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#E50914] text-white flex items-center justify-center shadow-md">
+                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     )}
-
-                    <div className="absolute bottom-1.5 inset-x-1.5 text-center pointer-events-none">
-                      <p className="text-[10px] font-bold text-white line-clamp-1 drop-shadow">
-                        {a.title}
-                      </p>
-                      <span className="text-[9px] text-gray-300 font-mono">
-                        {a.episode_count} ភាគ
-                      </span>
-                    </div>
+                  </div>
+                  <div className="p-2 bg-white border-t border-slate-100 text-center">
+                    <p className="text-[10px] font-bold text-slate-900 line-clamp-1">
+                      {a.title}
+                    </p>
+                    <span className="text-[9px] text-slate-500 font-mono">
+                      {a.episode_count} ភាគ
+                    </span>
                   </div>
                 </button>
               );
@@ -920,53 +932,53 @@ export function AdminEpisodesPage() {
         </div>
 
         {/* ── SERIES SELECTOR BAR & QUICK SEARCH ── */}
-        <div className="card p-3 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4 shadow-2xl bg-[#181818] border border-white/10 rounded-2xl">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4 shadow-sm">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 flex-1 w-full">
             {/* Quick Search within category */}
             <div className="relative w-full sm:w-56 shrink-0">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={seriesSearch}
                 onChange={(e) => setSeriesSearch(e.target.value)}
                 placeholder="ស្វែងរកឈ្មោះរឿង..."
-                className="input pl-9 pr-3 py-2 text-xs rounded-xl bg-[#121212] border border-white/10 text-white w-full placeholder-gray-500"
+                className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all"
               />
             </div>
 
             {/* Distinct Series Dropdown */}
             <div className="flex items-center gap-2 flex-1 w-full">
-              <Film className="w-5 h-5 text-amber-400 shrink-0" />
+              <Film className="w-5 h-5 text-blue-600 shrink-0" />
               <select
                 value={selectedAnime || ''}
                 onChange={(e) => e.target.value ? fetchEpisodes(parseInt(e.target.value)) : setSelectedAnime(null)}
-                className="input py-2 px-2.5 sm:py-2.5 sm:px-3 text-xs md:text-sm flex-1 font-bold bg-[#121212] border border-white/15 text-white rounded-xl focus:border-[#E50914] truncate"
+                className="flex-1 bg-white border border-slate-200 rounded-xl py-2 px-2.5 sm:py-2.5 sm:px-3 text-xs md:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 truncate"
                 aria-label="Select series to manage episodes"
               >
                 {selectedCategory === 'ALL' ? (
                   <>
-                    <optgroup label="🇨🇳 DONGHUA (រឿងចិន 3D)">
+                    <optgroup label="DONGHUA (រឿងចិន 3D)">
                       {animeList.filter(a => a.type === 'DONGHUA').map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.title} — {a.episode_count} ភាគ
                         </option>
                       ))}
                     </optgroup>
-                    <optgroup label="🇯🇵 ANIME (រឿងជប៉ុន)">
+                    <optgroup label="ANIME (រឿងជប៉ុន)">
                       {animeList.filter(a => a.type === 'ANIME').map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.title} — {a.episode_count} ភាគ
                         </option>
                       ))}
                     </optgroup>
-                    <optgroup label="🍿 MOVIES (ភាពយន្តដុំ)">
+                    <optgroup label="MOVIES (ភាពយន្តដុំ)">
                       {animeList.filter(a => a.type === 'MOVIE').map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.title} — {a.episode_count} ភាគ
                         </option>
                       ))}
                     </optgroup>
-                    <optgroup label="🎭 DRAMA (រឿងភាគ)">
+                    <optgroup label="DRAMA (រឿងភាគ)">
                       {animeList.filter(a => a.type === 'DRAMA').map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.title} — {a.episode_count} ភាគ
@@ -985,37 +997,37 @@ export function AdminEpisodesPage() {
             </div>
           </div>
 
-          {/* Quick Action Tools: 2 Columns on Mobile, Wrap on Tablet/Desktop */}
+          {/* Quick Action Tools */}
           {selectedAnime && (
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
               <button
                 onClick={() => void generateMissingThumbnails()}
                 disabled={isGeneratingThumbnails || !episodes.some(needsEpisodeThumbnail)}
-                className="px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Create episode stills from the R2 video links and save them to R2"
               >
                 {isGeneratingThumbnails ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
-                {isGeneratingThumbnails ? 'Generating…' : `Generate images (${episodes.filter(needsEpisodeThumbnail).length})`}
+                {isGeneratingThumbnails ? 'Generating...' : `Generate images (${episodes.filter(needsEpisodeThumbnail).length})`}
               </button>
               <button
                 onClick={handleSetFreeFirst3Episodes}
-                className="px-3 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
                 title="Set Ep 1-3 to Free and remaining episodes to VIP"
               >
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Free 3 ភាគ
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Free 3 ភាគ
               </button>
 
               <button
                 onClick={() => handleBatchVipToggle(true)}
-                className="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
                 title="Lock all episodes in this series to VIP"
               >
-                <Crown className="w-3.5 h-3.5 fill-amber-400" /> Lock VIP
+                <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" /> Lock VIP
               </button>
 
               <button
                 onClick={() => handleBatchVipToggle(false)}
-                className="px-3 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
                 title="Unlock all episodes in this series to Free"
               >
                 <Unlock className="w-3.5 h-3.5" /> Set Free
@@ -1028,24 +1040,24 @@ export function AdminEpisodesPage() {
                   setConverterOutput('');
                   setConverterCopied(false);
                 }}
-                className="px-3 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
                 title="Convert Link 1 (API Stream) to Link 2 (Direct S3 MP4)"
               >
-                <Link2 className="w-3.5 h-3.5" /> Convert Link
+                <Link2 className="w-3.5 h-3.5 text-blue-600" /> Convert Link
               </button>
 
               <button
                 onClick={() => setShowBatchModal(true)}
-                className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
               >
-                <Layers className="w-4 h-4 text-cyan-400" /> Batch Add
+                <Layers className="w-4 h-4 text-blue-600" /> Batch Add
               </button>
 
               <button
                 onClick={openCreate}
-                className="px-3 py-2 rounded-xl bg-[#E50914] hover:bg-[#b80710] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/30 transition cursor-pointer col-span-2 sm:col-span-1"
+                className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer col-span-2 sm:col-span-1"
               >
-                <Plus className="w-4 h-4" /> + បន្ថែមភាគថ្មី
+                <Plus className="w-4 h-4" /> បន្ថែមភាគថ្មី
               </button>
             </div>
           )}
@@ -1053,42 +1065,44 @@ export function AdminEpisodesPage() {
 
         {/* Feedback message */}
         {statusMessage && (
-          <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fade-in shadow-lg">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2 shadow-sm">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
             <span>{statusMessage}</span>
           </div>
         )}
 
         {/* ── SELECTED SERIES SHOWCASE BANNER ── */}
         {currentAnime && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-4 bg-gradient-to-r from-[#1e1e1e] to-[#141414] border border-white/10 p-3.5 sm:p-4 rounded-2xl shadow-xl">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 sm:gap-4 bg-white border border-slate-200/80 p-3.5 sm:p-4 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
               <img
                 src={currentAnime.poster_url || currentAnime.banner_url}
                 alt=""
-                className="w-12 h-16 sm:w-14 sm:h-20 rounded-xl object-cover border border-white/15 shadow-md shrink-0"
+                className="w-12 h-16 sm:w-14 sm:h-20 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0"
               />
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider ${
-                    currentAnime.type === 'DONGHUA'
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      : currentAnime.type === 'ANIME'
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                      : currentAnime.type === 'MOVIE'
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  }`}>
-                    {currentAnime.type === 'DONGHUA' ? '🇨🇳 រឿងចិន 3D' : currentAnime.type === 'ANIME' ? '🇯🇵 រឿងជប៉ុន' : currentAnime.type === 'MOVIE' ? '🍿 ភាពយន្តដុំ' : '🎭 រឿងភាគ'}
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border ${
+                      currentAnime.type === 'DONGHUA'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : currentAnime.type === 'ANIME'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : currentAnime.type === 'MOVIE'
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    {currentAnime.type === 'DONGHUA' ? 'រឿងចិន 3D' : currentAnime.type === 'ANIME' ? 'រឿងជប៉ុន' : currentAnime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : 'រឿងភាគ'}
                   </span>
-                  <span className="text-[11px] text-gray-400 font-bold">• {currentAnime.year || 2024}</span>
-                  <span className="text-[11px] text-emerald-400 font-bold">• {episodes.length} ភាគសរុប</span>
+                  <span className="text-[11px] text-slate-500 font-semibold">· {currentAnime.year || 2024}</span>
+                  <span className="text-[11px] text-emerald-700 font-semibold">· {episodes.length} ភាគសរុប</span>
                 </div>
-                <h3 className="font-display font-black text-sm sm:text-base text-white truncate">
+                <h3 className="font-display font-bold text-sm sm:text-base text-slate-900 truncate">
                   {currentAnime.title}
                 </h3>
                 {currentAnime.alt_title && (
-                  <p className="text-[11px] text-gray-400 truncate">{currentAnime.alt_title}</p>
+                  <p className="text-[11px] text-slate-500 truncate">{currentAnime.alt_title}</p>
                 )}
               </div>
             </div>
@@ -1096,7 +1110,7 @@ export function AdminEpisodesPage() {
             <Link
               to={`/${currentAnime.type === 'ANIME' ? 'anime' : currentAnime.type === 'MOVIE' ? 'movie' : currentAnime.type === 'DRAMA' ? 'drama' : 'donghua'}/${currentAnime.slug}`}
               target="_blank"
-              className="w-full sm:w-auto text-center px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition shrink-0"
+              className="w-full sm:w-auto text-center px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition shrink-0"
             >
               មើលលើ Website <ExternalLink className="w-3.5 h-3.5" />
             </Link>
@@ -1105,17 +1119,16 @@ export function AdminEpisodesPage() {
 
         {/* ── EPISODES LIST WITH EPISODE SEARCH & QUICK FILTERS ── */}
         {selectedAnime && (
-          <div className="card overflow-hidden shadow-2xl bg-[#181818] border border-white/10 rounded-2xl">
+          <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
             {/* Header Controls & Filter Pills */}
-            {/* Header Controls & Filter Pills */}
-            <div className="p-3.5 sm:p-4 border-b border-white/10 space-y-3 bg-[#1e1e1e]/60">
+            <div className="p-3.5 sm:p-4 border-b border-slate-200 space-y-3 bg-slate-50/60">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="font-display font-black text-xs sm:text-sm text-white">
+                  <span className="font-display font-bold text-xs sm:text-sm text-slate-900">
                     បញ្ជីភាគ ({episodes.length} ភាគ)
                   </span>
                   {episodeSearch && (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-slate-500">
                       — រកឃើញ {filteredEpisodes.length} ភាគ
                     </span>
                   )}
@@ -1123,60 +1136,60 @@ export function AdminEpisodesPage() {
 
                 {/* Search specific episode */}
                 <div className="relative w-full sm:w-60">
-                  <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={episodeSearch}
                     onChange={(e) => setEpisodeSearch(e.target.value)}
                     placeholder="ស្វែងរកភាគ (ឧ. 1, 2, 25)..."
-                    className="input pl-8 pr-3 py-1.5 text-xs rounded-xl bg-[#121212] border border-white/10 text-white w-full placeholder-gray-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all"
                   />
                 </div>
               </div>
 
-              {/* Usability Filter Pills (ទាំងអស់ / Free / VIP / ខ្វះ Link) & Select / Add Controls */}
+              {/* Usability Filter Pills & Select / Add Controls */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     onClick={() => setEpisodeFilterTab('ALL')}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
                       episodeFilterTab === 'ALL'
-                        ? 'bg-white text-black shadow-md'
-                        : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200'
                     }`}
                   >
                     ទាំងអស់ ({episodes.length})
                   </button>
                   <button
                     onClick={() => setEpisodeFilterTab('FREE')}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
                       episodeFilterTab === 'FREE'
-                        ? 'bg-emerald-500 text-black shadow-md font-black'
-                        : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
                     }`}
                   >
-                    <Unlock className="w-3 h-3" /> 🟢 Free ({freeCount})
+                    <Unlock className="w-3 h-3" /> Free ({freeCount})
                   </button>
                   <button
                     onClick={() => setEpisodeFilterTab('VIP')}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
                       episodeFilterTab === 'VIP'
-                        ? 'bg-amber-500 text-black shadow-md font-black'
-                        : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-400'
+                        ? 'bg-amber-500 text-white shadow-sm'
+                        : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
                     }`}
                   >
-                    <Crown className="w-3 h-3 fill-current" /> 👑 VIP ({vipCount})
+                    <Crown className="w-3 h-3 fill-current" /> VIP ({vipCount})
                   </button>
                   {missingCount > 0 && (
                     <button
                       onClick={() => setEpisodeFilterTab('MISSING')}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
                         episodeFilterTab === 'MISSING'
-                          ? 'bg-red-500 text-white shadow-md font-black'
-                          : 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40'
+                          ? 'bg-rose-600 text-white shadow-sm'
+                          : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
                       }`}
                     >
-                      <AlertCircle className="w-3 h-3" /> ⚠️ ខ្វះ Link ({missingCount})
+                      <AlertCircle className="w-3 h-3" /> ខ្វះ Link ({missingCount})
                     </button>
                   )}
                 </div>
@@ -1185,31 +1198,35 @@ export function AdminEpisodesPage() {
                   {/* Select All Toggle Button */}
                   <button
                     onClick={toggleSelectAll}
-                    className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                     title="ជ្រើសរើសគ្រប់ភាគទាំងអស់ក្នុងរឿងនេះ"
                   >
-                    <CheckSquare className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>{selectedEpisodeIds.length === filteredEpisodes.length && filteredEpisodes.length > 0 ? 'ដោះការរើស (Deselect)' : 'រើសទាំងអស់ (Select All)'}</span>
+                    <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
+                    <span>
+                      {selectedEpisodeIds.length === filteredEpisodes.length && filteredEpisodes.length > 0
+                        ? 'ដោះការរើស (Deselect)'
+                        : 'រើសទាំងអស់ (Select All)'}
+                    </span>
                   </button>
 
                   {/* 1-Click Quick Add Next Episode */}
                   <button
                     onClick={openCreate}
-                    className="px-3 py-1 rounded-xl bg-[#E50914] hover:bg-[#b80710] text-white text-xs font-bold flex items-center gap-1 transition shadow cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1 transition shadow-sm cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" /> + ភាគ {nextEpNum}
+                    <Plus className="w-3.5 h-3.5" /> ភាគ {nextEpNum}
                   </button>
                 </div>
               </div>
 
-              {/* ── BATCH SELECTION ACTION BAR (លុបភាគដែលបានរើស / ផ្ញើ Telegram) ── */}
+              {/* ── BATCH SELECTION ACTION BAR ── */}
               {selectedEpisodeIds.length > 0 && (
-                <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-gradient-to-r from-blue-950/80 via-dark-card to-red-950/80 border border-blue-500/50 rounded-2xl animate-fade-in shadow-2xl">
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-blue-50/80 border border-blue-200 rounded-2xl">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shadow">
+                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shadow-sm">
                       {selectedEpisodeIds.length}
                     </span>
-                    <span className="text-xs font-bold text-blue-200">
+                    <span className="text-xs font-semibold text-blue-900">
                       បានជ្រើសរើស {selectedEpisodeIds.length} ភាគក្នុងចំណោម {filteredEpisodes.length} ភាគ
                     </span>
                   </div>
@@ -1218,25 +1235,26 @@ export function AdminEpisodesPage() {
                     <button
                       onClick={handleBatchBroadcastTelegram}
                       disabled={isBroadcastingBatch}
-                      className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black flex items-center gap-1.5 shadow-lg shadow-blue-600/40 transition active:scale-95 cursor-pointer"
+                      className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-50"
                     >
                       <Send className={`w-3.5 h-3.5 ${isBroadcastingBatch ? 'animate-bounce' : ''}`} />
-                      <span>{isBroadcastingBatch ? 'កំពុងផ្ញើ...' : `📢 ផ្សាយទៅ Telegram (${selectedEpisodeIds.length})`}</span>
+                      <span>{isBroadcastingBatch ? 'កំពុងផ្ញើ...' : `ផ្សាយទៅ Telegram (${selectedEpisodeIds.length})`}</span>
                     </button>
 
                     <button
                       onClick={handleBatchDeleteSelected}
-                      className="px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black flex items-center gap-1.5 shadow-lg shadow-red-600/40 transition active:scale-95 cursor-pointer"
+                      className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <Trash2 className="w-3.5 h-3.5" />
                       <span>លុបភាគ ({selectedEpisodeIds.length})</span>
                     </button>
 
                     <button
                       onClick={() => setSelectedEpisodeIds([])}
-                      className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 text-xs font-semibold transition cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
                     >
-                      ✕ បោះបង់
+                      <X className="w-3.5 h-3.5" />
+                      <span>បោះបង់</span>
                     </button>
                   </div>
                 </div>
@@ -1244,11 +1262,11 @@ export function AdminEpisodesPage() {
             </div>
 
             {/* ── MOBILE VIEW: Touch-friendly cards for phones (md:hidden) ── */}
-            <div className="block md:hidden p-3 space-y-2.5 divide-y divide-white/5">
+            <div className="block md:hidden p-3 space-y-2.5">
               {isLoading ? (
-                <p className="text-center text-gray-500 py-8 text-xs">កំពុងទាញយកទិន្នន័យភាគ...</p>
+                <p className="text-center text-slate-500 py-8 text-xs">កំពុងទាញយកទិន្នន័យភាគ...</p>
               ) : filteredEpisodes.length === 0 ? (
-                <p className="text-center text-gray-400 py-8 text-xs">
+                <p className="text-center text-slate-500 py-8 text-xs">
                   {episodeSearch ? `រកមិនឃើញភាគ "${episodeSearch}" ឡើយ` : 'មិនទាន់មានភាគនៅឡើយទេ'}
                 </p>
               ) : (
@@ -1259,10 +1277,10 @@ export function AdminEpisodesPage() {
                     <div
                       key={ep.id}
                       onClick={() => toggleSelectEpisode(ep.id)}
-                      className={`pt-2.5 first:pt-0 p-3 rounded-xl border transition-all space-y-2 shadow-sm cursor-pointer ${
+                      className={`p-3 rounded-xl border transition-all space-y-2 cursor-pointer ${
                         isSelected
-                          ? 'bg-blue-950/30 border-blue-500/60 ring-1 ring-blue-500/40'
-                          : 'bg-[#161616] border-white/5'
+                          ? 'bg-blue-50/70 border-blue-300 ring-1 ring-blue-500/20'
+                          : 'bg-slate-50/60 border-slate-200'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -1274,46 +1292,52 @@ export function AdminEpisodesPage() {
                               e.stopPropagation();
                               toggleSelectEpisode(ep.id);
                             }}
-                            className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
+                            className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
                           />
-                          <span className="font-display font-black text-[11px] px-2 py-0.5 rounded bg-[#E50914] text-white shrink-0">
+                          <span className="font-display font-bold text-[11px] px-2 py-0.5 rounded-lg bg-blue-600 text-white shrink-0">
                             EP {ep.episode_number.toString().padStart(2, '0')}
                           </span>
-                          <p className="text-xs font-bold text-gray-100 truncate">
+                          <p className="text-xs font-bold text-slate-900 truncate">
                             {ep.title || `Episode ${ep.episode_number}`}
                           </p>
                         </div>
-                        <span className={`badge ${ep.is_published ? 'badge-ongoing' : 'badge-hiatus'} text-[9px] shrink-0`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold shrink-0 border ${
+                            ep.is_published
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}
+                        >
                           {ep.is_published ? 'Live' : 'Draft'}
                         </span>
                       </div>
 
                       {/* URL & Duration */}
-                      <div className="flex items-center justify-between text-[11px] text-gray-400 pl-6">
-                        <span className="truncate max-w-[200px] font-mono text-[10px] text-emerald-400">
-                          {ep.video_url ? '🟢 S3 Stream Set' : '🔴 No Stream URL'}
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 pl-6">
+                        <span className={`truncate max-w-[200px] font-mono text-[10px] font-medium ${ep.video_url ? 'text-emerald-700' : 'text-rose-600'}`}>
+                          {ep.video_url ? 'S3 Stream Set' : 'No Stream URL'}
                         </span>
                         <span>{ep.duration_seconds > 0 ? `${Math.floor(ep.duration_seconds / 60)}m` : '24m'}</span>
                       </div>
 
                       {/* Actions row on mobile */}
-                      <div className="flex items-center justify-between pt-1 border-t border-white/5 pl-6" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 pl-6" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => toggleEpisodeVip(ep)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                             isVip
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                              : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           }`}
                         >
                           {isVip ? (
                             <>
-                              <Crown className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              <Crown className="w-3 h-3 fill-amber-500 text-amber-600" />
                               <span>VIP Only</span>
                             </>
                           ) : (
                             <>
-                              <Unlock className="w-3 h-3 text-emerald-400" />
+                              <Unlock className="w-3 h-3 text-emerald-600" />
                               <span>Free Watch</span>
                             </>
                           )}
@@ -1323,28 +1347,28 @@ export function AdminEpisodesPage() {
                           <button
                             onClick={() => handleSingleBroadcastTelegram(ep)}
                             disabled={broadcastingEpId === ep.id}
-                            className="p-2 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 cursor-pointer"
+                            className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 cursor-pointer"
                             title="ផ្ញើសារដំណឹងភាគនេះទៅ Telegram Group"
                           >
                             <Send className={`w-3.5 h-3.5 ${broadcastingEpId === ep.id ? 'animate-spin' : ''}`} />
                           </button>
                           <button
                             onClick={() => setPreviewVideoEp(ep)}
-                            className="p-2 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 cursor-pointer"
+                            className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 cursor-pointer"
                             title="ចាក់តេស្តវីដេអូក្នុង Dashboard"
                           >
                             <Play className="w-3.5 h-3.5 fill-current" />
                           </button>
                           <button
                             onClick={() => openEdit(ep)}
-                            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/15 cursor-pointer"
+                            className="p-2 rounded-lg bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer"
                             title="Edit"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(ep)}
-                            className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 cursor-pointer"
+                            className="p-2 rounded-lg bg-white text-slate-500 border border-slate-200 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 cursor-pointer"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1361,34 +1385,34 @@ export function AdminEpisodesPage() {
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 bg-black/40">
+                  <tr className="border-b border-slate-200 bg-slate-50">
                     <th className="px-4 py-3.5 text-left w-12">
                       <input
                         type="checkbox"
                         checked={filteredEpisodes.length > 0 && selectedEpisodeIds.length === filteredEpisodes.length}
                         onChange={toggleSelectAll}
-                        className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-red-600 focus:ring-red-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500 cursor-pointer"
                         title="ជ្រើសរើសទាំងអស់"
                       />
                     </th>
-                    <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">ភាគ #</th>
-                    <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">ចំណងជើង (Title)</th>
-                    <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">សិទ្ធិមើល (Access)</th>
-                    <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">Stream URL</th>
-                    <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">Duration</th>
-                    <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">Status</th>
-                    <th className="px-4 py-3.5 text-right text-gray-400 font-bold text-xs">Actions</th>
+                    <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">ភាគ #</th>
+                    <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">ចំណងជើង (Title)</th>
+                    <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">សិទ្ធិមើល (Access)</th>
+                    <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">Stream URL</th>
+                    <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">Duration</th>
+                    <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">Status</th>
+                    <th className="px-4 py-3.5 text-right text-slate-500 font-semibold text-xs">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {isLoading ? (
-                    <tr><td colSpan={8} className="text-center text-gray-500 py-12">កំពុងទាញយកទិន្នន័យភាគ...</td></tr>
+                    <tr><td colSpan={8} className="text-center text-slate-500 py-12">កំពុងទាញយកទិន្នន័យភាគ...</td></tr>
                   ) : filteredEpisodes.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="text-center text-gray-400 py-12">
+                      <td colSpan={8} className="text-center text-slate-500 py-12">
                         {episodeSearch
                           ? `រកមិនឃើញភាគដែលស្វែងរក "${episodeSearch}" ឡើយ`
-                          : 'មិនទាន់មានភាគនៅឡើយទេ! សូមចុច Batch Add ឬ + បន្ថែមភាគថ្មី'}
+                          : 'មិនទាន់មានភាគនៅឡើយទេ! សូមចុច Batch Add ឬ បន្ថែមភាគថ្មី'}
                       </td>
                     </tr>
                   ) : (
@@ -1399,10 +1423,8 @@ export function AdminEpisodesPage() {
                         <tr
                           key={ep.id}
                           onClick={() => toggleSelectEpisode(ep.id)}
-                          className={`border-b border-dark-border/40 transition-colors cursor-pointer ${
-                            isSelected
-                              ? 'bg-blue-950/30 border-blue-500/40'
-                              : 'hover:bg-white/5'
+                          className={`transition-colors cursor-pointer ${
+                            isSelected ? 'bg-blue-50/60' : 'hover:bg-slate-50'
                           }`}
                         >
                           <td className="px-4 py-3.5 w-12" onClick={(e) => e.stopPropagation()}>
@@ -1410,66 +1432,72 @@ export function AdminEpisodesPage() {
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => toggleSelectEpisode(ep.id)}
-                              className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500 cursor-pointer"
                             />
                           </td>
                           <td className="px-4 py-3.5">
-                            <span className="font-display font-black text-sm text-brand-400">
+                            <span className="font-display font-bold text-sm text-blue-600">
                               EP {ep.episode_number.toString().padStart(2, '0')}
                             </span>
                           </td>
-                          <td className="px-4 py-3.5 text-gray-200 font-medium">
+                          <td className="px-4 py-3.5 text-slate-900 font-medium">
                             {ep.title || `Episode ${ep.episode_number}`}
                           </td>
                           <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => toggleEpisodeVip(ep)}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                                 isVip
-                                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30 shadow-sm shadow-amber-500/20'
-                                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                               }`}
                               title="Click to toggle VIP / Free"
                             >
                               {isVip ? (
                                 <>
-                                  <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                                  <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
                                   <span>VIP Only</span>
                                 </>
                               ) : (
                                 <>
-                                  <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+                                  <Unlock className="w-3.5 h-3.5 text-emerald-600" />
                                   <span>Free Watch</span>
                                 </>
                               )}
                             </button>
                           </td>
-                          <td className="px-4 py-3.5 text-gray-500">
+                          <td className="px-4 py-3.5 text-slate-500">
                             {ep.video_url ? (
                               isYouTubeUrl(ep.video_url) ? (
-                                <span className="text-xs font-mono text-red-400 flex items-center gap-1.5 truncate max-w-xs font-bold">
+                                <span className="text-xs font-mono text-rose-600 flex items-center gap-1.5 truncate max-w-xs font-semibold">
                                   <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
-                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                                   </svg>
                                   <span>YouTube: {parseYouTubeVideoId(ep.video_url)}</span>
                                 </span>
                               ) : (
-                                <span className="text-xs font-mono text-emerald-400 flex items-center gap-1 truncate max-w-xs">
-                                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                <span className="text-xs font-mono text-emerald-700 flex items-center gap-1 truncate max-w-xs">
+                                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
                                   {ep.video_url.substring(0, 45)}...
                                 </span>
                               )
                             ) : (
-                              <span className="text-red-400 text-xs flex items-center gap-1">
+                              <span className="text-rose-600 text-xs flex items-center gap-1 font-medium">
                                 <AlertCircle className="w-3.5 h-3.5" /> No Stream URL
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5 text-gray-400 text-xs">
+                          <td className="px-4 py-3.5 text-slate-500 text-xs">
                             {ep.duration_seconds > 0 ? `${Math.floor(ep.duration_seconds / 60)} mins` : '24 mins'}
                           </td>
                           <td className="px-4 py-3.5">
-                            <span className={`badge ${ep.is_published ? 'badge-ongoing' : 'badge-hiatus'} text-[10px]`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                ep.is_published
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-slate-100 text-slate-600 border-slate-200'
+                              }`}
+                            >
                               {ep.is_published ? 'Live' : 'Draft'}
                             </span>
                           </td>
@@ -1478,22 +1506,30 @@ export function AdminEpisodesPage() {
                               <button
                                 onClick={() => handleSingleBroadcastTelegram(ep)}
                                 disabled={broadcastingEpId === ep.id}
-                                className="p-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 transition cursor-pointer"
+                                className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 transition cursor-pointer"
                                 title="ផ្ញើសារដំណឹងភាគនេះទៅ Telegram Group"
                               >
                                 <Send className={`w-4 h-4 ${broadcastingEpId === ep.id ? 'animate-spin' : ''}`} />
                               </button>
                               <button
                                 onClick={() => setPreviewVideoEp(ep)}
-                                className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 transition cursor-pointer"
+                                className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-600 transition cursor-pointer"
                                 title="ចាក់តេស្តវីដេអូក្នុង Dashboard"
                               >
                                 <Play className="w-4 h-4 fill-current" />
                               </button>
-                              <button onClick={() => openEdit(ep)} className="btn-icon text-gray-400 hover:text-brand-400" title="Edit Episode">
+                              <button
+                                onClick={() => openEdit(ep)}
+                                className="p-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-blue-600 transition cursor-pointer"
+                                title="Edit Episode"
+                              >
                                 <Edit3 className="w-4 h-4" />
                               </button>
-                              <button onClick={() => handleDelete(ep)} className="btn-icon text-gray-400 hover:text-red-400" title="Delete Episode">
+                              <button
+                                onClick={() => handleDelete(ep)}
+                                className="p-1.5 rounded-lg bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 transition cursor-pointer"
+                                title="Delete Episode"
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -1510,20 +1546,20 @@ export function AdminEpisodesPage() {
 
         {/* ── IN-DASHBOARD INSTANT VIDEO PREVIEW PLAYER MODAL ── */}
         {previewVideoEp && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-            <div className="bg-[#141414] border border-white/20 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-scale-in">
-              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#1e1e1e]">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-[#E50914] text-white font-black text-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="px-2 py-0.5 rounded-lg bg-blue-600 text-white font-bold text-xs shrink-0">
                     EP {previewVideoEp.episode_number}
                   </span>
-                  <h3 className="font-bold text-sm text-white truncate">
+                  <h3 className="font-bold text-sm text-slate-900 truncate">
                     {previewVideoEp.title || `Episode ${previewVideoEp.episode_number}`}
                   </h3>
                 </div>
                 <button
                   onClick={() => setPreviewVideoEp(null)}
-                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1531,7 +1567,7 @@ export function AdminEpisodesPage() {
 
               <div className="p-4 space-y-3">
                 {previewVideoEp.video_url ? (
-                  <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-inner">
+                  <div className="relative aspect-video bg-slate-900 rounded-xl overflow-hidden border border-slate-200">
                     {isYouTubeUrl(previewVideoEp.video_url) ? (
                       <iframe
                         src={`https://www.youtube.com/embed/${parseYouTubeVideoId(previewVideoEp.video_url)}?autoplay=1&enablejsapi=1&rel=0`}
@@ -1551,21 +1587,21 @@ export function AdminEpisodesPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="py-16 text-center text-gray-400">
-                    <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-2" />
-                    <p className="font-bold">ភាគនេះមិនទាន់មានតំណភ្ជាប់ Stream URL ឡើយ</p>
+                  <div className="py-16 text-center text-slate-500">
+                    <AlertCircle className="w-10 h-10 text-rose-500 mx-auto mb-2" />
+                    <p className="font-bold text-slate-700">ភាគនេះមិនទាន់មានតំណភ្ជាប់ Stream URL ឡើយ</p>
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-400 pt-1">
-                  <span className="truncate max-w-md font-mono text-[11px] text-gray-300">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 pt-1">
+                  <span className="truncate max-w-md font-mono text-[11px] text-slate-600">
                     {previewVideoEp.video_url || 'No URL'}
                   </span>
                   {currentAnime && (
                     <Link
                       to={`/watch/${currentAnime.slug}/${previewVideoEp.episode_number}`}
                       target="_blank"
-                      className="text-[#E50914] hover:underline font-semibold flex items-center gap-1 shrink-0"
+                      className="text-blue-600 hover:underline font-semibold flex items-center gap-1 shrink-0"
                     >
                       បើកមើលលើ Frontend <ExternalLink className="w-3.5 h-3.5" />
                     </Link>
@@ -1579,23 +1615,29 @@ export function AdminEpisodesPage() {
 
       {/* Single Episode Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="bg-dark-card border border-dark-border rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-dark-border bg-dark-muted/30">
-              <h2 className="font-display font-bold text-xl text-white flex items-center gap-2">
-                {editEp ? `✏️ កែប្រែភាគទី ${editEp.episode_number}` : '➕ បន្ថែមភាគរឿងថ្មី'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50 shrink-0">
+              <h2 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
+                {editEp ? `កែប្រែភាគទី ${editEp.episode_number}` : 'បន្ថែមភាគរឿងថ្មី'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="btn-icon"><X className="w-5 h-5" /></button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">រឿង (Series) *</label>
+                  <label className={LABEL_CLASS}>រឿង (Series) *</label>
                   <select
                     value={form.anime_id || ''}
                     onChange={(e) => setForm((f) => ({ ...f, anime_id: parseInt(e.target.value) }))}
-                    required className="input text-xs"
+                    required
+                    className={`${INPUT_CLASS} text-xs`}
                   >
                     {animeList.map((a) => (
                       <option key={a.id} value={a.id}>{a.title}</option>
@@ -1603,42 +1645,46 @@ export function AdminEpisodesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">ភាគទី (Episode #) *</label>
+                  <label className={LABEL_CLASS}>ភាគទី (Episode #) *</label>
                   <input
                     type="number"
                     value={form.episode_number}
                     onChange={(e) => setForm((f) => ({ ...f, episode_number: parseInt(e.target.value) || 1 }))}
-                    required min="1" className="input"
+                    required
+                    min="1"
+                    className={INPUT_CLASS}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="label">ចំណងជើងភាគ (Episode Title)</label>
+                <label className={LABEL_CLASS}>ចំណងជើងភាគ (Episode Title)</label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  className="input"
+                  className={INPUT_CLASS}
                   placeholder="ឧ. ភាគទី ១ (ឬទុកចោលក៏បាន)"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="label mb-0">តំណភ្ជាប់វីដេអូ (Facebook / YouTube / MP4 / HLS / Iframe) *</label>
+                <div className="flex items-center justify-between mb-1.5 gap-2">
+                  <label className="text-xs font-semibold text-slate-700">
+                    តំណភ្ជាប់វីដេអូ (Facebook / YouTube / MP4 / HLS / Iframe) *
+                  </label>
                   {isYouTubeUrl(form.video_url) && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2.5 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full shrink-0">
                       <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                       </svg>
                       YouTube Detected
                     </span>
                   )}
                   {isFacebookUrl(form.video_url) && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-400 bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full shrink-0">
                       <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                       </svg>
                       Facebook Video Detected
                     </span>
@@ -1652,28 +1698,28 @@ export function AdminEpisodesPage() {
                     setForm((f) => ({ ...f, video_url: nextUrl }));
                     if (nextUrl.trim() !== form.video_url.trim()) setPrimaryQuality('');
                   }}
-                  className="input font-mono text-xs"
+                  className={`${INPUT_CLASS} font-mono text-xs`}
                   placeholder="https://www.facebook.com/... ឬ YouTube ឬ MP4 / m3u8"
                   required
                 />
-                <p className="text-[11px] text-gray-400 mt-1">
-                  💡 អាចដាក់ link Facebook Video (fb.watch, facebook.com/watch), YouTube (watch?v=, youtu.be), MP4, m3u8 ឬ iframe embed ក៏បាន
+                <p className="text-[11px] text-slate-500 mt-1">
+                  អាចដាក់ link Facebook Video (fb.watch, facebook.com/watch), YouTube (watch?v=, youtu.be), MP4, m3u8 ឬ iframe embed ក៏បាន
                 </p>
 
                 {/* YouTube Link Preview Card */}
                 {isYouTubeUrl(form.video_url) && (
-                  <div className="mt-2.5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between gap-3 animate-fade-in">
+                  <div className="mt-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <img
                         src={getYouTubeThumbnail(form.video_url, 'hq') || ''}
                         alt="YouTube preview"
-                        className="w-16 h-10 rounded-lg object-cover border border-white/20 shrink-0 shadow-sm"
+                        className="w-16 h-10 rounded-lg object-cover border border-rose-200 shrink-0 shadow-sm"
                       />
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-white truncate">
-                          YouTube Video ID: <span className="text-red-400">{parseYouTubeVideoId(form.video_url)}</span>
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          YouTube Video ID: <span className="text-rose-600">{parseYouTubeVideoId(form.video_url)}</span>
                         </p>
-                        <p className="text-[10px] text-gray-400">Player នឹងចាក់ដោយស្វ័យប្រវត្តិគ្មាន Error ឡើយ</p>
+                        <p className="text-[10px] text-slate-500">Player នឹងចាក់ដោយស្វ័យប្រវត្តិគ្មាន Error ឡើយ</p>
                       </div>
                     </div>
                     <button
@@ -1682,27 +1728,28 @@ export function AdminEpisodesPage() {
                         const thumb = getYouTubeThumbnail(form.video_url, 'hq');
                         if (thumb) setForm((f) => ({ ...f, thumbnail_url: thumb }));
                       }}
-                      className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold shrink-0 transition-colors shadow-sm cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold shrink-0 transition-colors shadow-sm cursor-pointer"
                     >
                       ប្រើ Thumbnail នេះ
                     </button>
                   </div>
                 )}
+
                 {/* Facebook Link Preview Card */}
                 {isFacebookUrl(form.video_url) && (
-                  <div className="mt-2.5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between gap-3 animate-fade-in">
+                  <div className="mt-2.5 p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-blue-600/30 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
                         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                         </svg>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span className="text-blue-400">Facebook Video Stream</span>
+                        <p className="text-xs font-bold text-blue-700 flex items-center gap-1.5">
+                          Facebook Video Stream
                         </p>
-                        <p className="text-[11px] text-gray-300">
-                          📌 ត្រូវប្រាកដថា Post នោះដាក់ Privacy ជា <span className="text-emerald-400 font-bold">Public (សាធារណៈ 🌍)</span> ទើបអាចទស្សនាបានពេញលេញ
+                        <p className="text-[11px] text-slate-600">
+                          ត្រូវប្រាកដថា Post នោះដាក់ Privacy ជា <span className="text-emerald-700 font-bold">Public (សាធារណៈ)</span> ទើបអាចទស្សនាបានពេញលេញ
                         </p>
                       </div>
                     </div>
@@ -1710,92 +1757,186 @@ export function AdminEpisodesPage() {
                       href={form.video_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold shrink-0 transition-colors shadow-sm flex items-center gap-1"
+                      className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold shrink-0 transition-colors shadow-sm flex items-center gap-1"
                     >
-                      តេស្តបើកមើល ↗
+                      តេស្តបើកមើល <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="label">តំណភ្ជាប់អក្សររត់ (Subtitle URL: .vtt)</label>
+                <label className={LABEL_CLASS}>តំណភ្ជាប់អក្សររត់ (Subtitle URL: .vtt)</label>
                 <input
                   type="url"
                   value={form.subtitle_url}
                   onChange={(e) => setForm((f) => ({ ...f, subtitle_url: e.target.value }))}
-                  className="input"
+                  className={INPUT_CLASS}
                   placeholder="https://.../subtitles-kh.vtt"
                 />
               </div>
 
               <div>
-                <label className="label">រូបភាពតំណាងភាគ (Episode Thumbnail URL)</label>
+                <label className={LABEL_CLASS}>រូបភាពតំណាងភាគ (Episode Thumbnail URL)</label>
                 <input
                   type="url"
                   value={form.thumbnail_url}
                   onChange={(e) => setForm((f) => ({ ...f, thumbnail_url: e.target.value }))}
-                  className="input font-mono text-xs"
+                  className={`${INPUT_CLASS} font-mono text-xs`}
                   placeholder="https://.../episode-02.jpg"
                 />
-                <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-gray-200 hover:bg-white/10">
-                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" disabled={isUploadingThumbnail} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadEpisodeThumbnail(file); event.currentTarget.value = ''; }} />
-                  {isUploadingThumbnail ? 'កំពុង Upload រូបភាព…' : 'Upload រូបភាពភាគ'}
+                <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="sr-only"
+                    disabled={isUploadingThumbnail}
+                    onChange={(event) => {
+                      const file = event.currentTarget.files?.[0];
+                      if (file) void uploadEpisodeThumbnail(file);
+                      event.currentTarget.value = '';
+                    }}
+                  />
+                  {isUploadingThumbnail ? 'កំពុង Upload រូបភាព...' : 'Upload រូបភាពភាគ'}
                 </label>
-                <p className="mt-1 text-[11px] text-gray-400">បញ្ចូល URL រូបភាព frame ពិតរបស់ភាគនេះ។ សម្រាប់ YouTube អាចប្រើប៊ូតុង Thumbnail ខាងលើ។</p>
-                {form.thumbnail_url.trim() && <img src={form.thumbnail_url} alt="Episode thumbnail preview" onError={(event) => { event.currentTarget.style.display = 'none'; }} onLoad={(event) => { event.currentTarget.style.display = 'block'; }} className="mt-2 aspect-video max-h-36 w-auto rounded-lg border border-white/10 object-cover" />}
+                <p className="mt-1 text-[11px] text-slate-500">
+                  បញ្ចូល URL រូបភាព frame ពិតរបស់ភាគនេះ។ សម្រាប់ YouTube អាចប្រើប៊ូតុង Thumbnail ខាងលើ។
+                </p>
+                {form.thumbnail_url.trim() && (
+                  <img
+                    src={form.thumbnail_url}
+                    alt="Episode thumbnail preview"
+                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                    onLoad={(event) => { event.currentTarget.style.display = 'block'; }}
+                    className="mt-2 aspect-video max-h-36 w-auto rounded-xl border border-slate-200 object-cover"
+                  />
+                )}
               </div>
 
               <div>
-                <label className="label">Subtitles by language (WebVTT .vtt)</label>
-                <p className="mb-2 text-xs text-gray-400">Add real subtitle file URLs. A language appears in the player only when its file is provided.</p>
+                <label className={LABEL_CLASS}>Subtitles by language (WebVTT .vtt)</label>
+                <p className="mb-2 text-xs text-slate-500">
+                  Add real subtitle file URLs. A language appears in the player only when its file is provided.
+                </p>
                 <div className="space-y-2">
-                  {subtitleTracks.map((track, index) => <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_2fr_auto]">
-                    <input className="input" value={track.label} placeholder="Name (Khmer)" onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => i === index ? { ...item, label: e.target.value } : item))} />
-                    <input className="input" value={track.lang} placeholder="Language (km)" onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => i === index ? { ...item, lang: e.target.value } : item))} />
-                    <input type="url" className="input" value={track.src} placeholder="https://.../subtitles-km.vtt" onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => i === index ? { ...item, src: e.target.value } : item))} />
-                    <button type="button" className="rounded-lg px-3 text-red-300 hover:bg-red-500/10" onClick={() => setSubtitleTracks((items) => items.filter((_, i) => i !== index))} aria-label="Remove subtitle track">×</button>
-                  </div>)}
+                  {subtitleTracks.map((track, index) => (
+                    <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_2fr_auto]">
+                      <input
+                        className={INPUT_CLASS}
+                        value={track.label}
+                        placeholder="Name (Khmer)"
+                        onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => (i === index ? { ...item, label: e.target.value } : item)))}
+                      />
+                      <input
+                        className={INPUT_CLASS}
+                        value={track.lang}
+                        placeholder="Language (km)"
+                        onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => (i === index ? { ...item, lang: e.target.value } : item)))}
+                      />
+                      <input
+                        type="url"
+                        className={INPUT_CLASS}
+                        value={track.src}
+                        placeholder="https://.../subtitles-km.vtt"
+                        onChange={(e) => setSubtitleTracks((items) => items.map((item, i) => (i === index ? { ...item, src: e.target.value } : item)))}
+                      />
+                      <button
+                        type="button"
+                        className="rounded-xl px-3 py-2 text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 flex items-center justify-center transition-colors"
+                        onClick={() => setSubtitleTracks((items) => items.filter((_, i) => i !== index))}
+                        aria-label="Remove subtitle track"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <button type="button" className="mt-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-emerald-300 hover:bg-white/5" onClick={() => setSubtitleTracks((items) => [...items, { label: '', lang: '', src: '' }])}>+ Add subtitle language</button>
+                <button
+                  type="button"
+                  className="mt-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 inline-flex items-center gap-1 transition-colors"
+                  onClick={() => setSubtitleTracks((items) => [...items, { label: '', lang: '', src: '' }])}
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add subtitle language
+                </button>
               </div>
 
               <div>
-                <label className="label" htmlFor="primary-video-quality">Quality of the main video link</label>
-                <p className="mb-2 text-xs text-gray-400">Detect the resolution from this video link or enter its label. This uses the one source URL and does not create other encodes.</p>
+                <label className={LABEL_CLASS} htmlFor="primary-video-quality">Quality of the main video link</label>
+                <p className="mb-2 text-xs text-slate-500">
+                  Detect the resolution from this video link or enter its label. This uses the one source URL and does not create other encodes.
+                </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <input id="primary-video-quality" className="input flex-1" value={primaryQuality} onChange={(event) => setPrimaryQuality(event.target.value)} placeholder="1080p" />
-                  <button type="button" onClick={detectPrimaryQuality} disabled={isDetectingQuality || !form.video_url.trim() || isYouTubeUrl(form.video_url) || isFacebookUrl(form.video_url)} className="rounded-lg border border-cyan-400/30 px-3 py-2 text-sm font-bold text-cyan-300 disabled:opacity-50">
-                    {isDetectingQuality ? 'Reading video…' : 'Detect from link'}
+                  <input
+                    id="primary-video-quality"
+                    className={`${INPUT_CLASS} flex-1`}
+                    value={primaryQuality}
+                    onChange={(event) => setPrimaryQuality(event.target.value)}
+                    placeholder="1080p"
+                  />
+                  <button
+                    type="button"
+                    onClick={detectPrimaryQuality}
+                    disabled={isDetectingQuality || !form.video_url.trim() || isYouTubeUrl(form.video_url) || isFacebookUrl(form.video_url)}
+                    className="rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 transition-colors disabled:opacity-50"
+                  >
+                    {isDetectingQuality ? 'Reading video...' : 'Detect from link'}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="label">Alternate video quality sources</label>
-                <p className="mb-2 text-xs text-gray-400">Add separate encoded files (or a quality-specific HLS URL). The player switches to these real sources.</p>
+                <label className={LABEL_CLASS}>Alternate video quality sources</label>
+                <p className="mb-2 text-xs text-slate-500">
+                  Add separate encoded files (or a quality-specific HLS URL). The player switches to these real sources.
+                </p>
                 <div className="space-y-2">
-                  {videoQualities.map((quality, index) => <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_3fr_auto]">
-                    <input className="input" value={quality.label} placeholder="720p HD" onChange={(e) => setVideoQualities((items) => items.map((item, i) => i === index ? { ...item, label: e.target.value } : item))} />
-                    <input type="url" className="input" value={quality.src} placeholder="https://.../episode-720p.mp4" onChange={(e) => setVideoQualities((items) => items.map((item, i) => i === index ? { ...item, src: e.target.value } : item))} />
-                    <button type="button" className="rounded-lg px-3 text-red-300 hover:bg-red-500/10" onClick={() => setVideoQualities((items) => items.filter((_, i) => i !== index))} aria-label="Remove video quality source">×</button>
-                  </div>)}
+                  {videoQualities.map((quality, index) => (
+                    <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_3fr_auto]">
+                      <input
+                        className={INPUT_CLASS}
+                        value={quality.label}
+                        placeholder="720p HD"
+                        onChange={(e) => setVideoQualities((items) => items.map((item, i) => (i === index ? { ...item, label: e.target.value } : item)))}
+                      />
+                      <input
+                        type="url"
+                        className={INPUT_CLASS}
+                        value={quality.src}
+                        placeholder="https://.../episode-720p.mp4"
+                        onChange={(e) => setVideoQualities((items) => items.map((item, i) => (i === index ? { ...item, src: e.target.value } : item)))}
+                      />
+                      <button
+                        type="button"
+                        className="rounded-xl px-3 py-2 text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 flex items-center justify-center transition-colors"
+                        onClick={() => setVideoQualities((items) => items.filter((_, i) => i !== index))}
+                        aria-label="Remove video quality source"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <button type="button" className="mt-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-emerald-300 hover:bg-white/5" onClick={() => setVideoQualities((items) => [...items, { label: '', src: '' }])}>+ Add video quality</button>
+                <button
+                  type="button"
+                  className="mt-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 inline-flex items-center gap-1 transition-colors"
+                  onClick={() => setVideoQualities((items) => [...items, { label: '', src: '' }])}
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add video quality
+                </button>
               </div>
 
               {/* VIP Access Control Box */}
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
-                    <Crown className="w-4 h-4 fill-amber-400" />
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600">
+                    <Crown className="w-4 h-4 fill-amber-500" />
                   </div>
                   <div>
-                    <label htmlFor="is_vip_toggle" className="text-xs font-bold text-white block cursor-pointer">
+                    <label htmlFor="is_vip_toggle" className="text-xs font-bold text-slate-900 block cursor-pointer">
                       Lock to VIP Only (ដាក់ VIP)
                     </label>
-                    <span className="text-[11px] text-gray-400 block">
-                      {form.is_vip ? '🔒 ទាល់តែមានគណនី VIP ទើបអាចទស្សនាបាន' : '🟢 គ្រប់គ្នាចុចមើលបានដោយសេរី (Free Watch)'}
+                    <span className="text-[11px] text-slate-600 block">
+                      {form.is_vip ? 'ទាល់តែមានគណនី VIP ទើបអាចទស្សនាបាន' : 'គ្រប់គ្នាចុចមើលបានដោយសេរី (Free Watch)'}
                     </span>
                   </div>
                 </div>
@@ -1807,18 +1948,18 @@ export function AdminEpisodesPage() {
                     onChange={(e) => setForm((f) => ({ ...f, is_vip: e.target.checked, is_free: !e.target.checked }))}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                 </label>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">រយៈពេល (Duration គិតជាវិនាទី)</label>
+                  <label className={LABEL_CLASS}>រយៈពេល (Duration គិតជាវិនាទី)</label>
                   <input
                     type="number"
                     value={form.duration_seconds}
                     onChange={(e) => setForm((f) => ({ ...f, duration_seconds: parseInt(e.target.value) || 0 }))}
-                    className="input"
+                    className={INPUT_CLASS}
                     min="0"
                   />
                 </div>
@@ -1828,20 +1969,28 @@ export function AdminEpisodesPage() {
                       type="checkbox"
                       checked={form.is_published}
                       onChange={(e) => setForm((f) => ({ ...f, is_published: e.target.checked }))}
-                      className="w-4 h-4 accent-brand-500 rounded"
+                      className="w-4 h-4 accent-blue-600 rounded"
                     />
-                    <span className="text-xs font-semibold text-gray-300">ផ្សាយផ្ទាល់ (Published / Live)</span>
+                    <span className="text-xs font-semibold text-slate-700">ផ្សាយផ្ទាល់ (Published / Live)</span>
                   </label>
                 </div>
               </div>
 
-              {error && <p className="text-red-400 text-xs">{error}</p>}
+              {error && <p className="text-rose-600 text-xs">{error}</p>}
 
-              <div className="flex gap-3 pt-4 border-t border-dark-border">
-                <button type="submit" disabled={saving} className="btn-primary flex-1 py-3 cursor-pointer">
-                  {saving ? 'កំពុងរក្សាទុក...' : editEp ? '💾 កែប្រែភាគរឿង' : '💾 រក្សាទុកភាគរឿង'}
+              <div className="flex gap-3 pt-4 border-t border-slate-200">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {saving ? 'កំពុងរក្សាទុក...' : editEp ? 'កែប្រែភាគរឿង' : 'រក្សាទុកភាគរឿង'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-ghost py-3 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="py-3 px-5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold transition-colors cursor-pointer"
+                >
                   បោះបង់
                 </button>
               </div>
@@ -1852,43 +2001,50 @@ export function AdminEpisodesPage() {
 
       {/* Batch Generator Modal */}
       {showBatchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="bg-dark-card border border-dark-border rounded-3xl w-full max-w-md shadow-2xl animate-scale-in overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-dark-border bg-dark-muted/30">
-              <h2 className="font-display font-bold text-lg text-white flex items-center gap-2">
-                <Layers className="w-5 h-5 text-cyan-400" /> Batch Add Episodes
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50">
+              <h2 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-blue-600" /> Batch Add Episodes
               </h2>
-              <button onClick={() => setShowBatchModal(false)} className="btn-icon"><X className="w-5 h-5" /></button>
+              <button
+                onClick={() => setShowBatchModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleBatchGenerate} className="p-6 space-y-4">
-              <p className="text-xs text-gray-400">
-                Automatically generate episodes 1 through N for <strong>{currentAnime?.title}</strong>.
+              <p className="text-xs text-slate-500">
+                Automatically generate episodes 1 through N for <strong className="text-slate-900">{currentAnime?.title}</strong>.
               </p>
 
               <div>
-                <label className="label">Total Episodes to Generate</label>
+                <label className={LABEL_CLASS}>Total Episodes to Generate</label>
                 <input
                   type="number"
                   value={batchCount}
                   onChange={(e) => setBatchCount(parseInt(e.target.value) || 1)}
-                  min="1" max="100" className="input"
+                  min="1"
+                  max="100"
+                  className={INPUT_CLASS}
                 />
               </div>
 
               <div>
-                <label className="label">Sample Stream URL Template</label>
+                <label className={LABEL_CLASS}>Sample Stream URL Template</label>
                 <input
                   type="url"
                   value={batchUrlPattern}
                   onChange={(e) => setBatchUrlPattern(e.target.value)}
-                  className="input text-xs"
+                  className={`${INPUT_CLASS} text-xs`}
                 />
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                  <Crown className="w-3.5 h-3.5 fill-amber-400" /> Lock all new episodes to VIP
+              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
+                  <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" /> Lock all new episodes to VIP
                 </span>
                 <input
                   type="checkbox"
@@ -1898,13 +2054,21 @@ export function AdminEpisodesPage() {
                 />
               </div>
 
-              {error && <p className="text-red-400 text-xs">{error}</p>}
+              {error && <p className="text-rose-600 text-xs">{error}</p>}
 
-              <div className="flex gap-3 pt-4 border-t border-dark-border">
-                <button type="submit" disabled={saving} className="btn-primary flex-1 py-3">
+              <div className="flex gap-3 pt-4 border-t border-slate-200">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all disabled:opacity-50"
+                >
                   {saving ? 'Generating...' : `Generate ${batchCount} Episodes`}
                 </button>
-                <button type="button" onClick={() => setShowBatchModal(false)} className="btn-ghost py-3">
+                <button
+                  type="button"
+                  onClick={() => setShowBatchModal(false)}
+                  className="py-3 px-5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold transition-colors"
+                >
                   Cancel
                 </button>
               </div>
@@ -1913,33 +2077,38 @@ export function AdminEpisodesPage() {
         </div>
       )}
 
-      {/* ── Link Converter Modal (Link 1 ➔ Link 2 S3 MP4) ── */}
+      {/* ── Link Converter Modal (Link 1 -> Link 2 S3 MP4) ── */}
       {showConverterModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="bg-dark-card border border-dark-border rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-dark-border bg-dark-muted/30">
-              <h2 className="font-display font-bold text-lg text-white flex items-center gap-2">
-                <Link2 className="w-5 h-5 text-purple-400" /> Stream Link Converter (Link 1 ➔ S3 MP4)
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50">
+              <h2 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-blue-600" /> Stream Link Converter (Link 1 to S3 MP4)
               </h2>
-              <button onClick={() => setShowConverterModal(false)} className="btn-icon"><X className="w-5 h-5" /></button>
+              <button
+                onClick={() => setShowConverterModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleConvertLink} className="p-6 space-y-4">
               <div>
-                <label className="label">Paste Type 1 Link (/api/video-stream?...)</label>
+                <label className={LABEL_CLASS}>Paste Type 1 Link (/api/video-stream?...)</label>
                 <textarea
                   value={converterInput}
                   onChange={(e) => setConverterInput(e.target.value)}
                   required
                   rows={3}
                   placeholder="https://nintanime.com/api/video-stream?episodeId=...&sig=..."
-                  className="input font-mono text-xs resize-none"
+                  className={`${INPUT_CLASS} font-mono text-xs resize-none`}
                 />
               </div>
 
               {converterError && (
-                <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                   <span>{converterError}</span>
                 </div>
               )}
@@ -1947,22 +2116,22 @@ export function AdminEpisodesPage() {
               <button
                 type="submit"
                 disabled={converterLoading || !converterInput.trim()}
-                className="btn-primary w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold"
+                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all disabled:opacity-50"
               >
-                {converterLoading ? 'Resolving S3 Direct Link...' : '⚡ Convert to Direct S3 Link'}
+                {converterLoading ? 'Resolving S3 Direct Link...' : 'Convert to Direct S3 Link'}
               </button>
 
               {converterOutput && (
-                <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-3 animate-fade-in">
-                  <label className="text-xs font-bold text-purple-300 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                     <span>Direct S3 MP4 URL (Link Type 2):</span>
                     {converterCopied && (
-                      <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                      <span className="text-emerald-700 font-bold flex items-center gap-1 text-[11px]">
                         <Check className="w-3.5 h-3.5" /> Copied!
                       </span>
                     )}
                   </label>
-                  <div className="p-3 rounded-xl bg-black/60 border border-white/10 font-mono text-xs text-emerald-300 break-all select-all">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 font-mono text-xs text-blue-700 break-all select-all">
                     {converterOutput}
                   </div>
 
@@ -1970,14 +2139,14 @@ export function AdminEpisodesPage() {
                     <button
                       type="button"
                       onClick={copyConvertedLink}
-                      className="btn-secondary text-xs py-2.5 px-4 flex-1 flex items-center justify-center gap-1.5"
+                      className="text-xs font-semibold py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 flex-1 flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <Copy className="w-3.5 h-3.5" /> Copy Link
                     </button>
                     <button
                       type="button"
                       onClick={useConvertedInNewEpisode}
-                      className="btn-primary text-xs py-2.5 px-4 flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600"
+                      className="text-xs font-semibold py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex-1 flex items-center justify-center gap-1.5 shadow-sm transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" /> Use in New Episode
                     </button>
@@ -1991,4 +2160,3 @@ export function AdminEpisodesPage() {
     </AdminLayout>
   );
 }
-

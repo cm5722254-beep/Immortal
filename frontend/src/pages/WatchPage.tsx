@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Info, Users,
-  Lock, Crown, Send, Film, Download
+  Lock, Crown, Send, Film, Download, Zap,
+  Play, Search, LayoutGrid
 } from 'lucide-react';
 import { VideoPlayer } from '../components/player/VideoPlayer';
 import { isMoviePurchased } from '../services/paymentService';
@@ -14,7 +15,6 @@ import type { Anime, Episode, DanmakuItem } from '../types';
 import { downloadService } from '../services/downloadService';
 import { triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
-import { getVipContactUrl } from '../utils/vip';
 import { translate, useLanguageStore } from '../store/languageStore';
 import { useDownloadStore } from '../store/downloadStore';
 
@@ -26,7 +26,7 @@ export function WatchPage() {
   const location = useLocation();
   const { user, isAuthenticated, isAdmin, isOwner } = useAuthStore();
   const { downloads, fetchDownloads, startDownload, isDownloaded, getDownloadProgress } = useDownloadStore();
-  const { promoData, fetchPromoCountdown } = usePromoStore();
+  const { fetchPromoCountdown } = usePromoStore();
 
   const [anime, setAnime] = useState<Anime | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
@@ -41,10 +41,32 @@ export function WatchPage() {
   });
   const [movieUnlocked] = useState(false);
   const [downloadNotice, setDownloadNotice] = useState('');
+  const [selectedRange, setSelectedRange] = useState(0);
+  const [epSearch, setEpSearch] = useState('');
+  const RANGE_SIZE = 25;
 
   const wsRef = useRef<WebSocket | null>(null);
   const skipEpisodeFetchRef = useRef<string | null>(null);
   const epNum = parseInt(episodeNumber || '1', 10);
+
+  // Auto-sync selectedRange to current episode's range
+  useEffect(() => {
+    if (epNum > 0) {
+      setSelectedRange(Math.floor((epNum - 1) / RANGE_SIZE));
+    }
+  }, [epNum]);
+
+  const totalRanges = Math.ceil(episodes.length / RANGE_SIZE);
+  const displayedEpisodes = useMemo(() => {
+    if (epSearch.trim()) {
+      const q = epSearch.trim().toLowerCase();
+      return episodes.filter(
+        (e) => String(e.episode_number).includes(q) || (e.title && e.title.toLowerCase().includes(q))
+      );
+    }
+    const start = selectedRange * RANGE_SIZE;
+    return episodes.slice(start, start + RANGE_SIZE);
+  }, [episodes, selectedRange, epSearch]);
 
   useEffect(() => {
     fetchPromoCountdown();
@@ -54,13 +76,10 @@ export function WatchPage() {
     void fetchDownloads();
   }, [fetchDownloads]);
 
-  // ✅ VIP: Admin, Owner, STAFF, is_vip_active, is_vip => always unlocked
-  const isVipUser = isAdmin || isOwner || !!user && (user.role === 'ADMIN' || user.role === 'OWNER' || user.role === 'STAFF' || user.is_vip_active === true);
+  // VIP verification: user must have VIP (Admin, Owner, Staff, is_vip, or active VIP status) to watch
+  const isVipUser = isAdmin || isOwner || !!user && (user.role === 'ADMIN' || user.role === 'OWNER' || user.role === 'STAFF' || user.is_vip_active === true || user.is_vip === true);
   const hasSeriesTrial = !!user && user.trial_anime_id === anime?.id && !!user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now();
-  const isGlobalVipLocked = !!promoData && (promoData.is_vip_locked || promoData.is_expired);
-  // ✅ Only treat episode as VIP if is_free is explicitly false (not null/undefined)
-  const isCurrentEpVip = currentEp?.is_vip === true || (currentEp as any)?.is_vip_only === true || (currentEp?.is_free !== null && currentEp?.is_free !== undefined && currentEp?.is_free === false);
-  const isLocked = (isGlobalVipLocked || isCurrentEpVip) && !isVipUser && !hasSeriesTrial;
+  const isLocked = !isVipUser && !hasSeriesTrial;
   const vipPlan = user?.vip_plan?.toLowerCase() || '';
   const canDownload = isAdmin || isOwner || user?.role === 'STAFF' || (isVipUser && vipPlan !== 'pro');
   const isPlusPlan = vipPlan === 'plus' && !isAdmin && !isOwner && user?.role !== 'STAFF';
@@ -321,8 +340,8 @@ export function WatchPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0E17] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-[#E8452C] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -332,50 +351,49 @@ export function WatchPage() {
       ? `/${anime.type === 'ANIME' ? 'anime' : anime.type === 'DRAMA' ? 'drama' : anime.type === 'MOVIE' ? 'movie' : 'donghua'}/${anime.slug}`
       : '/explore';
     return (
-      <div className="mini-watch-empty min-h-screen bg-[#111216] pt-16 flex flex-col items-center justify-center text-center px-5">
-        <div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-white/5 text-gray-400"><Film className="h-6 w-6" /></div>
-        <h1 className="text-xl text-white font-bold mb-2">Episode unavailable</h1>
-        <p className="max-w-sm text-gray-400 mb-6 text-sm leading-relaxed">
+      <div className="mini-watch-empty min-h-screen bg-slate-50 text-slate-800 pt-16 flex flex-col items-center justify-center text-center px-5">
+        <div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-slate-100 text-slate-500"><Film className="h-6 w-6" /></div>
+        <h1 className="text-xl text-slate-900 font-bold mb-2">Episode unavailable</h1>
+        <p className="max-w-sm text-slate-500 mb-6 text-sm leading-relaxed">
           {anime ? 'This title is in your catalog, but no playable episode is available right now.' : 'This episode may have been removed or is not published yet.'}
         </p>
         <div className="flex items-center gap-3">
-          <Link to={detailPath} className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black">Return to title</Link>
-          <Link to="/explore" className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white">Browse catalog</Link>
+          <Link to={detailPath} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-xs">Return to title</Link>
+          <Link to="/explore" className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700">Browse catalog</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <main className={`mini-watch ${!isTelegram && !isMobileApp ? 'website-watch' : ''} min-h-screen bg-[#080d1a] text-gray-100 pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6 ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
+    <main className={`mini-watch ${!isTelegram && !isMobileApp ? 'website-watch' : ''} min-h-screen bg-bg-base text-text-primary pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6 ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col gap-5">
           {/* Main Stream Area */}
           <div className="flex-1 min-w-0">
             {(!isAuthenticated && isLocked) ? (
-              /* ─── 🔒 MANDATORY LOGIN GATE (មិនទាន់ LOGIN មិនអាចមើលបាន) ─── */
-              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#0F1424] via-[#0A0E17] to-[#12070e] border-2 border-amber-500/50 flex items-center justify-center p-6 text-center animate-scale-in">
+              /* ─── MANDATORY LOGIN GATE (មិនទាន់ LOGIN មិនអាចមើលបាន) ─── */
+              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-sm bg-white/95 border border-slate-200/90 flex items-center justify-center p-6 text-center animate-scale-in">
                 {anime?.poster_url && (
                   <div
-                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-20 scale-110 pointer-events-none"
+                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-10 scale-110 pointer-events-none"
                     style={{ backgroundImage: `url(${anime.poster_url})` }}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E17] via-[#0A0E17]/90 to-[#0A0E17]/80 pointer-events-none" />
 
                 <div className="relative z-10 max-w-md mx-auto flex flex-col items-center space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.3)] animate-bounce">
+                  <div className="w-16 h-16 rounded-3xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-xs">
                     <Lock className="w-8 h-8 stroke-[2.4]" />
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/70">
                       <Lock className="w-3.5 h-3.5" /> {translate('Please sign in first', appLanguage)}
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight">
                       {anime?.title} ({translate('Episode', appLanguage)} {currentEp.episode_number})
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-300 leading-relaxed px-2">
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed px-2">
                       {translate('Sign in to watch in 4K.', appLanguage)}
                     </p>
                   </div>
@@ -385,13 +403,13 @@ export function WatchPage() {
                     <Link
                       to="/login"
                       state={{ from: location.pathname }}
-                      className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-black text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-amber-500/30 hover:scale-105 transition-all"
+                      className="w-full py-3.5 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2.5 shadow-xs hover:scale-105 active:scale-95 transition-all"
                     >
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <path fill="#000" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path fill="#000" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path fill="#000" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                        <path fill="#000" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      <svg className="w-4 h-4 shrink-0 fill-white" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                       </svg>
                       {translate('Sign in with Google', appLanguage)}
                     </Link>
@@ -399,30 +417,29 @@ export function WatchPage() {
                 </div>
               </div>
             ) : isMovieLocked ? (
-              /* ─── 🍿 MOVIE PAY-PER-VIEW GATE ($1.00) ─── */
-              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#16121f] via-[#0e0b14] to-[#07050a] border-2 border-amber-500/50 flex items-center justify-center p-6 text-center animate-scale-in">
+              /* ─── MOVIE PAY-PER-VIEW GATE ($1.00) ─── */
+              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-sm bg-white/95 border border-slate-200/90 flex items-center justify-center p-6 text-center animate-scale-in">
                 {anime?.poster_url && (
                   <div
-                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-25 scale-110 pointer-events-none"
+                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-10 scale-110 pointer-events-none"
                     style={{ backgroundImage: `url(${anime.poster_url})` }}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E17] via-[#0A0E17]/90 to-[#0A0E17]/70 pointer-events-none" />
 
                 <div className="relative z-10 max-w-md mx-auto flex flex-col items-center space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-black shadow-[0_0_35px_rgba(245,158,11,0.45)] animate-bounce">
+                  <div className="w-16 h-16 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs">
                     <Film className="w-8 h-8 stroke-[2.4]" />
                   </div>
 
                   <div className="space-y-2">
-                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/40 shadow-sm">
-                      <Film className="w-3.5 h-3.5" /> {translate('Special movie access', appLanguage)}
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-black border border-amber-200 shadow-xs">
+                      <Film className="w-3.5 h-3.5 text-amber-600" /> {translate('Special movie access', appLanguage)}
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight leading-snug">
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight leading-snug">
                       {anime?.title}
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-300 leading-relaxed px-2">
-                      {translate('Special movie', appLanguage)}. <span className="text-amber-300 font-bold">{translate('VIP members must also purchase this movie.', appLanguage)}</span> <strong className="text-amber-400 font-black text-sm">{appLanguage === 'km' ? '$1.00 (≈ 4,000 ៛)' : '$1.00 (≈ KHR 4,000)'}</strong> {translate('One-time purchase, watch forever.', appLanguage)}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed px-2">
+                      {translate('Special movie', appLanguage)}. <span className="text-amber-800 font-bold">{translate('VIP members must also purchase this movie.', appLanguage)}</span> <strong className="text-slate-900 font-black text-sm">{appLanguage === 'km' ? '$1.00 (≈ 4,000 ៛)' : '$1.00 (≈ KHR 4,000)'}</strong> {translate('One-time purchase, watch forever.', appLanguage)}
                     </p>
                   </div>
 
@@ -432,61 +449,55 @@ export function WatchPage() {
                       href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(appLanguage === 'km' ? `សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime?.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}` : `Hello Admin, I would like to buy this movie: ${anime?.title} ($1.00). Username: ${user?.username || 'Guest'}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-[0_8px_30px_rgba(245,158,11,0.45)] hover:scale-105 active:scale-95 transition-all"
+                      className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-xs hover:scale-105 active:scale-95 transition-all"
                     >
                       <Send className="w-5 h-5 stroke-[2.5]" /> {translate('Buy this movie on Telegram', appLanguage)} ($1.00)
                     </a>
-                    <p className="text-[11px] text-gray-400 mt-2">
-                      💬 {appLanguage === 'km' ? 'ទាក់ទង Admin @watchflixanimeadmin ដើម្បីបើកសិទ្ធិទស្សនាភ្លាមៗ' : 'Contact @watchflixanimeadmin to activate viewing access.'}
-                    </p>
                   </div>
                 </div>
               </div>
             ) : isLocked ? (
-              /* ─── 👑 VIP REQUIRED GATE ─── */
-              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl bg-[#0F1424] border border-amber-500/40 flex items-center justify-center p-6 text-center">
-
+              /* ─── VIP REQUIRED GATE ─── */
+              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-sm bg-white/95 border border-slate-200/90 flex items-center justify-center p-6 text-center">
                 {anime?.poster_url && (
                   <div
-                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-25 scale-110 pointer-events-none"
+                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-10 scale-110 pointer-events-none"
                     style={{ backgroundImage: `url(${anime.poster_url})` }}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E17] via-[#0A0E17]/90 to-[#0A0E17]/70 pointer-events-none" />
 
                 <div className="relative z-10 max-w-md mx-auto flex flex-col items-center space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.25)] animate-pulse">
-                    <Crown className="w-8 h-8 stroke-[2.2]" />
+                  <div className="w-16 h-16 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs">
+                    <Crown className="w-8 h-8 stroke-[2.2] fill-amber-500" />
                   </div>
 
                   <div className="space-y-2">
-                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
-                      <Crown className="w-3.5 h-3.5 fill-amber-400" /> {translate('VIP members only', appLanguage)}
+                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">
+                      <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" /> {translate('VIP members only', appLanguage)}
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight leading-snug">
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight leading-snug">
                       {anime?.title} ({translate('Episode', appLanguage)} {currentEp.episode_number})
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-300 leading-relaxed px-2">
-                      {isGlobalVipLocked ? translate('Free access expired.', appLanguage) : translate('This episode requires VIP.', appLanguage)}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed px-2">
+                      {appLanguage === 'km' ? 'វីដេអូនេះតម្រូវឱ្យមានសមាជិកភាព VIP ទើបអាចទស្សនាបាន។' : 'This video requires an active VIP membership to watch.'}
                     </p>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-1">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-1 max-w-xs mx-auto">
+                    <Link
+                      to="/vip"
+                      className="w-full py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black shadow-xs transition-transform active:scale-95"
+                    >
+                      <Crown className="w-4 h-4 fill-slate-950" /> {translate('Upgrade VIP', appLanguage)}
+                    </Link>
                     <a
                       href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(appLanguage === 'km' ? `សួស្តី Admin ខ្ញុំចង់ដំឡើងសមាជិក VIP សម្រាប់គណនី: ${user?.username || 'ភ្ញៀវ'}` : `Hello Admin, I would like to upgrade this account to VIP: ${user?.username || 'Guest'}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-primary w-full py-3 px-4 text-xs sm:text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-black shadow-lg shadow-amber-500/30"
+                      className="w-full sm:w-auto py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm whitespace-nowrap transition-all flex items-center justify-center gap-1.5 border border-slate-200"
                     >
-                      <Send className="w-4 h-4" /> {translate('Contact admin to upgrade VIP', appLanguage)}
-                    </a>
-                    <a
-                      href={getVipContactUrl(user?.username)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm whitespace-nowrap transition-all"
-                    >
-                      {translate('VIP information', appLanguage)}
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{translate('Contact admin to upgrade VIP', appLanguage)}</span>
                     </a>
                   </div>
                 </div>
@@ -496,7 +507,7 @@ export function WatchPage() {
                 {offlineVideoUrl && (
                   <div className="absolute top-3 left-3 z-30 pointer-events-none">
                     <span className="bg-emerald-600 text-white text-[11px] font-bold py-1 px-2.5 rounded-full shadow-lg flex items-center gap-1">
-                      ⚡ {translate('Watch offline', appLanguage)}
+                      <Zap className="w-3.5 h-3.5" /> {translate('Watch offline', appLanguage)}
                     </span>
                   </div>
                 )}
@@ -519,51 +530,51 @@ export function WatchPage() {
             )}
 
 
-            {/* Episode Meta Bar (Compact Native Layout) */}
-            <div className="mt-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0a0a0a]/90 border border-white/[0.08] backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+            {/* Episode Meta Bar */}
+            <div className="mt-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                  <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-[#E50914] text-white">
+                  <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-blue-600 text-white">
                     {translate('Episode', appLanguage)} {currentEp.episode_number}
                   </span>
                   {offlineVideoUrl ? (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                       {translate('Downloaded', appLanguage)}
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {liveViewers} {translate('Viewers', appLanguage)}
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                      <Users className="w-3 h-3" /> {liveViewers} {translate('Viewers', appLanguage)}
                     </span>
                   )}
                 </div>
-                <h1 className="font-display font-bold text-sm sm:text-base md:text-lg text-white tracking-tight truncate">
+                <h1 className="font-display font-bold text-sm sm:text-base md:text-lg text-slate-900 tracking-tight truncate">
                   {anime?.title} — {translate('Episode', appLanguage)} {currentEp.episode_number}
                 </h1>
                 {anime?.alt_title && (
-                  <p className="text-[11px] text-gray-400 mt-0.5 truncate">{anime.alt_title}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 truncate">{anime.alt_title}</p>
                 )}
               </div>
 
               {/* Prev / Next Controls */}
-              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end pt-1 sm:pt-0 border-t sm:border-t-0 border-white/[0.06]">
+              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                 <button
                   onClick={() => prevEp && goToEp(prevEp.episode_number)}
                   disabled={!prevEp}
-                  className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1a2336] hover:bg-[#222e46] text-gray-200 hover:text-white border border-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1"
+                  className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" /> {translate('Previous', appLanguage)}
                 </button>
                 <button
                   onClick={() => nextEp && goToEp(nextEp.episode_number)}
                   disabled={!nextEp}
-                  className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 shadow-md shadow-rose-600/30"
+                  className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 shadow-xs cursor-pointer"
                 >
                   {translate('Next', appLanguage)} <ChevronRight className="w-3.5 h-3.5" />
                 </button>
                 {anime && (
                   <Link
                     to={`/donghua/${anime.slug}`}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 transition-colors"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors"
                     title={translate('Story details', appLanguage)}
                   >
                     <Info className="w-4 h-4" />
@@ -592,7 +603,7 @@ export function WatchPage() {
                         }
                       }}
                       disabled={plusLimitReached || isDownloaded(anime?.id || currentEp.anime_id, currentEp.episode_number) || getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'}
-                      className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1a2336] hover:bg-[#222e46] text-gray-200 border border-white/10 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <Download className="w-3.5 h-3.5" />
                       {getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'
@@ -601,15 +612,107 @@ export function WatchPage() {
                       {isPlusPlan && ` (${Math.max(0, 10 - downloads.length)})`}
                     </button>
                   ) : (
-                    <Link to="/vip" className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1a2336] text-amber-300 border border-amber-400/20 flex items-center justify-center gap-1">
-                      <Crown className="w-3.5 h-3.5" />{translate('Upgrade to Plus', appLanguage)}
+                    <Link to="/vip" className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center gap-1">
+                      <Crown className="w-3.5 h-3.5 text-amber-600" />{translate('Upgrade to Plus', appLanguage)}
                     </Link>
                   )
                 )}
               </div>
-              {downloadNotice && <p role="status" className="mt-2 text-xs text-rose-300">{downloadNotice}</p>}
-              {plusLimitReached && <p className="mt-2 text-xs text-amber-300">{translate('Plus download limit reached', appLanguage)}</p>}
+              {downloadNotice && <p role="status" className="mt-2 text-xs text-rose-500">{downloadNotice}</p>}
+              {plusLimitReached && <p className="mt-2 text-xs text-amber-600">{translate('Plus download limit reached', appLanguage)}</p>}
             </div>
+
+            {/* ── Interactive Episode Selector (រើសភាគបានតាមចិត្ត អាចដូរបាន) ── */}
+            {episodes.length > 0 && (
+              <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+                {/* Header: Title, Count, Search */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-200/60 flex items-center justify-center shadow-xs">
+                      <LayoutGrid className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <h2 className="font-display font-black text-sm sm:text-base text-slate-900">
+                        {appLanguage === 'km' ? 'ជ្រើសរើសភាគទស្សនា' : 'Select Episode'}
+                      </h2>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        {episodes.length} {appLanguage === 'km' ? 'ភាគសរុប' : 'Total Episodes'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick Filter / Search */}
+                  {episodes.length > 12 && (
+                    <div className="relative w-full sm:w-48">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={epSearch}
+                        onChange={(e) => setEpSearch(e.target.value)}
+                        placeholder={appLanguage === 'km' ? 'ស្វែងរកភាគ...' : 'Search episode...'}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Range Tabs (if > 25 episodes) */}
+                {totalRanges > 1 && !epSearch && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-3">
+                    {Array.from({ length: totalRanges }).map((_, rIdx) => {
+                      const start = rIdx * RANGE_SIZE + 1;
+                      const end = Math.min((rIdx + 1) * RANGE_SIZE, episodes.length);
+                      const isRangeActive = selectedRange === rIdx;
+                      return (
+                        <button
+                          key={rIdx}
+                          onClick={() => setSelectedRange(rIdx)}
+                          className={`px-3 py-1 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                            isRangeActive
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {start} - {end}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Episode Cards Grid */}
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-2.5 max-h-[360px] overflow-y-auto pr-1">
+                  {displayedEpisodes.map((ep) => {
+                    const isCurrent = ep.episode_number === currentEp.episode_number;
+                    return (
+                      <button
+                        key={ep.id || ep.episode_number}
+                        onClick={() => goToEp(ep.episode_number)}
+                        className={`group relative p-2.5 rounded-xl text-center transition-all duration-150 cursor-pointer flex flex-col items-center justify-center min-h-[50px] ${
+                          isCurrent
+                            ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-500/30'
+                            : 'bg-slate-50 hover:bg-blue-50/60 text-slate-700 hover:text-blue-600 border border-slate-200/70 hover:border-blue-300'
+                        }`}
+                        title={`Episode ${ep.episode_number}`}
+                      >
+                        <span className="text-xs sm:text-sm font-bold">
+                          {ep.episode_number}
+                        </span>
+                        {isCurrent ? (
+                          <span className="text-[9px] font-black uppercase tracking-wider text-blue-100 flex items-center gap-0.5 mt-0.5">
+                            <Play className="w-2.5 h-2.5 fill-white" /> {appLanguage === 'km' ? 'កំពុងមើល' : 'Now'}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-slate-400 group-hover:text-blue-500 mt-0.5">
+                            {appLanguage === 'km' ? 'ភាគ' : 'Ep'}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

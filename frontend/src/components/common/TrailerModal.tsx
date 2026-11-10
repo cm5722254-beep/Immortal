@@ -79,54 +79,52 @@ export function TrailerModal({ anime, isOpen, onClose }: TrailerModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-8 animate-fade-in">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Card */}
       <div
-        className="relative z-10 w-full max-w-4xl bg-[#0d1424] border border-rose-500/40 rounded-3xl overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(255,77,109,0.25)] animate-scale-in flex flex-col max-h-[92vh]"
+        className="relative z-10 w-full max-w-4xl bg-white/95 backdrop-blur-2xl border border-slate-200/90 rounded-[28px] overflow-hidden shadow-[0_24px_60px_rgba(15,23,42,0.16)] animate-scale-in flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-gradient-to-r from-[#191022] via-[#101424] to-[#150d1a] border-b border-white/10 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-white border-b border-slate-200/80 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0">
+            <span className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
               <Film className="w-4 h-4" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
                   ឈុតខ្លីផ្លូវការ • OFFICIAL TRAILER
                 </span>
-                <span className="text-[10px] text-gray-400 font-bold hidden sm:inline">
+                <span className="text-[10px] text-slate-400 font-bold hidden sm:inline">
                   4K ULTRA HD
                 </span>
               </div>
-              <h2 className="text-sm sm:text-base font-bold text-white line-clamp-1 mt-0.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 line-clamp-1 mt-0.5">
                 {anime.title}
               </h2>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {/* Direct YouTube Link if available */}
             {directYouTubeUrl && (
               <a
                 href={directYouTubeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition shadow-md hover:scale-105 active:scale-95"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition"
                 title="បើកមើលលើ YouTube App ឬ Website"
               >
                 <span>មើលលើ YouTube</span>
-                <span className="text-[10px]">↗</span>
               </a>
             )}
 
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-rose-500/20 text-gray-300 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
+              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition active:scale-90 cursor-pointer"
               title="បិទ (Close)"
             >
               <X className="w-5 h-5" />
@@ -134,30 +132,30 @@ export function TrailerModal({ anime, isOpen, onClose }: TrailerModalProps) {
           </div>
         </div>
 
-        {/* Player Switcher Bar (Fix YouTube Error 153) */}
+        {/* Player Switcher Bar */}
         {isYouTube && (
-          <div className="px-4 py-2 bg-[#090e1c] border-b border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="px-4 py-2 bg-slate-50 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="text-gray-400 font-semibold text-[11px]">ម៉ាស៊ីនចាក់វីដេអូ៖</span>
+              <span className="text-slate-500 font-semibold text-[11px]">ម៉ាស៊ីនចាក់វីដេអូ៖</span>
               <button
                 onClick={() => setPlayerMode('youtube')}
                 className={`px-3 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
                   playerMode === 'youtube'
-                    ? 'bg-rose-500 text-white shadow-[0_0_10px_rgba(255,77,109,0.5)]'
-                    : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                📺 YouTube
+                YouTube
               </button>
               <button
                 onClick={() => setPlayerMode('mp4')}
                 className={`px-3 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
                   playerMode === 'mp4'
-                    ? 'bg-rose-500 text-white shadow-[0_0_10px_rgba(255,77,109,0.5)]'
-                    : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                🎬 HD 4K Server (គ្មាន Error)
+                HD 4K Server (គ្មាន Error)
               </button>
             </div>
 
@@ -166,9 +164,9 @@ export function TrailerModal({ anime, isOpen, onClose }: TrailerModalProps) {
                 href={directYouTubeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 text-[11px] underline sm:no-underline"
+                className="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 text-[11px] underline sm:no-underline"
               >
-                <span>ប្រសិនបើមាន Error 153 សូមចុចមើលលើ YouTube ផ្ទាល់ ↗</span>
+                <span>ប្រសិនបើមាន Error 153 សូមចុចមើលលើ YouTube ផ្ទាល់</span>
               </a>
             )}
           </div>
@@ -199,13 +197,13 @@ export function TrailerModal({ anime, isOpen, onClose }: TrailerModalProps) {
         </div>
 
         {/* Footer Info & Actions */}
-        <div className="p-4 sm:p-5 bg-gradient-to-t from-[#080d1a] to-[#0d1424] flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+        <div className="p-4 sm:p-5 bg-white border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
           <div className="text-center sm:text-left">
-            <h3 className="text-base font-bold text-white line-clamp-1">
+            <h3 className="text-base font-bold text-slate-900 line-clamp-1">
               {anime.title}
             </h3>
-            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1 max-w-xl">
-              {anime.description || `ទស្សនាសាច់រឿងពេញ ${anime.title} កម្រិត 4K UHD 60FPS លើ WatchFlix Anime`}
+            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 max-w-xl">
+              {anime.description || `ទស្សនាសាច់រឿងពេញ ${anime.title} កម្រិត 4K UHD 60FPS លើ MerDonghua`}
             </p>
           </div>
 
@@ -215,14 +213,14 @@ export function TrailerModal({ anime, isOpen, onClose }: TrailerModalProps) {
                 onClose();
                 navigate(detailUrl);
               }}
-              className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition active:scale-95 cursor-pointer"
+              className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition active:scale-95 cursor-pointer"
             >
               ព័ត៌មានលម្អិត
             </button>
 
             <button
               onClick={handleWatchFull}
-              className="flex-1 sm:flex-initial py-2.5 px-5 rounded-xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-400 hover:to-pink-400 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-rose-500/30 transition active:scale-95 cursor-pointer"
+              className="flex-1 sm:flex-initial py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm shadow-blue-600/20 transition active:scale-95 cursor-pointer"
             >
               <Play className="w-4 h-4 fill-white" />
               <span>ទស្សនារឿងពេញ (Watch Full)</span>

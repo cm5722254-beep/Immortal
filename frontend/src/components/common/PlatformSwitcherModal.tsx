@@ -36,7 +36,7 @@ export function PlatformSwitcherModal({ isOpen, onClose }: PlatformSwitcherModal
     },
     {
       id: 'web',
-      title: '🌐 Website UI (Desktop/Cinema)',
+      title: 'Website UI (Desktop/Cinema)',
       subtitle: 'រចនាបថវេបសាយធំទូលាយ 16:9 សម្រាប់កុំព្យូទ័រ & Smart TV',
       tag: 'WEBSITE',
       icon: Monitor,
@@ -46,7 +46,7 @@ export function PlatformSwitcherModal({ isOpen, onClose }: PlatformSwitcherModal
     },
     {
       id: 'telegram',
-      title: '✈️ Telegram Mini App UI',
+      title: 'Telegram Mini App UI',
       subtitle: 'រចនាបថកម្មវិធីក្នុង Telegram Bot (@animeflickh_bot)',
       tag: 'TELEGRAM',
       icon: Send,
@@ -56,7 +56,7 @@ export function PlatformSwitcherModal({ isOpen, onClose }: PlatformSwitcherModal
     },
     {
       id: 'mobile',
-      title: '📱 Android APK UI (Native App)',
+      title: 'Android APK UI (Native App)',
       subtitle: 'រចនាបថកម្មវិធីទូរស័ព្ទ Android (.apk) ដំឡើងផ្ទាល់',
       tag: 'APK APP',
       icon: Smartphone,
@@ -95,7 +95,7 @@ export function PlatformSwitcherModal({ isOpen, onClose }: PlatformSwitcherModal
         <div className="p-3 rounded-2xl bg-[#131d36] border border-white/10 flex items-center justify-between">
           <span className="text-xs text-gray-400">ទម្រង់កំពុងបង្ហាញបច្ចុប្បន្ន៖</span>
           <span className="text-xs font-black text-rose-300 uppercase px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40">
-            {platform === 'telegram' ? '✈️ Telegram Mini App' : platform === 'mobile' ? '📱 Android APK' : '🌐 Website Desktop'}
+            {platform === 'telegram' ? 'Telegram Mini App' : platform === 'mobile' ? 'Android APK' : 'Website Desktop'}
           </span>
         </div>
 

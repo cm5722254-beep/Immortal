@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Shield, UserCheck, UserX, Trash2, X, Search, Crown, Check, Send, Mail, Globe, Smartphone, Film } from 'lucide-react';
+import {
+  Shield, UserCheck, UserX, Trash2, X, Search, Crown, Check,
+  Send, Mail, Globe, Smartphone, Film, Clock
+} from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { SkeletonTable } from '../../components/common/SkeletonLoader';
 import { useAuthStore } from '../../store/authStore';
 import { triggerConfirm } from '../../store/confirmStore';
 import api from '../../services/api';
 import type { User } from '../../types';
+
+const INPUT_CLASS =
+  'w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all';
 
 // Helper: format relative time
 function timeAgo(dateStr?: string | null): string {
@@ -23,24 +29,30 @@ function timeAgo(dateStr?: string | null): string {
 
 // Login source badge
 function LoginSourceBadge({ source }: { source?: string | null }) {
-  if (!source) return <span className="text-gray-600 text-[10px]">—</span>;
-  if (source === 'phone') return (
-    <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] flex items-center gap-1">
-      <Smartphone className="w-2.5 h-2.5" /> Phone OTP
-    </span>
-  );
-  if (source === 'telegram') return (
-    <span className="badge bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[10px] flex items-center gap-1">
-      <Send className="w-2.5 h-2.5" /> Telegram
-    </span>
-  );
-  if (source === 'google') return (
-    <span className="badge bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] flex items-center gap-1">
-      <Globe className="w-2.5 h-2.5" /> Google
-    </span>
-  );
+  if (!source) return <span className="text-slate-400 text-[10px]">—</span>;
+  if (source === 'phone') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
+        <Smartphone className="w-2.5 h-2.5" /> Phone OTP
+      </span>
+    );
+  }
+  if (source === 'telegram') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-semibold">
+        <Send className="w-2.5 h-2.5" /> Telegram
+      </span>
+    );
+  }
+  if (source === 'google') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold">
+        <Globe className="w-2.5 h-2.5" /> Google
+      </span>
+    );
+  }
   return (
-    <span className="badge bg-white/10 text-gray-300 border border-white/10 text-[10px] flex items-center gap-1">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold">
       <Mail className="w-2.5 h-2.5" /> Email
     </span>
   );
@@ -329,31 +341,35 @@ export function AdminUsersPage() {
       <div className="space-y-4 sm:space-y-6">
         {/* Success Alert */}
         {successMsg && (
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center gap-3 animate-slide-down text-xs sm:text-sm">
-            <Check className="w-5 h-5 shrink-0" />
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-3 text-xs sm:text-sm">
+            <Check className="w-5 h-5 shrink-0 text-emerald-600" />
             <span className="font-semibold">{successMsg}</span>
           </div>
         )}
 
         {/* Main Tab Switch: Users List vs Unban Appeals */}
-        <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-2.5 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-              activeTab === 'users' ? 'bg-[#E50914] text-white shadow-lg shadow-red-600/30' : 'bg-white/5 text-gray-400 hover:text-white'
+            className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+              activeTab === 'users'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
             <UserCheck className="w-4 h-4" /> គ្រប់គ្រងគណនី ({total})
           </button>
           <button
             onClick={() => setActiveTab('appeals')}
-            className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all relative shrink-0 cursor-pointer ${
-              activeTab === 'appeals' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/30' : 'bg-white/5 text-amber-400 hover:text-white'
+            className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all relative shrink-0 cursor-pointer ${
+              activeTab === 'appeals'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
             <Mail className="w-4 h-4" /> សំណើសុំដោះសោរ (Appeals)
             {unbanRequests.filter(r => r.status === 'PENDING').length > 0 && (
-              <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-md">
+              <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                 {unbanRequests.filter(r => r.status === 'PENDING').length} ថ្មី
               </span>
             )}
@@ -362,13 +378,13 @@ export function AdminUsersPage() {
 
         {activeTab === 'appeals' ? (
           /* ─── UNBAN APPEALS TABLE ─── */
-          <div className="card overflow-hidden shadow-2xl space-y-4 p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-dark-border">
+          <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm space-y-4 p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
               <div>
-                <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2 font-display">
-                  <Mail className="w-5 h-5 text-amber-400" /> សំណើស្នើសុំដោះសោរ (Appeals)
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 font-display">
+                  <Mail className="w-5 h-5 text-blue-600" /> សំណើស្នើសុំដោះសោរ (Appeals)
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   User ដែលជាប់ Disabled / Banned អាចផ្ញើសំណើមកទីនេះ
                 </p>
               </div>
@@ -377,7 +393,7 @@ export function AdminUsersPage() {
                   <button
                     onClick={() => handleClearAppeals(true)}
                     disabled={saving}
-                    className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
                     title="លុបសំណើដែលបានអនុម័ត ឬបដិសេធរួចរាល់"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> សម្អាតដែលដោះសោររួច
@@ -387,7 +403,7 @@ export function AdminUsersPage() {
                   <button
                     onClick={() => handleClearAppeals(false)}
                     disabled={saving}
-                    className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
                     title="សម្អាតសំណើស្នើសុំដោះសោរទាំងអស់"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> សម្អាតទាំងអស់
@@ -395,7 +411,7 @@ export function AdminUsersPage() {
                 )}
                 <button
                   onClick={fetchUnbanRequests}
-                  className="btn-secondary text-xs py-1.5 px-3 cursor-pointer"
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs py-1.5 px-3 cursor-pointer transition-colors"
                 >
                   Refresh សំណើ
                 </button>
@@ -403,51 +419,51 @@ export function AdminUsersPage() {
             </div>
 
             {unbanRequests.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 text-sm">
-                🎉 គ្មានសំណើស្នើសុំដោះសោរដែលនៅសល់ឡើយ!
+              <div className="text-center py-12 text-slate-500 text-sm">
+                គ្មានសំណើស្នើសុំដោះសោរដែលនៅសល់ឡើយ!
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-dark-border bg-dark-muted/40">
-                      <th className="px-4 py-3 text-left text-gray-400 font-bold text-xs">User / Identifier</th>
-                      <th className="px-4 py-3 text-left text-gray-400 font-bold text-xs">មូលហេតុស្នើសុំ (Appeal Reason)</th>
-                      <th className="px-4 py-3 text-left text-gray-400 font-bold text-xs">ទំនាក់ទំនង</th>
-                      <th className="px-4 py-3 text-left text-gray-400 font-bold text-xs">កាលបរិច្ឆេទ</th>
-                      <th className="px-4 py-3 text-left text-gray-400 font-bold text-xs">ស្ថានភាព</th>
-                      <th className="px-4 py-3 text-right text-gray-400 font-bold text-xs">សកម្មភាព Admin</th>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="px-4 py-3 text-left text-slate-500 font-semibold text-xs">User / Identifier</th>
+                      <th className="px-4 py-3 text-left text-slate-500 font-semibold text-xs">មូលហេតុស្នើសុំ (Appeal Reason)</th>
+                      <th className="px-4 py-3 text-left text-slate-500 font-semibold text-xs">ទំនាក់ទំនង</th>
+                      <th className="px-4 py-3 text-left text-slate-500 font-semibold text-xs">កាលបរិច្ឆេទ</th>
+                      <th className="px-4 py-3 text-left text-slate-500 font-semibold text-xs">ស្ថានភាព</th>
+                      <th className="px-4 py-3 text-right text-slate-500 font-semibold text-xs">សកម្មភាព Admin</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
                     {unbanRequests.map((req) => (
-                      <tr key={req.id} className="border-b border-dark-border/40 hover:bg-white/5 transition-colors">
-                        <td className="px-4 py-3 font-bold text-white">
+                      <tr key={req.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-slate-900">
                           {req.username_or_email}
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-300 max-w-xs">
-                          <span className="bg-black/40 border border-white/10 px-2.5 py-1 rounded-lg inline-block">
+                        <td className="px-4 py-3 text-xs text-slate-700 max-w-xs">
+                          <span className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg inline-block">
                             "{req.reason}"
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-sky-400 font-mono">
+                        <td className="px-4 py-3 text-xs text-blue-600 font-mono">
                           {req.contact || '—'}
                         </td>
-                        <td className="px-4 py-3 text-[11px] text-gray-400">
+                        <td className="px-4 py-3 text-[11px] text-slate-500">
                           {timeAgo(req.created_at)}
                         </td>
                         <td className="px-4 py-3">
                           {req.status === 'APPROVED' ? (
-                            <span className="badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
-                              ✅ បានដោះសោរ
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
+                              បានដោះសោរ
                             </span>
                           ) : req.status === 'REJECTED' ? (
-                            <span className="badge bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-bold">
-                              ❌ បានបដិសេធ
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold">
+                              បានបដិសេធ
                             </span>
                           ) : (
-                            <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold animate-pulse">
-                              ⏳ រង់ចាំពិនិត្យ
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
+                              <Clock className="w-3 h-3" /> រង់ចាំពិនិត្យ
                             </span>
                           )}
                         </td>
@@ -458,25 +474,25 @@ export function AdminUsersPage() {
                                 <button
                                   onClick={() => handleApproveUnban(req.id)}
                                   disabled={saving}
-                                  className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+                                  className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
                                   title="យល់ព្រមដោះសោរ"
                                 >
-                                  ✅ យល់ព្រម
+                                  យល់ព្រម
                                 </button>
                                 <button
                                   onClick={() => handleRejectUnban(req.id)}
                                   disabled={saving}
-                                  className="px-2.5 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-all cursor-pointer"
+                                  className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition-all cursor-pointer"
                                   title="បដិសេធសំណើ"
                                 >
-                                  ❌ បដិសេធ
+                                  បដិសេធ
                                 </button>
                               </>
                             )}
                             <button
                               onClick={() => handleDeleteAppeal(req.id)}
                               disabled={saving}
-                              className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/20 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-200 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
                               title="លុបសំណើនេះចោល"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -494,24 +510,24 @@ export function AdminUsersPage() {
         ) : (
           <>
             {/* Search, Filter and Stats Bar */}
-            <div className="card p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 shadow-xl">
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 shadow-sm">
               <div className="relative flex-1 max-w-sm w-full">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="ស្វែងរកឈ្មោះ ឬ Email..."
-                  className="input pl-10 py-2 text-xs md:text-sm w-full"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2 text-xs md:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all"
                 />
               </div>
 
               {/* Filter Tabs: Horizontally Scrollable on Mobile */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-dark-bg border border-dark-border overflow-x-auto no-scrollbar scroll-smooth shrink-0">
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
                 <button
                   onClick={() => { setFilterVip('all'); setPage(1); }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                    filterVip === 'all' ? 'bg-[#E50914] text-white shadow' : 'text-gray-400 hover:text-white'
+                    filterVip === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                   }`}
                 >
                   All ({total})
@@ -519,7 +535,7 @@ export function AdminUsersPage() {
                 <button
                   onClick={() => { setFilterVip('vip'); setPage(1); }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 cursor-pointer ${
-                    filterVip === 'vip' ? 'bg-amber-500 text-black font-bold' : 'text-amber-400 hover:bg-amber-500/10'
+                    filterVip === 'vip' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                   }`}
                 >
                   <Crown className="w-3 h-3 fill-current" /> VIP
@@ -527,7 +543,7 @@ export function AdminUsersPage() {
                 <button
                   onClick={() => { setFilterVip('regular'); setPage(1); }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                    filterVip === 'regular' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'
+                    filterVip === 'regular' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                   }`}
                 >
                   Regular
@@ -535,7 +551,7 @@ export function AdminUsersPage() {
                 <button
                   onClick={() => { setFilterVip('telegram' as any); setPage(1); }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 cursor-pointer ${
-                    filterVip === ('telegram' as any) ? 'bg-sky-500 text-white font-bold' : 'text-sky-400 hover:bg-sky-500/10'
+                    filterVip === ('telegram' as any) ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                   }`}
                 >
                   <Send className="w-3 h-3" /> Telegram
@@ -543,7 +559,7 @@ export function AdminUsersPage() {
                 <button
                   onClick={() => { setFilterVip('phone' as any); setPage(1); }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 cursor-pointer ${
-                    filterVip === ('phone' as any) ? 'bg-amber-500 text-black font-bold' : 'text-amber-400 hover:bg-amber-500/10'
+                    filterVip === ('phone' as any) ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                   }`}
                 >
                   <Smartphone className="w-3 h-3" /> Phone
@@ -554,13 +570,13 @@ export function AdminUsersPage() {
         )}
 
         {/* Users Container */}
-        <div className="card overflow-hidden shadow-2xl bg-[#181818] border border-white/10 rounded-2xl">
+        <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
           {/* ── MOBILE VIEW: Touch-Friendly User Cards (md:hidden) ── */}
-          <div className="block md:hidden p-3 space-y-3 divide-y divide-white/5">
+          <div className="block md:hidden p-3 space-y-3">
             {isLoading ? (
               <div className="py-8"><SkeletonTable rows={4} /></div>
             ) : filteredUsers.length === 0 ? (
-              <p className="text-center text-gray-400 py-12 text-xs">រកមិនឃើញសមាជិកឡើយ</p>
+              <p className="text-center text-slate-500 py-12 text-xs">រកមិនឃើញសមាជិកឡើយ</p>
             ) : (
               filteredUsers.map((u) => {
                 const isUserOwner = u.role === 'OWNER' || u.email === 'cm5722254@gmail.com';
@@ -568,17 +584,19 @@ export function AdminUsersPage() {
                 const isCurrentOwner = currentUser?.role === 'OWNER' || currentUser?.email === 'cm5722254@gmail.com';
 
                 return (
-                  <div key={u.id} className="pt-3 first:pt-0 bg-[#151515] p-3.5 rounded-2xl border border-white/5 space-y-3 shadow-md">
+                  <div key={u.id} className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                     {/* Top Row: User Avatar, Name, Badges, Role Selector */}
                     <div className="flex items-center justify-between gap-2.5">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden shadow-md ${
-                          isUserOwner
-                            ? 'ring-2 ring-yellow-400 bg-gradient-to-br from-yellow-400 via-amber-500 to-red-500 shadow-amber-500/40 shadow-lg'
-                            : isUserVip
-                            ? 'ring-2 ring-amber-400/60 bg-gradient-to-br from-amber-500 to-yellow-400'
-                            : 'bg-gradient-to-br from-brand-500 to-purple-600'
-                        }`}>
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden shadow-sm ${
+                            isUserOwner
+                              ? 'ring-2 ring-amber-400 bg-amber-600'
+                              : isUserVip
+                              ? 'ring-2 ring-amber-300 bg-amber-500'
+                              : 'bg-blue-600'
+                          }`}
+                        >
                           {u.avatar_url ? (
                             <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -587,29 +605,31 @@ export function AdminUsersPage() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-white text-sm truncate">{u.username}</span>
+                            <span className="font-bold text-slate-900 text-sm truncate">{u.username}</span>
                             {isUserOwner ? (
-                              <Crown className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                              <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                             ) : u.role === 'ADMIN' ? (
-                              <Shield className="w-3 h-3 text-red-400" />
+                              <Shield className="w-3 h-3 text-rose-600" />
                             ) : u.role === 'STAFF' ? (
-                              <Shield className="w-3 h-3 text-cyan-400" />
+                              <Shield className="w-3 h-3 text-blue-600" />
                             ) : isUserVip ? (
-                              <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
+                              <Crown className="w-3 h-3 text-amber-500 fill-amber-500" />
                             ) : null}
                             {u.id === currentUser?.id && (
-                              <span className="badge bg-[#E50914]/20 text-[#E50914] text-[9px] py-0 font-black">YOU</span>
+                              <span className="inline-flex items-center px-1.5 py-0 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold">
+                                YOU
+                              </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-gray-400 truncate">{u.email || 'No email'}</p>
+                          <p className="text-[11px] text-slate-500 truncate">{u.email || 'No email'}</p>
                         </div>
                       </div>
 
                       {/* Role Badge on Top Right */}
                       <div className="shrink-0">
                         {isUserOwner ? (
-                          <span className="badge bg-gradient-to-r from-amber-500/25 to-yellow-500/25 text-amber-300 border border-amber-400/50 font-black text-[10px]">
-                            👑 OWNER
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px]">
+                            OWNER
                           </span>
                         ) : (
                           <select
@@ -627,44 +647,42 @@ export function AdminUsersPage() {
                                 );
                                 setSuccessMsg(`បានកំណត់ ${u.username} ទៅជា ${newRole}`);
                                 setTimeout(() => setSuccessMsg(''), 4000);
-                              } catch (err: any) {
+                              } catch {
                                 alert('Error updating role');
                               } finally {
                                 setSaving(false);
                               }
                             }}
-                            className={`rounded-xl px-2 py-1 text-[11px] font-bold border transition cursor-pointer ${
+                            className={`rounded-xl px-2 py-1 text-[11px] font-semibold border transition cursor-pointer ${
                               u.role === 'ADMIN'
-                                ? 'bg-red-500/20 text-red-300 border-red-500/40'
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
                                 : u.role === 'STAFF'
-                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                                : 'bg-white/5 text-gray-300 border-white/10'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-white text-slate-700 border-slate-200'
                             }`}
                           >
-                            <option value="USER" className="bg-dark-card text-white">👤 USER</option>
-                            <option value="STAFF" className="bg-dark-card text-cyan-300">🎬 STAFF</option>
-                            <option value="ADMIN" className="bg-dark-card text-red-300">🛡️ ADMIN</option>
-                            {isCurrentOwner && (
-                              <option value="OWNER" className="bg-dark-card text-amber-300">👑 OWNER</option>
-                            )}
+                            <option value="USER">USER</option>
+                            <option value="STAFF">STAFF</option>
+                            <option value="ADMIN">ADMIN</option>
+                            {isCurrentOwner && <option value="OWNER">OWNER</option>}
                           </select>
                         )}
                       </div>
                     </div>
 
                     {/* Middle Row: VIP & Source Badges */}
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+                    <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200/80">
                       <div>
                         {isUserOwner ? (
-                          <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-                            👑 Super Owner Access
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
+                            Super Owner Access
                           </span>
                         ) : isUserVip ? (
-                          <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-                            👑 VIP ({u.vip_plan ? u.vip_plan.toUpperCase() : 'ACTIVE'})
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
+                            VIP ({u.vip_plan ? u.vip_plan.toUpperCase() : 'ACTIVE'})
                           </span>
                         ) : (
-                          <span className="badge bg-white/5 text-gray-400 text-[10px]">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-medium">
                             Regular Member
                           </span>
                         )}
@@ -672,31 +690,31 @@ export function AdminUsersPage() {
 
                       <div className="flex items-center gap-1.5">
                         <LoginSourceBadge source={(u as any).login_source} />
-                        <span className="text-[10px] text-gray-400 font-mono">
+                        <span className="text-[10px] text-slate-500 font-mono">
                           {timeAgo((u as any).last_login_at)}
                         </span>
                       </div>
                     </div>
 
                     {/* Bottom Row: Actions */}
-                    <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/80">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {!isUserOwner ? (
                           <button
                             onClick={() => setVipModalUser(u)}
-                            className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
                           >
-                            <Crown className="w-3.5 h-3.5 fill-amber-400" /> Set VIP
+                            <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" /> Set VIP
                           </button>
                         ) : (
-                          <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
-                            <Shield className="w-3 h-3 fill-amber-400/30" /> ការពារដាច់ខាត
+                          <span className="text-[10px] text-amber-700 font-semibold flex items-center gap-1">
+                            <Shield className="w-3 h-3 text-amber-600" /> ការពារដាច់ខាត
                           </span>
                         )}
 
                         <button
                           onClick={() => setMovieModalUser(u)}
-                          className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
                           title="គ្រប់គ្រងសិទ្ធិទស្សនាភាពយន្ត (Movie Access)"
                         >
                           <Film className="w-3.5 h-3.5" /> Movie {u.unlocked_movies?.length ? `(${u.unlocked_movies.length})` : ''}
@@ -706,7 +724,7 @@ export function AdminUsersPage() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEdit(u)}
-                          className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-gray-300 transition cursor-pointer"
+                          className="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 transition cursor-pointer"
                           title="Edit"
                         >
                           <Shield className="w-4 h-4" />
@@ -716,7 +734,7 @@ export function AdminUsersPage() {
                           <button
                             onClick={() => handleDelete(u)}
                             disabled={!isCurrentOwner && (u.role === 'ADMIN' || u.role === 'STAFF')}
-                            className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 transition cursor-pointer"
+                            className="p-2 rounded-xl bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                             title="Delete User"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -734,38 +752,40 @@ export function AdminUsersPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-dark-border bg-dark-muted/40">
-                  <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">User Profile</th>
-                  <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs hidden md:table-cell">Email</th>
-                  <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">Role</th>
-                  <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs">VIP Status</th>
-                  <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs hidden lg:table-cell">Login Source</th>
-                  <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs hidden lg:table-cell">Telegram</th>
-                  <th className="px-4 py-3.5 text-left text-gray-400 font-bold text-xs hidden sm:table-cell">Last Login</th>
-                  <th className="px-4 py-3.5 text-right text-gray-400 font-bold text-xs">Actions</th>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">User Profile</th>
+                  <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs hidden md:table-cell">Email</th>
+                  <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">Role</th>
+                  <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs">VIP Status</th>
+                  <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs hidden lg:table-cell">Login Source</th>
+                  <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs hidden lg:table-cell">Telegram</th>
+                  <th className="px-4 py-3.5 text-left text-slate-500 font-semibold text-xs hidden sm:table-cell">Last Login</th>
+                  <th className="px-4 py-3.5 text-right text-slate-500 font-semibold text-xs">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
-                  <tr><td colSpan={6} className="px-4 py-8"><SkeletonTable rows={8} /></td></tr>
+                  <tr><td colSpan={8} className="px-4 py-8"><SkeletonTable rows={8} /></td></tr>
                 ) : filteredUsers.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center text-gray-500 py-12">No users found.</td></tr>
+                  <tr><td colSpan={8} className="text-center text-slate-500 py-12">No users found.</td></tr>
                 ) : (
                   filteredUsers.map((u) => {
                     const isUserOwner = u.role === 'OWNER' || u.email === 'cm5722254@gmail.com';
                     const isUserVip = isUserOwner || u.role === 'ADMIN' || u.is_vip_active || u.is_vip;
                     const isCurrentOwner = currentUser?.role === 'OWNER' || currentUser?.email === 'cm5722254@gmail.com';
                     return (
-                  <tr key={u.id} className="border-b border-dark-border/40 hover:bg-white/5 transition-colors">
+                      <tr key={u.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden shadow-md ${
-                              isUserOwner
-                                ? 'ring-2 ring-yellow-400 bg-gradient-to-br from-yellow-400 via-amber-500 to-red-500 shadow-amber-500/40 shadow-lg'
-                                : isUserVip
-                                ? 'ring-2 ring-amber-400/60 bg-gradient-to-br from-amber-500 to-yellow-400'
-                                : 'bg-gradient-to-br from-brand-500 to-purple-600'
-                            }`}>
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden shadow-sm ${
+                                isUserOwner
+                                  ? 'ring-2 ring-amber-400 bg-amber-600'
+                                  : isUserVip
+                                  ? 'ring-2 ring-amber-300 bg-amber-500'
+                                  : 'bg-blue-600'
+                              }`}
+                            >
                               {u.avatar_url ? (
                                 <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
                               ) : (
@@ -774,29 +794,31 @@ export function AdminUsersPage() {
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <span className="font-semibold text-white text-sm">{u.username}</span>
+                                <span className="font-semibold text-slate-900 text-sm">{u.username}</span>
                                 {isUserOwner ? (
-                                  <Crown className="w-4 h-4 text-yellow-400 fill-yellow-400 animate-pulse" />
+                                  <Crown className="w-4 h-4 text-amber-500 fill-amber-500" />
                                 ) : u.role === 'ADMIN' ? (
-                                  <Shield className="w-3.5 h-3.5 text-red-400" />
+                                  <Shield className="w-3.5 h-3.5 text-rose-600" />
                                 ) : u.role === 'STAFF' ? (
-                                  <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                                  <Shield className="w-3.5 h-3.5 text-blue-600" />
                                 ) : isUserVip ? (
-                                  <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
+                                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                                 ) : null}
                                 {u.id === currentUser?.id && (
-                                  <span className="badge bg-brand-500/20 text-brand-400 text-[10px] py-0">You</span>
+                                  <span className="inline-flex items-center px-2 py-0 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold">
+                                    You
+                                  </span>
                                 )}
                               </div>
-                              <span className="text-[11px] text-gray-500 md:hidden">{u.email}</span>
+                              <span className="text-[11px] text-slate-500 md:hidden">{u.email}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-gray-400 text-xs hidden md:table-cell">{u.email}</td>
+                        <td className="px-4 py-3.5 text-slate-600 text-xs hidden md:table-cell">{u.email}</td>
                         <td className="px-4 py-3.5">
                           {isUserOwner ? (
-                            <span className="badge bg-gradient-to-r from-amber-500/25 via-yellow-500/25 to-red-500/25 text-amber-300 border border-amber-400/50 font-black shadow-sm text-[10px]">
-                              👑 OWNER (ម្ចាស់)
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px]">
+                              OWNER (ម្ចាស់)
                             </span>
                           ) : (
                             <select
@@ -826,49 +848,47 @@ export function AdminUsersPage() {
                                   setSaving(false);
                                 }
                               }}
-                              className={`rounded-xl px-2.5 py-1 text-xs font-bold border transition-all cursor-pointer focus:outline-none ${
+                              className={`rounded-xl px-2.5 py-1 text-xs font-semibold border transition-all cursor-pointer focus:outline-none ${
                                 u.role === 'ADMIN'
-                                  ? 'bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30'
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
                                   : u.role === 'STAFF'
-                                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/30'
-                                  : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                               }`}
                             >
-                              <option value="USER" className="bg-dark-card text-white">👤 USER (សមាជិក)</option>
-                              <option value="STAFF" className="bg-dark-card text-cyan-300">🎬 STAFF (រឿង & ភាគ)</option>
-                              <option value="ADMIN" className="bg-dark-card text-red-300">🛡️ ADMIN (គ្រប់គ្រង)</option>
-                              {isCurrentOwner && (
-                                <option value="OWNER" className="bg-dark-card text-amber-300">👑 OWNER (ម្ចាស់)</option>
-                              )}
+                              <option value="USER">USER (សមាជិក)</option>
+                              <option value="STAFF">STAFF (រឿង & ភាគ)</option>
+                              <option value="ADMIN">ADMIN (គ្រប់គ្រង)</option>
+                              {isCurrentOwner && <option value="OWNER">OWNER (ម្ចាស់)</option>}
                             </select>
                           )}
                         </td>
                         <td className="px-4 py-3.5">
                           {isUserOwner ? (
-                            <span className="badge bg-gradient-to-r from-amber-500/30 via-yellow-500/30 to-red-500/30 text-amber-300 border border-amber-400/50 text-[10px] flex items-center gap-1 font-black shadow-md">
-                              <Crown className="w-3 h-3 fill-amber-400" /> SUPER OWNER ACCESS
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+                              <Crown className="w-3 h-3 fill-amber-500 text-amber-600" /> SUPER OWNER ACCESS
                             </span>
                           ) : u.role === 'ADMIN' ? (
-                            <span className="badge bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold">
                               <Shield className="w-3 h-3" /> Admin Access
                             </span>
                           ) : u.role === 'STAFF' ? (
-                            <span className="badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] flex items-center gap-1 font-bold">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold">
                               <Shield className="w-3 h-3" /> Staff (រឿង/ភាគ)
                             </span>
                           ) : isUserVip ? (
                             <div>
-                              <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] flex items-center gap-1 font-bold">
-                                <Crown className="w-3 h-3 fill-amber-400" /> VIP ({u.vip_plan ? u.vip_plan.toUpperCase() : 'ACTIVE'})
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
+                                <Crown className="w-3 h-3 fill-amber-500 text-amber-600" /> VIP ({u.vip_plan ? u.vip_plan.toUpperCase() : 'ACTIVE'})
                               </span>
                               {u.vip_expires_at && (
-                                <span className="text-[10px] text-gray-400 block mt-0.5 font-mono">
+                                <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">
                                   Exp: {new Date(u.vip_expires_at).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="badge bg-white/5 text-gray-500 text-[10px]">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-medium">
                               Regular Member
                             </span>
                           )}
@@ -880,22 +900,22 @@ export function AdminUsersPage() {
                           {(u as any).telegram_id ? (
                             <div className="space-y-0.5">
                               <div className="flex items-center gap-1">
-                                <Send className="w-3 h-3 text-sky-400" />
-                                <span className="text-[10px] font-mono text-sky-300">#{(u as any).telegram_id}</span>
+                                <Send className="w-3 h-3 text-sky-600" />
+                                <span className="text-[10px] font-mono text-sky-700 font-medium">#{(u as any).telegram_id}</span>
                               </div>
                               {(u as any).telegram_username && (
-                                <span className="text-[10px] text-gray-400">@{(u as any).telegram_username}</span>
+                                <span className="text-[10px] text-slate-500">@{(u as any).telegram_username}</span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-gray-600 text-[10px]">—</span>
+                            <span className="text-slate-400 text-[10px]">—</span>
                           )}
                         </td>
                         <td className="px-4 py-3.5 hidden sm:table-cell">
                           <div className="space-y-0.5">
-                            <span className="text-[10px] text-gray-300 font-mono">{timeAgo((u as any).last_login_at)}</span>
+                            <span className="text-[10px] text-slate-700 font-mono font-medium">{timeAgo((u as any).last_login_at)}</span>
                             {(u as any).last_login_at && (
-                              <span className="text-[9px] text-gray-500 block">{new Date((u as any).last_login_at).toLocaleString()}</span>
+                              <span className="text-[9px] text-slate-500 block">{new Date((u as any).last_login_at).toLocaleString()}</span>
                             )}
                           </div>
                         </td>
@@ -905,53 +925,59 @@ export function AdminUsersPage() {
                             {!isUserOwner && (
                               <button
                                 onClick={() => setVipModalUser(u)}
-                                className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                                className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
                                 title="Set VIP Membership Plan"
                               >
-                                <Crown className="w-3.5 h-3.5 fill-amber-400" /> Set VIP
+                                <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" /> Set VIP
                               </button>
                             )}
 
                             {/* Manage Movie Access Button */}
                             <button
                               onClick={() => setMovieModalUser(u)}
-                              className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
                               title="គ្រប់គ្រងសិទ្ធិទស្សនា Movie (Movie Access)"
                             >
                               <Film className="w-3.5 h-3.5" /> Movie {u.unlocked_movies?.length ? `(${u.unlocked_movies.length})` : ''}
                             </button>
 
                             {/* Edit Role & Status */}
-                            <button onClick={() => openEdit(u)} className="btn-icon text-gray-400 hover:text-brand-400" title="Edit Role & Permissions">
+                            <button
+                              onClick={() => openEdit(u)}
+                              className="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
+                              title="Edit Role & Permissions"
+                            >
                               <Shield className="w-4 h-4" />
                             </button>
 
                             {/* Delete User Action with Strict Immunity for OWNER */}
                             {isUserOwner ? (
                               <div
-                                className="px-2 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold flex items-center gap-1 cursor-not-allowed select-none opacity-90 shadow-sm"
+                                className="px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold flex items-center gap-1 cursor-not-allowed select-none"
                                 title="គណនី OWNER (ម្ចាស់វេបសាយ) ត្រូវបានការពារដាច់ខាត ទោះបីជា Admin ក៏មិនអាចលុបបានឡើយ (Protected Super Owner)"
                               >
-                                <Shield className="w-3 h-3 text-amber-400 fill-amber-400/30" />
+                                <Shield className="w-3 h-3 text-amber-600" />
                                 <span>ការពារដាច់ខាត</span>
                               </div>
-                            ) : u.id !== currentUser?.id && (
-                              <button
-                                onClick={() => handleDelete(u)}
-                                disabled={!isCurrentOwner && (u.role === 'ADMIN' || u.role === 'STAFF')}
-                                className={`btn-icon ${
-                                  !isCurrentOwner && (u.role === 'ADMIN' || u.role === 'STAFF')
-                                    ? 'opacity-40 cursor-not-allowed text-gray-600'
-                                    : 'text-gray-400 hover:text-red-400'
-                                }`}
-                                title={
-                                  !isCurrentOwner && (u.role === 'ADMIN' || u.role === 'STAFF')
-                                    ? 'Admin ធម្មតាមិនអាចលុប Admin ផ្សេងទៀតបានឡើយ'
-                                    : 'Delete User'
-                                }
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                            ) : (
+                              u.id !== currentUser?.id && (
+                                <button
+                                  onClick={() => handleDelete(u)}
+                                  disabled={!isCurrentOwner && (u.role === 'ADMIN' || u.role === 'STAFF')}
+                                  className={`p-2 rounded-xl border transition-colors ${
+                                    !isCurrentOwner && (u.role === 'ADMIN' || u.role === 'STAFF')
+                                      ? 'opacity-40 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-400'
+                                      : 'bg-white hover:bg-rose-50 border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 cursor-pointer'
+                                  }`}
+                                  title={
+                                    !isCurrentOwner && (u.role === 'ADMIN' || u.role === 'STAFF')
+                                      ? 'Admin ធម្មតាមិនអាចលុប Admin ផ្សេងទៀតបានឡើយ'
+                                      : 'Delete User'
+                                  }
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )
                             )}
                           </div>
                         </td>
@@ -965,11 +991,23 @@ export function AdminUsersPage() {
 
           {/* Pagination */}
           {total > 20 && (
-            <div className="p-4 border-t border-dark-border flex justify-between items-center text-xs text-gray-400">
+            <div className="p-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
               <span>Page {page}</span>
               <div className="flex gap-2">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="btn-secondary py-1 px-3 text-xs">Previous</button>
-                <button onClick={() => setPage((p) => p + 1)} disabled={users.length < 20} className="btn-secondary py-1 px-3 text-xs">Next</button>
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl py-1.5 px-3 text-xs disabled:opacity-50 transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={users.length < 20}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl py-1.5 px-3 text-xs disabled:opacity-50 transition-colors"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}
@@ -977,23 +1015,28 @@ export function AdminUsersPage() {
 
         {/* VIP Management Modal */}
         {vipModalUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-            <div className="bg-dark-card border-2 border-amber-500/40 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-dark-border bg-gradient-to-r from-amber-500/15 via-dark-muted to-dark-muted">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
+              <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
                     <Crown className="w-5 h-5 fill-current" />
                   </div>
                   <div>
-                    <h2 className="font-display font-bold text-base text-white">Set VIP: {vipModalUser.username}</h2>
-                    <p className="text-[11px] text-gray-400">{vipModalUser.email}</p>
+                    <h2 className="font-display font-bold text-base text-slate-900">Set VIP: {vipModalUser.username}</h2>
+                    <p className="text-[11px] text-slate-500">{vipModalUser.email}</p>
                   </div>
                 </div>
-                <button onClick={() => setVipModalUser(null)} className="btn-icon"><X className="w-5 h-5" /></button>
+                <button
+                  onClick={() => setVipModalUser(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               <div className="p-6 space-y-4">
-                <p className="text-xs text-gray-300">
+                <p className="text-xs text-slate-600">
                   ជ្រើសរើសរយៈពេល VIP ដែលចង់ផ្ដល់ឱ្យអ្នកប្រើប្រាស់នេះ៖
                 </p>
 
@@ -1002,37 +1045,37 @@ export function AdminUsersPage() {
                   <button
                     onClick={() => handleSetVip(vipModalUser, 'pro')}
                     disabled={saving}
-                    className="p-3.5 rounded-2xl bg-white/5 hover:bg-sky-500/20 border border-white/10 hover:border-sky-500/40 text-left transition-all group"
+                    className="p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-left transition-all group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white group-hover:text-sky-300">Pro · $2/month</span>
-                      <span className="badge bg-sky-500/20 text-sky-300 text-[9px]">30 Days</span>
+                      <span className="text-xs font-bold text-slate-900 group-hover:text-blue-700">Pro · $2/month</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-semibold">30 Days</span>
                     </div>
-                    <span className="text-[10px] text-gray-400 block mt-1">ទស្សនាគ្រប់ភាគ · មិនអាចទាញយក</span>
+                    <span className="text-[10px] text-slate-500 block mt-1">ទស្សនាគ្រប់ភាគ · មិនអាចទាញយក</span>
                   </button>
 
                   <button
                     onClick={() => handleSetVip(vipModalUser, 'plus')}
                     disabled={saving}
-                    className="p-3.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-left transition-all group"
+                    className="p-3.5 rounded-2xl bg-emerald-50/60 hover:bg-emerald-50 border border-emerald-200 text-left transition-all group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-300">Plus · $3/month</span>
-                      <span className="badge bg-emerald-500/30 text-emerald-300 text-[9px]">30 Days</span>
+                      <span className="text-xs font-bold text-emerald-800">Plus · $3/month</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-semibold">30 Days</span>
                     </div>
-                    <span className="text-[10px] text-emerald-200/80 block mt-1">ទាញយកក្រៅបណ្ដាញបាន ១០ ភាគ</span>
+                    <span className="text-[10px] text-emerald-700 block mt-1">ទាញយកក្រៅបណ្ដាញបាន ១០ ភាគ</span>
                   </button>
 
                   <button
                     onClick={() => handleSetVip(vipModalUser, 'premium')}
                     disabled={saving}
-                    className="p-3.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-left transition-all group"
+                    className="p-3.5 rounded-2xl bg-amber-50/60 hover:bg-amber-50 border border-amber-200 text-left transition-all group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-300">Premium · $5/month</span>
-                      <span className="badge bg-amber-500/30 text-amber-300 text-[9px]">30 Days</span>
+                      <span className="text-xs font-bold text-amber-900">Premium · $5/month</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9px] font-semibold">30 Days</span>
                     </div>
-                    <span className="text-[10px] text-amber-200/80 block mt-1">ទាញយកមិនកំណត់</span>
+                    <span className="text-[10px] text-amber-700 block mt-1">ទាញយកមិនកំណត់</span>
                   </button>
                 </div>
 
@@ -1040,29 +1083,32 @@ export function AdminUsersPage() {
                   <button
                     onClick={() => handleSetVip(vipModalUser, 'lifetime')}
                     disabled={saving}
-                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 hover:border-amber-400 text-amber-300 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                    className="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-bold flex items-center justify-center gap-2 transition-all"
                   >
-                    <Crown className="w-4 h-4 fill-amber-400" /> ផ្ដល់សិទ្ធិ VIP ពេញមួយជីវិត (Lifetime VIP)
+                    <Crown className="w-4 h-4 fill-amber-500 text-amber-600" /> ផ្ដល់សិទ្ធិ VIP ពេញមួយជីវិត (Lifetime VIP)
                   </button>
                 </div>
 
                 {/* Revoke VIP Option */}
                 {vipModalUser.is_vip && (
-                  <div className="pt-2 border-t border-dark-border">
+                  <div className="pt-2 border-t border-slate-200">
                     <button
                       onClick={() => handleSetVip(vipModalUser, 'revoke')}
                       disabled={saving}
-                      className="w-full py-2 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                      className="w-full py-2 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold flex items-center justify-center gap-2 transition-all"
                     >
                       <UserX className="w-4 h-4" /> ដកសិទ្ធិ VIP ចេញ (Revoke VIP)
                     </button>
                   </div>
                 )}
 
-                {error && <p className="text-red-400 text-xs">{error}</p>}
+                {error && <p className="text-rose-600 text-xs">{error}</p>}
 
                 <div className="flex justify-end pt-2">
-                  <button onClick={() => setVipModalUser(null)} className="btn-ghost py-2 text-xs">
+                  <button
+                    onClick={() => setVipModalUser(null)}
+                    className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                  >
                     បិទ
                   </button>
                 </div>
@@ -1084,18 +1130,20 @@ export function AdminUsersPage() {
         )}
 
         {/* Edit Role & Status Modal */}
-        {editUser && <EditRoleModal
-          editUser={editUser}
-          editRole={editRole}
-          editActive={editActive}
-          saving={saving}
-          error={error}
-          currentUser={currentUser}
-          setEditRole={setEditRole}
-          setEditActive={setEditActive}
-          setEditUser={setEditUser}
-          saveEdit={saveEdit}
-        />}
+        {editUser && (
+          <EditRoleModal
+            editUser={editUser}
+            editRole={editRole}
+            editActive={editActive}
+            saving={saving}
+            error={error}
+            currentUser={currentUser}
+            setEditRole={setEditRole}
+            setEditActive={setEditActive}
+            setEditUser={setEditUser}
+            saveEdit={saveEdit}
+          />
+        )}
       </div>
     </AdminLayout>
   );
@@ -1129,23 +1177,28 @@ function MovieAccessModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in cursor-pointer"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 cursor-pointer"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#141414] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in overflow-hidden cursor-default"
+        className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-xl overflow-hidden cursor-default"
       >
-        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-rose-950/40 via-red-900/20 to-transparent">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
               <Film className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-display font-black text-base text-white">សិទ្ធិទស្សនាភាពយន្ត (Movie Access)</h2>
-              <p className="text-xs text-gray-400">សម្រាប់គណនី: <strong className="text-amber-400">{user.username}</strong></p>
+              <h2 className="font-display font-bold text-base text-slate-900">សិទ្ធិទស្សនាភាពយន្ត (Movie Access)</h2>
+              <p className="text-xs text-slate-500">
+                សម្រាប់គណនី: <strong className="text-slate-900">{user.username}</strong>
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1153,11 +1206,11 @@ function MovieAccessModal({
         <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           {/* Currently Unlocked Movies List */}
           <div>
-            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block mb-2">
+            <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-2">
               ភាពយន្តដែលបានបើកសិទ្ធិរួច ({unlockedList.length})៖
             </label>
             {unlockedList.length === 0 ? (
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center text-gray-500 text-xs">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                 មិនទាន់មានភាពយន្តណាមួយត្រូវបាន Unlock ជូន User នេះនៅឡើយទេ។
               </div>
             ) : (
@@ -1169,22 +1222,22 @@ function MovieAccessModal({
                   return (
                     <div
                       key={slug}
-                      className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-3"
+                      className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0">
                           <Film className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-white truncate">{title}</p>
-                          <p className="text-[10px] text-gray-500 font-mono truncate">{slug}</p>
+                          <p className="text-xs font-bold text-slate-900 truncate">{title}</p>
+                          <p className="text-[10px] text-slate-500 font-mono truncate">{slug}</p>
                         </div>
                       </div>
 
                       <button
                         onClick={() => onToggleAccess(user, slug, 'lock')}
                         disabled={saving}
-                        className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/20 transition flex items-center gap-1 shrink-0 cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition flex items-center gap-1 shrink-0 cursor-pointer"
                       >
                         <Trash2 className="w-3 h-3" /> ដកសិទ្ធិ
                       </button>
@@ -1196,8 +1249,8 @@ function MovieAccessModal({
           </div>
 
           {/* Unlock New Movie Selector */}
-          <div className="pt-3 border-t border-white/10 space-y-3">
-            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">
+          <div className="pt-3 border-t border-slate-200 space-y-3">
+            <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block">
               ជ្រើសរើស Movie ដើម្បីបើកសិទ្ធិ (Unlock New Movie)៖
             </label>
 
@@ -1205,12 +1258,12 @@ function MovieAccessModal({
               <select
                 value={selectedSlug}
                 onChange={(e) => setSelectedSlug(e.target.value)}
-                className="input text-xs sm:text-sm font-semibold w-full"
+                className={`${INPUT_CLASS} font-medium`}
               >
                 <option value="">-- សូមជ្រើសរើសភាពយន្ត (Select Movie) --</option>
                 {movies.map((m) => (
                   <option key={m.id || m.slug} value={m.slug} disabled={unlockedList.includes(m.slug)}>
-                    {m.title} {unlockedList.includes(m.slug) ? '✓ (បានបើករួច)' : ''}
+                    {m.title} {unlockedList.includes(m.slug) ? '(បានបើករួច)' : ''}
                   </option>
                 ))}
               </select>
@@ -1218,18 +1271,21 @@ function MovieAccessModal({
               <button
                 onClick={handleUnlock}
                 disabled={!selectedSlug || saving}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                <Check className="w-4 h-4 stroke-[3]" /> {saving ? 'កំពុងដំណើរការ...' : '🔓 បើកសិទ្ធិទស្សនា (Unlock Movie)'}
+                <Check className="w-4 h-4" /> {saving ? 'កំពុងដំណើរការ...' : 'បើកសិទ្ធិទស្សនា (Unlock Movie)'}
               </button>
             </div>
           </div>
 
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+          {error && <p className="text-rose-600 text-xs">{error}</p>}
         </div>
 
-        <div className="p-4 border-t border-white/10 bg-white/[0.02] flex justify-end">
-          <button onClick={onClose} className="btn-ghost py-2 px-5 text-xs font-bold cursor-pointer">
+        <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold cursor-pointer transition-colors"
+          >
             បិទ (Close)
           </button>
         </div>
@@ -1254,52 +1310,63 @@ function EditRoleModal({
   return (
     <div
       onClick={() => setEditUser(null)}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in cursor-pointer"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 cursor-pointer"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-dark-card border border-dark-border rounded-3xl w-full max-w-sm shadow-2xl animate-scale-in overflow-hidden cursor-default"
+        className="bg-white border border-slate-200 rounded-2xl w-full max-w-sm shadow-xl overflow-hidden cursor-default"
       >
-        <div className="flex items-center justify-between p-6 border-b border-dark-border bg-dark-muted/30">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2">
-            {isEditingOwner ? <Crown className="w-5 h-5 text-amber-400 fill-amber-400" /> : <Shield className="w-5 h-5 text-brand-400" />}
-            <h2 className="font-display font-bold text-base text-white">Edit User: {editUser.username}</h2>
+            {isEditingOwner ? (
+              <Crown className="w-5 h-5 text-amber-500 fill-amber-500" />
+            ) : (
+              <Shield className="w-5 h-5 text-blue-600" />
+            )}
+            <h2 className="font-display font-bold text-base text-slate-900">Edit User: {editUser.username}</h2>
           </div>
-          <button onClick={() => setEditUser(null)} className="btn-icon"><X className="w-5 h-5" /></button>
+          <button
+            onClick={() => setEditUser(null)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
         <div className="p-6 space-y-4">
           {isEditingOwner && !isCurrentOwner && (
-            <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-              <Shield className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+              <Shield className="w-4 h-4 text-amber-600 shrink-0" />
               <span>គណនី OWNER ត្រូវបានការពារដាច់ខាត Admin ធម្មតាមិនអាចកែប្រែបានឡើយ។</span>
             </div>
           )}
 
           <div>
-            <label className="label">Account Role (តួនាទីគណនី)</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Account Role (តួនាទីគណនី)</label>
             <select
               value={editRole}
               disabled={!canModifyThisUser || (isEditingOwner && !isCurrentOwner)}
               onChange={(e) => setEditRole(e.target.value as any)}
-              className="input font-semibold text-xs sm:text-sm"
+              className={`${INPUT_CLASS} font-medium`}
             >
               {isCurrentOwner && (
-                <option value="OWNER">👑 Platform Owner (OWNER - ម្ចាស់វេបសាយ)</option>
+                <option value="OWNER">Platform Owner (OWNER - ម្ចាស់វេបសាយ)</option>
               )}
-              <option value="ADMIN">🛡️ Platform Administrator (ADMIN - អ្នកគ្រប់គ្រង)</option>
-              <option value="STAFF">🎬 Staff (STAFF - គ្រប់គ្រងរឿង និងភាគ)</option>
-              <option value="USER">👤 Standard User (USER - សមាជិកទូទៅ)</option>
+              <option value="ADMIN">Platform Administrator (ADMIN - អ្នកគ្រប់គ្រង)</option>
+              <option value="STAFF">Staff (STAFF - គ្រប់គ្រងរឿង និងភាគ)</option>
+              <option value="USER">Standard User (USER - សមាជិកទូទៅ)</option>
             </select>
           </div>
           <div>
-            <label className="label">Account Status (ស្ថានភាពគណនី)</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Account Status (ស្ថានភាពគណនី)</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 disabled={!canModifyThisUser || isEditingOwner}
                 onClick={() => setEditActive(true)}
-                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  editActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm' : 'btn-ghost'
+                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all border ${
+                  editActive
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
+                    : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
                 }`}
               >
                 <UserCheck className="w-4 h-4" /> Active (ដំណើរការ)
@@ -1308,29 +1375,34 @@ function EditRoleModal({
                 type="button"
                 disabled={!canModifyThisUser || isEditingOwner}
                 onClick={() => setEditActive(false)}
-                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  !editActive ? 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm' : 'btn-ghost'
+                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all border ${
+                  !editActive
+                    ? 'bg-rose-50 text-rose-700 border-rose-200 shadow-sm'
+                    : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
                 } ${isEditingOwner ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
                 <UserX className="w-4 h-4" /> Disabled (បិទ)
               </button>
             </div>
             {isEditingOwner && (
-              <p className="text-[10px] text-amber-400/80 mt-1.5 flex items-center gap-1">
+              <p className="text-[10px] text-amber-700 mt-1.5 flex items-center gap-1">
                 <Shield className="w-3 h-3" /> គណនី OWNER មិនអាចបិទ (Disable) បានឡើយ
               </p>
             )}
           </div>
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-          <div className="flex gap-3 pt-4 border-t border-dark-border">
+          {error && <p className="text-rose-600 text-xs">{error}</p>}
+          <div className="flex gap-3 pt-4 border-t border-slate-200">
             <button
               onClick={saveEdit}
               disabled={saving || (!isCurrentOwner && isEditingOwner)}
-              className="btn-primary flex-1 py-2.5 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Changes (រក្សាទុក)'}
             </button>
-            <button onClick={() => setEditUser(null)} className="btn-ghost py-2.5 text-xs font-semibold">
+            <button
+              onClick={() => setEditUser(null)}
+              className="py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+            >
               Cancel (បោះបង់)
             </button>
           </div>

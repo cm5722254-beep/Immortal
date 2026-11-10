@@ -173,11 +173,20 @@ async def create_episode(
     except Exception:
         pass
 
-    # Auto-persist to permanent storage
+    # Auto-persist to permanent storage & trigger 24/7 Telegram Channel Auto-Sync
     try:
         import asyncio
         from app.services.data_persistence import sync_database_to_export_json
-        asyncio.create_task(sync_database_to_export_json())
+        from app.api.telegram_channel_sync import load_website_catalog, trigger_sync_queue_async, load_config
+
+        async def _persist_and_sync_new_ep(aid: int, ep_num: int, is_pub: bool, has_vid: bool):
+            await sync_database_to_export_json()
+            if is_pub and has_vid and load_config().get("daemon_24_7_enabled", True):
+                load_website_catalog()
+                target_aid = 1001 if (aid == 1 and ep_num >= 109) else aid
+                trigger_sync_queue_async([target_aid], is_resume=False)
+
+        asyncio.create_task(_persist_and_sync_new_ep(anime.id, ep.episode_number, bool(ep.is_published), bool(ep.video_url)))
     except Exception:
         pass
 
@@ -230,11 +239,20 @@ async def update_episode(
     except Exception:
         pass
 
-    # Auto-persist to permanent storage
+    # Auto-persist to permanent storage & trigger 24/7 Telegram Channel Auto-Sync
     try:
         import asyncio
         from app.services.data_persistence import sync_database_to_export_json
-        asyncio.create_task(sync_database_to_export_json())
+        from app.api.telegram_channel_sync import load_website_catalog, trigger_sync_queue_async, load_config
+
+        async def _persist_and_sync_new_ep(aid: int, ep_num: int, is_pub: bool, has_vid: bool):
+            await sync_database_to_export_json()
+            if is_pub and has_vid and load_config().get("daemon_24_7_enabled", True):
+                load_website_catalog()
+                target_aid = 1001 if (aid == 1 and ep_num >= 109) else aid
+                trigger_sync_queue_async([target_aid], is_resume=False)
+
+        asyncio.create_task(_persist_and_sync_new_ep(anime.id, ep.episode_number, bool(ep.is_published), bool(ep.video_url)))
     except Exception:
         pass
 

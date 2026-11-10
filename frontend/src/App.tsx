@@ -1,5 +1,6 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { ShieldAlert, AlertTriangle, CheckCircle2, Send } from 'lucide-react';
 import { NotFoundPage, ForbiddenPage, ServerErrorPage } from './pages/ErrorPages';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { ConfirmDialog } from './components/common/ConfirmDialog';
@@ -63,13 +64,13 @@ function ContentManagerGuard({ children }: { children: React.ReactNode }) {
   const isAuthorized = canManageContent || isOwner || isAdmin || isStaff || user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.role === 'STAFF' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
   if (!isAuthenticated && !user) return <Navigate to="/login" replace />;
-  if (!isAuthorized) return <ForbiddenPage />;
+  if (!isAuthorized) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -78,13 +79,13 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   const isAuthorized = isAdmin || isOwner || user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
   if (!isAuthenticated && !user) return <Navigate to="/login" replace />;
-  if (!isAuthorized) return <ForbiddenPage />;
+  if (!isAuthorized) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -93,13 +94,30 @@ function OwnerGuard({ children }: { children: React.ReactNode }) {
   const isAuthorized = isOwner || user?.role === 'OWNER' || user?.email?.toLowerCase() === 'cm5722254@gmail.com';
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
   if (!isAuthenticated && !user) return <Navigate to="/login" replace />;
-  if (!isAuthorized) return <ForbiddenPage />;
+  if (!isAuthorized) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function WatchAuthGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuthStore();
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!isAuthenticated && !user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
   return <>{children}</>;
 }
 
@@ -164,10 +182,10 @@ export default function App() {
     }
 
     fetchSiteTheme();
-    initTelegramWebApp();
+    const cleanupTelegram = initTelegramWebApp();
 
     // 🚀 Preload all common routes & catalog in background (0ms transition on click)
-    setTimeout(() => {
+    const preloadTimer = setTimeout(() => {
       import('./pages/HomePage');
       import('./pages/ExplorePage');
       import('./pages/DetailPage');
@@ -194,6 +212,11 @@ export default function App() {
     } else {
       fetchMe();
     }
+
+    return () => {
+      clearTimeout(preloadTimer);
+      cleanupTelegram?.();
+    };
   }, []);
 
   const isLocalDev = typeof window !== 'undefined' &&
@@ -253,6 +276,7 @@ export default function App() {
 
           {/* Admin ONLY: Telegram Mini App Management */}
           <Route path="/admin/telegram" element={<AdminGuard><AdminTelegramPage /></AdminGuard>} />
+          <Route path="/admin/telegram/channel-sync" element={<AdminGuard><AdminTelegramPage /></AdminGuard>} />
           <Route path="/admin/telegram/users" element={<AdminGuard><AdminUsersPage /></AdminGuard>} />
           <Route path="/admin/telegram/broadcast" element={<AdminGuard><AdminTelegramPage /></AdminGuard>} />
           <Route path="/admin/telegram/miniapp" element={<AdminGuard><AdminTelegramPage /></AdminGuard>} />
@@ -260,9 +284,9 @@ export default function App() {
           {/* OWNER ONLY: Platform Owner Control Center */}
           <Route path="/admin/owner" element={<OwnerGuard><AdminOwnerPage /></OwnerGuard>} />
 
-          {/* Watch page (with Maintenance Lock protection) */}
-          <Route path="/watch/:slug" element={<ProtectedLayout><WatchPage /></ProtectedLayout>} />
-          <Route path="/watch/:slug/:episodeNumber" element={<ProtectedLayout><WatchPage /></ProtectedLayout>} />
+          {/* Watch page (requires login & VIP access) */}
+          <Route path="/watch/:slug" element={<WatchAuthGuard><ProtectedLayout><WatchPage /></ProtectedLayout></WatchAuthGuard>} />
+          <Route path="/watch/:slug/:episodeNumber" element={<WatchAuthGuard><ProtectedLayout><WatchPage /></ProtectedLayout></WatchAuthGuard>} />
 
           {/* Public pages with standard layout */}
           <Route path="/" element={<ProtectedLayout><HomePage /></ProtectedLayout>} />
@@ -377,22 +401,24 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
     <div className="fixed inset-0 z-[99999999] bg-[#080306] flex flex-col items-center justify-center text-white p-4 sm:p-6 overflow-y-auto select-none">
       <div className="max-w-lg w-full bg-[#11070c] border-2 border-red-500/40 rounded-3xl p-6 sm:p-8 text-center shadow-[0_0_80px_rgba(239,68,68,0.25)] my-auto">
         <div className="w-20 h-20 rounded-full bg-red-500/15 border-2 border-red-500 flex items-center justify-center mx-auto mb-5 shadow-[0_0_50px_rgba(239,68,68,0.4)] animate-pulse">
-          <span className="text-4xl">⛔</span>
+          <ShieldAlert className="w-10 h-10 text-red-500" />
         </div>
 
         <h1 className="text-xl sm:text-2xl font-black text-red-500 mb-2 tracking-tight font-display">
           ឧបករណ៍ និងគណនីរបស់អ្នកត្រូវបាន BANNED
         </h1>
-        <p className="text-xs sm:text-sm text-red-300 font-bold mb-2">
-          ⚠️ មូលហេតុ៖ ប៉ុនប៉ងបំពានប្រព័ន្ធការពារ ({banReason})
+        <p className="text-xs sm:text-sm text-red-300 font-bold mb-2 flex items-center justify-center gap-1.5">
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+          <span>មូលហេតុ៖ ប៉ុនប៉ងបំពានប្រព័ន្ធការពារ ({banReason})</span>
         </p>
         <p className="text-xs text-gray-400 leading-relaxed mb-6">
-          ប្រព័ន្ធបានចាក់សោរបិទឧបករណ៍ និងគណនីរបស់អ្នកជាស្ថាពរ។ លោកអ្នកអំផ្ញើសំណើស្នើស៻ំទៅកាន់ <strong className="text-amber-400">Admin</strong> ដើម្បីសុំក្រាជោគជ័យបានត្រូវបាន (Unban)
+          ប្រព័ន្ធបានចាក់សោរបិទឧបករណ៍ និងគណនីរបស់អ្នកជាស្ថាពរ។ លោកអ្នកអាចផ្ញើសំណើស្នើសុំទៅកាន់ <strong className="text-amber-400">Admin</strong> ដើម្បីសុំដោះសោរ (Unban)
         </p>
 
         {submittedMsg ? (
-          <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 text-green-400 text-sm font-medium">
-            ✅ {submittedMsg}
+          <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 text-green-400 text-sm font-medium flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+            <span>{submittedMsg}</span>
           </div>
         ) : (
           <form onSubmit={handleSubmitAppeal} className="text-left space-y-3">
@@ -427,14 +453,18 @@ function BannedLockScreen({ banReason }: { banReason: string }) {
               />
             </div>
             {errorMsg && (
-              <p className="text-red-400 text-xs font-medium">⚠️ {errorMsg}</p>
+              <p className="text-red-400 text-xs font-medium flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                <span>{errorMsg}</span>
+              </p>
             )}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+              className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
             >
-              {isSubmitting ? 'កំពុងផ្ញើ...' : '📨 ផ្ញើសំណើស្ដោះសោរ'}
+              <Send className="w-4 h-4" />
+              <span>{isSubmitting ? 'កំពុងផ្ញើ...' : 'ផ្ញើសំណើដោះសោរ'}</span>
             </button>
           </form>
         )}

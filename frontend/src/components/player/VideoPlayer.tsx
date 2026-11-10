@@ -561,13 +561,13 @@ export function VideoPlayer({
     e?.stopPropagation();
     setScaleMode((prev) => {
       if (prev === 'contain') {
-        showHud('📐 ពេញអេក្រង់ (Crop to Fill - គ្មានគែមខ្មៅ)');
+        showHud('ពេញអេក្រង់ (Crop to Fill - គ្មានគែមខ្មៅ)');
         return 'cover';
       } else if (prev === 'cover') {
-        showHud('📐 ពង្រីកពេញ (Stretch)');
+        showHud('ពង្រីកពេញ (Stretch)');
         return 'fill';
       } else {
-        showHud('📐 ទំហំដើម (Fit 16:9)');
+        showHud('ទំហំដើម (Fit 16:9)');
         return 'contain';
       }
     });
@@ -590,7 +590,7 @@ export function VideoPlayer({
       try {
         if (document.fullscreenElement) await document.exitFullscreen();
       } catch {}
-      showHud('📱 ចាកចេញពីរបៀបបញ្ឈ');
+      showHud('ចាកចេញពីរបៀបបញ្ឈ');
       return;
     }
 
@@ -607,7 +607,7 @@ export function VideoPlayer({
       try { await (window.screen.orientation as any).lock('portrait'); } catch {}
     }
 
-    showHud('📱 របៀបបញ្ឈពេញអេក្រង់ (Portrait Full)');
+    showHud('របៀបបញ្ឈពេញអេក្រង់ (Portrait Full)');
   };
 
   // Toggle Landscape Fullscreen (មើលផ្ដេកពេញអេក្រង់)
@@ -633,7 +633,7 @@ export function VideoPlayer({
         try { (window.screen.orientation as any).unlock(); } catch {}
       }
       try { telegramWebApp?.unlockOrientation?.(); } catch {}
-      showHud('🔄 ចាកចេញពីរបៀបផ្ដេក');
+      showHud('ចាកចេញពីរបៀបផ្ដេក');
       return;
     }
 
@@ -675,7 +675,7 @@ export function VideoPlayer({
     await new Promise((resolve) => window.setTimeout(resolve, 120));
     setIsRotatedLandscape(window.innerHeight > window.innerWidth);
 
-    showHud('🔄 របៀបផ្ដេកពេញអេក្រង់ (Landscape Full)');
+    showHud('របៀបផ្ដេកពេញអេក្រង់ (Landscape Full)');
   };
 
   // Standard Fullscreen Toggle (smart: checks current device orientation)
@@ -941,7 +941,7 @@ export function VideoPlayer({
           left: `${watermarkPos.left}%`,
         }}
       >
-        <span>🛡️ NAMI ANIME</span>
+        <span>NAMI ANIME</span>
         <span>•</span>
         <span className="text-amber-200/70">{user?.username || 'Member'}</span>
         <span>•</span>
@@ -954,7 +954,7 @@ export function VideoPlayer({
           <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-400 mb-3 animate-pulse">
             <ShieldAlert className="w-8 h-8" />
           </div>
-          <p className="text-white font-bold text-lg">⚠️ Screen Recording Protected</p>
+          <p className="text-white font-bold text-lg">Screen Recording Protected</p>
           <p className="text-gray-400 text-xs mt-1 max-w-sm">
             ការថត Screenshot ឬ Record Screen ត្រូវបានហាមឃាត់ដើម្បីការពារកម្មសិទ្ធិបញ្ញា។
           </p>

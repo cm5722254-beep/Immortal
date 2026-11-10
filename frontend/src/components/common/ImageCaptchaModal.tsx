@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShieldCheck, RefreshCw, X, AlertCircle, CheckCircle2, Sparkles, Check } from 'lucide-react';
+import { ShieldCheck, RefreshCw, X, AlertCircle, CheckCircle2, Sparkles, Check, Film } from 'lucide-react';
 
 interface RawChallenge {
   id: string;
@@ -301,7 +301,7 @@ export const ImageCaptchaModal: React.FC<ImageCaptchaModalProps> = ({
         }, 700);
       } else {
         setIsVerifying(false);
-        setErrorMsg(`❌ មិនទាន់ត្រឹមត្រូវទេ! សូមជ្រើសរើសរូបភាពទាំង ${currentChallenge.targetCount} នៃរឿងនេះ។`);
+        setErrorMsg(`មិនទាន់ត្រឹមត្រូវទេ! សូមជ្រើសរើសរូបភាពទាំង ${currentChallenge.targetCount} នៃរឿងនេះ។`);
         setIsShaking(true);
         setTimeout(() => {
           setIsShaking(false);
@@ -385,7 +385,7 @@ export const ImageCaptchaModal: React.FC<ImageCaptchaModalProps> = ({
           {isSuccess && (
             <div className="mb-2.5 p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-1.5 animate-scale-in">
               <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-              <span>✅ ផ្ទៀងផ្ទាត់ជោគជ័យ! កំពុងបើក Login...</span>
+              <span>ផ្ទៀងផ្ទាត់ជោគជ័យ! កំពុងបើក Login...</span>
             </div>
           )}
 
@@ -421,7 +421,7 @@ export const ImageCaptchaModal: React.FC<ImageCaptchaModalProps> = ({
 
                   {/* Fallback Icon if poster image fails */}
                   <div className="tile-fallback hidden absolute inset-0 flex flex-col items-center justify-center bg-[#1e0a12] p-1 text-center">
-                    <span className="text-xl">🎬</span>
+                    <Film className="w-5 h-5 text-gray-400" />
                     <span className="text-[9px] text-gray-300 font-bold mt-1 line-clamp-1">{tile.label}</span>
                   </div>
 
@@ -448,7 +448,7 @@ export const ImageCaptchaModal: React.FC<ImageCaptchaModalProps> = ({
             </span>
             <span className="text-[10px] text-gray-400">
               {selectedIds.length === currentChallenge.targetCount
-                ? '✓ រួចរាល់ចុច "ផ្ទៀងផ្ទាត់"'
+                ? 'រួចរាល់ចុច "ផ្ទៀងផ្ទាត់"'
                 : `សូមរើសឱ្យបាន ${currentChallenge.targetCount} រូបភាព`}
             </span>
           </div>

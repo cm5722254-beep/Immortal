@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Lock, Globe, Trash2, Edit2, BookmarkPlus, Check, FolderOpen, X, Heart } from 'lucide-react';
+import { Plus, Lock, Globe, Trash2, Edit2, BookmarkPlus, Check, FolderOpen, X, Heart, Folder } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Anime } from '../../types';
 import api from '../../services/api';
@@ -15,7 +15,6 @@ interface VaultFolder {
 }
 
 const STORAGE_KEY = 'md_watchlist_vault';
-const EMOJI_OPTIONS = ['📁', '🎬', '⚔️', '💖', '🐉', '🌌', '🔥', '🎭', '👑', '🕹️', '🎵', '🌙'];
 
 // ── Persistence helpers ───────────────────────────────────────────────────────
 function loadVault(): VaultFolder[] {
@@ -31,27 +30,16 @@ function saveVault(folders: VaultFolder[]) {
 // ── Create Folder Modal ───────────────────────────────────────────────────────
 function CreateFolderModal({ onSave, onClose }: { onSave: (name: string, emoji: string, isPrivate: boolean) => void; onClose: () => void }) {
   const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('📁');
   const [isPrivate, setIsPrivate] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div className="w-full max-w-sm bg-[#1a1a1a] border border-white/10 rounded-2xl p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-white">New Vault Folder</h3>
+          <h3 className="font-bold text-white flex items-center gap-2">
+            <Folder className="w-4 h-4 text-orange-400" /> New Vault Folder
+          </h3>
           <button onClick={onClose} className="btn-icon w-7 h-7"><X className="w-4 h-4" /></button>
-        </div>
-
-        {/* Emoji picker */}
-        <p className="text-xs text-gray-400 mb-2">Pick an icon</p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {EMOJI_OPTIONS.map(e => (
-            <button key={e} onClick={() => setEmoji(e)}
-              className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all
-                ${emoji === e ? 'bg-orange-500/30 border-2 border-orange-500 scale-110' : 'bg-white/5 hover:bg-white/15 border border-white/5'}`}>
-              {e}
-            </button>
-          ))}
         </div>
 
         {/* Name input */}
@@ -86,7 +74,7 @@ function CreateFolderModal({ onSave, onClose }: { onSave: (name: string, emoji: 
         <div className="flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1 text-sm">Cancel</button>
           <button
-            onClick={() => { if (name.trim()) { onSave(name.trim(), emoji, isPrivate); onClose(); } }}
+            onClick={() => { if (name.trim()) { onSave(name.trim(), '', isPrivate); onClose(); } }}
             disabled={!name.trim()}
             className="btn-primary flex-1 text-sm disabled:opacity-50"
           >
@@ -220,7 +208,9 @@ export function WatchlistVault() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-lg">🗄️</div>
+          <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-lg">
+            <Folder className="w-4 h-4 text-orange-400" />
+          </div>
           <div>
             <h2 className="font-bold text-white">Watchlist Vault</h2>
             <p className="text-xs text-gray-400">Your custom collections</p>
@@ -254,7 +244,9 @@ export function WatchlistVault() {
                   className="input text-xs h-8 w-32 py-0 px-2"
                   autoFocus
                 />
-                <button onClick={() => saveEdit(f.id)} className="text-green-400 hover:text-green-300 text-xs px-1">✓</button>
+                <button onClick={() => saveEdit(f.id)} className="text-green-400 hover:text-green-300 text-xs px-1 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5" />
+                </button>
               </div>
             ) : (
               <button
@@ -262,7 +254,8 @@ export function WatchlistVault() {
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-all pr-6
                   ${activeFolder === f.id ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
               >
-                {f.emoji} {f.name}
+                <Folder className="w-3.5 h-3.5 text-orange-400 shrink-0 inline mr-1" />
+                {f.name}
                 <span className="text-[10px] text-gray-500">({f.items.length})</span>
                 {f.isPrivate && <Lock className="w-2.5 h-2.5 text-gray-500" />}
               </button>

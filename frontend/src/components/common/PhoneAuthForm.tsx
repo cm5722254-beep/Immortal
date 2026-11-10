@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Smartphone, Check, ArrowRight, RotateCcw, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Smartphone, Check, ArrowRight, RotateCcw, AlertCircle, ShieldCheck, Key } from 'lucide-react';
 import { formatPhoneNumber, sendPhoneOtp, type PhoneAuthSession } from '../../utils/firebase';
 import { useAuthStore } from '../../store/authStore';
 import { translate, useLanguageStore } from '../../store/languageStore';
@@ -150,7 +150,7 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
             <label className="label text-xs">{t('លេខទូរសព្ទ (Phone Number)')}</label>
             <div className="relative">
               <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none text-gray-400">
-                <span className="text-sm font-bold text-amber-400">🇰🇭 +855</span>
+                <span className="text-sm font-bold text-amber-500">KH +855</span>
                 <span className="text-dark-border">|</span>
               </div>
               <input
@@ -208,8 +208,9 @@ export function PhoneAuthForm({ onSuccess, onError }: PhoneAuthFormProps) {
           {/* Test OTP Helper Banner */}
           {session?.generatedOtp && (
             <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center justify-between gap-2 animate-bounce">
-              <div className="text-xs">
-                <span>🔑 {t('លេខកូដ OTP តេស្ត៖')} </span>
+              <div className="text-xs flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-amber-400" />
+                <span>{t('លេខកូដ OTP តេស្ត៖')} </span>
                 <strong className="font-mono text-sm tracking-wider text-white bg-black/40 px-2 py-0.5 rounded-lg border border-amber-400/40">
                   {session.generatedOtp}
                 </strong>

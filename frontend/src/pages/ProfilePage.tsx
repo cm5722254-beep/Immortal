@@ -1,27 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Languages, Headset,
-  Sparkles, Tv, Zap, ExternalLink,
-  Send, Smartphone, Trash2, CheckCircle2, Crown, ShieldAlert,
-  RotateCw, SlidersHorizontal, Eye, Wand2, Clock3, Download, Bookmark,
-  Gift, Settings, MessageSquare, Plus, Bell, QrCode
+  Tv, ExternalLink,
+  ShieldCheck, Trash2, CheckCircle2, Crown, ShieldAlert,
+  RotateCw, Eye, Wand2, Clock3, Download, Bookmark,
+  LogOut, Bell
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { usePlatform } from '../utils/platform';
 import { triggerHaptic } from '../utils/telegram';
 import { useUiPreferencesStore } from '../store/uiPreferencesStore';
-import { PlatformSwitcherModal } from '../components/common/PlatformSwitcherModal';
 import { clearLocalCatalogCache } from '../services/catalogService';
-import { getVipContactUrl } from '../utils/vip';
 import { translate, useLanguageStore } from '../store/languageStore';
 
 export function ProfilePage() {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, logout, isAdmin, isOwner, isStaff } = useAuthStore();
+  const navigate = useNavigate();
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
-  const { isTelegram, isMobileApp } = usePlatform();
-  const isPremiumVerified = Boolean(user?.is_vip_active && user.vip_plan?.trim().toLowerCase() === 'premium');
+
   const {
     cleanMode,
     reduceMotion,
@@ -31,22 +28,11 @@ export function ProfilePage() {
     toggleHidePromos,
   } = useUiPreferencesStore();
 
-  const [userName, setUserName] = useState(user?.username || 'Free Cultivator');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [streamQuality, setStreamQuality] = useState(() => {
-    try { return localStorage.getItem('nami_playback_quality') || 'Auto'; } catch { return 'Auto'; }
-  });
-  const [showPlatformModal, setShowPlatformModal] = useState(false);
-  const [subtitlesEnabled, setSubtitlesEnabled] = useState(() => {
-    try { return localStorage.getItem('nami_subtitles_enabled') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('nami_playback_quality') || '1080p Full HD'; } catch { return '1080p Full HD'; }
   });
   const [vipClock, setVipClock] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (user?.username) {
-      setUserName(user.username);
-    }
-  }, [user]);
 
   useEffect(() => {
     if (!user?.vip_expires_at) return;
@@ -63,476 +49,479 @@ export function ProfilePage() {
     const minutes = Math.floor((remaining % 3_600_000) / 60_000);
     return language === 'km' ? `នៅសល់ ${days}ថ្ងៃ ${hours}ម៉ោង ${minutes}នាទី` : `${days}d ${hours}h ${minutes}m remaining`;
   })();
-  const vipExpiryDate = user?.vip_expires_at ? new Date(user.vip_expires_at).toLocaleString(language === 'km' ? 'km-KH' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }) : null;
+
+  const vipExpiryDate = user?.vip_expires_at
+    ? new Date(user.vip_expires_at).toLocaleString(language === 'km' ? 'km-KH' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' })
+    : null;
 
   const showToast = (msg: string) => {
     triggerHaptic('light');
     setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2500);
+    setTimeout(() => setToastMessage(null), 2500);
   };
 
-  if (isTelegram || isMobileApp) {
-    const menuRows = [
-      { label: 'My List', icon: Bookmark, to: '/favorites' },
-      { label: 'History', icon: Clock3, to: '/history' },
-      { label: 'Download TV App', icon: Download, to: '/downloads', hint: 'Enjoy now' },
-      { label: `Subtitles · ${translate(subtitlesEnabled ? 'On' : 'Off', language)}`, icon: Languages, action: () => {
-        const next = !subtitlesEnabled;
-        setSubtitlesEnabled(next);
-        localStorage.setItem('nami_subtitles_enabled', String(next));
-        showToast(`${translate('Subtitles', language)} ${translate(next ? 'enabled' : 'disabled', language)}`);
-      } },
-      { label: 'Settings', icon: Settings, to: '/settings' },
-      ...(!isTelegram ? [{ label: 'App appearance', icon: SlidersHorizontal, action: () => setShowPlatformModal(true) }] : []),
-      { label: 'VIP Membership', icon: Gift, to: '/vip' },
-      { label: 'Friend Referral Rewards', icon: Gift, to: '/referrals' },
-      { label: 'Help and Feedback', icon: MessageSquare, to: '/help' },
-    ];
-
-    return (
-      <main className="mini-profile min-h-screen bg-[#111216] text-white pb-8">
-        <div className="mini-profile-top">
-          <div className="mini-profile-tools">
-            <Link aria-label="Scan QR code" to="/scan"><QrCode /></Link>
-            <Link aria-label="Notifications" to="/notifications"><Bell /></Link>
-            {!isTelegram && <button aria-label="Display settings" onClick={() => setShowPlatformModal(true)}><SlidersHorizontal /></button>}
-          </div>
-          <div className="mini-profile-identity">
-            <Link to="/account" className="mini-profile-avatar" aria-label="Personal data">{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : userName.slice(0, 1).toUpperCase()}</Link>
-            <div><div className="mini-profile-identity-name"><h1>{userName}</h1>{isPremiumVerified && <span className="mini-verified-badge" role="img" aria-label="Premium verified profile" title="Premium verified profile"><CheckCircle2 /></span>}</div><p>{user?.telegram_username ? `@${user.telegram_username}` : user?.telegram_first_name || user?.email || 'Welcome to Huang Anime'}{user?.telegram_id ? ` · Telegram ID: ${user.telegram_id}` : ''}</p></div>
-            <ChevronRight className="w-5 h-5 ml-auto text-white/50" />
-          </div>
-          <div className={`mini-vip-status ${user?.is_vip_active ? 'active' : ''}`}>
-            <div><strong>{user?.is_vip_active ? `VIP · ${user.vip_plan || translate('Active', language)}` : translate('Standard', language)}</strong><span>{vipExpiryDate ? `${translate('Expires', language)} ${vipExpiryDate} · ${vipTimeLeft}` : vipTimeLeft}</span></div>
-            {user?.is_vip_active ? <Link to="/vip">{translate('VIP benefits', language)} ›</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer">{translate('Upgrade VIP', language)} ›</a>}
-          </div>
-        </div>
-        {user?.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() && (
-          <p className="mx-4 mt-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{translate('Free trial active for one series · expires', language)} {new Date(user.trial_expires_at).toLocaleString(language === 'km' ? 'km-KH' : 'en-US')}</p>
-        )}
-        <div className="mini-profile-wallet">
-          {[
-            { label: 'VIP Plans', icon: Gift },
-            { label: 'My List', icon: Bookmark },
-            { label: 'Downloads', icon: Download },
-          ].map(({ label, icon: Icon }, index) => index === 0
-            ? <a key={label} href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer"><Icon /><span>{translate('Message to buy', language)}</span></a>
-            : <Link key={label} to={index === 1 ? '/favorites' : '/downloads'}><Icon /><span>{translate(label, language)}</span></Link>)}
-        </div>
-        <div className="mini-profile-menu">
-          {menuRows.map(({ label, icon: Icon, to, hint, action }) => {
-            const row = <><Icon className="mini-menu-icon" /><span>{translate(label.split(' · ')[0], language)}{label.includes(' · ') ? ` · ${label.split(' · ')[1]}` : ''}</span>{hint && <small>{translate(hint, language)}</small>}{label === 'My List' && <Plus className="mini-menu-plus" />}</>;
-            return to === '/vip'
-              ? <a key={label} href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer" className="mini-menu-row">{row}</a>
-              : to ? <Link key={label} to={to} className="mini-menu-row">{row}</Link> : <button key={label} className="mini-menu-row" onClick={action}>{row}</button>;
-          })}
-        </div>
-        <section className="mx-4 mt-4 rounded-xl border border-white/10 bg-[#1a1b20] p-4" aria-label={translate('Display language', language)}>
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white"><Languages className="h-4 w-4 text-emerald-400" />{translate('Display language', language)}</div>
-          <div className="grid grid-cols-2 gap-2">
-            {(['km', 'en'] as const).map((option) => <button key={option} type="button" aria-pressed={language === option} onClick={() => { setLanguage(option); showToast(translate('Language updated', option)); }} className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${language === option ? 'bg-emerald-500 text-black' : 'bg-white/10 text-gray-300'}`}>{option === 'km' ? 'ខ្មែរ' : 'English'}</button>)}
-          </div>
-        </section>
-        <p className="mini-profile-version">Huang Anime · Mobile</p>
-         {!isTelegram && <PlatformSwitcherModal isOpen={showPlatformModal} onClose={() => setShowPlatformModal(false)} />}
-        {toastMessage && <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-[#24252b] border border-white/10 text-white text-xs px-4 py-3 rounded-xl shadow-2xl whitespace-nowrap">{toastMessage}</div>}
-      </main>
-    );
-  }
+  const userName = user?.username || (isAuthenticated ? 'Member' : 'Guest Viewer');
 
   return (
-    <main className={`website-profile min-h-screen pb-28 md:pb-14 bg-[#0A0E17] text-gray-100 px-4 py-6 max-w-lg mx-auto ${!isTelegram && !isMobileApp ? 'is-web-profile' : ''}`}>
-      {/* ── Top Header ── */}
-      <div className="mb-6 pt-1 flex items-center justify-between">
+    <main className="min-h-screen bg-slate-50/70 text-slate-900 pb-28 md:pb-16 px-4 py-6 max-w-xl mx-auto transition-colors">
+      {/* ── Page Header ── */}
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-            {isTelegram ? (language === 'km' ? 'គណនី Telegram' : 'Telegram account') : isMobileApp ? translate('Settings', language) : translate('Account information', language)}
+          <h1 className="font-display font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
+            {language === 'km' ? 'គណនី & ការកំណត់' : 'Settings & Profile'}
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {isTelegram ? (language === 'km' ? 'កម្មវិធីទស្សនារឿង Telegram' : 'Watch anime on Telegram') : isMobileApp ? `Mobile app v1.5` : translate('Account and viewing settings', language)}
+          <p className="text-xs text-slate-500 mt-0.5">
+            {language === 'km' ? 'គ្រប់គ្រងគណនី និងបទពិសោធន៍ទស្សនា' : 'Manage your preferences and stream quality'}
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setShowPlatformModal(true);
-          }}
-          className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm ${
-            isTelegram ? 'bg-[#24A1DE]/20 text-[#24A1DE] border-[#24A1DE]/40' :
-            isMobileApp ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-            'bg-white/10 hover:bg-white/15 text-gray-200 border-white/20'
-          }`}
-          title="ចុចដើម្បីប្តូរទម្រង់ UI"
-        >
-          <span>{isTelegram ? '✈️ Telegram' : isMobileApp ? '📱 APK App' : '🌐 Web Cinema'}</span>
-          <span className="text-[8px] opacity-70">▼</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <Link
+            to="/notifications"
+            className="p-2.5 rounded-2xl bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-600 hover:text-slate-900 shadow-xs transition-all"
+            aria-label="Notifications"
+          >
+            <Bell className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-6">
-        {/* ── 1. Profile / Account Card ── */}
-        <div className={`rounded-2xl border p-4.5 flex items-center justify-between shadow-xl transition-all ${
-          isTelegram
-            ? 'bg-gradient-to-br from-[#0E1B2B] via-[#0B141F] to-[#0B141F] border-[#24A1DE]/40'
-            : isMobileApp
-            ? 'bg-gradient-to-br from-[#1C1405] via-[#0D0B05] to-[#050508] border-amber-500/40'
-            : 'bg-[#111726] border-[#1E283C]'
-        }`}>
-          <div className="flex items-center gap-3.5">
+        {/* ── 1. Apple-Style ID Card ── */}
+        <div className="bg-white/90 backdrop-blur-xl border border-slate-200/90 rounded-3xl p-5 shadow-xs transition-all flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
             {/* Avatar */}
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-500 flex items-center justify-center text-black font-black text-xl shadow-md overflow-hidden shrink-0 border-2 border-white/10">
-              {user?.avatar_url ? (
-                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                userName.charAt(0).toUpperCase()
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-sm ring-4 ring-blue-50 overflow-hidden">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  userName.charAt(0).toUpperCase()
+                )}
+              </div>
+              {user?.is_vip_active && (
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-400 border-2 border-white flex items-center justify-center shadow-xs">
+                  <Crown className="w-3 h-3 fill-slate-950 text-slate-950" />
+                </div>
               )}
             </div>
 
-            <div>
+            {/* User Meta */}
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="font-display font-black text-base text-white truncate max-w-[160px]">
+                <h2 className="font-display font-bold text-base text-slate-900 truncate">
                   {userName}
                 </h2>
-                {isPremiumVerified && <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sky-500 text-white" role="img" aria-label="Premium verified profile" title="Premium verified profile"><CheckCircle2 className="h-4 w-4" /></span>}
                 {user?.role === 'OWNER' || user?.email === 'cm5722254@gmail.com' ? (
-                  <span className="bg-gradient-to-r from-amber-500/25 via-yellow-500/25 to-red-500/25 text-amber-300 border border-amber-400/50 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-                    <Crown className="w-3 h-3 fill-amber-400" /> OWNER (ម្ចាស់)
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 shadow-xs inline-flex items-center gap-1">
+                    <Crown className="w-3 h-3 fill-amber-700 text-amber-700" /> OWNER
                   </span>
                 ) : user?.role === 'ADMIN' ? (
-                  <span className="bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <ShieldAlert className="w-3 h-3" /> អ្នកគ្រប់គ្រង (Admin)
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 inline-flex items-center gap-1">
+                    <ShieldAlert className="w-3 h-3" /> ADMIN
                   </span>
                 ) : user?.role === 'STAFF' ? (
-                  <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <ShieldAlert className="w-3 h-3" /> បុគ្គលិក (Staff)
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200 inline-flex items-center gap-1">
+                    STAFF
                   </span>
                 ) : user?.is_vip_active ? (
-                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black px-2 py-0.5 rounded-full">
-                    <Crown className="w-3 h-3 fill-amber-400" /> VIP ({user.vip_plan ? user.vip_plan.toUpperCase() : 'សកម្ម'})
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1">
+                    <Crown className="w-3 h-3 fill-amber-600 text-amber-600" /> VIP
                   </span>
                 ) : (
-                  <span className="bg-white/10 text-gray-300 border border-white/15 text-[10px] py-0.5 px-2 rounded-full flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-yellow-400" /> សមាជិកឥតគិតថ្លៃ
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                    Standard
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-400 mt-1 flex items-center gap-1 font-mono">
-                {user?.phone_number ? (
-                  <span className="text-amber-300">{user.phone_number}</span>
-                ) : user?.telegram_username ? (
-                  <span className="text-[#24A1DE]">@{user.telegram_username}</span>
-                ) : (
-                  <span className="text-emerald-400 flex items-center gap-1"><Zap className="w-3 h-3" /> កម្រិត 4K Ultra HD សកម្ម</span>
-                )}
+              <p className="text-xs text-slate-500 mt-0.5 truncate font-sans">
+                {user?.email || (user?.phone_number ? `+855 ${user.phone_number}` : (user?.telegram_username ? `@${user.telegram_username}` : 'MerDonghua Member'))}
               </p>
             </div>
           </div>
+
+          {!isAuthenticated ? (
+            <Link
+              to="/login"
+              className="px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all shrink-0"
+            >
+              {language === 'km' ? 'ចូលគណនី' : 'Sign in'}
+            </Link>
+          ) : (
+            <Link
+              to="/account"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+              aria-label="Account Details"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          )}
         </div>
 
-        <section className="rounded-2xl border border-amber-400/25 bg-gradient-to-r from-[#201a10] to-[#17191e] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-amber-300">{translate('VIP membership', language)}</p>
-            <p className="mt-1 text-sm font-semibold text-white">{vipExpiryDate ? `${translate('Expires', language)} ${vipExpiryDate}` : user?.is_vip_active ? translate('Lifetime membership', language) : translate('Standard plan', language)}</p>
-            <p className="mt-1 text-xs text-gray-400">{vipTimeLeft}</p>
+        {/* ── 2. VIP Membership Status Banner ── */}
+        <div className="bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 border border-amber-200/80 rounded-3xl p-5 shadow-xs flex items-center justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <div className="inline-flex items-center gap-1 text-[11px] font-black text-amber-700 uppercase tracking-wider">
+              <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
+              <span>{language === 'km' ? 'សមាជិកភាព VIP' : 'VIP Membership'}</span>
+            </div>
+            <p className="text-sm font-bold text-slate-900">
+              {user?.is_vip_active
+                ? (vipExpiryDate ? `${language === 'km' ? 'ផុតកំណត់ត្រឹម' : 'Expires'} ${vipExpiryDate}` : (language === 'km' ? 'សមាជិកពេញមួយជីវិត' : 'Lifetime Access'))
+                : (language === 'km' ? 'គម្រោងទូទៅ (មិនទាន់មាន VIP)' : 'Standard Free Viewer')}
+            </p>
+            <p className="text-xs text-slate-500">{vipTimeLeft}</p>
           </div>
-          {user?.is_vip_active ? <Link to="/vip" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">{translate('VIP benefits', language)}</Link> : <a href={getVipContactUrl(user?.username)} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[#f3c17e] px-4 py-2 text-sm font-bold text-[#171717]">{translate('Message to buy', language)}</a>}
-        </section>
-        {user?.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() && (
-          <p className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">Free trial active for one series · expires {new Date(user.trial_expires_at).toLocaleString()}</p>
-        )}
 
-        {/* ── 2. ✨ NEW: UI & DISPLAY SETTINGS (ការកំណត់ការបង្ហាញកុំឱ្យរញេរញៃ) ── */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-rose-400" /> {translate('UI and display settings', language)}
-            </span>
-            {cleanMode && (
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                ✓ {translate('Eye comfort mode', language)}
+          <Link
+            to="/vip"
+            onClick={() => triggerHaptic('medium')}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shadow-xs transition-all shrink-0 hover:scale-105 active:scale-95"
+          >
+            {user?.is_vip_active ? (language === 'km' ? 'បន្តសុពលភាព' : 'Extend VIP') : (language === 'km' ? 'ទិញ VIP ឥឡូវ' : 'Get VIP')}
+          </Link>
+        </div>
+
+        {/* ── 3. Quick Actions: Favorites / History / Downloads ── */}
+        <div>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">
+            {language === 'km' ? 'បណ្ណាល័យវីដេអូ' : 'My Library'}
+          </span>
+          <div className="grid grid-cols-3 gap-3">
+            <Link
+              to="/favorites"
+              className="bg-white/90 backdrop-blur-xl border border-slate-200/80 hover:border-blue-400/60 rounded-2xl p-3.5 text-center shadow-xs transition-all group hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                <Bookmark className="w-5 h-5 fill-rose-100" />
+              </div>
+              <span className="font-bold text-xs text-slate-800 block">
+                {language === 'km' ? 'រក្សាទុក' : 'Saved'}
               </span>
-            )}
-          </div>
+            </Link>
 
-          <div className="rounded-2xl bg-[#111726] border border-[#1E283C] overflow-hidden divide-y divide-[#1E283C]/70 shadow-lg">
-            
-            {/* Toggle 1: Clean & Minimalist Mode (Master Clutter Remover) */}
+            <Link
+              to="/history"
+              className="bg-white/90 backdrop-blur-xl border border-slate-200/80 hover:border-blue-400/60 rounded-2xl p-3.5 text-center shadow-xs transition-all group hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                <Clock3 className="w-5 h-5" />
+              </div>
+              <span className="font-bold text-xs text-slate-800 block">
+                {language === 'km' ? 'ប្រវត្តិមើល' : 'History'}
+              </span>
+            </Link>
+
+            <Link
+              to="/downloads"
+              className="bg-white/90 backdrop-blur-xl border border-slate-200/80 hover:border-blue-400/60 rounded-2xl p-3.5 text-center shadow-xs transition-all group hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                <Download className="w-5 h-5" />
+              </div>
+              <span className="font-bold text-xs text-slate-800 block">
+                {language === 'km' ? 'ទាញយក' : 'Downloads'}
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {/* ── 4. Apple Inset Group: UI & Display Experience ── */}
+        <div>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">
+            {language === 'km' ? 'បទពិសោធន៍ទស្សនា & UI' : 'Display & Visuals'}
+          </span>
+          <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl overflow-hidden divide-y divide-slate-100 shadow-xs">
+            {/* Toggle 1: Clean UI Mode */}
             <div
               onClick={() => {
                 toggleCleanMode();
-                showToast(!cleanMode ? 'បានបើក៖ របៀបទស្សនាសាមញ្ញ (Clean Mode)' : 'បានបិទ៖ របៀបទស្សនាសាមញ្ញ');
+                showToast(!cleanMode ? 'បានបើក៖ របៀបទស្សនាសាមញ្ញ' : 'បានបិទ៖ របៀបទស្សនាសាមញ្ញ');
               }}
-              className="p-4 flex items-center justify-between gap-3 hover:bg-white/5 cursor-pointer transition-colors"
+              className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/70 cursor-pointer transition-colors"
             >
-              <div className="flex items-start gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-md ${
-                  cleanMode
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-emerald-500/20'
-                    : 'bg-white/10 text-gray-400 border border-white/10'
-                }`}>
-                  <Wand2 className="w-5 h-5" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Wand2 className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-display font-bold text-sm text-white">{translate('Clean UI Mode', language)}</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      {translate('Recommended', language)}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
-                    {translate('Simplify animations and poster labels.', language)}
-                  </p>
+                  <span className="font-display font-bold text-sm text-slate-900 block">
+                    {language === 'km' ? 'របៀបទស្សនាសាមញ្ញ' : 'Clean & Minimalist View'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {language === 'km' ? 'កាត់បន្ថយបដារំខាន ផ្តោតលើវីដេអូ' : 'Removes clutter for focus'}
+                  </span>
                 </div>
               </div>
 
-              {/* iOS Style Switch */}
-              <div className={`w-11 h-6 rounded-full transition-colors relative shrink-0 p-0.5 cursor-pointer ${
-                cleanMode ? 'bg-emerald-500' : 'bg-gray-700'
-              }`}>
-                <div className={`w-5 h-5 rounded-full bg-white transition-transform shadow-md ${
-                  cleanMode ? 'translate-x-5' : 'translate-x-0'
-                }`} />
+              {/* iOS Switch */}
+              <div className={`w-11 h-6 rounded-full transition-colors relative shrink-0 p-0.5 ${cleanMode ? 'bg-blue-600' : 'bg-slate-200'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white transition-transform shadow-xs ${cleanMode ? 'translate-x-5' : 'translate-x-0'}`} />
               </div>
             </div>
 
-            {/* Toggle 2: Reduce Motion & Glow */}
+            {/* Toggle 2: Reduce Motion */}
             <div
               onClick={() => {
                 toggleReduceMotion();
-                showToast(!reduceMotion ? 'បានបើក៖ កាត់បន្ថយចលនា & ពន្លឺ' : 'បានបិទ៖ កាត់បន្ថយចលនា & ពន្លឺ');
+                showToast(!reduceMotion ? 'បានបើក៖ កាត់បន្ថយចលនា' : 'បានបិទ៖ កាត់បន្ថយចលនា');
               }}
-              className="p-4 flex items-center justify-between gap-3 hover:bg-white/5 cursor-pointer transition-colors"
+              className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/70 cursor-pointer transition-colors"
             >
-              <div className="flex items-start gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-md ${
-                  reduceMotion
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                    : 'bg-white/10 text-gray-400 border border-white/10'
-                }`}>
-                  <Eye className="w-5 h-5" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Eye className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <span className="font-display font-bold text-sm text-white">{translate('Reduce motion and glow', language)}</span>
-                  <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
-                    {translate('Turn off neon pulses and intense movement.', language)}
-                  </p>
+                  <span className="font-display font-bold text-sm text-slate-900 block">
+                    {language === 'km' ? 'កាត់បន្ថយចលនា' : 'Reduce Motion'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {language === 'km' ? 'បិទចលនាញ័រ ឬរំកិលរហ័ស' : 'Disables heavy animations'}
+                  </span>
                 </div>
               </div>
 
-              {/* iOS Style Switch */}
-              <div className={`w-11 h-6 rounded-full transition-colors relative shrink-0 p-0.5 cursor-pointer ${
-                reduceMotion ? 'bg-cyan-500' : 'bg-gray-700'
-              }`}>
-                <div className={`w-5 h-5 rounded-full bg-white transition-transform shadow-md ${
-                  reduceMotion ? 'translate-x-5' : 'translate-x-0'
-                }`} />
+              {/* iOS Switch */}
+              <div className={`w-11 h-6 rounded-full transition-colors relative shrink-0 p-0.5 ${reduceMotion ? 'bg-blue-600' : 'bg-slate-200'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white transition-transform shadow-xs ${reduceMotion ? 'translate-x-5' : 'translate-x-0'}`} />
               </div>
             </div>
 
-            {/* Toggle 3: Hide Promo & Lucky Wheel */}
+            {/* Toggle 3: Hide Promos */}
             <div
               onClick={() => {
                 toggleHidePromos();
-                showToast(!hidePromos ? 'បានលាក់៖ ផ្ទាំងផ្សាយ & កង់បង្វិល' : 'បានបង្ហាញ៖ ផ្ទាំងផ្សាយ & កង់បង្វិល');
+                showToast(!hidePromos ? 'បានលាក់ផ្ទាំងផ្សាយ' : 'បានបង្ហាញផ្ទាំងផ្សាយ');
               }}
-              className="p-4 flex items-center justify-between gap-3 hover:bg-white/5 cursor-pointer transition-colors"
+              className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/70 cursor-pointer transition-colors"
             >
-              <div className="flex items-start gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-md ${
-                  hidePromos
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                    : 'bg-white/10 text-gray-400 border border-white/10'
-                }`}>
-                  <RotateCw className="w-5 h-5" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <RotateCw className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <span className="font-display font-bold text-sm text-white">{translate('Hide promotions and lucky wheel', language)}</span>
-                  <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
-                    {translate('Hide large promotions to focus on watching.', language)}
-                  </p>
+                  <span className="font-display font-bold text-sm text-slate-900 block">
+                    {language === 'km' ? 'លាក់កង់សំណាង & បដាផ្សាយ' : 'Hide Promo Banners'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {language === 'km' ? 'លាក់ផ្ទាំងកង់បង្វិលយករង្វាន់' : 'Hide rewards wheel on feed'}
+                  </span>
                 </div>
               </div>
 
-              {/* iOS Style Switch */}
-              <div className={`w-11 h-6 rounded-full transition-colors relative shrink-0 p-0.5 cursor-pointer ${
-                hidePromos ? 'bg-amber-500' : 'bg-gray-700'
-              }`}>
-                <div className={`w-5 h-5 rounded-full bg-white transition-transform shadow-md ${
-                  hidePromos ? 'translate-x-5' : 'translate-x-0'
-                }`} />
+              {/* iOS Switch */}
+              <div className={`w-11 h-6 rounded-full transition-colors relative shrink-0 p-0.5 ${hidePromos ? 'bg-blue-600' : 'bg-slate-200'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white transition-transform shadow-xs ${hidePromos ? 'translate-x-5' : 'translate-x-0'}`} />
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* ── 3. Playback Preferences (ការកំណត់ការចាក់វីដេអូ) ── */}
-        <div className="space-y-2">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
-            <Tv className="w-3.5 h-3.5 text-amber-400" /> {translate('Playback settings', language)}
+        {/* ── 5. Apple Inset Group: Playback & Language Preferences ── */}
+        <div>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">
+            {language === 'km' ? 'ការចាក់វីដេអូ & ភាសា' : 'Playback & Regional'}
           </span>
-
-          <div className="rounded-2xl bg-[#111726] border border-[#1E283C] overflow-hidden divide-y divide-[#1E283C]/70 shadow-lg">
-            {/* Quality Selector */}
+          <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl overflow-hidden divide-y divide-slate-100 shadow-xs">
+            {/* Stream Quality */}
             <div
               onClick={() => {
                 const order = ['Auto', '720p HD', '1080p Full HD', '4K Ultra HD'];
                 const next = order[(order.indexOf(streamQuality) + 1) % order.length];
                 setStreamQuality(next);
-                localStorage.setItem('nami_playback_quality', next);
-                showToast(`កម្រិតរូបភាព៖ ${next}`);
+                try { localStorage.setItem('nami_playback_quality', next); } catch {}
+                showToast(`កម្រិតវីដេអូ៖ ${next}`);
               }}
-              className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
+              className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/70 cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-black shadow-md shadow-amber-500/20">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                   <Tv className="w-4.5 h-4.5" />
                 </div>
-                <span className="font-display font-bold text-sm text-white">{translate('Default picture quality', language)}</span>
+                <div>
+                  <span className="font-display font-bold text-sm text-slate-900 block">
+                    {language === 'km' ? 'កម្រិតរូបភាពវីដេអូ' : 'Default Stream Quality'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {language === 'km' ? 'កម្រិតច្បាស់ពេលចាប់ផ្តើមចាក់' : 'Initial playback resolution'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
-                <span className="text-amber-400">{streamQuality}</span>
-                <ChevronRight className="w-4 h-4 text-gray-500" />
+
+              <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600">
+                <span>{streamQuality}</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
               </div>
             </div>
 
-            {/* Language Selector */}
-            <div
-              className="flex items-center justify-between gap-3 p-4 transition-colors"
-            >
+            {/* Display Language */}
+            <div className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                   <Languages className="w-4.5 h-4.5" />
                 </div>
-                <span className="font-display font-bold text-sm text-white">{translate('Display language', language)}</span>
+                <div>
+                  <span className="font-display font-bold text-sm text-slate-900 block">
+                    {language === 'km' ? 'ភាសាក្នុងកម្មវិធី' : 'App Language'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {language === 'km' ? 'ជ្រើសរើសភាសាខ្មែរ ឬ អង់គ្លេស' : 'Choose Khmer or English'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-xs font-bold" role="group" aria-label={translate('Display language', language)}>
-              {(['km', 'en'] as const).map((option) => <button key={option} type="button" aria-pressed={language === option} onClick={() => { setLanguage(option); showToast(translate('Language updated', option)); }} className={`rounded-lg px-2.5 py-2 transition-colors ${language === option ? 'bg-emerald-500 text-black' : 'bg-white/10 text-gray-300'}`}>{option === 'km' ? 'ខ្មែរ' : 'English'}</button>)}
+
+              <div className="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => { setLanguage('km'); showToast('បានប្តូរទៅជាភាសាខ្មែរ'); }}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    language === 'km' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  ខ្មែរ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLanguage('en'); showToast('Language switched to English'); }}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    language === 'en' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  English
+                </button>
               </div>
+            </div>
+
+            {/* Clear Cache */}
+            <div
+              onClick={() => {
+                clearLocalCatalogCache();
+                showToast(language === 'km' ? 'បានសម្អាតទិន្នន័យ Cache ជោគជ័យ' : 'Catalog cache cleared');
+              }}
+              className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/70 cursor-pointer transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <span className="font-display font-bold text-sm text-slate-900 block">
+                    {language === 'km' ? 'សម្អាតទិន្នន័យបណ្តោះអាសន្ន' : 'Clear Temporary Cache'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {language === 'km' ? 'ជួយឱ្យទំព័រដំណើរការលឿនជាងមុន' : 'Frees up local storage'}
+                  </span>
+                </div>
+              </div>
+
+              <ChevronRight className="w-4 h-4 text-slate-400" />
             </div>
           </div>
         </div>
 
-        {/* ── 4. Optional Lucky Wheel Banner (Hidden if hidePromos is ON) ── */}
-        {!hidePromos && (
-          <Link
-            to="/vip#lucky-wheel"
-            className="rounded-2xl p-4 bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-amber-500/10 border border-rose-500/30 shadow-md flex items-center justify-between gap-3 hover:border-rose-400/60 hover:scale-[1.01] active:scale-[0.99] transition-all group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-rose-500/30 shrink-0 group-hover:rotate-45 transition-transform duration-500">
-                <RotateCw className="w-4.5 h-4.5" />
-              </div>
-              <div>
-                <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-amber-300">
-                  <Sparkles className="w-3 h-3 text-amber-300" /> {translate('VIP prizes up to 3 months', language)}
+        {/* ── 6. Admin Portal Link (Only for authorized roles) ── */}
+        {(isAdmin || isOwner || isStaff) && (
+          <div>
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">
+              {language === 'km' ? 'ផ្នែកគ្រប់គ្រង' : 'Management Portal'}
+            </span>
+            <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl overflow-hidden shadow-xs">
+              <Link
+                to="/admin"
+                className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <span className="font-display font-bold text-sm text-slate-900 block">
+                      {isOwner ? 'ផ្ទាំងម្ចាស់ Platform (Owner Dashboard)' : 'ផ្ទាំងអ្នកគ្រប់គ្រង (Admin Dashboard)'}
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      {language === 'km' ? 'គ្រប់គ្រងរឿង ភាគ និងសមាជិក' : 'Manage series, episodes, and users'}
+                    </span>
+                  </div>
                 </div>
-                <h3 className="font-display font-black text-xs sm:text-sm text-white">{translate('VIP Lucky Wheel', language)}</h3>
-                <p className="text-[10px] sm:text-[11px] text-gray-400">
-                  {user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.username === 'cheat_admin'
-                    ? '👑 គណនី Admin (ចាប់រង្វាន់បានរហូត)'
-                    : translate('Spin after buying VIP.', language)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1 py-1 px-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-xs shadow-sm shrink-0 group-hover:from-rose-400 group-hover:to-pink-400 transition-all">
-              <span>{translate('Spin now', language)}</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </div>
-          </Link>
-        )}
-
-        {/* ── 5. Platform Specific Actions (Telegram / Mobile App) ── */}
-        {isTelegram && (
-          <div className="rounded-2xl bg-[#0E1B2B]/90 border border-[#24A1DE]/30 p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Send className="w-4 h-4 text-[#24A1DE]" /> {translate('Official Telegram channel', language)}
-              </span>
-              <a
-                href="https://t.me/watchflixanimeadmin"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[#24A1DE] font-bold hover:underline"
-              >
-                {translate('Join channel', language)} →
-              </a>
-            </div>
-            <p className="text-[11px] text-gray-400">
-              {translate('Daily updates about new donghua and anime on Telegram.', language)}
-            </p>
-          </div>
-        )}
-
-        {isMobileApp && (
-          <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Smartphone className="w-4 h-4 text-amber-400" /> NAMI ANIME APK v1.5
-              </span>
-              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                {translate('Latest version', language)}
-              </span>
-            </div>
-            <div className="pt-2 flex items-center justify-between text-xs text-gray-400 border-t border-amber-500/20">
-              <span>{translate('Temporary data (Cache):', language)}</span>
-              <button
-                onClick={() => { clearLocalCatalogCache(); showToast(translate('Cache cleared.', language)); }}
-                className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> {translate('Clear Cache', language)}
-              </button>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </Link>
             </div>
           </div>
         )}
 
-        {/* ── 6. Support & Security (ជំនួយ និងសុវត្ថិភាព) ── */}
-        <div className="space-y-2">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
-            <ShieldAlert className="w-3.5 h-3.5 text-blue-400" /> {translate('Support and security', language)}
+        {/* ── 7. Support & Sign Out ── */}
+        <div>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">
+            {language === 'km' ? 'ជំនួយ & គណនី' : 'Support & Account'}
           </span>
-
-          <div className="rounded-2xl bg-[#111726] border border-[#1E283C] overflow-hidden divide-y divide-[#1E283C]/70 shadow-lg">
-            {/* Customer Support */}
+          <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl overflow-hidden divide-y divide-slate-100 shadow-xs">
             <a
               href="https://t.me/watchflixanimeadmin"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
+              className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                   <Headset className="w-4.5 h-4.5" />
                 </div>
-                <span className="font-display font-bold text-sm text-white">{translate('Customer support', language)}</span>
+                <div>
+                  <span className="font-display font-bold text-sm text-slate-900 block">
+                    {language === 'km' ? 'ទាក់ទងជំនួយ Telegram' : 'Customer Support'}
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    @watchflixanimeadmin
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
-                <span className="text-emerald-400">@watchflixanimeadmin</span>
-                <ExternalLink className="w-4 h-4 text-gray-500" />
-              </div>
+              <ExternalLink className="w-4 h-4 text-slate-400" />
             </a>
+
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  showToast(language === 'km' ? 'បានចាកចេញពីគណនី' : 'Signed out');
+                  navigate('/');
+                }}
+                className="w-full p-4 flex items-center justify-between gap-3 hover:bg-rose-50/50 text-left transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    <LogOut className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <span className="font-display font-bold text-sm text-rose-600 block">
+                      {language === 'km' ? 'ចាកចេញពីគណនី' : 'Log out'}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {language === 'km' ? 'ចាកចេញពីឧបករណ៍នេះ' : 'Sign out of this session'}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-rose-300" />
+              </button>
+            )}
           </div>
         </div>
 
+        {/* Footer info */}
+        <p className="text-center text-[11px] font-medium text-slate-400 pt-2 pb-4">
+          MerDonghua v2.0 • Ultra HD Stream
+        </p>
       </div>
 
-      {/* Toast Notification */}
+      {/* Floating Toast */}
       {toastMessage && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 py-2.5 px-4 rounded-xl bg-[#131a29] border border-amber-500/50 text-amber-300 font-bold text-xs shadow-2xl animate-fade-in flex items-center gap-2 backdrop-blur-md">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 py-2.5 px-4 rounded-2xl bg-slate-900/90 text-white font-bold text-xs shadow-xl animate-fade-in flex items-center gap-2 backdrop-blur-md">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
       )}
-
-      {/* Platform UI Switcher Modal */}
-      <PlatformSwitcherModal
-        isOpen={showPlatformModal}
-        onClose={() => setShowPlatformModal(false)}
-      />
     </main>
   );
 }
+
+export default ProfilePage;

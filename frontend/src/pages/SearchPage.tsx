@@ -217,15 +217,15 @@ export function SearchPage() {
   const hasActiveFilters = contentType !== 'ALL' || language !== 'ALL' || status !== 'ALL' || sortBy !== 'LATEST';
 
   return (
-    <main className="min-h-screen pb-24 md:pb-16 bg-[#080d1a] text-gray-100 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
+    <main className="min-h-screen pb-24 md:pb-16 bg-bg-base text-text-primary px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
       {/* ── Page Title ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight flex items-center gap-2.5">
-            <span className="w-2.5 h-7 rounded-full bg-[#E50914]" />
+          <h1 className="font-display font-black text-2xl sm:text-3xl text-text-primary tracking-tight flex items-center gap-2.5">
+            <span className="w-2.5 h-7 rounded-full bg-blue-600" />
             {translate('Title search and advanced filters', appLanguage)}
           </h1>
-          <p className="text-gray-400 text-xs sm:text-sm mt-1">
+          <p className="text-text-secondary text-xs sm:text-sm mt-1">
             {translate('Search anime, donghua, and movies in 4K.', appLanguage)}
           </p>
         </div>
@@ -235,8 +235,8 @@ export function SearchPage() {
           onClick={() => setShowFilters(!showFilters)}
           className={`px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
             showFilters || hasActiveFilters
-              ? 'bg-[#E50914] text-white border-[#E50914] shadow-lg shadow-[#E50914]/25'
-              : 'bg-[#1e1e1e] text-gray-300 border-white/10 hover:border-white/20 hover:text-white'
+              ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/25'
+              : 'bg-bg-card text-text-secondary border-border-subtle hover:border-border-focus hover:text-text-primary'
           }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
@@ -251,7 +251,7 @@ export function SearchPage() {
       {/* ── Search Input & Autocomplete Popover ── */}
       <div ref={searchContainerRef} className="relative mb-6 max-w-3xl">
         <div className="relative">
-          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-[#E50914] w-5 h-5 pointer-events-none" />
+          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 w-5 h-5 pointer-events-none" />
           <input
             id="search-input"
             type="text"
@@ -264,13 +264,13 @@ export function SearchPage() {
             }}
             placeholder={translate('Enter a title to search...', appLanguage)}
             autoFocus
-            className="w-full pl-12 pr-11 py-3.5 text-sm sm:text-base rounded-2xl bg-[#1e1e1e] border border-white/10 focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20 text-white placeholder-gray-400 outline-none transition-all shadow-inner"
+            className="w-full pl-12 pr-11 py-3.5 text-sm sm:text-base rounded-2xl bg-bg-card border border-border-subtle focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-text-primary placeholder-text-secondary outline-none transition-all shadow-inner"
             aria-label={translate('Search title', appLanguage)}
           />
           {query && (
             <button
               onClick={clearSearch}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-bg-subtle flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
               title={translate('Clear search', appLanguage)}
             >
               <X className="w-4 h-4" />
@@ -280,40 +280,40 @@ export function SearchPage() {
 
         {/* Live Autocomplete Popover Dropdown */}
         {showSuggestions && autocompleteSuggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-[#181818] border border-white/15 rounded-2xl shadow-2xl backdrop-blur-xl z-50 overflow-hidden animate-scale-in">
-            <div className="p-2 border-b border-white/10 flex items-center justify-between text-[11px] text-gray-400 font-bold px-3">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-bg-card border border-border-subtle rounded-2xl shadow-2xl backdrop-blur-xl z-50 overflow-hidden animate-scale-in">
+            <div className="p-2 border-b border-border-subtle flex items-center justify-between text-[11px] text-text-secondary font-bold px-3">
               <span>{translate('Quick suggestions count', appLanguage)} ({autocompleteSuggestions.length})</span>
               <span>{translate('Tap a title to watch.', appLanguage)}</span>
             </div>
-            <div className="divide-y divide-white/5 max-h-80 overflow-y-auto">
+            <div className="divide-y divide-border-subtle max-h-80 overflow-y-auto">
               {autocompleteSuggestions.map((item) => (
                 <Link
                   key={item.id}
                   to={`/watch/${item.slug}/1`}
                   onClick={() => setShowSuggestions(false)}
-                  className="flex items-center gap-3 p-3 hover:bg-white/10 transition-colors group cursor-pointer"
+                  className="flex items-center gap-3 p-3 hover:bg-bg-subtle transition-colors group cursor-pointer"
                 >
                   <img
                     src={item.poster_url || '/placeholder-poster.png'}
                     alt={item.title}
-                    className="w-11 h-14 object-cover rounded-lg shrink-0 border border-white/10 group-hover:border-[#E50914] transition-all"
+                    className="w-11 h-14 object-cover rounded-lg shrink-0 border border-border-subtle group-hover:border-blue-600 transition-all"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-bold truncate group-hover:text-[#E50914] transition-colors">
+                    <p className="text-text-primary text-sm font-bold truncate group-hover:text-blue-600 transition-colors">
                       {item.title}
                     </p>
                     {item.alt_title && (
-                      <p className="text-gray-400 text-xs truncate">
+                      <p className="text-text-secondary text-xs truncate">
                         {item.alt_title}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-400">
-                      <span className="px-1.5 py-0.5 rounded bg-white/10 text-gray-300 font-semibold">
+                    <div className="flex items-center gap-2 mt-1 text-[10px] text-text-secondary">
+                      <span className="px-1.5 py-0.5 rounded bg-bg-subtle text-text-secondary font-semibold">
                         {item.type === 'DONGHUA' ? translate('Donghua 3D', appLanguage) : item.type === 'MOVIE' ? translate('Movies', appLanguage) : translate('Anime', appLanguage)}
                       </span>
                       {item.year && <span>{item.year}</span>}
                       {item.average_rating > 0 && (
-                        <span className="flex items-center gap-0.5 text-amber-400">
+                        <span className="flex items-center gap-0.5 text-amber-500">
                           <Star className="w-3 h-3 fill-current" /> {item.average_rating.toFixed(1)}
                         </span>
                       )}
@@ -328,16 +328,16 @@ export function SearchPage() {
 
       {/* ── Multi-Criteria Filter Panel ── */}
       {showFilters && (
-        <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-[#1e1e1e] border border-white/10 space-y-4 animate-scale-in">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <div className="flex items-center gap-2 text-sm font-black text-white">
-              <Filter className="w-4 h-4 text-[#E50914]" />
+        <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-bg-card border border-border-subtle space-y-4 animate-scale-in">
+          <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+            <div className="flex items-center gap-2 text-sm font-black text-text-primary">
+              <Filter className="w-4 h-4 text-blue-600" />
               <span>{translate('Filter options', appLanguage)}</span>
             </div>
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+                className="text-xs text-rose-500 hover:text-rose-600 flex items-center gap-1 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>{translate('Reset', appLanguage)}</span>
@@ -348,7 +348,7 @@ export function SearchPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* 1. Content Type Filter */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Type', appLanguage)}</label>
+              <label className="block text-xs font-bold text-slate-500 mb-2">{translate('Type', appLanguage)}</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
                   { value: 'ALL', label: 'All' },
@@ -359,10 +359,10 @@ export function SearchPage() {
                   <button
                     key={opt.value}
                     onClick={() => setContentType(opt.value as ContentTypeFilter)}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer ${
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer border ${
                       contentType === opt.value
-                        ? 'bg-[#E50914] text-white'
-                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100'
                     }`}
                   >
                     <span>{translate(opt.label, appLanguage)}</span>
@@ -374,7 +374,7 @@ export function SearchPage() {
 
             {/* 2. Language Filter (Dub / Sub) */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Language', appLanguage)}</label>
+              <label className="block text-xs font-bold text-slate-500 mb-2">{translate('Language', appLanguage)}</label>
               <div className="space-y-1.5">
                 {[
                   { value: 'ALL', label: 'All audio' },
@@ -384,10 +384,10 @@ export function SearchPage() {
                   <button
                     key={opt.value}
                     onClick={() => setLanguage(opt.value as LanguageFilter)}
-                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer ${
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer border ${
                       language === opt.value
-                        ? 'bg-[#E50914] text-white'
-                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100'
                     }`}
                   >
                     <span>{translate(opt.label, appLanguage)}</span>
@@ -399,7 +399,7 @@ export function SearchPage() {
 
             {/* 3. Status Filter */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Status', appLanguage)}</label>
+              <label className="block text-xs font-bold text-slate-500 mb-2">{translate('Status', appLanguage)}</label>
               <div className="space-y-1.5">
                 {[
                   { value: 'ALL', label: 'All' },
@@ -409,10 +409,10 @@ export function SearchPage() {
                   <button
                     key={opt.value}
                     onClick={() => setStatus(opt.value as StatusFilter)}
-                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer ${
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer border ${
                       status === opt.value
-                        ? 'bg-[#E50914] text-white'
-                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100'
                     }`}
                   >
                     <span>{translate(opt.label, appLanguage)}</span>
@@ -424,7 +424,7 @@ export function SearchPage() {
 
             {/* 4. Sort Filter */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2">{translate('Sort by', appLanguage)}</label>
+              <label className="block text-xs font-bold text-slate-500 mb-2">{translate('Sort by', appLanguage)}</label>
               <div className="space-y-1.5">
                 {[
                   { value: 'LATEST', label: 'Latest first' },
@@ -435,10 +435,10 @@ export function SearchPage() {
                   <button
                     key={opt.value}
                     onClick={() => setSortBy(opt.value as SortFilter)}
-                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer ${
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between cursor-pointer border ${
                       sortBy === opt.value
-                        ? 'bg-[#E50914] text-white'
-                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100'
                     }`}
                   >
                     <span>{translate(opt.label, appLanguage)}</span>
@@ -454,15 +454,15 @@ export function SearchPage() {
       {/* ── Quick search chips ── */}
       {!query && !hasActiveFilters && (
         <div className="mb-8 space-y-3">
-          <p className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#E50914]" /> {translate('Search popular titles', appLanguage)}
+          <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" /> {translate('Search popular titles', appLanguage)}
           </p>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SEARCHES.map((term) => (
               <button
                 key={term}
                 onClick={() => handleChipClick(term)}
-                className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#1e1e1e] hover:bg-[#E50914] text-gray-300 hover:text-white border border-white/10 transition-all cursor-pointer active:scale-95 shadow-sm"
+                className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200/90 hover:border-blue-200 transition-all cursor-pointer active:scale-95 shadow-xs"
               >
                 {term}
               </button>
@@ -477,20 +477,20 @@ export function SearchPage() {
           <SkeletonCard count={12} />
         </div>
       ) : (query || hasActiveFilters) && results.length === 0 ? (
-        <div className="text-center py-16 space-y-3 bg-[#181818]/60 rounded-3xl border border-white/5 p-8">
-          <div className="w-16 h-16 rounded-full bg-[#1e1e1e] border border-white/10 flex items-center justify-center mx-auto text-gray-500">
-            <SearchIcon className="w-8 h-8 text-gray-500" />
+        <div className="text-center py-16 space-y-3 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center mx-auto text-slate-400">
+            <SearchIcon className="w-7 h-7 text-slate-400" />
           </div>
-          <p className="text-gray-200 text-base font-bold">
+          <p className="text-slate-900 text-base font-bold">
             {translate('No results for this search', appLanguage)}{query && appLanguage === 'km' ? ` សម្រាប់ "${query}"` : query ? ` for "${query}"` : ''}
           </p>
-          <p className="text-gray-400 text-xs max-w-sm mx-auto">
+          <p className="text-slate-500 text-xs max-w-sm mx-auto">
             {translate('Try another title or reset filters.', appLanguage)}
           </p>
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
-              className="mt-2 px-4 py-2 rounded-xl bg-[#E50914] text-white text-xs font-bold transition cursor-pointer"
+              className="mt-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer shadow-xs"
             >
               {translate('Clear all filters', appLanguage)}
             </button>
@@ -499,13 +499,13 @@ export function SearchPage() {
       ) : results.length > 0 ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs sm:text-sm text-gray-400 font-medium flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#E50914]" />
-              {translate('Showing results', appLanguage)} <strong className="text-white font-bold">{results.length}</strong> {translate('titles', appLanguage)}
+            <p className="text-xs sm:text-sm text-slate-500 font-medium flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-600" />
+              {translate('Showing results', appLanguage)} <strong className="text-slate-900 font-bold">{results.length}</strong> {translate('titles', appLanguage)}
               {query && <span>{appLanguage === 'km' ? `សម្រាប់ពាក្យ "${query}"` : `for "${query}"`}</span>}
             </p>
             {hasActiveFilters && (
-              <span className="text-xs text-[#E50914] font-semibold bg-[#E50914]/10 px-2.5 py-1 rounded-full border border-[#E50914]/30">
+              <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
                 {translate('Filter active', appLanguage)}
               </span>
             )}
@@ -517,12 +517,12 @@ export function SearchPage() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-20 space-y-3">
-          <div className="w-16 h-16 rounded-full bg-[#1e1e1e] border border-white/10 flex items-center justify-center mx-auto text-[#E50914] shadow-lg shadow-[#E50914]/10">
-            <SearchIcon className="w-8 h-8 text-[#E50914]" />
+        <div className="text-center py-20 space-y-3 bg-white rounded-3xl border border-slate-200/80 shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto text-blue-600">
+            <SearchIcon className="w-7 h-7 text-blue-600" />
           </div>
-          <p className="text-gray-200 text-sm sm:text-base font-bold">{translate('Search for something to watch', appLanguage)}</p>
-          <p className="text-gray-400 text-xs max-w-xs mx-auto">
+          <p className="text-slate-900 text-sm sm:text-base font-bold">{translate('Search for something to watch', appLanguage)}</p>
+          <p className="text-slate-500 text-xs max-w-xs mx-auto">
             {translate('Search and watch popular titles in 4K.', appLanguage)}
           </p>
         </div>

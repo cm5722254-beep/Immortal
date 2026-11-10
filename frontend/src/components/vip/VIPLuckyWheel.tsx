@@ -98,7 +98,7 @@ export const WHEEL_PRIZES: PrizeItem[] = [
   },
   {
     id: 'vip_3months',
-    label: '🏆 VIP 3 ខែ',
+    label: 'VIP 3 ខែ',
     subLabel: 'រង្វាន់ធំ Grand Prize',
     days: 90,
     color: '#b45309', // Amber 700 / Gold
@@ -399,7 +399,7 @@ export function VIPLuckyWheel({ onBuyVipClick, isModal = false, onClose }: VIPLu
             <span className="text-xs text-gray-300 font-bold">សិទ្ធិចាប់រង្វាន់:</span>
             {hasUnlimitedSpins ? (
               <span className="text-xs font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-md">
-                👑 ADMIN (ចាប់បានរហូត)
+                ADMIN (ចាប់បានរហូត)
               </span>
             ) : (
               <span className={`text-sm font-black ${spinsLeft > 0 ? 'text-rose-400' : 'text-gray-400'}`}>
@@ -421,7 +421,7 @@ export function VIPLuckyWheel({ onBuyVipClick, isModal = false, onClose }: VIPLu
         {/* Admin Secret Mode Switch (Only visible for cheat_admin / owner) */}
         {hasUnlimitedSpins && (
           <div className="mt-3 flex items-center justify-center gap-2">
-            <span className="text-[10px] text-amber-300 font-bold">👑 របៀប Admin:</span>
+            <span className="text-[10px] text-amber-300 font-bold">របៀប Admin:</span>
             <button
               onClick={() => setAdminMode(adminMode === 'NORMAL_RIGGED' ? 'FORCE_GRAND_PRIZE' : 'NORMAL_RIGGED')}
               className={`text-[10px] font-black px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
@@ -430,7 +430,7 @@ export function VIPLuckyWheel({ onBuyVipClick, isModal = false, onClose }: VIPLu
                   : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
               }`}
             >
-              {adminMode === 'FORCE_GRAND_PRIZE' ? '⚡ បង្ខំរង្វាន់ធំ (3 ខែ)' : '🎯 ធម្មតា (1-3 ថ្ងៃ)'}
+              {adminMode === 'FORCE_GRAND_PRIZE' ? 'បង្ខំរង្វាន់ធំ (3 ខែ)' : 'ធម្មតា (1-3 ថ្ងៃ)'}
             </button>
           </div>
         )}
@@ -631,7 +631,7 @@ export function VIPLuckyWheel({ onBuyVipClick, isModal = false, onClose }: VIPLu
 
             {/* Winning Headline */}
             <h3 className="font-display font-black text-2xl text-white mt-4 tracking-tight">
-              🎉 អបអរសាទរ!
+              អបអរសាទរ!
             </h3>
             <p className="text-xs text-gray-300 mt-1">
               អ្នកបានឈ្នះរង្វាន់ពីកង់បង្វិលសំណាង VIP

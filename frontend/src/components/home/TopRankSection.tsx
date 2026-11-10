@@ -15,8 +15,8 @@ export function TopRankSection({ items, isLoading }: TopRankSectionProps) {
       <div className="section-header mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="badge bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
-              🔥 តារាងចំណាត់ថ្នាក់កំពូល
+            <span className="badge bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 text-[10px] font-bold">
+              តារាងចំណាត់ថ្នាក់កំពូល
             </span>
           </div>
           <h2 className="section-title text-gradient-gold text-2xl md:text-3xl flex items-center gap-2">

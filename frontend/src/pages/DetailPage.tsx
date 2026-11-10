@@ -6,7 +6,7 @@ import {
   Search, ArrowDownUp, Info, Send, ThumbsUp, ListPlus,
   LayoutGrid, List, X
 } from 'lucide-react';
-import { triggerHaptic } from '../utils/telegram';
+import { setTelegramMainButton, triggerHaptic } from '../utils/telegram';
 import { SkeletonDetail } from '../components/common/SkeletonLoader';
 import { StreamingAvailabilityHub } from '../components/common/StreamingAvailabilityHub';
 import { TrailerModal } from '../components/common/TrailerModal';
@@ -216,7 +216,7 @@ export function DetailPage() {
       localStorage.setItem('animekh_user_ratings', JSON.stringify(savedRatings));
     } catch {}
 
-    setRatingToast(`អ្នកបានដាក់ពិន្ទុ ${star} ផ្កាយ ⭐! អរគុណច្រើន!`);
+    setRatingToast(`អ្នកបានដាក់ពិន្ទុ ${star} ផ្កាយ! អរគុណច្រើន!`);
     setTimeout(() => setRatingToast(null), 3000);
 
     // Send 10-scale score to backend
@@ -386,6 +386,12 @@ export function DetailPage() {
     ? Math.max(...episodes.map((e) => e.episode_number))
     : 1;
 
+  useEffect(() => {
+    if (!isTelegram || !anime || episodes.length === 0) return;
+    const buttonLabel = appLanguage === 'km' ? 'មើលឥឡូវនេះ' : 'Watch now';
+    return setTelegramMainButton(buttonLabel, () => navigate(`/watch/${anime.slug}/${firstEpNum}`));
+  }, [isTelegram, anime?.slug, episodes.length, firstEpNum, appLanguage, navigate]);
+
   const totalEpisodesCount = filteredEpisodes.length;
   const rangeChunks = useMemo(() => {
     if (totalEpisodesCount <= RANGE_SIZE) return [];
@@ -412,13 +418,15 @@ export function DetailPage() {
   if (isLoading) return <SkeletonDetail />;
   if (!anime) {
     return (
-      <div className="min-h-screen bg-black pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
-        <Film className="w-16 h-16 text-rose-500/50 mb-4 animate-pulse" />
-        <h2 className="text-2xl font-black text-white mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ</h2>
-        <p className="text-gray-400 text-sm max-w-md mb-6">
+      <div className="min-h-screen bg-slate-50/60 text-slate-900 pt-28 pb-16 flex flex-col items-center justify-center text-center px-4">
+        <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-4">
+          <Film className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900 mb-2 font-display">រកមិនឃើញរឿងនេះឡើយ</h2>
+        <p className="text-slate-500 text-sm max-w-md mb-6">
           រឿងដែលលោកអ្នកកំពុងស្វែងរកប្រហែលជាត្រូវបានផ្លាស់ប្តូរតំណភ្ជាប់ ឬមិនទាន់បានដាក់បញ្ចូល។
         </p>
-        <Link to="/search" className="py-3 px-6 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm transition shadow-lg">
+        <Link to="/search" className="py-3 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition shadow-sm">
           ស្វែងរករឿងផ្សេងៗ
         </Link>
       </div>
@@ -426,20 +434,17 @@ export function DetailPage() {
   }
 
   return (
-    <main className={`mini-detail ${!isTelegram && !isMobileApp ? 'website-detail' : ''} min-h-screen pb-24 md:pb-16 bg-black text-gray-100 selection:bg-rose-500 selection:text-white ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
-      {/* ── 1. Full-Bleed Cinematic Hero Banner (Mobile & Desktop App Style) ── */}
-      <div className="detail-hero relative w-full overflow-hidden bg-black">
-        
-        {/* Full-Bleed Backdrop Image */}
-        <div className="detail-hero-art relative aspect-[16/10] sm:aspect-[21/9] md:h-[420px] w-full overflow-hidden">
+    <main className={`mini-detail ${!isTelegram && !isMobileApp ? 'website-detail' : ''} min-h-screen pb-24 md:pb-16 bg-slate-50/50 text-slate-900 selection:bg-blue-600 selection:text-white ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
+      {/* ── 1. iOS 27 Liquid Glass White Hero Banner ── */}
+      <div className="detail-hero relative w-full overflow-hidden bg-white border-b border-slate-200/80">
+        {/* Soft Daylight Backdrop Image */}
+        <div className="detail-hero-art relative aspect-[16/10] sm:aspect-[21/9] md:h-[360px] w-full overflow-hidden bg-slate-100">
           <img
             src={anime.banner_url || anime.poster_url}
             alt=""
-            className="w-full h-full object-cover object-top sm:object-center opacity-40 blur-xs scale-105"
+            className="w-full h-full object-cover object-top sm:object-center opacity-30 blur-md scale-105"
           />
-          {/* Cinema Gradients */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent h-24" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-white/25" />
 
           <Link
             to={`/watch/${anime.slug}/${firstEpNum}`}
@@ -449,7 +454,7 @@ export function DetailPage() {
             <Play className="w-8 h-8 fill-current" />
           </Link>
 
-          {/* Floating Top App Action Bar (Mobile Back & Share) */}
+          {/* Floating Top App Action Bar */}
           <div className="detail-top-controls absolute top-3 inset-x-3 sm:inset-x-6 flex items-center justify-between z-30 pt-[max(0rem,env(safe-area-inset-top))]">
             <button
               onClick={() => {
@@ -457,9 +462,9 @@ export function DetailPage() {
                 navigate(-1);
               }}
               aria-label="Go back"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-all active:scale-95 shadow-lg cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/90 hover:bg-white backdrop-blur-xl text-slate-800 text-xs font-bold border border-slate-200/90 transition-all active:scale-95 shadow-xs cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 text-rose-400" />
+              <ArrowLeft className="w-4 h-4 text-blue-600" />
               <span>ត្រឡប់</span>
             </button>
 
@@ -469,14 +474,14 @@ export function DetailPage() {
                   triggerHaptic('light');
                   toggleFavorite();
                 }}
-                className={`w-8 h-8 rounded-full border flex items-center justify-center backdrop-blur-md transition-all active:scale-90 cursor-pointer ${
+                className={`w-9 h-9 rounded-full border flex items-center justify-center backdrop-blur-xl transition-all active:scale-90 shadow-xs cursor-pointer ${
                   isFav
-                    ? 'bg-rose-500/30 border-rose-400 text-rose-400 shadow-[0_0_12px_rgba(255,77,109,0.5)]'
-                    : 'bg-black/60 border-white/20 text-white'
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-white/90 hover:bg-white border-slate-200/90 text-slate-700'
                 }`}
                 title="Bookmark"
               >
-                <Bookmark className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                <Bookmark className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
               </button>
 
               <button
@@ -484,29 +489,28 @@ export function DetailPage() {
                   triggerHaptic('light');
                   share();
                 }}
-                className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 border border-white/20 text-white flex items-center justify-center backdrop-blur-md transition-all active:scale-90 cursor-pointer"
+                className="w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-slate-200/90 text-slate-700 flex items-center justify-center backdrop-blur-xl transition-all active:scale-90 shadow-xs cursor-pointer"
                 title="Share"
               >
-                <Share2 className="w-3.5 h-3.5" />
+                <Share2 className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── Content Card & Metadata Section (Asymmetrical Mobile / Side-by-side Desktop) ── */}
-        <div className="detail-hero-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-20 sm:-mt-24 pb-4">
-          <div className="flex flex-row items-end gap-3.5 sm:gap-6">
+        {/* ── Content Card & Metadata Section ── */}
+        <div className="detail-hero-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-24 sm:-mt-28 pb-6">
+          <div className="flex flex-row items-end gap-4 sm:gap-6">
             {/* Poster Card */}
-            <div className="detail-poster w-28 sm:w-40 md:w-52 shrink-0">
-              <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.9)] border-2 border-white/20 bg-[#0d1526]">
+            <div className="detail-poster w-28 sm:w-40 md:w-48 shrink-0">
+              <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_14px_34px_rgba(15,23,42,0.14)] border-2 border-white bg-slate-100">
                 <img
                   src={anime.poster_url || anime.banner_url}
                   alt={anime.title}
                   className="w-full h-full object-cover"
                 />
-                {/* 4K Badge */}
                 <div className="absolute bottom-1.5 inset-x-1.5 flex items-center justify-between pointer-events-none">
-                  <span className="px-1.5 py-0.2 rounded bg-black/80 backdrop-blur-md text-[8px] sm:text-[9px] font-black text-rose-300 border border-rose-500/40">
+                  <span className="px-2 py-0.5 rounded-md bg-white/95 backdrop-blur-md text-[9px] font-black text-blue-600 border border-slate-200/80 shadow-2xs">
                     4K UHD
                   </span>
                 </div>
@@ -514,46 +518,45 @@ export function DetailPage() {
             </div>
 
             {/* Title & Key Meta on the Right */}
-            <div className="detail-meta flex-1 min-w-0 pb-1 space-y-1 sm:space-y-2">
+            <div className="detail-meta flex-1 min-w-0 pb-1 space-y-1.5 sm:space-y-2">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/25 border border-rose-400/40 text-rose-300">
-                  {anime.type === 'ANIME' ? '🇯🇵 Anime ជប៉ុន' : anime.type === 'MOVIE' ? '🍿 ភាពយន្តដុំ' : '🐉 Donghua 3D'}
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 border border-blue-200/80 text-blue-700">
+                  {anime.type === 'ANIME' ? 'Anime ជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : 'Donghua 3D'}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center gap-1">
-                  <Star className="w-2.5 h-2.5 fill-amber-400" /> {(anime.average_rating || 9.8).toFixed(1)}
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center gap-1">
+                  <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> {(anime.average_rating || 9.8).toFixed(1)}
                 </span>
               </div>
 
-              <h1 className="font-display font-black text-lg sm:text-2xl md:text-3xl text-white tracking-tight leading-tight line-clamp-2 drop-shadow-md">
+              <h1 className="font-display font-black text-lg sm:text-2xl md:text-3xl text-slate-900 tracking-tight leading-tight line-clamp-2">
                 {anime.title}
               </h1>
 
               {anime.alt_title && (
-                <p className="text-xs text-gray-400 line-clamp-1 italic">
+                <p className="text-xs text-slate-500 line-clamp-1">
                   {anime.alt_title}
                 </p>
               )}
 
-              <div className="flex items-center gap-2 text-[11px] text-gray-300 font-medium flex-wrap pt-0.5">
+              <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium flex-wrap pt-0.5">
                 <span>{anime.year || 2024}</span>
                 <span>•</span>
                 <span>{anime.episode_count || episodes.length} ភាគ</span>
                 <span>•</span>
-                <span className="text-rose-300 font-bold">សំឡេងខ្មែរ</span>
+                <span className="text-blue-600 font-bold">សំឡេងខ្មែរ</span>
               </div>
             </div>
           </div>
 
-          {/* ── Primary Action Buttons Bar (Sleek Global App Style) ── */}
-          <div className="detail-actions mt-4 pt-2 border-t border-white/[0.08] space-y-3">
-            {/* Primary Watch / Movie CTA */}
-            <div className="flex items-center gap-2 sm:gap-3">
+          {/* ── Primary Action Buttons Bar ── */}
+          <div className="detail-actions mt-5 pt-4 border-t border-slate-200/70 space-y-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
               {anime.type === 'MOVIE' && !hasMovieAccess ? (
                 <a
                   href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(`សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(255,77,109,0.35)] active:scale-95 transition-all"
+                  className="flex-1 py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20 active:scale-95 transition-all"
                 >
                   <Send className="w-4 h-4" /> ទិញទស្សនា Movie ($1.00) តាម Telegram
                 </a>
@@ -561,13 +564,13 @@ export function DetailPage() {
                 <Link
                   to={`/watch/${anime.slug}/${firstEpNum}`}
                   onClick={() => triggerHaptic('medium')}
-                  className="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(255,77,109,0.4)] active:scale-95 transition-all select-none"
+                  className="flex-1 py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20 active:scale-95 transition-all select-none"
                 >
-                  <Play className="w-4 h-4 fill-white stroke-[2.5]" />
+                  <Play className="w-4 h-4 fill-white" />
                   <span>
                     {anime.type === 'MOVIE'
                       ? (isAdministrator ? 'ចាក់ទស្សនា (Admin Access)' : 'ចាក់ទស្សនា Movie')
-                      : 'ចាក់ទស្សនា ភាគ ១'}
+                      : 'ចាក់ទស្សនា ភាគ 1'}
                   </span>
                 </Link>
               )}
@@ -576,30 +579,29 @@ export function DetailPage() {
                 <Link
                   to={`/watch/${anime.slug}/${latestEpNum}`}
                   onClick={() => triggerHaptic('light')}
-                  className="py-3 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-white/15 transition active:scale-95 select-none shrink-0"
+                  className="py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200/80 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200 transition active:scale-95 select-none shrink-0"
                   title={`ភាគចុងក្រោយ (ភាគ ${latestEpNum})`}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                   <span>ភាគ {latestEpNum}</span>
                 </Link>
               )}
             </div>
 
-            {/* Quick Action Icon Pills Row (Compact & Non-Cluttering) */}
-            <div className="detail-quick-actions flex items-center justify-between sm:justify-start gap-2 pt-1 text-xs">
-              {/* My List */}
+            {/* Quick Action Icon Pills Row */}
+            <div className="detail-quick-actions flex items-center justify-between sm:justify-start gap-2 pt-0.5 text-xs">
               <button
                 onClick={() => {
                   triggerHaptic('light');
                   setShowMyListDropdown(!showMyListDropdown);
                 }}
-                className={`flex-1 sm:flex-initial py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold transition-all active:scale-95 cursor-pointer relative ${
+                className={`flex-1 sm:flex-initial py-2 px-3.5 rounded-xl border flex items-center justify-center gap-1.5 font-semibold transition-all active:scale-95 cursor-pointer relative ${
                   myListStatus !== 'NONE'
-                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                    : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/90'
                 }`}
               >
-                <ListPlus className="w-3.5 h-3.5 text-rose-400" />
+                <ListPlus className="w-3.5 h-3.5 text-blue-600" />
                 <span>
                   {myListStatus === 'WATCHING' ? 'កំពុងមើល' :
                    myListStatus === 'PLAN_TO_WATCH' ? 'គ្រោងមើល' :
@@ -607,15 +609,14 @@ export function DetailPage() {
                    myListStatus === 'FAVORITE' ? 'រក្សាទុក' : '+ បញ្ជីខ្ញុំ'}
                 </span>
 
-                {/* Dropdown Options */}
                 {showMyListDropdown && (
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-[#111] border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in text-left">
+                  <div className="absolute top-full left-0 mt-2 w-52 bg-white border border-slate-200/90 rounded-2xl shadow-xl p-1.5 z-50 animate-scale-in text-left">
                     {[
-                      { status: 'WATCHING' as MyListStatus, label: '👁️ កំពុងមើល · Follow updates' },
-                      { status: 'PLAN_TO_WATCH' as MyListStatus, label: '⏳ គ្រោងមើល (Plan)' },
-                      { status: 'COMPLETED' as MyListStatus, label: '✅ មើលចប់ (Completed)' },
-                      { status: 'FAVORITE' as MyListStatus, label: '💖 ចូលចិត្ត · Follow updates' },
-                      { status: 'NONE' as MyListStatus, label: '❌ ដកចេញពីបញ្ជី' },
+                      { status: 'WATCHING' as MyListStatus, label: 'កំពុងមើល · Follow updates' },
+                      { status: 'PLAN_TO_WATCH' as MyListStatus, label: 'គ្រោងមើល (Plan)' },
+                      { status: 'COMPLETED' as MyListStatus, label: 'មើលចប់ (Completed)' },
+                      { status: 'FAVORITE' as MyListStatus, label: 'ចូលចិត្ត · Follow updates' },
+                      { status: 'NONE' as MyListStatus, label: 'ដកចេញពីបញ្ជី' },
                     ].map((item) => (
                       <button
                         key={item.status}
@@ -625,8 +626,8 @@ export function DetailPage() {
                         }}
                         className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
                           myListStatus === item.status
-                            ? 'bg-rose-500 text-white'
-                            : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            ? 'bg-blue-600 text-white'
+                            : 'text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         <span>{item.label}</span>
@@ -637,39 +638,36 @@ export function DetailPage() {
                 )}
               </button>
 
-              {/* Trailer */}
               <button
                 onClick={() => {
                   triggerHaptic('light');
                   setShowTrailerModal(true);
                 }}
-                className="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 flex items-center justify-center gap-1.5 font-bold transition active:scale-95 cursor-pointer"
+                className="flex-1 sm:flex-initial py-2 px-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/90 flex items-center justify-center gap-1.5 font-semibold transition active:scale-95 cursor-pointer"
               >
-                <Film className="w-3.5 h-3.5 text-rose-400" />
+                <Film className="w-3.5 h-3.5 text-blue-600" />
                 <span>ឈុតខ្លី</span>
               </button>
 
-              {/* Rating */}
               <button
                 onClick={() => {
                   triggerHaptic('light');
                   setShowRatingModal(true);
                 }}
-                className="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-amber-300 border border-white/10 flex items-center justify-center gap-1.5 font-bold transition active:scale-95 cursor-pointer"
+                className="flex-1 sm:flex-initial py-2 px-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/90 flex items-center justify-center gap-1.5 font-semibold transition active:scale-95 cursor-pointer"
               >
-                <Star className="w-3.5 h-3.5 fill-amber-400" />
-                <span>{userRating > 0 ? `${userRating}★` : 'ដាក់ពិន្ទុ'}</span>
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                <span>{userRating > 0 ? `${userRating}/5` : 'ដាក់ពិន្ទុ'}</span>
               </button>
 
-              {/* Comments tab shortcut */}
               <button
                 onClick={() => {
                   triggerHaptic('light');
                   setActiveTab('comments');
                 }}
-                className="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 flex items-center justify-center gap-1.5 font-bold transition active:scale-95 cursor-pointer"
+                className="flex-1 sm:flex-initial py-2 px-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/90 flex items-center justify-center gap-1.5 font-semibold transition active:scale-95 cursor-pointer"
               >
-                <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
+                <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
                 <span>{commentsCount}</span>
               </button>
             </div>
@@ -679,50 +677,60 @@ export function DetailPage() {
 
       {/* ── 2. Tab Navigation & Content Section ── */}
       <div className="detail-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        <section className="detail-synopsis" aria-label="Story summary">
-          <div className="detail-genre-list">
+        <section className="bg-white rounded-3xl border border-slate-200/85 p-5 sm:p-6 shadow-xs space-y-3" aria-label="Story summary">
+          <div className="flex flex-wrap gap-1.5">
             {(anime.genres || []).slice(0, 4).map((genre) => (
-              <span key={genre.id}>{genre.name}</span>
+              <span key={genre.id} className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200/80">
+                {genre.name}
+              </span>
             ))}
-            {anime.year && <span>{anime.year}</span>}
+            {anime.year && (
+              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold border border-slate-200/80">
+                {anime.year}
+              </span>
+            )}
           </div>
-          <h2>រឿងសង្ខេប</h2>
-          <p className={showFullDescription ? 'expanded' : ''}>
+          <h2 className="text-sm font-bold text-slate-900">រឿងសង្ខេប</h2>
+          <p className={`text-xs sm:text-sm text-slate-600 leading-relaxed ${showFullDescription ? '' : 'line-clamp-3'}`}>
             {anime.description || 'មិនមានការពិពណ៌នាសាច់រឿងលម្អិតនៅឡើយទេ។'}
           </p>
           {(anime.description?.length || 0) > 150 && (
-            <button type="button" onClick={() => setShowFullDescription((value) => !value)}>
+            <button
+              type="button"
+              onClick={() => setShowFullDescription((value) => !value)}
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 cursor-pointer"
+            >
               {showFullDescription ? 'បង្រួម' : 'អានបន្ថែម'}
             </button>
           )}
         </section>
         {anime.type !== 'MOVIE' && user?.role !== 'ADMIN' && user?.role !== 'OWNER' && user?.role !== 'STAFF' && !user?.is_vip_active && (
-          <section className="flex flex-col gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.07] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="flex flex-col gap-3 rounded-3xl border border-blue-200/80 bg-blue-50/60 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="font-bold text-white">One free day for one series</h2>
-              <p className="mt-1 text-sm text-white/65">Claim once to watch every episode of this series for 24 hours.</p>
-              {trialError && <p role="alert" className="mt-2 text-sm text-rose-300">{trialError}</p>}
+              <h2 className="font-bold text-slate-900 text-sm sm:text-base">សាកល្បងមើលដោយឥតគិតថ្លៃ 1 ថ្ងៃសម្រាប់រឿងនេះ</h2>
+              <p className="mt-1 text-xs sm:text-sm text-slate-600">បើកសិទ្ធិមើលគ្រប់ភាគនៃរឿងនេះរយៈពេល 24 ម៉ោង។</p>
+              {trialError && <p role="alert" className="mt-2 text-xs font-semibold text-red-600">{trialError}</p>}
             </div>
             {user?.trial_anime_id === anime.id && user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() ? (
-              <span className="rounded-xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-200">Your free trial is active for this series</span>
+              <span className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs sm:text-sm font-semibold text-emerald-700">កំពុងបើកសាកល្បងឥតគិតថ្លៃ</span>
             ) : user?.trial_claimed_at ? (
-              <span className="rounded-xl bg-white/5 px-4 py-3 text-sm text-white/60">Free trial already claimed</span>
+              <span className="rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-xs sm:text-sm text-slate-500">បានប្រើសិទ្ធិសាកល្បងរួចហើយ</span>
             ) : user?.is_vip_active ? null : (
-              <button onClick={claimFreeTrial} disabled={claimingTrial} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 font-bold text-[#06130c] transition hover:bg-emerald-400 disabled:opacity-60">
-                {claimingTrial ? 'Claiming…' : 'Claim free 1-day trial'}
+              <button onClick={claimFreeTrial} disabled={claimingTrial} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60 cursor-pointer shadow-xs">
+                {claimingTrial ? 'កំពុងដំណើរការ…' : 'បើកមើលសាកល្បង 1 ថ្ងៃ'}
               </button>
             )}
           </section>
         )}
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('episodes')}
             className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'episodes'
-                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Film className="w-4 h-4" /> បញ្ជីភាគ ({episodes.length})
@@ -732,8 +740,8 @@ export function DetailPage() {
             onClick={() => setActiveTab('story')}
             className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'story'
-                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Info className="w-4 h-4" /> ដំណើររឿងសង្ខេប & ព័ត៌មាន
@@ -743,8 +751,8 @@ export function DetailPage() {
             onClick={() => setActiveTab('comments')}
             className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
               activeTab === 'comments'
-                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <MessageSquare className="w-4 h-4" /> មតិយោបល់ ({commentsCount})
@@ -755,8 +763,8 @@ export function DetailPage() {
               onClick={() => setActiveTab('related')}
               className={`px-5 py-2.5 rounded-2xl font-black text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                 activeTab === 'related'
-                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <Sparkles className="w-4 h-4" /> រឿងស្រដៀងគ្នា ({relatedAnime.length})
@@ -768,16 +776,16 @@ export function DetailPage() {
         {activeTab === 'episodes' && (
           <div className="space-y-4">
             {/* Episode Toolbar (Search + Range Selector + Sort + View Mode) */}
-            <div className="detail-episode-toolbar flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0a0a0a]/90 border border-white/10 backdrop-blur-xl shadow-lg">
+            <div className="detail-episode-toolbar flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
               {/* Left: Search input */}
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={epSearch}
                   onChange={(e) => setEpSearch(e.target.value)}
                   placeholder="ស្វែងរកលេខភាគ (ឧ. 1, 12, 105)..."
-                  className="w-full bg-[#111] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/30 transition-colors"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
 
@@ -788,22 +796,22 @@ export function DetailPage() {
                     triggerHaptic('light');
                     setEpSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
                   }}
-                  className="px-3 py-2 rounded-xl bg-[#131d36] hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                   title="Toggle episode order"
                 >
-                  <ArrowDownUp className="w-3.5 h-3.5 text-rose-400" />
-                  <span>{epSortOrder === 'asc' ? 'ភាគ 1 ➔ ចុងក្រោយ' : 'ភាគចុងក្រោយ ➔ 1'}</span>
+                  <ArrowDownUp className="w-3.5 h-3.5 text-blue-600" />
+                  <span>{epSortOrder === 'asc' ? 'ភាគ 1 -> ចុងក្រោយ' : 'ភាគចុងក្រោយ -> 1'}</span>
                 </button>
 
                 {/* View Mode Toggle (Grid / List) */}
-                <div className="detail-view-toggle flex items-center bg-[#131d36] p-0.5 rounded-xl border border-white/10">
+                <div className="detail-view-toggle flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
                   <button
                     onClick={() => {
                       triggerHaptic('light');
                       setViewMode('grid');
                     }}
                     className={`p-1.5 rounded-lg transition cursor-pointer ${
-                      viewMode === 'grid' ? 'bg-rose-500 text-white shadow' : 'text-gray-400 hover:text-white'
+                      viewMode === 'grid' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800'
                     }`}
                     title="Grid View"
                   >
@@ -815,7 +823,7 @@ export function DetailPage() {
                       setViewMode('list');
                     }}
                     className={`p-1.5 rounded-lg transition cursor-pointer ${
-                      viewMode === 'list' ? 'bg-rose-500 text-white shadow' : 'text-gray-400 hover:text-white'
+                      viewMode === 'list' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800'
                     }`}
                     title="List View"
                   >
@@ -837,8 +845,8 @@ export function DetailPage() {
                     }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-black shrink-0 transition-all cursor-pointer ${
                       selectedRange === idx
-                        ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-500/25 ring-1 ring-white/20'
-                        : 'bg-[#10192e] text-gray-400 hover:text-white border border-white/10 hover:border-white/20'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300'
                     }`}
                   >
                     {chunk.label}
@@ -849,10 +857,10 @@ export function DetailPage() {
 
             {/* Episodes List Display */}
             {displayedEpisodes.length === 0 ? (
-              <div className="text-center py-16 bg-[#0e1629]/60 rounded-3xl border border-white/5 space-y-2">
-                <Film className="w-10 h-10 text-gray-500 mx-auto" />
-                <p className="text-gray-400 text-sm font-semibold">រកមិនឃើញភាគដែលស្វែងរកឡើយ</p>
-                <p className="text-gray-500 text-xs">សូមសាកល្បងស្វែងរកលេខភាគផ្សេងទៀត។</p>
+              <div className="text-center py-16 bg-white border border-slate-200/80 rounded-3xl space-y-2">
+                <Film className="w-10 h-10 text-slate-400 mx-auto" />
+                <p className="text-slate-700 text-sm font-semibold">រកមិនឃើញភាគដែលស្វែងរកឡើយ</p>
+                <p className="text-slate-500 text-xs">សូមសាកល្បងស្វែងរកលេខភាគផ្សេងទៀត។</p>
               </div>
             ) : viewMode === 'grid' ? (
               /* Sleek Compact Number Grid (5 per row on mobile, up to 10 on desktop) */
@@ -866,18 +874,18 @@ export function DetailPage() {
                       key={ep.id}
                       to={`/watch/${anime.slug}/${ep.episode_number}`}
                       onClick={() => triggerHaptic('light')}
-                      className="group relative aspect-square overflow-hidden flex flex-col items-center justify-center rounded-xl bg-[#10192e]/90 hover:bg-gradient-to-br hover:from-rose-600 hover:to-pink-600 border border-white/10 hover:border-rose-400/50 text-white transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-rose-500/25 hover:scale-105 active:scale-95 cursor-pointer select-none"
+                      className="group relative aspect-square overflow-hidden flex flex-col items-center justify-center rounded-xl bg-white hover:bg-blue-50 border border-slate-200/80 hover:border-blue-400 text-slate-900 transition-all duration-200 shadow-xs hover:shadow-sm active:scale-95 cursor-pointer select-none"
                     >
                       {episodeThumb && <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full rounded-xl object-cover" />}
                       {episodeThumb && <span aria-hidden="true" className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/75 via-black/15 to-black/10" />}
                       {/* VIP Crown Indicator */}
                       {isEpVip && (
-                        <div className="absolute top-1 right-1 z-10 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center shadow">
-                          <Crown className="w-2 h-2 text-black fill-black" />
+                        <div className="absolute top-1 right-1 z-10 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center shadow-xs">
+                          <Crown className="w-2 h-2 text-slate-900 fill-slate-900" />
                         </div>
                       )}
 
-                      <span className="relative z-10 rounded-md bg-black/55 px-2 py-1 font-display font-black text-sm sm:text-base group-hover:text-white transition-colors">
+                      <span className={`relative z-10 font-display font-black text-sm sm:text-base group-hover:text-blue-600 transition-colors ${episodeThumb ? 'rounded-md bg-black/60 px-2 py-1 text-white' : 'text-slate-900'}`}>
                         {ep.episode_number}
                       </span>
                     </Link>
@@ -896,17 +904,17 @@ export function DetailPage() {
                       key={ep.id}
                       to={`/watch/${anime.slug}/${ep.episode_number}`}
                       onClick={() => triggerHaptic('light')}
-                      className="group flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl bg-[#10192e]/90 hover:bg-[#15203a] border border-white/10 hover:border-rose-500/40 transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer"
+                      className="group flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 hover:border-blue-300 transition-all duration-200 shadow-xs active:scale-[0.99] cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        {episodeThumb ? <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="h-[58px] w-[102px] sm:h-16 sm:w-28 shrink-0 rounded-lg border border-white/10 bg-black object-cover" /> : <div className="h-[58px] w-[102px] sm:h-16 sm:w-28 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-display font-black text-sm text-white group-hover:bg-rose-500 group-hover:text-white group-hover:border-rose-400 transition-colors shrink-0">
+                        {episodeThumb ? <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="h-[58px] w-[102px] sm:h-16 sm:w-28 shrink-0 rounded-lg border border-slate-200 bg-slate-900 object-cover" /> : <div className="h-[58px] w-[102px] sm:h-16 sm:w-28 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center font-display font-black text-sm text-slate-800 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors shrink-0">
                           {ep.episode_number}
                         </div>}
                         <div className="min-w-0">
-                          <p className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-rose-300 transition-colors">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
                             {ep.title || `ភាគទី ${ep.episode_number}`}
                           </p>
-                          <p className="text-[11px] text-gray-400">
+                          <p className="text-[11px] text-slate-500">
                             {anime.title} • {ep.duration_seconds ? `${Math.floor(ep.duration_seconds / 60)} នាទី` : 'សំឡេងខ្មែរ'}
                           </p>
                         </div>
@@ -914,15 +922,15 @@ export function DetailPage() {
 
                       <div className="flex items-center gap-2 shrink-0">
                         {isEpVip ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                            <Crown className="w-2.5 h-2.5 fill-amber-400" /> VIP
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                            <Crown className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> VIP
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/5 text-gray-400 border border-white/10">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
                             ឥតគិតថ្លៃ
                           </span>
                         )}
-                        <div className="w-8 h-8 rounded-full bg-rose-500/20 group-hover:bg-rose-500 text-rose-400 group-hover:text-white flex items-center justify-center transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center transition-colors">
                           <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                         </div>
                       </div>
@@ -938,11 +946,11 @@ export function DetailPage() {
         {activeTab === 'story' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-6">
-              <div className="p-6 md:p-8 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4">
-                <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
-                  <Info className="w-5 h-5 text-rose-400" /> សាច់រឿងសង្ខេប
+              <div className="p-6 md:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-4">
+                <h3 className="font-display font-black text-xl text-slate-900 flex items-center gap-2">
+                  <Info className="w-5 h-5 text-blue-600" /> សាច់រឿងសង្ខេប
                 </h3>
-                <p className="text-sm md:text-base text-gray-300 leading-relaxed font-sans whitespace-pre-line">
+                <p className="text-sm md:text-base text-slate-600 leading-relaxed font-sans whitespace-pre-line">
                   {anime.description || 'មិនមានការពិពណ៌នាសាច់រឿងលម្អិតឡើយ។'}
                 </p>
               </div>
@@ -953,39 +961,39 @@ export function DetailPage() {
               />
             </div>
 
-            <div className="p-6 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4 text-xs">
-              <h4 className="font-display font-bold text-sm text-white border-b border-white/10 pb-3">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-4 text-xs">
+              <h4 className="font-display font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">
                 ព័ត៌មានលម្អិតអំពីរឿង
               </h4>
 
               <div className="space-y-3">
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ឈ្មោះដើម៖</span>
-                  <span className="text-white font-bold">{anime.alt_title || anime.title}</span>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">ឈ្មោះដើម៖</span>
+                  <span className="text-slate-900 font-bold">{anime.alt_title || anime.title}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ប្រភេទ៖</span>
-                  <span className="text-rose-400 font-bold">{anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}</span>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">ប្រភេទ៖</span>
+                  <span className="text-blue-600 font-bold">{anime.type === 'ANIME' ? 'រឿងជប៉ុន' : anime.type === 'MOVIE' ? 'ភាពយន្តដុំ' : anime.type === 'DRAMA' ? 'រឿងភាគ' : 'រឿងចិន 3D'}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ស្ថានភាព៖</span>
-                  <span className="text-emerald-400 font-bold">{anime.status === 'COMPLETED' ? 'ចប់សព្វគ្រប់' : 'កំពុងចាក់ផ្សាយ'}</span>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">ស្ថានភាព៖</span>
+                  <span className="text-emerald-600 font-bold">{anime.status === 'COMPLETED' ? 'ចប់សព្វគ្រប់' : 'កំពុងចាក់ផ្សាយ'}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ស្ទូឌីយោ៖</span>
-                  <span className="text-white font-bold">{anime.studio || 'NINT Studio Animation'}</span>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">ស្ទូឌីយោ៖</span>
+                  <span className="text-slate-900 font-bold">{anime.studio || 'NINT Studio Animation'}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ឆ្នាំផលិត៖</span>
-                  <span className="text-white font-bold">{anime.year || 2024}</span>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">ឆ្នាំផលិត៖</span>
+                  <span className="text-slate-900 font-bold">{anime.year || 2024}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-gray-400">ចំនួនភាគ៖</span>
-                  <span className="text-white font-bold">{anime.episode_count || episodes.length} ភាគ</span>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">ចំនួនភាគ៖</span>
+                  <span className="text-slate-900 font-bold">{anime.episode_count || episodes.length} ភាគ</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-gray-400">កម្រិតច្បាស់៖</span>
-                  <span className="text-rose-400 font-bold">4K Ultra HD • 60 FPS</span>
+                  <span className="text-slate-500">កម្រិតច្បាស់៖</span>
+                  <span className="text-blue-600 font-bold">4K Ultra HD • 60 FPS</span>
                 </div>
               </div>
             </div>
@@ -996,14 +1004,14 @@ export function DetailPage() {
         {activeTab === 'comments' && (
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Post a Comment Form */}
-            <div className="p-6 rounded-3xl bg-[#0e1629] border border-white/10 shadow-2xl space-y-4">
-              <h3 className="font-display font-black text-lg text-white flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-rose-400" /> បញ្ចេញមតិយោបល់របស់អ្នក
+            <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-4">
+              <h3 className="font-display font-black text-lg text-slate-900 flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-blue-600" /> បញ្ចេញមតិយោបល់របស់អ្នក
               </h3>
               <form onSubmit={handlePostComment} className="space-y-3">
                 {!isAuthenticated && (
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       ឈ្មោះរបស់អ្នក (Display Name)
                     </label>
                     <input
@@ -1011,7 +1019,7 @@ export function DetailPage() {
                       value={guestAuthorName}
                       onChange={(e) => setGuestAuthorName(e.target.value)}
                       placeholder="ឧ. សុខា, វិចិត្រ..."
-                      className="w-full sm:w-64 bg-[#131d36] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 transition-colors"
+                      className="w-full sm:w-64 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
                 )}
@@ -1020,16 +1028,16 @@ export function DetailPage() {
                   onChange={(e) => setNewCommentText(e.target.value)}
                   placeholder="ចែករំលែកមតិរបស់អ្នកអំពីសាច់រឿង តួអង្គ ឬគុណភាពវីដេអូនៅទីនេះ..."
                   rows={3}
-                  className="w-full bg-[#131d36] border border-white/10 rounded-2xl p-3.5 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 transition-colors resize-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors resize-none"
                 />
                 <div className="flex items-center justify-between pt-1">
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-slate-500">
                     សូមបញ្ចេញមតិប្រកបដោយសុជីវធម៌ និងការគោរពគ្នាទៅវិញទៅមក។
                   </p>
                   <button
                     type="submit"
                     disabled={isSubmittingComment || !newCommentText.trim()}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-rose-500/20 transition cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{isSubmittingComment ? 'កំពុងផ្ញើ...' : 'ផ្ញើមតិ'}</span>
@@ -1041,29 +1049,29 @@ export function DetailPage() {
             {/* Comments List */}
             <div className="space-y-3">
               {comments.length === 0 ? (
-                <div className="text-center py-12 bg-[#0e1629]/60 rounded-3xl border border-white/5 space-y-2">
-                  <MessageSquare className="w-8 h-8 text-gray-500 mx-auto" />
-                  <p className="text-gray-400 text-sm font-semibold">មិនទាន់មានមតិយោបល់នៅឡើយទេ</p>
-                  <p className="text-gray-500 text-xs">ក្លាយជាអ្នកដំបូងគេដែលបញ្ចេញមតិលើរឿងនេះ!</p>
+                <div className="text-center py-12 bg-white rounded-3xl border border-slate-200/80 space-y-2">
+                  <MessageSquare className="w-8 h-8 text-slate-400 mx-auto" />
+                  <p className="text-slate-700 text-sm font-semibold">មិនទាន់មានមតិយោបល់នៅឡើយទេ</p>
+                  <p className="text-slate-500 text-xs">ក្លាយជាអ្នកដំបូងគេដែលបញ្ចេញមតិលើរឿងនេះ!</p>
                 </div>
               ) : (
                 comments.map((c) => (
                   <div
                     key={c.id}
-                    className="p-4 sm:p-5 rounded-2xl bg-[#0e1629] border border-white/10 shadow-md flex items-start gap-3.5"
+                    className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-start gap-3.5"
                   >
                     <img
                       src={c.user?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${c.user?.username || 'user'}`}
                       alt=""
-                      className="w-9 h-9 rounded-full object-cover bg-white/5 border border-white/10 shrink-0"
+                      className="w-9 h-9 rounded-full object-cover bg-slate-100 border border-slate-200 shrink-0"
                     />
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs sm:text-sm text-white">
+                          <span className="font-bold text-xs sm:text-sm text-slate-900">
                             {c.user?.username || 'អ្នកទស្សនា'}
                           </span>
-                          <span className="text-[10px] text-gray-500">
+                          <span className="text-[10px] text-slate-500">
                             {new Date(c.created_at).toLocaleDateString('km-KH', {
                               year: 'numeric',
                               month: 'short',
@@ -1075,15 +1083,15 @@ export function DetailPage() {
                           onClick={() => handleLikeComment(c.id)}
                           className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
                             likedCommentIds.includes(c.id)
-                              ? 'text-rose-400 bg-rose-500/10'
-                              : 'text-gray-400 hover:text-white hover:bg-white/5'
+                              ? 'text-blue-600 bg-blue-50'
+                              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                           }`}
                         >
                           <ThumbsUp className={`w-3.5 h-3.5 ${likedCommentIds.includes(c.id) ? 'fill-current' : ''}`} />
                           <span>{c.likes_count || 0}</span>
                         </button>
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans">
+                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
                         {c.content}
                       </p>
                     </div>
@@ -1097,31 +1105,31 @@ export function DetailPage() {
         {/* ── TAB 4: RELATED RECOMMENDATIONS CONTENT ── */}
         {activeTab === 'related' && (
           <div className="space-y-4">
-            <h3 className="font-display font-black text-xl text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-rose-400" /> រឿងដែលអ្នកអាចនឹងចូលចិត្ត
+            <h3 className="font-display font-black text-xl text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-600" /> រឿងដែលអ្នកអាចនឹងចូលចិត្ត
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {relatedAnime.map((item) => (
                 <Link
                   key={item.id}
                   to={`/anime/${item.slug}`}
-                  className="group flex flex-col rounded-2xl overflow-hidden bg-[#0e1629] border border-white/10 hover:border-rose-500/50 transition-all duration-300 shadow-xl tilt-3d"
+                  className="group flex flex-col rounded-2xl overflow-hidden bg-white border border-slate-200/80 hover:border-blue-400 transition-all duration-300 shadow-xs hover:shadow-md"
                 >
-                  <div className="relative aspect-[3/4] overflow-hidden bg-[#141e33]">
+                  <div className="relative aspect-[3/4] overflow-hidden bg-slate-100">
                     <img
                       src={item.poster_url || item.banner_url}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded-md text-[10px] font-bold text-yellow-400">
-                      ⭐ {(item.average_rating || 9.6).toFixed(1)}
+                    <div className="absolute top-2 left-2 bg-black/75 px-2 py-0.5 rounded-md text-[10px] font-bold text-amber-400 flex items-center gap-1">
+                      <Star className="w-2.5 h-2.5 fill-amber-400" /> {(item.average_rating || 9.6).toFixed(1)}
                     </div>
                   </div>
                   <div className="p-3">
-                    <h4 className="font-display font-bold text-xs text-white group-hover:text-rose-400 transition-colors truncate">
+                    <h4 className="font-display font-bold text-xs text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                       {item.title}
                     </h4>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{item.episode_count || 'Multi'} ភាគ</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{item.episode_count || 'Multi'} ភាគ</p>
                   </div>
                 </Link>
               ))}
@@ -1132,10 +1140,10 @@ export function DetailPage() {
 
       {/* ── Feedback Modal ── */}
       {showFeedbackModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="w-full max-w-md bg-[#111726] border border-white/15 rounded-3xl p-6 space-y-4 shadow-2xl animate-scale-in">
-            <h3 className="font-display font-bold text-lg text-white">មតិកែលម្អ ឬរាយការណ៍បញ្ហា</h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
+        <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-white border border-slate-200/90 rounded-[28px] p-6 space-y-4 shadow-[0_24px_60px_rgba(15,23,42,0.16)] animate-scale-in">
+            <h3 className="font-display font-bold text-lg text-slate-900">មតិកែលម្អ ឬរាយការណ៍បញ្ហា</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
               មានបញ្ហាទាក់ទងនឹងវីដេអូ សំឡេង ឬចំណងជើង? សូមផ្ញើសារមកកាន់យើងខ្ញុំ៖
             </p>
             <textarea
@@ -1146,7 +1154,7 @@ export function DetailPage() {
               className="input resize-none text-xs"
             />
             {feedbackSent ? (
-              <div className="p-3.5 rounded-xl bg-emerald-500/20 text-emerald-300 text-xs font-bold flex items-center gap-2">
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
                 <Check className="w-4 h-4" /> សូមអរគុណ! មតិរបស់អ្នកត្រូវបានផ្ញើរួចរាល់។
               </div>
             ) : (
@@ -1171,20 +1179,20 @@ export function DetailPage() {
 
       {/* ── Interactive Rating Modal ── */}
       {showRatingModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="w-full max-w-sm bg-[#111726] border border-white/15 rounded-3xl p-6 space-y-5 shadow-2xl text-center animate-scale-in">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h3 className="font-display font-black text-base text-white">ដាក់ពិន្ទុរឿងនេះ</h3>
+        <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="w-full max-w-sm bg-white border border-slate-200/90 rounded-[28px] p-6 space-y-5 shadow-[0_24px_60px_rgba(15,23,42,0.16)] text-center animate-scale-in">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-display font-black text-base text-slate-900">ដាក់ពិន្ទុរឿងនេះ</h3>
               <button
                 onClick={() => setShowRatingModal(false)}
-                className="w-7 h-7 rounded-full bg-white/10 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs text-gray-300 font-medium">តើអ្នកយល់យ៉ាងណាដែរចំពោះរឿងនេះ?</p>
+              <p className="text-xs text-slate-500 font-medium">តើអ្នកយល់យ៉ាងណាដែរចំពោះរឿងនេះ?</p>
               <div className="flex items-center justify-center gap-2 py-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -1202,19 +1210,19 @@ export function DetailPage() {
                     <Star
                       className={`w-8 h-8 transition-colors ${
                         (hoverRating || userRating) >= star
-                          ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                          : 'text-gray-600 hover:text-gray-400'
+                          ? 'fill-amber-400 text-amber-400'
+                          : 'text-slate-300 hover:text-slate-400'
                       }`}
                     />
                   </button>
                 ))}
               </div>
-              <p className="text-xs font-bold text-amber-400 h-4">
-                {(hoverRating || userRating) === 5 ? '🌟 ល្អឥតខ្ចោះ (5/5)' :
-                 (hoverRating || userRating) === 4 ? '✨ ល្អណាស់ (4/5)' :
-                 (hoverRating || userRating) === 3 ? '👍 មធ្យម (3/5)' :
-                 (hoverRating || userRating) === 2 ? '😐 ធម្មតា (2/5)' :
-                 (hoverRating || userRating) === 1 ? '👎 មិនសូវល្អ (1/5)' : 'សូមចុចផ្កាយដើម្បីដាក់ពិន្ទុ'}
+              <p className="text-xs font-bold text-amber-600 h-4">
+                {(hoverRating || userRating) === 5 ? 'ល្អឥតខ្ចោះ (5/5)' :
+                 (hoverRating || userRating) === 4 ? 'ល្អណាស់ (4/5)' :
+                 (hoverRating || userRating) === 3 ? 'មធ្យម (3/5)' :
+                 (hoverRating || userRating) === 2 ? 'ធម្មតា (2/5)' :
+                 (hoverRating || userRating) === 1 ? 'មិនសូវល្អ (1/5)' : 'សូមចុចផ្កាយដើម្បីដាក់ពិន្ទុ'}
               </p>
             </div>
           </div>

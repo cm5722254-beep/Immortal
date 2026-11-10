@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useSystemUpdateStore } from '../../store/systemUpdateStore';
+import { LanguageSwitcher } from '../../components/layout/LanguageSwitcher';
 
 // ─── 3 Admin Sections ────────────────────────────────────────────────
 const sections = [
@@ -17,11 +18,11 @@ const sections = [
     icon: Globe,
     label: 'គ្រប់គ្រងវេបសាយ',
     sublabel: 'គ្រប់គ្រងវេបសាយ',
-    color: 'text-brand-400',
-    border: 'border-brand-500/40',
-    bg: 'bg-brand-500/10',
-    activeBg: 'bg-brand-500/20',
-    dot: 'bg-brand-400',
+    color: 'text-blue-700',
+    border: 'border-blue-200',
+    bg: 'bg-blue-50',
+    activeBg: 'bg-blue-100',
+    dot: 'bg-blue-600',
     items: [
       { to: '/admin', icon: LayoutDashboard, label: 'ផ្ទាំងគ្រប់គ្រងទូទៅ' },
       { to: '/admin/donghua', icon: Play, label: 'រឿងចិន 3D (Donghua)' },
@@ -42,11 +43,11 @@ const sections = [
     icon: Smartphone,
     label: 'គ្រប់គ្រងកម្មវិធី APP',
     sublabel: 'គ្រប់គ្រង APP',
-    color: 'text-emerald-400',
-    border: 'border-emerald-500/40',
-    bg: 'bg-emerald-500/10',
-    activeBg: 'bg-emerald-500/20',
-    dot: 'bg-emerald-400',
+    color: 'text-emerald-700',
+    border: 'border-emerald-200',
+    bg: 'bg-emerald-50',
+    activeBg: 'bg-emerald-100',
+    dot: 'bg-emerald-600',
     items: [
       { to: '/admin/mobile', icon: Smartphone, label: 'ព័ត៌មានទូទៅនៃ App' },
       { to: '/admin/mobile/push', icon: Bell, label: 'ផ្ញើដំណឹង Push Notification' },
@@ -59,13 +60,14 @@ const sections = [
     icon: Bot,
     label: 'គ្រប់គ្រង Mini App',
     sublabel: 'គ្រប់គ្រង Telegram',
-    color: 'text-sky-400',
-    border: 'border-sky-500/40',
-    bg: 'bg-sky-500/10',
-    activeBg: 'bg-sky-500/20',
-    dot: 'bg-sky-400',
+    color: 'text-sky-700',
+    border: 'border-sky-200',
+    bg: 'bg-sky-50',
+    activeBg: 'bg-sky-100',
+    dot: 'bg-sky-600',
     items: [
       { to: '/admin/telegram', icon: Bot, label: 'ស្ថានភាព Bot & ការគ្រប់គ្រង' },
+      { to: '/admin/telegram/channel-sync', icon: FolderDown, label: 'Auto-Sync ចូល Channel (24/7)' },
       { to: '/admin/telegram/users', icon: Users, label: 'អ្នកប្រើប្រាស់ Telegram' },
       { to: '/admin/telegram/broadcast', icon: Send, label: 'ផ្ញើសាររួម (Broadcast)' },
       { to: '/admin/telegram/miniapp', icon: Zap, label: 'ការកំណត់ Mini App' },
@@ -77,15 +79,15 @@ const sections = [
 const ownerSection = {
   id: 'owner',
   icon: Crown,
-  label: '👑 ម្ចាស់ Platform',
-  sublabel: '👑 ម្ចាស់ប្រព័ន្ធ',
-  color: 'text-amber-300',
-  border: 'border-amber-400/50',
-  bg: 'bg-amber-500/15',
-  activeBg: 'bg-amber-500/25',
-  dot: 'bg-amber-300',
+  label: 'ម្ចាស់ Platform',
+  sublabel: 'ម្ចាស់ប្រព័ន្ធ',
+  color: 'text-amber-800',
+  border: 'border-amber-200',
+  bg: 'bg-amber-50',
+  activeBg: 'bg-amber-100',
+  dot: 'bg-amber-600',
   items: [
-    { to: '/admin/owner', icon: Crown, label: '👑 ផ្ទាំងគ្រប់គ្រងម្ចាស់' },
+    { to: '/admin/owner', icon: Crown, label: 'ផ្ទាំងគ្រប់គ្រងម្ចាស់' },
     { to: '/admin/owner#admins', icon: ShieldCheck, label: 'គ្រប់គ្រង Admin & Staff' },
     { to: '/admin/owner#security', icon: Lock, label: 'មជ្ឈមណ្ឌលសុវត្ថិភាព' },
     { to: '/admin/owner#platform', icon: Settings, label: 'ការកំណត់ប្រព័ន្ធ' },
@@ -154,49 +156,49 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
   };
 
   const Sidebar = () => (
-    <aside className="flex flex-col h-full bg-gradient-to-b from-[#10151c] via-[#0d1117] to-[#0b0e13] border-r border-white/[0.08] overflow-hidden select-none shadow-[12px_0_40px_rgba(0,0,0,.16)]">
-      <div className="px-4 py-4 border-b border-white/[0.08] shrink-0 flex items-center justify-between">
+    <aside className="flex flex-col h-full bg-white/95 backdrop-blur-2xl border-r border-slate-200/80 overflow-hidden select-none shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+      <div className="px-4 py-4 border-b border-slate-100 shrink-0 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <img
             src="/logo.png"
             alt="ទស្សនារឿង"
-            className="w-8 h-8 object-cover rounded-full border border-amber-500/30 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+            className="w-8 h-8 object-cover rounded-full border border-blue-500/20 shadow-xs"
           />
           <div>
-            <p className="font-display font-black text-sm text-white">ទស្សនារឿង</p>
-            <p className="text-[11px] flex items-center gap-1 font-semibold text-amber-400/90">
-              <Shield className="w-3 h-3 text-amber-400" /> ផ្ទាំងគ្រប់គ្រង (Admin)
+            <p className="font-display font-black text-sm text-slate-900">MerDonghua</p>
+            <p className="text-[11px] flex items-center gap-1 font-semibold text-blue-600">
+              <Shield className="w-3 h-3 text-blue-600" /> ផ្ទាំងគ្រប់គ្រង (Admin)
             </p>
           </div>
         </Link>
 
         <button
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition cursor-pointer"
+          className="lg:hidden p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition cursor-pointer"
           title="បិទ Menu"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="px-4 py-3.5 border-b border-white/[0.06] shrink-0 bg-white/[0.015]">
+      <div className="px-4 py-3.5 border-b border-slate-100 shrink-0 bg-slate-50/50">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold bg-white/10 text-white border border-white/10 shrink-0">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold bg-blue-600 text-white shadow-xs shrink-0">
             {user?.username?.[0]?.toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-white truncate flex items-center gap-1">
+            <p className="text-xs font-bold text-slate-900 truncate flex items-center gap-1">
               {user?.username}
             </p>
-            <p className="text-[10px] text-gray-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-              {isOwner ? '👑 ម្ចាស់ប្រព័ន្ធ (Owner)' : isStaff ? 'បុគ្គលិក (Staff)' : 'អ្នកគ្រប់គ្រង (Admin)'}
+            <p className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              {isOwner ? 'ម្ចាស់ប្រព័ន្ធ (Owner)' : isStaff ? 'បុគ្គលិក (Staff)' : 'អ្នកគ្រប់គ្រង (Admin)'}
             </p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
         {availableSections.map((sec) => {
           const SecIcon = sec.icon;
           const isOpen = openSection === sec.id;
@@ -212,11 +214,11 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
                 onClick={() => setOpenSection(isOpen ? '' : sec.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   isOpen || hasActive
-                    ? `${sec.bg} ${sec.color} shadow-sm`
-                    : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
                 }`}
               >
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${isOpen || hasActive ? sec.bg : 'bg-white/5'} shrink-0`}>
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${isOpen || hasActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'} shrink-0`}>
                   <SecIcon className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1 text-left min-w-0">
@@ -230,7 +232,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
               </button>
 
               {isOpen && (
-                <div className="mt-1.5 ml-3 pl-2.5 border-l border-white/[0.08] space-y-1 animate-in slide-in-from-top-1 duration-150">
+                <div className="mt-1.5 ml-3 pl-2.5 border-l border-slate-200 space-y-0.5 animate-in slide-in-from-top-1 duration-150">
                   {sec.items.map((item) => {
                     const active = item.to === '/admin'
                       ? location.pathname === '/admin'
@@ -244,11 +246,11 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
                         onClick={() => setSidebarOpen(false)}
                         className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all duration-150 group ${
                           active
-                            ? 'bg-brand-600 text-white font-bold shadow-md shadow-brand-600/25'
-                            : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+                            ? 'bg-blue-600 text-white font-bold shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
                         }`}
                       >
-                        <SubIcon className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-white' : 'text-gray-400 group-hover:text-white'}`} />
+                        <SubIcon className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'}`} />
                         <span className="truncate">{item.label}</span>
                         {active && <ChevronRight className="w-3 h-3 ml-auto shrink-0 text-white" />}
                       </Link>
@@ -262,18 +264,18 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
       </nav>
 
       {/* Bottom actions */}
-      <div className="p-2.5 border-t border-white/[0.08] shrink-0 space-y-1">
+      <div className="p-2.5 border-t border-slate-100 shrink-0 space-y-1">
         <Link
           to="/"
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
         >
-          <Globe className="w-3.5 h-3.5" /> មើល Website
+          <Globe className="w-3.5 h-3.5 text-slate-400" /> មើល Website
         </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all cursor-pointer"
+          className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
         >
-          <LogOut className="w-3.5 h-3.5" /> ចាកចេញពីគណនី
+          <LogOut className="w-3.5 h-3.5 text-rose-600" /> ចាកចេញពីគណនី
         </button>
       </div>
     </aside>
@@ -283,7 +285,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
   const activeSec = availableSections.find(s => s.id === getActiveSection());
 
   return (
-    <div className="admin-dashboard-shell relative min-h-screen bg-[#080b10] text-gray-100 flex flex-col bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,.06),transparent_36%)]">
+    <div className="admin-dashboard-shell relative min-h-screen bg-slate-50 text-slate-800 flex flex-col">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex w-64 xl:w-72 shrink-0 flex-col fixed inset-y-0 left-0 z-30">
         <Sidebar />
@@ -293,7 +295,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative w-72 max-w-[85vw] h-full z-50 animate-in slide-in-from-left duration-250 shadow-2xl">
@@ -305,10 +307,10 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
       {/* Main content */}
       <main className="flex-1 lg:ml-64 xl:ml-72 min-h-screen flex flex-col">
         {/* Top bar */}
-        <header className="sticky top-0 z-20 bg-[#0a0e13]/90 backdrop-blur-xl border-b border-white/[0.08] px-3 sm:px-6 xl:px-8 h-16 flex items-center gap-3 sm:gap-4 shadow-[0_8px_28px_rgba(0,0,0,.12)]">
+        <header className="sticky top-0 z-20 bg-white/85 backdrop-blur-xl border-b border-slate-200/80 px-3 sm:px-6 xl:px-8 h-16 flex items-center gap-3 sm:gap-4 shadow-xs">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white transition cursor-pointer"
+            className="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
             aria-label="Open Menu"
           >
             <Menu className="w-5 h-5" />
@@ -316,13 +318,13 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
 
           {/* Section badge */}
           {activeSec && (
-            <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${activeSec.bg} border ${activeSec.border} shrink-0`}>
-              <activeSec.icon className={`w-3.5 h-3.5 ${activeSec.color}`} />
-              <span className={`text-[10px] font-bold ${activeSec.color}`}>{activeSec.sublabel}</span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 shrink-0">
+              <activeSec.icon className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-[10px] font-bold text-blue-700">{activeSec.sublabel}</span>
             </div>
           )}
 
-          <h1 className="font-display font-bold text-sm sm:text-lg text-white truncate flex-1 min-w-0 tracking-tight">
+          <h1 className="font-display font-bold text-sm sm:text-lg text-slate-900 truncate flex-1 min-w-0 tracking-tight">
             {title}
           </h1>
 
@@ -330,48 +332,50 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
             {updateConfig.enabled && (
               <button
                 onClick={previewUpdateModal}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-600/20 text-red-300 border border-red-500/40 text-[11px] font-bold shadow-sm shadow-red-500/20 animate-pulse hover:bg-red-600/30 transition shrink-0 cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold shadow-xs hover:bg-rose-100 transition shrink-0 cursor-pointer"
                 title="ផ្ទាំង Website Update កំពុងបើកដំណើរការលើ Website (ចុចដើម្បីមើល Preview)"
               >
-                <Rocket className="w-3.5 h-3.5 text-amber-400" />
+                <Rocket className="w-3.5 h-3.5 text-rose-600" />
                 <span>Update Mode: ON</span>
               </button>
             )}
 
             <Link
               to="/"
-              className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-semibold flex items-center gap-1 transition shrink-0"
+              className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold flex items-center gap-1 transition shrink-0"
               title="មើល Website"
             >
-              <Globe className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Website</span>
+              <Globe className="w-3.5 h-3.5 text-slate-500" /> <span className="hidden sm:inline">Website</span>
             </Link>
+
+            <LanguageSwitcher className="admin-language-switcher" />
 
             <Link
               to="/admin/downloads"
-              className="hidden sm:flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 transition"
+              className="hidden sm:flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200/80 transition"
               title="Download videos to a computer folder"
             >
-              <FolderDown className="h-3.5 w-3.5" /> Downloads
+              <FolderDown className="h-3.5 w-3.5 text-slate-600" /> Downloads
             </Link>
 
             <Link
               to="/admin/stream-health"
-              className="hidden xl:flex items-center gap-1 rounded-lg bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold text-sky-300 hover:bg-sky-500/20 transition"
+              className="hidden xl:flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200/80 transition"
               title="Check episode stream links"
             >
-              <Activity className="h-3.5 w-3.5" /> Stream health
+              <Activity className="h-3.5 w-3.5 text-blue-600" /> Stream health
             </Link>
 
             {isOwner ? (
-              <span className="badge bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-400/40 font-black text-[10px] sm:text-xs shrink-0">
-                <Crown className="w-3 h-3 mr-1 text-amber-400" /> Owner
+              <span className="badge bg-blue-50 text-blue-700 border border-blue-200/80 font-bold text-[10px] sm:text-xs shrink-0 flex items-center">
+                <Crown className="w-3 h-3 mr-1 text-blue-600" /> Owner
               </span>
             ) : isStaff ? (
-              <span className="badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold text-[10px] sm:text-xs">
+              <span className="badge bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] sm:text-xs">
                 Staff
               </span>
             ) : (
-              <span className="badge bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-[10px] sm:text-xs">
+              <span className="badge bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] sm:text-xs">
                 Admin
               </span>
             )}
@@ -385,13 +389,13 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
       </main>
 
       {/* ── MOBILE PHONE BOTTOM QUICK BAR (លេចឡើងលើទូរស័ព្ទដៃ) ── */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0d1017]/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 flex items-center justify-around shadow-2xl safe-area-pb">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-2xl border-t border-slate-200/80 px-2 py-1.5 flex items-center justify-around shadow-lg safe-area-pb">
         <Link
           to="/admin"
           className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition ${
             location.pathname === '/admin'
-              ? 'text-[#E50914] font-bold'
-              : 'text-gray-400 hover:text-white'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-900'
           }`}
         >
           <LayoutDashboard className="w-4 h-4" />
@@ -402,8 +406,8 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
           to="/admin/donghua"
           className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition ${
             location.pathname.startsWith('/admin/donghua')
-              ? 'text-[#E50914] font-bold'
-              : 'text-gray-400 hover:text-white'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-900'
           }`}
         >
           <Play className="w-4 h-4" />
@@ -414,8 +418,8 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
           to="/admin/episodes"
           className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition ${
             location.pathname.startsWith('/admin/episodes')
-              ? 'text-[#E50914] font-bold'
-              : 'text-gray-400 hover:text-white'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-900'
           }`}
         >
           <Layers className="w-4 h-4" />
@@ -426,8 +430,8 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
           to="/admin/users"
           className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition ${
             location.pathname.startsWith('/admin/users')
-              ? 'text-[#E50914] font-bold'
-              : 'text-gray-400 hover:text-white'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-900'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -436,7 +440,7 @@ export function AdminLayout({ children, title, section }: AdminLayoutProps) {
 
         <button
           onClick={() => setSidebarOpen(true)}
-          className="flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl text-gray-400 hover:text-white transition cursor-pointer"
+          className="flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl text-slate-500 hover:text-slate-900 transition cursor-pointer"
         >
           <Menu className="w-4 h-4" />
           <span className="text-[10px]">Menu</span>

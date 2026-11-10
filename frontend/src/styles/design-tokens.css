@@ -1,40 +1,74 @@
-/* ANIMEKH V2 - Premium Design Tokens */
-/* Based on the ANIMEKH V2 — ULTIMATE PREMIUM STREAMING UI/UX REDESIGN specification */
+/* MerDonghua iOS 27 Liquid Glass White — Shared Viewer & Admin Design System */
 
-/* Color System */
 :root {
-  /* Premium cinematic dark theme */
-  --animekh-bg-base: #08090D;           /* Near-black background */
-  --animekh-bg-card: #11131B;           /* Elevated surfaces */
-  --animekh-bg-card-subtle: #171A24;    /* Card background */
-  --animekh-accent-primary: #8B5CF6;    /* Electric violet */
-  --animekh-accent-secondary: #38BDF8;  /* Cinematic blue */
-  --animekh-text-primary: #F8FAFC;      /* Primary text */
-  --animekh-text-secondary: #9CA3AF;    /* Secondary text */
-  --animekh-border-subtle: rgba(255, 255, 255, 0.1); /* Subtle borders */
+  --md-bg: #F8FAFC;
+  --md-bg-raised: #FFFFFF;
+  --md-surface: #F1F5F9;
+  --md-surface-raised: #FFFFFF;
+  --md-surface-hover: #E2E8F0;
+  --md-brand: #2563EB;
+  --md-brand-strong: #1D4ED8;
+  --md-brand-soft: rgba(37, 99, 235, 0.08);
+  --md-vip: #D97706;
+  --md-danger: #EF4444;
+  --md-info: #0284C7;
+  --md-text: #0F172A;
+  --md-text-secondary: #475569;
+  --md-text-muted: #64748B;
+  --md-border: #E2E8F0;
+  --md-border-strong: #CBD5E1;
+  --md-focus: #3B82F6;
+  --md-shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --md-shadow-overlay: 0 24px 48px -8px rgba(15, 23, 42, 0.12);
+  --md-radius-sm: 10px;
+  --md-radius-md: 14px;
+  --md-radius-lg: 20px;
+  --md-radius-xl: 26px;
+  --md-space-1: 4px;
+  --md-space-2: 8px;
+  --md-space-3: 12px;
+  --md-space-4: 16px;
+  --md-space-6: 24px;
+  --md-space-8: 32px;
+  --md-font-body: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --md-font-display: 'Outfit', 'Inter', 'Kantumruy Pro', -apple-system, sans-serif;
+  --md-line-khmer: 1.65;
+  --md-motion-fast: 140ms;
+  --md-motion-standard: 220ms;
+  --md-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  /* Gradient definitions */
-  --animekh-gradient-primary: linear-gradient(135deg, #8B5CF6, #38BDF8);
-  --animekh-gradient-secondary: linear-gradient(135deg, #38BDF8, #8B5CF6);
-  --animekh-gradient-glow: radial-gradient(circle at center, rgba(139, 92, 246, 0.3), transparent 70%);
+  /* Theme Tokens */
+  --animekh-bg-base: #F8FAFC;
+  --animekh-bg-card: #FFFFFF;
+  --animekh-bg-card-subtle: #F1F5F9;
+  --animekh-accent-primary: #2563EB;
+  --animekh-accent-secondary: #0284C7;
+  --animekh-text-primary: #0F172A;
+  --animekh-text-secondary: #475569;
+  --animekh-border-subtle: #E2E8F0;
 
-  /* Shadow system */
-  --animekh-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --animekh-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-  --animekh-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-  --animekh-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
-  --animekh-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-  --animekh-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Gradients */
+  --animekh-gradient-primary: linear-gradient(135deg, #2563EB, #0284C7);
+  --animekh-gradient-secondary: linear-gradient(135deg, #0284C7, #2563EB);
+  --animekh-gradient-glow: radial-gradient(circle at center, rgba(37, 99, 235, 0.12), transparent 70%);
+
+  /* Shadows */
+  --animekh-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --animekh-shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+  --animekh-shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+  --animekh-shadow-xl: 0 20px 32px -6px rgba(15, 23, 42, 0.10);
+  --animekh-shadow-2xl: 0 25px 50px -12px rgba(15, 23, 42, 0.14);
+  --animekh-shadow-inner: inset 0 1px 2px rgba(15, 23, 42, 0.04);
 
   /* Glow effects */
-  --animekh-glow-primary: 0 0 20px rgba(139, 92, 246, 0.4);
-  --animekh-glow-secondary: 0 0 20px rgba(56, 189, 248, 0.4);
+  --animekh-glow-primary: 0 8px 24px rgba(37, 99, 235, 0.16);
+  --animekh-glow-secondary: 0 8px 24px rgba(2, 132, 199, 0.14);
 
   /* Border radius */
-  --animekh-radius-sm: 0.375rem;
-  --animekh-radius-md: 0.5rem;
-  --animekh-radius-lg: 0.75rem;
-  --animekh-radius-xl: 1rem;
+  --animekh-radius-sm: 0.5rem;
+  --animekh-radius-md: 0.75rem;
+  --animekh-radius-lg: 1rem;
+  --animekh-radius-xl: 1.25rem;
   --animekh-radius-2xl: 1.5rem;
   --animekh-radius-full: 9999px;
 
@@ -42,18 +76,6 @@
   --animekh-font-sans: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --animekh-font-display: 'Outfit', 'Inter', 'Kantumruy Pro', sans-serif;
   --animekh-font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-
-  /* Font sizes */
-  --animekh-text-xs: 0.75rem;
-  --animekh-text-sm: 0.875rem;
-  --animekh-text-base: 1rem;
-  --animekh-text-lg: 1.125rem;
-  --animekh-text-xl: 1.25rem;
-  --animekh-text-2xl: 1.5rem;
-  --animekh-text-3xl: 1.875rem;
-  --animekh-text-4xl: 2.25rem;
-  --animekh-text-5xl: 3rem;
-  --animekh-text-6xl: 3.75rem;
 
   /* Z-index layers */
   --animekh-z-index-dropdown: 1000;
@@ -65,77 +87,59 @@
   --animekh-z-index-tooltip: 1070;
 }
 
-/* Apply the ANIMEKH theme when active */
 [data-theme="animekh-premium"] {
-  --bg-base: var(--animekh-bg-base);
-  --bg-card: var(--animekh-bg-card);
-  --bg-card-subtle: var(--animekh-bg-card-subtle);
-  --border-subtle: var(--animekh-border-subtle);
-  --accent-primary: var(--animekh-accent-primary);
-  --color-brand: 139 92 246;
+  --bg-base: var(--md-bg);
+  --bg-card: var(--md-bg-raised);
+  --bg-card-subtle: var(--md-surface);
+  --border-subtle: var(--md-border);
+  --accent-primary: var(--md-brand);
+  --color-brand: 37 99 235;
 }
 
-/* Premium Card Styles */
+/* iOS 27 White Glass Card Styles */
 .animekh-card {
-  background-color: var(--animekh-bg-card);
-  border: 1px solid var(--animekh-border-subtle);
-  border-radius: var(--animekh-radius-lg);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: var(--animekh-radius-xl);
+  box-shadow: var(--md-shadow-card);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .animekh-card:hover {
-  border-color: rgba(139, 92, 246, 0.35);
-  background-color: var(--animekh-bg-card-subtle);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--animekh-shadow-lg);
 }
 
 .animekh-card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.25);
+  transform: translateY(-2px);
+  box-shadow: var(--animekh-shadow-lg);
 }
 
-.animekh-card-glow {
-  position: relative;
-}
-
-.animekh-card-glow::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--animekh-radius-lg);
-  background: linear-gradient(135deg, transparent, rgba(139, 92, 246, 0.2));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.animekh-card-glow:hover::before {
-  opacity: 1;
-}
-
-/* Premium Button Styles */
+/* iOS 27 Button Styles */
 .animekh-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   background-color: var(--animekh-accent-primary);
-  color: #fff;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
   padding: 0.625rem 1.25rem;
-  border-radius: var(--animekh-radius-md);
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+  border-radius: var(--animekh-radius-lg);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.22);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .animekh-btn-primary:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+  background-color: var(--md-brand-strong);
   transform: translateY(-1px);
 }
 
 .animekh-btn-primary:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .animekh-btn-secondary {
@@ -143,23 +147,23 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: var(--animekh-bg-card-subtle);
-  color: var(--animekh-text-primary);
+  background-color: #FFFFFF;
+  color: #0F172A;
   font-weight: 600;
-  border: 1px solid var(--animekh-border-subtle);
+  border: 1px solid #E2E8F0;
   padding: 0.625rem 1.25rem;
-  border-radius: var(--animekh-radius-md);
+  border-radius: var(--animekh-radius-lg);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .animekh-btn-secondary:hover {
-  background-color: rgba(139, 92, 246, 0.12);
-  border-color: rgba(139, 92, 246, 0.4);
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
 }
 
 .animekh-btn-secondary:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .animekh-btn-ghost {
@@ -168,7 +172,7 @@
   justify-content: center;
   gap: 0.5rem;
   background: transparent;
-  color: var(--animekh-text-secondary);
+  color: #475569;
   font-weight: 600;
   padding: 0.5rem 1rem;
   border-radius: var(--animekh-radius-md);
@@ -177,28 +181,29 @@
 }
 
 .animekh-btn-ghost:hover {
-  color: var(--animekh-accent-primary);
-  background-color: rgba(139, 92, 246, 0.08);
+  color: #0F172A;
+  background-color: #F1F5F9;
 }
 
-/* Premium Input Styles */
+/* iOS 27 Input Styles */
 .animekh-input {
   width: 100%;
-  background-color: var(--animekh-bg-card);
-  border: 1px solid var(--animekh-border-subtle);
-  color: var(--animekh-text-primary);
-  border-radius: var(--animekh-radius-md);
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  color: #0F172A;
+  border-radius: var(--animekh-radius-lg);
   padding: 0.625rem 1rem;
   outline: none;
   transition: all 0.2s ease;
 }
 
 .animekh-input:focus {
-  border-color: var(--animekh-accent-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+  background-color: #FFFFFF;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
 
-/* Premium Badge Styles */
+/* Badges */
 .animekh-badge {
   display: inline-flex;
   align-items: center;
@@ -207,35 +212,22 @@
   border-radius: var(--animekh-radius-full);
   font-size: 0.75rem;
   font-weight: 700;
-  background-color: rgba(139, 92, 246, 0.15);
-  color: var(--animekh-accent-primary);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background-color: rgba(37, 99, 235, 0.08);
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .animekh-badge-outline {
   background-color: transparent;
-  color: var(--animekh-accent-primary);
-  border: 1px solid var(--animekh-accent-primary);
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.35);
 }
 
-/* Premium Typography */
-.animekh-text-primary {
-  color: var(--animekh-text-primary);
-}
+.animekh-text-primary { color: #0F172A; }
+.animekh-text-secondary { color: #475569; }
+.animekh-text-muted { color: #64748B; }
+.animekh-font-display { font-family: var(--animekh-font-display); }
 
-.animekh-text-secondary {
-  color: var(--animekh-text-secondary);
-}
-
-.animekh-text-muted {
-  color: rgba(156, 163, 175, 0.7);
-}
-
-.animekh-font-display {
-  font-family: var(--animekh-font-display);
-}
-
-/* Layout Containers */
 .animekh-container {
   max-width: 80rem;
   margin-left: auto;
@@ -245,88 +237,28 @@
 }
 
 @media (min-width: 640px) {
-  .animekh-container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
+  .animekh-container { padding-left: 1.5rem; padding-right: 1.5rem; }
 }
 
 @media (min-width: 1024px) {
-  .animekh-container {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
+  .animekh-container { padding-left: 2rem; padding-right: 2rem; }
 }
 
-.animekh-section {
-  padding-top: 3rem;
-  padding-bottom: 3rem;
-}
-
-.animekh-section-header {
-  margin-bottom: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.animekh-section-title {
-  font-family: var(--animekh-font-display);
-  font-size: 1.875rem;
-  line-height: 2.25rem;
-  font-weight: 800;
-  color: var(--animekh-text-primary);
-  letter-spacing: -0.025em;
-}
-
-.animekh-section-description {
-  color: var(--animekh-text-secondary);
-  font-size: 0.875rem;
-  max-width: 32rem;
-}
-
-/* Navigation */
 .animekh-navbar {
-  background-color: rgba(17, 19, 27, 0.85);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--animekh-border-subtle);
-  padding: 1rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 0.75rem 1.5rem;
   z-index: 50;
 }
 
-.animekh-navbar-content {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.animekh-nav-item {
-  color: var(--animekh-text-secondary);
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--animekh-radius-md);
-  transition: all 0.2s ease;
-}
-
-.animekh-nav-item:hover {
-  color: var(--animekh-text-primary);
-  background-color: rgba(139, 92, 246, 0.08);
-}
-
-.animekh-nav-item-active {
-  color: var(--animekh-text-primary);
-  font-weight: 600;
-  background-color: rgba(139, 92, 246, 0.12);
-  border-left: 2px solid var(--animekh-accent-primary);
-}
-
-/* Modals */
 .animekh-modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: var(--animekh-z-index-modal-backdrop);
   display: flex;
   align-items: center;
@@ -335,10 +267,11 @@
 
 .animekh-modal {
   position: relative;
-  background-color: var(--animekh-bg-card);
-  border: 1px solid var(--animekh-border-subtle);
-  border-radius: var(--animekh-radius-lg);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.2);
   width: 100%;
   max-width: 28rem;
   margin: 1rem;

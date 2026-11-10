@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Info, Plus, Check, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
+import { Play, Info, Plus, Check, ChevronRight, ChevronLeft, Sparkles, Star } from 'lucide-react';
 import type { Banner, Anime } from '../../types';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
@@ -196,7 +196,7 @@ export function HeroSpotlightCarousel({ banners, anime }: HeroSpotlightCarouselP
                 #{activeIndex + 1} ពេញនិយម
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 border border-rose-400/40 text-rose-300 shadow-[0_0_10px_rgba(255,77,109,0.3)]">
-                ⚡ ULTRA 3D • UE5
+                <Sparkles className="w-3 h-3 text-rose-400" /> ULTRA 3D • UE5
               </span>
             </div>
 
@@ -215,7 +215,9 @@ export function HeroSpotlightCarousel({ banners, anime }: HeroSpotlightCarouselP
             {/* Netflix Metadata Row - Clean & Non-Cluttered */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-2.5 text-xs sm:text-sm font-bold text-white/90 drop-shadow">
               <span className="text-[#46d369] font-black text-xs sm:text-sm">ត្រូវចិត្ត 98%</span>
-              <span className="text-yellow-400 font-bold flex items-center gap-1">★ {rating}</span>
+              <span className="text-amber-400 font-bold flex items-center gap-1">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {rating}
+              </span>
               <span className="text-gray-400 hidden xs:inline">•</span>
               <span>{current.year || 2024}</span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-black border border-rose-400/40 bg-rose-500/15 text-rose-300 backdrop-blur-md">4K UHD</span>

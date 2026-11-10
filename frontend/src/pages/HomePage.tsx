@@ -86,19 +86,18 @@ function HeroCarousel({ items }: { items: Anime[] }) {
     setBookmarkedIds(updated);
     try {
       localStorage.setItem('nami_my_list', JSON.stringify(updated));
-    } catch {}
+    } catch { }
     triggerHaptic('light');
   };
 
-  const detailUrl = `/${
-    currentAnime.type === 'ANIME'
-      ? 'anime'
-      : currentAnime.type === 'DONGHUA'
+  const detailUrl = `/${currentAnime.type === 'ANIME'
+    ? 'anime'
+    : currentAnime.type === 'DONGHUA'
       ? 'donghua'
       : currentAnime.type === 'DRAMA'
-      ? 'drama'
-      : 'movie'
-  }/${currentAnime.slug}`;
+        ? 'drama'
+        : 'movie'
+    }/${currentAnime.slug}`;
   const watchUrl = `/watch/${currentAnime.slug}/1`;
 
   const episodeBadge =
@@ -107,196 +106,198 @@ function HeroCarousel({ items }: { items: Anime[] }) {
         ? `ចប់បរិបូរណ៍ (${currentAnime.episode_count || 16} ភាគ)`
         : `Completed (${currentAnime.episode_count || 16} eps)`
       : language === 'km'
-      ? `ភាគទី ${currentAnime.episode_count || 'ថ្មី'}`
-      : `Ep. ${currentAnime.episode_count || 'New'}`;
+        ? `ភាគទី ${currentAnime.episode_count || 'ថ្មី'}`
+        : `Ep. ${currentAnime.episode_count || 'New'}`;
 
   return (
-    <div
-      className="relative w-full h-[520px] sm:h-[620px] lg:h-[700px] overflow-hidden select-none bg-black"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      {/* Background Banner Slides */}
-      {items.map((anime, index) => {
-        const isCurrent = index === currentIndex;
-        const bannerSrc = anime.banner_url || anime.poster_url || `/posters/${anime.slug}.jpg`;
-        return (
-          <div
-            key={anime.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              isCurrent ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-            }`}
-          >
-            <img
-              src={bannerSrc}
-              alt={anime.title}
-              className={`w-full h-full object-cover object-top transition-transform duration-7000 ease-out ${
-                isCurrent ? 'scale-105' : 'scale-100'
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 sm:pt-4">
+      <div
+        className="relative w-full h-[480px] sm:h-[560px] lg:h-[620px] rounded-3xl overflow-hidden select-none bg-slate-950 border border-slate-200/60 shadow-sm"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {/* Background Banner Slides */}
+        {items.map((anime, index) => {
+          const isCurrent = index === currentIndex;
+          const bannerSrc = anime.banner_url || anime.poster_url || `/posters/${anime.slug}.jpg`;
+          return (
+            <div
+              key={anime.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                isCurrent ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
               }`}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `/posters/${anime.slug}.jpg`;
-              }}
-            />
-            {/* Cinematic Vignette Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/50 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f] via-[#0a0a0f]/75 to-transparent w-full lg:w-3/4" />
-            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#0a0a0f]/80 to-transparent" />
-          </div>
-        );
-      })}
+            >
+              <img
+                src={bannerSrc}
+                alt={anime.title}
+                className={`w-full h-full object-cover object-top transition-transform duration-7000 ease-out ${
+                  isCurrent ? 'scale-105' : 'scale-100'
+                }`}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `/posters/${anime.slug}.jpg`;
+                }}
+              />
+              {/* Cinematic Vignette Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-transparent w-full lg:w-3/4" />
+              <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-slate-950/60 to-transparent" />
+            </div>
+          );
+        })}
 
-      {/* Hero Content */}
-      <div className="relative z-20 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-12 sm:pb-16 lg:pb-20">
-        <div className="max-w-2xl sm:max-w-3xl space-y-3 sm:space-y-4">
-          {/* Badges Bar */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/20">
-              <Sparkles className="w-3.5 h-3.5 fill-black" />
-              {currentAnime.type === 'DONGHUA' ? '3D Donghua' : currentAnime.type || 'Anime'}
-            </span>
-
-            {!currentAnime.is_free && (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                <Crown className="w-3 h-3 text-amber-400" />
-                VIP 4K
+        {/* Hero Content */}
+        <div className="relative z-20 h-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 flex flex-col justify-end pb-10 sm:pb-14 lg:pb-16">
+          <div className="max-w-2xl sm:max-w-3xl space-y-3 sm:space-y-4">
+            {/* Badges Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-white/95 text-slate-900 border border-white/60 shadow-xs backdrop-blur-md">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 fill-blue-600" />
+                {currentAnime.type === 'DONGHUA' ? '3D Donghua' : currentAnime.type || 'Anime'}
               </span>
-            )}
 
-            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-white backdrop-blur-md border border-white/10">
-              {episodeBadge}
-            </span>
-
-            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Khmer Dub & Sub
-            </span>
-          </div>
-
-          {/* Title */}
-          <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight sm:leading-tight drop-shadow-md">
-            {currentAnime.title}
-          </h1>
-
-          {/* Subtitle / Chinese name */}
-          {currentAnime.alt_title && (
-            <p className="text-sm sm:text-base text-amber-300 font-medium tracking-wide">
-              {currentAnime.alt_title}
-            </p>
-          )}
-
-          {/* Meta Info: Rating, Year, Country */}
-          <div className="flex items-center gap-3 text-xs sm:text-sm text-gray-300 font-medium">
-            <span className="flex items-center gap-1 text-amber-400 font-bold bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md border border-amber-400/30">
-              <Star className="w-3.5 h-3.5 fill-amber-400" />
-              {(currentAnime.average_rating || 9.5).toFixed(1)}
-            </span>
-            <span>•</span>
-            <span>{currentAnime.year || 2024}</span>
-            <span>•</span>
-            <span>{currentAnime.country || 'China'}</span>
-            {currentAnime.genres && currentAnime.genres.length > 0 && (
-              <>
-                <span>•</span>
-                <span className="text-gray-400 truncate hidden sm:inline">
-                  {currentAnime.genres.map((g) => g.name).slice(0, 3).join(' / ')}
+              {!currentAnime.is_free && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-slate-950 shadow-xs">
+                  <Crown className="w-3 h-3 fill-slate-950" />
+                  VIP 4K
                 </span>
-              </>
+              )}
+
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-md border border-white/20">
+                {episodeBadge}
+              </span>
+
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 backdrop-blur-md">
+                Khmer Dub & Sub
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight sm:leading-tight drop-shadow-md">
+              {currentAnime.title}
+            </h1>
+
+            {/* Subtitle / Chinese name */}
+            {currentAnime.alt_title && (
+              <p className="text-sm sm:text-base text-amber-300 font-medium tracking-wide">
+                {currentAnime.alt_title}
+              </p>
             )}
+
+            {/* Meta Info: Rating, Year, Country */}
+            <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium">
+              <span className="flex items-center gap-1 text-amber-400 font-bold bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md border border-amber-400/30">
+                <Star className="w-3.5 h-3.5 fill-amber-400" />
+                {(currentAnime.average_rating || 9.5).toFixed(1)}
+              </span>
+              <span>•</span>
+              <span>{currentAnime.year || 2024}</span>
+              <span>•</span>
+              <span>{currentAnime.country || 'China'}</span>
+              {currentAnime.genres && currentAnime.genres.length > 0 && (
+                <>
+                  <span>•</span>
+                  <span className="text-slate-300 truncate hidden sm:inline">
+                    {currentAnime.genres.map((g) => g.name).slice(0, 3).join(' / ')}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Synopsis */}
+            <p className="text-xs sm:text-sm text-slate-200 line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-2xl drop-shadow">
+              {currentAnime.description ||
+                `${currentAnime.title} គឺជាភាពយន្តភាគគំនូរជីវចល 3D ដ៏អស្ចារ្យ ផ្សាយផ្ទាល់លើវេទិកា ANIMEKH ជាមួយគុណភាព Ultra HD និងសំឡេងភាសាខ្មែរពិរោះ។`}
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5 sm:gap-3 pt-2">
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  navigate(watchUrl);
+                }}
+                className="flex items-center justify-center gap-2 px-6 sm:px-7 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <Play className="w-5 h-5 fill-white" />
+                <span>{language === 'km' ? 'ទស្សនាឥឡូវ' : 'Watch Episode 1'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  navigate(detailUrl);
+                }}
+                className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-bold text-sm sm:text-base backdrop-blur-xl border border-white/60 shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <Info className="w-4 h-4" />
+                <span>{language === 'km' ? 'ពត៌មានលម្អិត' : 'Details'}</span>
+              </button>
+
+              <button
+                onClick={() => toggleBookmark(currentAnime.id)}
+                className={`p-3 rounded-2xl backdrop-blur-xl border transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs ${
+                  isBookmarked
+                    ? 'bg-blue-50 text-blue-600 border-blue-200'
+                    : 'bg-white/90 hover:bg-white text-slate-800 border-white/60'
+                }`}
+                title={isBookmarked ? 'Remove from List' : 'Add to List'}
+                aria-label="Add to Watchlist"
+              >
+                {isBookmarked ? <Check className="w-5 h-5 text-blue-600" /> : <Plus className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
+        </div>
 
-          {/* Synopsis */}
-          <p className="text-xs sm:text-sm text-gray-300 line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-2xl drop-shadow">
-            {currentAnime.description ||
-              `${currentAnime.title} គឺជាភាពយន្តភាគគំនូរជីវចល 3D ដ៏អស្ចារ្យ ផ្សាយផ្ទាល់លើវេទិកា ANIMEKH ជាមួយគុណភាព Ultra HD និងសំឡេងភាសាខ្មែរពិរោះ។`}
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3 pt-2">
+        {/* Carousel Navigation Arrows */}
+        {items.length > 1 && (
+          <>
             <button
               onClick={() => {
-                triggerHaptic('medium');
-                navigate(watchUrl);
+                triggerHaptic('light');
+                setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
               }}
-              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-sm sm:text-base shadow-xl shadow-amber-500/25 transition-all hover:scale-105 active:scale-95"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-white/90 hover:bg-white text-slate-800 backdrop-blur-xl border border-slate-200/80 shadow-md transition-all hover:scale-110 active:scale-95 hidden sm:flex items-center justify-center cursor-pointer"
+              aria-label="Previous featured anime"
             >
-              <Play className="w-5 h-5 fill-black" />
-              <span>{language === 'km' ? 'ទស្សនាឥឡូវ' : 'Watch Episode 1'}</span>
+              <ChevronLeft className="w-5 h-5" />
             </button>
 
             <button
               onClick={() => {
                 triggerHaptic('light');
-                navigate(detailUrl);
+                setCurrentIndex((prev) => (prev + 1) % items.length);
               }}
-              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm sm:text-base backdrop-blur-md border border-white/15 transition-all hover:scale-105 active:scale-95"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-white/90 hover:bg-white text-slate-800 backdrop-blur-xl border border-slate-200/80 shadow-md transition-all hover:scale-110 active:scale-95 hidden sm:flex items-center justify-center cursor-pointer"
+              aria-label="Next featured anime"
             >
-              <Info className="w-4 h-4" />
-              <span>{language === 'km' ? 'ពត៌មានលម្អិត' : 'More Details'}</span>
+              <ChevronRight className="w-5 h-5" />
             </button>
 
-            <button
-              onClick={() => toggleBookmark(currentAnime.id)}
-              className={`p-3 rounded-xl backdrop-blur-md border transition-all hover:scale-105 active:scale-95 ${
-                isBookmarked
-                  ? 'bg-amber-400/20 border-amber-400/50 text-amber-400'
-                  : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
-              }`}
-              title={isBookmarked ? 'Remove from List' : 'Add to List'}
-              aria-label="Add to Watchlist"
-            >
-              {isBookmarked ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
+            {/* Carousel Slide Indicators */}
+            <div className="absolute bottom-4 sm:bottom-6 right-6 sm:right-10 z-30 flex items-center gap-1.5">
+              {items.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`transition-all rounded-full h-1.5 cursor-pointer ${
+                    idx === currentIndex
+                      ? 'w-7 bg-blue-500'
+                      : 'w-1.5 bg-white/40 hover:bg-white/70'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
-
-      {/* Carousel Navigation Arrows */}
-      {items.length > 1 && (
-        <>
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
-            }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-md border border-white/10 transition-all hover:scale-110 active:scale-95 hidden sm:flex items-center justify-center"
-            aria-label="Previous featured anime"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setCurrentIndex((prev) => (prev + 1) % items.length);
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-md border border-white/10 transition-all hover:scale-110 active:scale-95 hidden sm:flex items-center justify-center"
-            aria-label="Next featured anime"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-
-          {/* Carousel Slide Indicators */}
-          <div className="absolute bottom-4 sm:bottom-6 right-6 sm:right-10 z-30 flex items-center gap-2">
-            {items.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`transition-all rounded-full h-2 ${
-                  idx === currentIndex
-                    ? 'w-8 bg-amber-400'
-                    : 'w-2 bg-white/30 hover:bg-white/60'
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-        </>
-      )}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// 🎬 Responsive Poster Card (Standard Cinema Aspect Ratio 3:4)
+// 🎬 Responsive Poster Card (Apple iOS 27 Pure White Glass)
 // ─────────────────────────────────────────────────────────────
 function CinemaPosterCard({ anime }: { anime: Anime }) {
   const navigate = useNavigate();
@@ -315,10 +316,10 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
     anime.type === 'ANIME'
       ? 'anime'
       : anime.type === 'DONGHUA'
-      ? 'donghua'
-      : anime.type === 'DRAMA'
-      ? 'drama'
-      : 'movie';
+        ? 'donghua'
+        : anime.type === 'DRAMA'
+          ? 'drama'
+          : 'movie';
   const detailUrl = `/${detailType}/${anime.slug}`;
   const watchUrl = `/watch/${anime.slug}/1`;
 
@@ -328,12 +329,12 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
         ? `ចប់ · ${anime.episode_count || 16} ភាគ`
         : `Completed · ${anime.episode_count || 16} eps`
       : anime.episode_count
-      ? language === 'km'
-        ? `ភាគ ${anime.episode_count}`
-        : `Ep. ${anime.episode_count}`
-      : language === 'km'
-      ? 'ថ្មី'
-      : 'New';
+        ? language === 'km'
+          ? `ភាគ ${anime.episode_count}`
+          : `Ep. ${anime.episode_count}`
+        : language === 'km'
+          ? 'ថ្មី'
+          : 'New';
 
   const imgSrc = !imageError
     ? anime.poster_url || anime.banner_url || `/posters/${anime.slug}.jpg`
@@ -353,7 +354,7 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
       localStorage.setItem('nami_my_list', JSON.stringify(updated));
       setIsBookmarked(!isBookmarked);
       triggerHaptic('light');
-    } catch {}
+    } catch { }
   };
 
   return (
@@ -362,39 +363,39 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
         triggerHaptic('light');
         navigate(watchUrl);
       }}
-      className="group relative w-[150px] sm:w-[185px] md:w-[210px] flex-shrink-0 cursor-pointer rounded-2xl overflow-hidden bg-[#121318] border border-white/5 hover:border-amber-400/40 shadow-lg hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-300"
+      className="group relative w-[145px] sm:w-[180px] md:w-[200px] flex-shrink-0 cursor-pointer rounded-2xl overflow-hidden bg-white border border-slate-200/80 hover:border-blue-400 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1 select-none"
     >
       {/* Poster Image Container */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-900">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100">
         <img
           src={imgSrc}
           alt={anime.title}
           onError={() => setImageError(true)}
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-106"
         />
 
         {/* Gradient shadow */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#121318] via-transparent to-black/30 opacity-80 group-hover:opacity-60 transition-opacity" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20 opacity-70 group-hover:opacity-50 transition-opacity" />
 
         {/* Top Badges */}
         <div className="absolute top-2 inset-x-2 flex items-center justify-between z-10">
-          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/60 text-white backdrop-blur-md border border-white/10">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/95 text-slate-900 backdrop-blur-md border border-slate-200/80 shadow-xs">
             {tagText}
           </span>
 
           <div className="flex items-center gap-1">
             {!anime.is_free && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow">
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs">
                 VIP
               </span>
             )}
             <button
               onClick={toggleBookmark}
-              className={`w-6 h-6 rounded-full flex items-center justify-center backdrop-blur-md transition-colors ${
+              className={`w-6 h-6 rounded-full flex items-center justify-center backdrop-blur-md transition-colors cursor-pointer ${
                 isBookmarked
-                  ? 'bg-amber-400 text-black'
-                  : 'bg-black/50 text-white hover:bg-white hover:text-black'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white/80 text-slate-700 hover:bg-white hover:text-slate-900 border border-slate-200/60 shadow-xs'
               }`}
               title="Bookmark"
               aria-label="Bookmark"
@@ -407,7 +408,7 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
                 triggerHaptic('light');
                 navigate(detailUrl);
               }}
-              className="w-6 h-6 rounded-full flex items-center justify-center bg-black/50 hover:bg-white hover:text-black text-white backdrop-blur-md transition-colors"
+              className="w-6 h-6 rounded-full flex items-center justify-center bg-white/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/60 backdrop-blur-md shadow-xs transition-colors cursor-pointer"
               title="Details"
               aria-label="Details"
             >
@@ -418,8 +419,8 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
 
         {/* Center Hover Play Button */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-          <div className="w-12 h-12 rounded-full bg-amber-400 text-black flex items-center justify-center shadow-xl shadow-amber-500/30 transform group-hover:scale-110 transition-transform">
-            <Play className="w-6 h-6 fill-black translate-x-0.5" />
+          <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/40 transform group-hover:scale-110 transition-transform">
+            <Play className="w-5 h-5 fill-white translate-x-0.5" />
           </div>
         </div>
       </div>
@@ -427,19 +428,19 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
       {/* Card Info */}
       <div className="p-3">
         <h3
-          className="font-bold text-white text-xs sm:text-sm line-clamp-1 group-hover:text-amber-400 transition-colors"
+          className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-1 group-hover:text-blue-600 transition-colors"
           title={anime.title}
         >
           {anime.title}
         </h3>
 
-        <div className="flex items-center justify-between text-[11px] text-gray-400 mt-1">
-          <div className="flex items-center gap-1 text-amber-400 font-semibold">
-            <Star className="w-3 h-3 fill-amber-400" />
+        <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+          <div className="flex items-center gap-1 text-amber-500 font-bold">
+            <Star className="w-3 h-3 fill-amber-500" />
             <span>{(anime.average_rating || 9.5).toFixed(1)}</span>
           </div>
           <span>{anime.year || 2024}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-gray-300">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium border border-slate-200/60">
             {anime.type === 'DONGHUA' ? '3D' : anime.type || 'Anime'}
           </span>
         </div>
@@ -477,18 +478,18 @@ function AnimeCarouselShelf({
   if (!items || items.length === 0) return null;
 
   return (
-    <section className="mb-10 sm:mb-12 relative group/shelf">
+    <section className="mb-8 sm:mb-10 relative group/shelf select-none">
       {/* Shelf Header */}
-      <div className="flex items-end justify-between mb-4 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-end justify-between mb-3 px-4 sm:px-6 lg:px-8">
         <div>
           <div className="flex items-center gap-2">
-            {Icon && <Icon className="w-5 h-5 text-amber-400" />}
-            <h2 className="font-display font-extrabold text-lg sm:text-2xl text-white tracking-wide">
+            {Icon && <Icon className="w-5 h-5 text-blue-600" />}
+            <h2 className="font-display font-black text-lg sm:text-xl md:text-2xl text-slate-900 tracking-tight">
               {title}
             </h2>
           </div>
           {subtitle && (
-            <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
               {subtitle}
             </p>
           )}
@@ -497,7 +498,7 @@ function AnimeCarouselShelf({
         {viewAllLink && (
           <Link
             to={viewAllLink}
-            className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+            className="flex items-center gap-1 text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors px-3 py-1 rounded-full hover:bg-blue-50"
           >
             <span>{language === 'km' ? 'មើលទាំងអស់' : 'View All'}</span>
             <ChevronRight className="w-4 h-4" />
@@ -510,7 +511,7 @@ function AnimeCarouselShelf({
         {/* Left Arrow Button */}
         <button
           onClick={() => scroll('left')}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 hover:bg-amber-400 hover:text-black text-white border border-white/10 backdrop-blur-md flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-all shadow-xl hover:scale-110 active:scale-95"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-all shadow-md hover:scale-110 active:scale-95 cursor-pointer"
           aria-label="Scroll left"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -529,7 +530,7 @@ function AnimeCarouselShelf({
         {/* Right Arrow Button */}
         <button
           onClick={() => scroll('right')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 hover:bg-amber-400 hover:text-black text-white border border-white/10 backdrop-blur-md flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-all shadow-xl hover:scale-110 active:scale-95"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-all shadow-md hover:scale-110 active:scale-95 cursor-pointer"
           aria-label="Scroll right"
         >
           <ChevronRight className="w-5 h-5" />
@@ -571,7 +572,7 @@ export function HomePage() {
         try {
           const response = await api.get('/history');
           if (Array.isArray(response.data)) history = response.data;
-        } catch {}
+        } catch { }
       }
       const incomplete = history
         .filter(
@@ -658,9 +659,9 @@ export function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-semibold text-gray-400 tracking-wider">
+        <p className="text-sm font-semibold text-text-secondary tracking-wider">
           {language === 'km' ? 'កំពុងដំណើរការ ANIMEKH...' : 'Loading ANIMEKH...'}
         </p>
       </div>
@@ -688,7 +689,7 @@ export function HomePage() {
     ].filter((s) => s.items.length > 0);
 
     return (
-      <main className="mini-home min-h-screen bg-[#0a0a0f] text-white pb-10">
+      <main className="mini-home min-h-screen bg-bg-base text-text-primary pb-10">
         {heroItems.length > 0 && <HeroCarousel items={heroItems} />}
         <div className="mini-home-sections mt-6">
           <ContinueWatchingSection items={continueItems} />
@@ -707,15 +708,15 @@ export function HomePage() {
 
   // Desktop & Tablet Web Layout
   return (
-    <main className="min-h-screen bg-[#0a0a0f] text-white">
-      {/* 🌟 Ultra-Premium Hero Carousel */}
+    <main className="min-h-screen bg-bg-base text-text-primary">
+      {/* Ultra-Premium Hero Carousel */}
       {heroItems.length > 0 && <HeroCarousel items={heroItems} />}
 
       {/* Main Shelves Content */}
-      <div className="relative z-20 -mt-10 sm:-mt-16 pb-20">
+      <div className="relative z-20 pt-6 pb-20">
         {/* Continue Watching Section */}
         {continueItems.length > 0 && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
             <ContinueWatchingSection items={continueItems} />
           </div>
         )}
@@ -723,8 +724,8 @@ export function HomePage() {
         {/* Interactive Genre Filter Chips */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
-            <span className="text-xs font-bold text-gray-400 flex items-center gap-1.5 shrink-0 mr-1">
-              <Compass className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 shrink-0 mr-1">
+              <Compass className="w-4 h-4 text-blue-600" />
               {language === 'km' ? 'ប្រភេទរឿង:' : 'Categories:'}
             </span>
             {genreFilters.map((tab) => (
@@ -734,10 +735,10 @@ export function HomePage() {
                   setSelectedGenre(tab.id);
                   triggerHaptic('light');
                 }}
-                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                   selectedGenre === tab.id
-                    ? 'bg-amber-400 text-black shadow-lg shadow-amber-500/20 scale-105'
-                    : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white border border-white/5'
+                    ? 'bg-blue-600 text-white shadow-xs scale-105'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/80 shadow-xs'
                 }`}
               >
                 {tab.label}
@@ -765,7 +766,7 @@ export function HomePage() {
           />
         )}
 
-        {/* Shelf 1: 🔥 Trending Now */}
+        {/* Shelf 1: Trending Now */}
         <AnimeCarouselShelf
           title={language === 'km' ? 'កំពុងពេញនិយមខ្លាំង' : 'Trending Now'}
           subtitle={
@@ -778,7 +779,7 @@ export function HomePage() {
           viewAllLink="/donghua"
         />
 
-        {/* Shelf 2: ⚔️ 3D Donghua Cultivation Epics */}
+        {/* Shelf 2: 3D Donghua Cultivation Epics */}
         <AnimeCarouselShelf
           title={language === 'km' ? 'រឿងភាគដុងហួរ 3D កំពូល' : 'Top 3D Donghua'}
           subtitle={
@@ -792,20 +793,20 @@ export function HomePage() {
         />
 
         {/* VIP Promotion Showcase Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-12">
-          <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 bg-gradient-to-r from-amber-500/20 via-purple-500/10 to-rose-500/20 border border-amber-400/30 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-10">
+          <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-blue-50/80 border border-blue-100/90 shadow-xs">
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="space-y-2 text-center md:text-left">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-400 text-black">
-                  <Crown className="w-3.5 h-3.5 fill-black" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-400 text-slate-950 shadow-xs">
+                  <Crown className="w-3.5 h-3.5 fill-slate-950" />
                   VIP PREMIUM MEMBER
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-display font-black text-white">
+                <h3 className="text-2xl sm:text-3xl font-display font-black text-slate-900 tracking-tight">
                   {language === 'km'
                     ? 'ទស្សនារឿងកម្រិត 4K Ultra HD គ្មានការរំខាន'
                     : 'Stream Unlimited 4K Ultra HD With Zero Ads'}
                 </h3>
-                <p className="text-sm text-gray-300 max-w-xl">
+                <p className="text-sm text-slate-600 max-w-xl">
                   {language === 'km'
                     ? 'រីករាយជាមួយភាគថ្មីៗមុនគេ ទាញយកទុកមើលក្រៅបណ្តាញ និងការគាំទ្រពិសេសតាម Telegram។'
                     : 'Enjoy early episode releases, fast cloud streaming, offline downloads, and dedicated support.'}
@@ -816,13 +817,13 @@ export function HomePage() {
                 <Link
                   to="/vip"
                   onClick={() => triggerHaptic('medium')}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-sm shadow-xl shadow-amber-500/30 transition-all hover:scale-105 active:scale-95"
+                  className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   {language === 'km' ? 'ចូលរួមជា VIP ឥឡូវនេះ' : 'Upgrade to VIP'}
                 </Link>
                 <Link
                   to="/explore"
-                  className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-md border border-white/10 transition-all"
+                  className="px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm border border-slate-200/80 shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   {language === 'km' ? 'ស្វែងយល់បន្ថែម' : 'Explore All'}
                 </Link>
@@ -831,7 +832,7 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* Shelf 3: 🌸 Japanese Anime Favorites */}
+        {/* Shelf 3: Japanese Anime Favorites */}
         {animeList.length > 0 && (
           <AnimeCarouselShelf
             title={language === 'km' ? 'អានីម៉ែជប៉ុនល្បីៗ' : 'Popular Anime'}
@@ -845,7 +846,7 @@ export function HomePage() {
           />
         )}
 
-        {/* Shelf 4: 🎬 Blockbuster Movies & Specials */}
+        {/* Shelf 4: Blockbuster Movies & Specials */}
         {movies.length > 0 && (
           <AnimeCarouselShelf
             title={language === 'km' ? 'ភាពយន្តពិសេស 3D Donghua' : 'Movies & Specials'}

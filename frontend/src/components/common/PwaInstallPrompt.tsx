@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Smartphone, Sparkles, Share, PlusSquare } from 'lucide-react';
+import { Download, X, Smartphone, Share, PlusSquare } from 'lucide-react';
+import { useUiPreferencesStore } from '../../store/uiPreferencesStore';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -7,6 +8,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const PwaInstallPrompt: React.FC = () => {
+  const hidePromos = useUiPreferencesStore((state) => state.hidePromos);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -14,7 +16,6 @@ export const PwaInstallPrompt: React.FC = () => {
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   useEffect(() => {
-    // Check if already installed as standalone PWA
     const isRunningStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true;
@@ -22,28 +23,23 @@ export const PwaInstallPrompt: React.FC = () => {
     setIsStandalone(isRunningStandalone);
     if (isRunningStandalone) return;
 
-    // Detect iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    // Check if previously dismissed
     const dismissedUntil = localStorage.getItem('pwa_prompt_dismissed');
     if (dismissedUntil && Date.now() < parseInt(dismissedUntil, 10)) {
       return;
     }
 
-    // Android / Chrome / Edge beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Show prompt banner with slight delay for smooth entrance
       setTimeout(() => setIsVisible(true), 2500);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Show for iOS users if not dismissed
     if (isIosDevice && !isRunningStandalone) {
       setTimeout(() => setIsVisible(true), 3500);
     }
@@ -71,90 +67,84 @@ export const PwaInstallPrompt: React.FC = () => {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    // Dismiss for 3 days
-    localStorage.setItem('pwa_prompt_dismissed', (Date.now() + 3 * 24 * 60 * 60 * 1000).toString());
+    localStorage.setItem('pwa_prompt_dismissed', (Date.now() + 7 * 24 * 60 * 60 * 1000).toString());
   };
 
-  if (isStandalone || !isVisible) return null;
+  if (isStandalone || !isVisible || hidePromos) return null;
 
   return (
-    <div className="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-6 sm:w-96 z-50 animate-in fade-in slide-in-from-bottom-5 duration-500">
-      <div className="relative overflow-hidden rounded-2xl bg-dark-card/95 backdrop-blur-xl border border-brand-500/30 p-4 shadow-2xl shadow-brand-950/60 ring-1 ring-white/10">
-        {/* Glow ambient background */}
-        <div className="absolute -top-12 -right-12 w-28 h-28 bg-brand-600/30 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-cyan-600/20 rounded-full blur-2xl pointer-events-none" />
-
+    <div className="fixed bottom-20 sm:bottom-6 right-4 left-4 sm:left-auto sm:right-6 sm:w-[360px] z-50 animate-fade-in">
+      <div className="relative overflow-hidden rounded-3xl bg-white/95 backdrop-blur-2xl border border-slate-200/90 p-4 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.14)]">
         {/* Close Button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+          className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-800 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
           aria-label="Close install prompt"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <div className="flex items-start gap-3.5">
+        <div className="flex items-center gap-3.5">
           {/* App Icon */}
-          <div className="w-12 h-12 rounded-xl bg-amber-500/20 p-0.5 flex-shrink-0 shadow-lg shadow-amber-500/25 border border-amber-500/30">
+          <div className="w-12 h-12 rounded-2xl bg-slate-50 p-0.5 shrink-0 border border-slate-200/80 shadow-xs overflow-hidden">
             <img
               src="/logo.png"
-              alt="NAMI ANIME"
-              className="w-full h-full rounded-[10px] object-contain"
+              alt="MerDonghua"
+              className="w-full h-full rounded-[14px] object-cover"
             />
           </div>
 
-          <div className="flex-1 pr-4">
+          <div className="flex-1 min-w-0 pr-6">
             <div className="flex items-center gap-1.5">
-              <h4 className="text-sm font-bold text-white tracking-wide">Install NAMI ANIME</h4>
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                <Sparkles className="w-2.5 h-2.5" /> App
+              <h4 className="font-display text-sm font-black text-slate-900 tracking-tight truncate">
+                MerDonghua
+              </h4>
+              <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200/80">
+                App
               </span>
             </div>
-            <p className="text-xs text-gray-300 mt-1 leading-relaxed">
-              ដំឡើង App លើទូរស័ព្ទ ឬកុំព្យូទ័រ ដើម្បីមើលរឿង Anime & Donghua លឿនរហ័ស Full Screen!
+            <p className="text-xs text-slate-500 mt-0.5 leading-snug">
+              ដំឡើងកម្មវិធីដើម្បីទស្សនាលឿនរហ័ស Full Screen
             </p>
           </div>
         </div>
 
-        {/* iOS specific guide modal / popover */}
+        {/* iOS Safari Guide */}
         {showIOSGuide ? (
-          <div className="mt-3.5 pt-3 border-t border-white/10 text-xs text-gray-200 space-y-2 bg-dark-bg/60 p-2.5 rounded-xl">
-            <p className="font-semibold text-brand-300 flex items-center gap-1.5">
-              <Smartphone className="w-3.5 h-3.5" /> របៀបដំឡើងលើ iPhone / iPad (Safari)៖
+          <div className="mt-3.5 pt-3 border-t border-slate-100 text-xs text-slate-700 space-y-2 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
+            <p className="font-bold text-slate-900 flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5 text-blue-600" /> របៀបដំឡើងលើ iPhone / iPad៖
             </p>
-            <ol className="list-decimal list-inside space-y-1 text-gray-300 text-[11px]">
+            <ol className="list-decimal list-inside space-y-1 text-slate-600 text-[11px]">
               <li className="flex items-center gap-1.5">
-                ចុចប៊ូតុង Share <Share className="w-3 h-3 text-cyan-400 inline" /> នៅខាងក្រោម Safari
+                ចុចប៊ូតុង Share <Share className="w-3 h-3 text-blue-600 inline" /> នៅខាងក្រោម Safari
               </li>
               <li className="flex items-center gap-1.5">
-                អូសចុះក្រោម រួចជ្រើសរើស <PlusSquare className="w-3 h-3 text-brand-400 inline" />{' '}
-                <span className="font-medium text-white">Add to Home Screen</span>
-              </li>
-              <li>
-                ចុច <span className="font-medium text-white">Add</span> នៅជ្រុងខាងស្តាំលើ
+                ជ្រើសរើស <PlusSquare className="w-3 h-3 text-blue-600 inline" />{' '}
+                <span className="font-semibold text-slate-900">Add to Home Screen</span>
               </li>
             </ol>
             <button
               onClick={() => setShowIOSGuide(false)}
-              className="w-full mt-2 py-1.5 text-center text-xs text-gray-400 hover:text-white bg-white/5 rounded-lg"
+              className="w-full mt-2 py-2 text-center text-xs font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 rounded-xl transition-colors cursor-pointer"
             >
               យល់ព្រម
             </button>
           </div>
         ) : (
-          <div className="mt-3.5 pt-3 border-t border-white/10 flex items-center justify-end gap-2">
+          <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
             <button
               onClick={handleDismiss}
-              className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors"
+              className="px-3.5 py-2 rounded-full text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               ពេលក្រោយ
             </button>
             <button
               onClick={handleInstallClick}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-bold shadow-md shadow-brand-500/25 active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
-              ដំឡើង App (Install)
+              <span>ដំឡើង App</span>
             </button>
           </div>
         )}

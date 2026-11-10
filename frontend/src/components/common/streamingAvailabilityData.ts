@@ -14,7 +14,7 @@ export interface StreamingProvider {
 
 export interface RegionAvailability {
   region: string;   // e.g. "Global", "Southeast Asia", "US"
-  flag: string;     // emoji flag
+  flag?: string;    // optional icon / code
   providers: StreamingProvider[];
 }
 

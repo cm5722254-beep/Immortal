@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Star, Send, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Star, Send, ChevronDown, ChevronUp, AlertTriangle, Palette, BookOpen, Music, Clock, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
@@ -8,7 +8,7 @@ import api from '../../services/api';
 interface AttributeScore {
   key: string;
   label: string;
-  icon: string;
+  icon?: string;
   score: number; // 0 = not rated
 }
 
@@ -23,12 +23,23 @@ interface ReviewData {
   createdAt: string;
 }
 
+const getAttributeIcon = (key: string) => {
+  switch (key) {
+    case 'animation': return <Palette className="w-4 h-4 text-rose-400" />;
+    case 'story': return <BookOpen className="w-4 h-4 text-blue-400" />;
+    case 'sound': return <Music className="w-4 h-4 text-purple-400" />;
+    case 'pacing': return <Clock className="w-4 h-4 text-amber-400" />;
+    case 'characters': return <Users className="w-4 h-4 text-emerald-400" />;
+    default: return null;
+  }
+};
+
 const ATTRIBUTE_DEFAULTS: AttributeScore[] = [
-  { key: 'animation',   label: 'Animation',    icon: '🎨', score: 0 },
-  { key: 'story',       label: 'Story',        icon: '📖', score: 0 },
-  { key: 'sound',       label: 'Sound Design', icon: '🎵', score: 0 },
-  { key: 'pacing',      label: 'Pacing',       icon: '⏱️', score: 0 },
-  { key: 'characters',  label: 'Characters',   icon: '👥', score: 0 },
+  { key: 'animation',   label: 'Animation',    score: 0 },
+  { key: 'story',       label: 'Story',        score: 0 },
+  { key: 'sound',       label: 'Sound Design', score: 0 },
+  { key: 'pacing',      label: 'Pacing',       score: 0 },
+  { key: 'characters',  label: 'Characters',   score: 0 },
 ];
 
 // ── Star picker ───────────────────────────────────────────────────────────────
@@ -87,7 +98,7 @@ function ReviewCard({ review }: { review: ReviewData }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {review.attributes.filter(a => a.score > 0).map(attr => (
             <div key={attr.key} className="flex items-center gap-2 bg-white/5 rounded-lg px-2.5 py-1.5">
-              <span className="text-sm">{attr.icon}</span>
+              <span>{getAttributeIcon(attr.key)}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] text-gray-500 truncate">{attr.label}</p>
                 <div className="flex gap-0.5 mt-0.5">
@@ -207,7 +218,7 @@ function WriteReviewForm({ animeId, onSubmitted }: WriteReviewFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {attributes.map(attr => (
             <div key={attr.key} className="flex items-center gap-3 bg-white/5 rounded-xl px-3 py-2.5 border border-white/5">
-              <span className="text-base w-6 text-center">{attr.icon}</span>
+              <span className="w-6 flex items-center justify-center">{getAttributeIcon(attr.key)}</span>
               <span className="text-xs text-gray-300 w-24 shrink-0">{attr.label}</span>
               <StarPicker value={attr.score} onChange={s => setAttrScore(attr.key, s)} />
               {attr.score > 0 && (
@@ -253,7 +264,7 @@ function WriteReviewForm({ animeId, onSubmitted }: WriteReviewFormProps) {
               ${hasSpoiler ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
           >
             <AlertTriangle className="w-3.5 h-3.5" />
-            {hasSpoiler ? 'Contains Spoilers ✓' : 'Mark as Spoiler'}
+            {hasSpoiler ? 'Contains Spoilers (Yes)' : 'Mark as Spoiler'}
           </button>
           <span className="text-[10px] text-gray-600 self-end">{text.length}/1000</span>
         </div>

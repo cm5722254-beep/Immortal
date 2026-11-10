@@ -36,8 +36,8 @@ export function ScheduleSection() {
       <div className="section-header mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold">
-              📅 កាលវិភាគផ្សាយប្រចាំសប្តាហ៍
+            <span className="badge bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border border-cyan-500/40 text-[10px] font-bold">
+              កាលវិភាគផ្សាយប្រចាំសប្តាហ៍
             </span>
           </div>
           <h2 className="section-title text-gradient-cyan text-2xl md:text-3xl flex items-center gap-2">
@@ -74,8 +74,8 @@ export function ScheduleSection() {
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 )}
               </div>
-              <span className={`text-[10px] mt-1 font-semibold ${isSelected ? 'text-white' : isCurrentToday ? 'text-emerald-300' : 'text-gray-500'}`}>
-                {isCurrentToday ? '★ ថ្ងៃនេះ' : `${count} រឿង`}
+              <span className={`text-[10px] mt-1 font-semibold ${isSelected ? 'text-white' : isCurrentToday ? 'text-emerald-500' : 'text-gray-500'}`}>
+                {isCurrentToday ? 'ថ្ងៃនេះ' : `${count} រឿង`}
               </span>
             </button>
           );
@@ -122,7 +122,7 @@ export function ScheduleSection() {
                 <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
                   {isToday ? (
                     <span className="badge bg-emerald-500 text-black font-black text-[9px] shadow-lg animate-pulse py-0.5 px-2">
-                      ⚡ ផ្សាយថ្ងៃនេះ
+                      ផ្សាយថ្ងៃនេះ
                     </span>
                   ) : (
                     <span className="badge bg-black/75 text-cyan-300 border border-cyan-500/40 text-[9px] font-bold">

@@ -107,13 +107,13 @@ export function initSecurityProtection(isAdmin: boolean) {
       <div style="position: fixed; inset: 0; z-index: 99999999; background: #080306; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 24px; overflow-y: auto;">
         <div style="max-width: 520px; width: 100%; background: #11070c; border: 2px solid rgba(239,68,68,0.4); border-radius: 28px; padding: 32px 28px; box-shadow: 0 0 80px rgba(239,68,68,0.25); margin: auto;">
           <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(239,68,68,0.15); border: 2px solid #EF4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: 0 0 50px rgba(239,68,68,0.4);">
-            <span style="font-size: 38px;">⛔</span>
+            <svg style="width: 36px; height: 36px; color: #EF4444;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
           </div>
           <h1 style="font-size: 24px; font-weight: 900; color: #EF4444; margin-bottom: 8px; letter-spacing: -0.02em;">
             ឧបករណ៍ និងគណនីរបស់អ្នកត្រូវបាន BANNED
           </h1>
           <p style="font-size: 14px; color: #FCA5A5; font-weight: bold; margin-bottom: 8px;">
-            ⚠️ មូលហេតុ៖ ${reason}
+            មូលហេតុ៖ ${reason}
           </p>
           <p style="font-size: 13px; color: #9CA3AF; line-height: 1.6; margin-bottom: 24px;">
             គណនីរបស់អ្នកត្រូវបានចាក់សោរបិទជាស្ថាពរ។ សូមបំពេញទម្រង់ខាងក្រោមដើម្បីស្នើសុំទៅកាន់ <strong style="color: #FBBF24;">Admin ដោះសោរ (Unban)</strong>៖
@@ -164,7 +164,7 @@ export function initSecurityProtection(isAdmin: boolean) {
                 type="submit"
                 style="width: 100%; background: linear-gradient(135deg, #EF4444, #D97706); color: #fff; font-weight: 900; font-size: 13px; padding: 12px 20px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 20px rgba(239,68,68,0.3); margin-top: 4px;"
               >
-                📩 ផ្ញើសំណើស្នើសុំដោះសោរទៅកាន់ Admin (Submit Appeal)
+                ផ្ញើសំណើស្នើសុំដោះសោរទៅកាន់ Admin (Submit Appeal)
               </button>
             </form>
           </div>
@@ -176,7 +176,7 @@ export function initSecurityProtection(isAdmin: boolean) {
               rel="noreferrer"
               style="display: inline-flex; align-items: center; gap: 6px; color: #38BDF8; font-size: 12px; text-decoration: none; font-weight: bold;"
             >
-              💬 ទាក់ទង Admin តាម Telegram ផ្ទាល់ (@watchflixanimeadmin)
+              ទាក់ទង Admin តាម Telegram ផ្ទាល់ (@watchflixanimeadmin)
             </a>
           </div>
         </div>
@@ -247,7 +247,7 @@ export function initSecurityProtection(isAdmin: boolean) {
             if (success) {
               container.innerHTML = `
                 <div style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); border-radius: 16px; padding: 20px; color: #6EE7B7; font-size: 14px; font-weight: bold; text-align: center; line-height: 1.6;">
-                  <p style="font-size: 16px; margin-bottom: 6px;">✅ ${msg}</p>
+                  <p style="font-size: 16px; margin-bottom: 6px;">${msg}</p>
                   <p style="font-size: 12px; color: #D1D5DB; font-weight: normal; margin-top: 4px;">
                     Admin នឹងពិនិត្យ និងដោះសោរជូនអ្នកក្នុងពេលឆាប់ៗ។
                   </p>
@@ -257,7 +257,7 @@ export function initSecurityProtection(isAdmin: boolean) {
               // Even if both network requests fail, show confirmed saved locally
               container.innerHTML = `
                 <div style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); border-radius: 16px; padding: 20px; color: #6EE7B7; font-size: 14px; font-weight: bold; text-align: center; line-height: 1.6;">
-                  <p style="font-size: 16px; margin-bottom: 6px;">✅ សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ!</p>
+                  <p style="font-size: 16px; margin-bottom: 6px;">សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ!</p>
                   <p style="font-size: 12px; color: #D1D5DB; font-weight: normal; margin-top: 4px;">
                     Admin នឹងពិនិត្យ និងដោះសោរជូនអ្នកក្នុងពេលឆាប់ៗ។ ឬអាចផ្ញើសារតាម Telegram (@merdonghuakh)។
                   </p>
@@ -359,7 +359,6 @@ export function initSecurityProtection(isAdmin: boolean) {
         toast.style.alignItems = 'center';
         toast.style.gap = '10px';
         toast.innerHTML = `
-          <span style="font-size: 18px;">⚠️</span>
           <span>ការព្រមានសុវត្ថិភាព (<strong style="color:#EF4444;">${currentStrikes}/5</strong>)៖ ការចុច F12 / Inspect លើស ៥ ដង គណនីរបស់អ្នកនឹងត្រូវ <strong>BANNED</strong> ភ្លាមៗ!</span>
         `;
 

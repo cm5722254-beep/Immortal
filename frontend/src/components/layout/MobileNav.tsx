@@ -1,60 +1,43 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Tv, Sparkles, User, Crown, Download } from 'lucide-react';
+import { Bookmark, Compass, Home, Search, User } from 'lucide-react';
 import { triggerHaptic } from '../../utils/telegram';
-import { useAuthStore } from '../../store/authStore';
+import { useLanguageStore, translate } from '../../store/languageStore';
 import { usePlatform } from '../../utils/platform';
-import { translate, useLanguageStore } from '../../store/languageStore';
+
+const tabs = [
+  { to: '/', icon: Home, label: 'Home', matches: ['/'] },
+  { to: '/explore', icon: Compass, label: 'Explore', matches: ['/explore', '/donghua', '/anime', '/movies', '/movie', '/drama', '/free'] },
+  { to: '/search', icon: Search, label: 'Search', matches: ['/search'] },
+  { to: '/library', icon: Bookmark, label: 'Library', matches: ['/library', '/favorites', '/history', '/downloads'] },
+  { to: '/profile', icon: User, label: 'Profile', matches: ['/profile', '/me', '/account', '/settings', '/vip', '/notifications', '/help', '/referrals'] },
+];
 
 export function MobileNav() {
   const location = useLocation();
-  const { user, isAuthenticated, isVip } = useAuthStore();
-  const { isMobileApp, isTelegram } = usePlatform();
   const language = useLanguageStore((state) => state.language);
-  const isVipUser = isVip || user?.is_vip_active;
-  const isPremiumVerified = Boolean(user?.is_vip_active && user.vip_plan?.trim().toLowerCase() === 'premium');
-
-  if (location.pathname.startsWith('/watch') || ['/login', '/register', '/vip', '/settings', '/account', '/help', '/scan', '/referrals', '/notifications'].includes(location.pathname)) return null;
-
+  const { isMobileApp, isTelegram } = usePlatform();
   const miniApp = isMobileApp || isTelegram;
-  const tabs = miniApp
-    ? [
-        { to: '/', icon: Home, label: translate('Home', language), activeMatches: ['/'] },
-        { to: '/explore', icon: Sparkles, label: translate('Explore', language), activeMatches: ['/explore', '/donghua', '/anime', '/movies', '/drama'] },
-        { to: '/shorts', icon: Tv, label: translate('Short', language), activeMatches: ['/shorts'] },
-        { to: '/downloads', icon: Download, label: translate('Download', language), activeMatches: ['/downloads'] },
-        { to: '/profile', icon: User, label: translate('Me', language), activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history', '/vip'] },
-      ]
-    : [
-        { to: '/', icon: Home, label: translate('Home', language), activeMatches: ['/'] },
-        { to: '/donghua', icon: Sparkles, label: translate('Donghua', language), activeMatches: ['/donghua'] },
-        { to: '/anime', icon: Tv, label: translate('Anime', language), activeMatches: ['/anime'] },
-        { to: '/search', icon: Search, label: translate('Search', language), activeMatches: ['/search'] },
-        { to: '/profile', icon: User, label: translate('Me', language), activeMatches: ['/profile', '/me', '/settings', '/favorites', '/history', '/vip', '/downloads'] },
-      ];
+  const isTitleDetail = ['/anime/', '/donghua/', '/drama/', '/movie/'].some((prefix) => location.pathname.startsWith(prefix));
+
+  if (location.pathname.startsWith('/watch') || ['/login', '/register'].includes(location.pathname)) return null;
+  if (isTelegram && isTitleDetail) return null;
 
   return (
-    <nav aria-label="Mobile application navigation" className={`fixed bottom-0 inset-x-0 z-40 md:hidden backdrop-blur-3xl px-2 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] select-none ${miniApp ? 'mini-bottom-nav' : 'bg-black/80 border-t border-white/[0.04]'}`}>
-      <div className="flex items-center justify-around max-w-lg mx-auto">
-        {tabs.map(({ to, icon: Icon, label, activeMatches }) => {
-          const active = activeMatches.some((path) => location.pathname === path || (path !== '/' && location.pathname.startsWith(path)));
-          const isProfile = to === '/profile';
+    <nav aria-label={translate('Primary navigation', language)} className={`mini-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/90 px-2 pt-1.5 pb-[max(.4rem,env(safe-area-inset-bottom))] backdrop-blur-2xl shadow-md ${miniApp ? '' : 'md:hidden'}`}>
+      <div className="mx-auto flex min-h-14 max-w-xl items-stretch justify-around">
+        {tabs.map(({ to, icon: Icon, label, matches }) => {
+          const active = matches.some((path) => path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(`${path}/`));
           return (
-            <Link key={to} to={to} onClick={() => triggerHaptic('light')} aria-label={label} aria-current={active ? 'page' : undefined} className={`flex-1 flex flex-col items-center justify-center py-1 px-1 transition-all duration-200 select-none relative group active:scale-95 ${active ? 'text-white' : 'text-gray-400 hover:text-gray-200'}`}>
-              <div className="relative flex items-center justify-center">
-                {isProfile && isAuthenticated && user ? (
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${active ? 'bg-emerald-500 text-white' : 'bg-white/10 text-gray-200 border border-white/20'}`}>
-                    {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                ) : (
-                  <div className={`p-1 rounded-xl transition-all ${active && miniApp ? 'bg-emerald-500/15' : ''}`}>
-                    <Icon strokeWidth={active ? 2.2 : 1.8} className={`w-[20px] h-[20px] ${active && miniApp ? 'text-emerald-400' : active ? 'text-rose-400' : 'text-gray-400 group-hover:text-gray-200'}`} />
-                  </div>
-                )}
-                {isProfile && isPremiumVerified
-                  ? <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-[#111216] text-sky-400 ring-1 ring-[#0A0E17]" aria-label="Premium verified"><span className="grid h-3 w-3 place-items-center rounded-full bg-sky-400 text-[#111216]"><svg aria-hidden="true" viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none"><path d="m4 8 2.5 2.5L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></span></span>
-                  : isProfile && isVipUser && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black flex items-center justify-center ring-1 ring-[#0A0E17]"><Crown className="w-2 h-2 fill-current" /></span>}
-              </div>
-              <span className={`text-[10px] mt-1 leading-none tracking-tight truncate max-w-[68px] ${active ? 'text-white font-semibold' : 'text-gray-400'}`}>{label}</span>
+            <Link
+              key={to}
+              to={to}
+              onClick={() => triggerHaptic('light')}
+              aria-label={translate(label, language)}
+              aria-current={active ? 'page' : undefined}
+              className={`mini-nav-item group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-center transition-all duration-200 focus-visible:outline-none ${active ? 'is-active text-blue-600 font-bold' : 'text-slate-500 hover:text-slate-900'}`}
+            >
+              <Icon aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={active ? 2.5 : 1.75} />
+              <span className="max-w-full truncate text-[10px] font-semibold tracking-tight leading-tight">{translate(label, language)}</span>
             </Link>
           );
         })}

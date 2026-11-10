@@ -167,75 +167,227 @@ export function AdminSeriesDownloader({ items }: { items: Anime[] }) {
   };
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/[.09] bg-[#11151b] shadow-[0_18px_70px_rgba(0,0,0,.24)]">
-      <div className="border-b border-white/[.08] bg-gradient-to-r from-[#171d24] to-[#12161d] p-4 sm:p-5">
+    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs">
+      <div className="border-b border-slate-200/80 bg-slate-50/70 p-4 sm:p-5">
         <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
           <div>
-            <div className="flex items-center gap-2 text-base font-bold text-white"><FolderDown className="h-5 w-5 text-emerald-400" /> Choose episodes</div>
-            <p className="mt-1 text-xs text-slate-400">Open a series to choose individual episodes or select all its available episodes.</p>
+            <div className="flex items-center gap-2 text-base font-bold text-slate-900">
+              <FolderDown className="h-5 w-5 text-blue-600" /> Choose episodes
+            </div>
+            <p className="mt-1 text-xs text-slate-500">Open a series to choose individual episodes or select all its available episodes.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 rounded-lg border border-white/[.08] bg-black/20 px-3 py-2 text-xs text-slate-300"><span className="font-bold text-white">{selectedJobs.length}</span> episode{selectedJobs.length === 1 ? '' : 's'} selected</span>
-            {selectedJobs.length > 0 && <button type="button" onClick={() => setSelectedEpisodeIds(new Set())} disabled={busy} className="rounded-xl px-2.5 py-2 text-xs text-slate-400 transition hover:text-white">Clear selection</button>}
-            <button type="button" onClick={startDownload} disabled={!selectedJobs.length || busy} className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-4 py-2.5 text-xs font-extrabold text-[#06231b] shadow-lg shadow-emerald-950/40 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40">
+            <span className="mr-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+              <span className="font-bold text-slate-900">{selectedJobs.length}</span> episode{selectedJobs.length === 1 ? '' : 's'} selected
+            </span>
+            {selectedJobs.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedEpisodeIds(new Set())}
+                disabled={busy}
+                className="rounded-xl px-2.5 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+              >
+                Clear selection
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={startDownload}
+              disabled={!selectedJobs.length || busy}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+            >
               <Download size={15} /> {busy ? 'Saving…' : 'Choose folder & download'}
             </button>
-            {busy && <button type="button" onClick={() => controller?.abort()} className="rounded-xl border border-red-400/30 p-2.5 text-red-300 hover:bg-red-500/10" title="Stop download"><X size={15} /></button>}
+            {busy && (
+              <button
+                type="button"
+                onClick={() => controller?.abort()}
+                className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-rose-600 hover:bg-rose-100 cursor-pointer"
+                title="Stop download"
+              >
+                <X size={15} />
+              </button>
+            )}
           </div>
         </div>
         <div className="mt-4 flex flex-col gap-3 lg:flex-row">
           <label className="relative block flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search series by title…" className="h-11 w-full rounded-xl border border-white/[.09] bg-[#0b0f14] pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search series by title…"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+            />
           </label>
-          <div className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-white/[.07] bg-[#0b0f14] p-1">
-            <span className="flex shrink-0 items-center gap-1.5 px-2 text-[11px] font-semibold text-slate-500"><SlidersHorizontal className="h-3.5 w-3.5" /> Type</span>
-            {[['ALL', 'All'], ['DONGHUA', 'Donghua'], ['ANIME', 'Anime'], ['DRAMA', 'Drama'], ['MOVIE', 'Movies']].map(([value, label]) => <button key={value} type="button" onClick={() => setTypeFilter(value)} className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold transition ${typeFilter === value ? 'bg-emerald-400/15 text-emerald-300' : 'text-slate-400 hover:bg-white/[.05] hover:text-white'}`}>{label}</button>)}
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1">
+            <span className="flex shrink-0 items-center gap-1.5 px-2 text-[11px] font-semibold text-slate-500">
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Type
+            </span>
+            {[['ALL', 'All'], ['DONGHUA', 'Donghua'], ['ANIME', 'Anime'], ['DRAMA', 'Drama'], ['MOVIE', 'Movies']].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTypeFilter(value)}
+                className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-bold transition cursor-pointer ${
+                  typeFilter === value ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500"><span>Showing <b className="text-slate-300">{visibleItems.length}</b> of {items.length} series</span><span className="hidden items-center gap-1.5 sm:flex"><CircleHelp className="h-3.5 w-3.5" /> Select only the episodes you want to save</span></div>
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+          <span>Showing <b className="text-slate-800">{visibleItems.length}</b> of {items.length} series</span>
+          <span className="hidden items-center gap-1.5 sm:flex"><CircleHelp className="h-3.5 w-3.5" /> Select only the episodes you want to save</span>
+        </div>
       </div>
-      {visibleItems.length ? <div className="grid max-h-[min(62vh,680px)] grid-cols-2 gap-3 overflow-y-auto p-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 sm:p-5">
-        {visibleItems.map((item) => {
-          const opened = expandedAnimeId === item.id;
-          const selectedForAnime = (episodesByAnime[item.id] || []).filter((episode) => selectedEpisodeIds.has(episode.id)).length;
-          return <button key={item.id} type="button" onClick={() => void toggleAnime(item)} aria-expanded={opened} disabled={busy} className={`group relative flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border p-2.5 text-left transition duration-200 ${opened ? 'border-emerald-400/55 bg-emerald-400/[.08] shadow-[0_0_0_1px_rgba(52,211,153,.12)]' : 'border-white/[.07] bg-[#171c23] hover:border-white/[.16] hover:bg-[#1b222a]'}`}>
-            <span className="relative h-[68px] w-[50px] shrink-0 overflow-hidden rounded-lg bg-[#232a33]">
-              {item.poster_url ? <img src={item.poster_url} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" /> : <span className="flex h-full w-full items-center justify-center text-slate-600"><Film className="h-5 w-5" /></span>}
-              {opened && <span className="absolute inset-0 grid place-items-center bg-emerald-950/60 text-emerald-200"><Check className="h-5 w-5" /></span>}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="line-clamp-2 text-xs font-bold leading-5 text-slate-100">{item.title}</span>
-              <span className="mt-1.5 flex items-center gap-1.5 text-[10px] text-slate-500"><Layers3 className="h-3 w-3" />{item.episode_count || 0} episodes{selectedForAnime > 0 ? ` · ${selectedForAnime} selected` : ''}</span>
-              <span className="mt-1 block truncate text-[9px] font-semibold uppercase tracking-wide text-slate-600">{item.type?.toLowerCase() || 'series'}</span>
-            </span>
-            {loadingAnimeId === item.id ? <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-emerald-300" /> : opened ? <ChevronDown className="h-4 w-4 shrink-0 text-emerald-300" /> : <ChevronRight className="h-4 w-4 shrink-0 text-slate-500" />}
-          </button>;
-        })}
-      </div> : <div className="px-4 py-16 text-center"><Search className="mx-auto h-8 w-8 text-slate-600" /><p className="mt-3 text-sm font-semibold text-slate-300">No series match your search</p><button type="button" onClick={() => { setQuery(''); setTypeFilter('ALL'); }} className="mt-2 text-xs font-bold text-emerald-300 hover:text-emerald-200">Clear filters</button></div>}
-      {expandedAnime && <div className="border-t border-white/[.08] bg-[#0d1218] p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h3 className="font-bold text-white">{expandedAnime.title}</h3><p className="mt-1 text-xs text-slate-500">{downloadableExpandedEpisodes.length} episode(s) have a stream link</p></div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={toggleExpandedEpisodes} disabled={!downloadableExpandedEpisodes.length || busy || loadingAnimeId === expandedAnime.id} className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/[.07] px-3 py-2 text-xs font-bold text-emerald-300 transition hover:bg-emerald-400/[.13] disabled:opacity-40">
-              {allExpandedSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}{allExpandedSelected ? 'Deselect all episodes' : 'Select all episodes'}
-            </button>
-            <button type="button" onClick={() => setExpandedAnimeId(null)} className="rounded-lg p-2 text-slate-500 transition hover:bg-white/[.06] hover:text-white" aria-label="Close episode list"><X className="h-4 w-4" /></button>
-          </div>
-        </div>
-        {loadingAnimeId === expandedAnime.id ? <div className="flex items-center gap-2 py-8 text-sm text-slate-400"><LoaderCircle className="h-4 w-4 animate-spin" /> Loading episodes…</div> : expandedEpisodes.length ? <div className="mt-4 grid max-h-72 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3">
-          {expandedEpisodes.map((episode) => {
-            const canDownload = Boolean(episode.video_url?.trim());
-            const checked = selectedEpisodeIds.has(episode.id);
-            return <label key={episode.id} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition ${!canDownload ? 'cursor-not-allowed border-white/[.04] bg-white/[.015] opacity-45' : checked ? 'cursor-pointer border-emerald-400/30 bg-emerald-400/[.07]' : 'cursor-pointer border-white/[.07] bg-white/[.025] hover:border-white/[.15]'}`}>
-              <input type="checkbox" checked={checked} disabled={!canDownload || busy} onChange={() => toggleEpisode(episode)} className="h-4 w-4 accent-emerald-400" />
-              <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-slate-200">Episode {episode.episode_number}{episode.title ? ` · ${episode.title}` : ''}</span><span className={`mt-1 block text-[10px] ${canDownload ? 'text-emerald-400/80' : 'text-slate-500'}`}>{canDownload ? 'Video link available' : 'No video link'}</span></span>
-            </label>;
+      {visibleItems.length ? (
+        <div className="grid max-h-[min(62vh,680px)] grid-cols-2 gap-3 overflow-y-auto p-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 sm:p-5">
+          {visibleItems.map((item) => {
+            const opened = expandedAnimeId === item.id;
+            const selectedForAnime = (episodesByAnime[item.id] || []).filter((episode) => selectedEpisodeIds.has(episode.id)).length;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => void toggleAnime(item)}
+                aria-expanded={opened}
+                disabled={busy}
+                className={`group relative flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border p-2.5 text-left transition duration-200 ${
+                  opened
+                    ? 'border-blue-500 bg-blue-50/60 shadow-xs'
+                    : 'border-slate-200/80 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <span className="relative h-[68px] w-[50px] shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200/80">
+                  {item.poster_url ? (
+                    <img src={item.poster_url} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-slate-400"><Film className="h-5 w-5" /></span>
+                  )}
+                  {opened && (
+                    <span className="absolute inset-0 grid place-items-center bg-blue-600/80 text-white"><Check className="h-5 w-5" /></span>
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="line-clamp-2 text-xs font-bold leading-5 text-slate-900">{item.title}</span>
+                  <span className="mt-1.5 flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <Layers3 className="h-3 w-3" />{item.episode_count || 0} episodes{selectedForAnime > 0 ? ` · ${selectedForAnime} selected` : ''}
+                  </span>
+                  <span className="mt-1 block truncate text-[9px] font-semibold uppercase tracking-wide text-slate-400">{item.type?.toLowerCase() || 'series'}</span>
+                </span>
+                {loadingAnimeId === item.id ? (
+                  <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-blue-600" />
+                ) : opened ? (
+                  <ChevronDown className="h-4 w-4 shrink-0 text-blue-600" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                )}
+              </button>
+            );
           })}
-        </div> : <div className="py-8 text-center text-sm text-slate-500">No episodes found for this series.</div>}
-      </div>}
-      {(progress || result) && <div role="status" className={`border-t border-white/[.08] px-4 py-3 text-xs ${result.includes('failed') || result.includes('could not') ? 'bg-red-500/[.05] text-red-300' : 'bg-emerald-500/[.05] text-emerald-300'}`}>{progress || result}</div>}
-      <div className="flex items-center gap-2 border-t border-white/[.06] px-4 py-3 text-[11px] text-slate-500"><ShieldCheck size={14} className="text-emerald-500" /> Browser folder access is private to this download session.</div>
+        </div>
+      ) : (
+        <div className="px-4 py-16 text-center">
+          <Search className="mx-auto h-8 w-8 text-slate-400" />
+          <p className="mt-3 text-sm font-semibold text-slate-700">No series match your search</p>
+          <button
+            type="button"
+            onClick={() => { setQuery(''); setTypeFilter('ALL'); }}
+            className="mt-2 text-xs font-bold text-blue-600 hover:text-blue-700 cursor-pointer"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+      {expandedAnime && (
+        <div className="border-t border-slate-200/80 bg-slate-50/70 p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-slate-900">{expandedAnime.title}</h3>
+              <p className="mt-1 text-xs text-slate-500">{downloadableExpandedEpisodes.length} episode(s) have a stream link</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleExpandedEpisodes}
+                disabled={!downloadableExpandedEpisodes.length || busy || loadingAnimeId === expandedAnime.id}
+                className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-100 cursor-pointer disabled:opacity-40"
+              >
+                {allExpandedSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                {allExpandedSelected ? 'Deselect all episodes' : 'Select all episodes'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setExpandedAnimeId(null)}
+                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-200/70 hover:text-slate-900 cursor-pointer"
+                aria-label="Close episode list"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          {loadingAnimeId === expandedAnime.id ? (
+            <div className="flex items-center gap-2 py-8 text-sm text-slate-500">
+              <LoaderCircle className="h-4 w-4 animate-spin text-blue-600" /> Loading episodes…
+            </div>
+          ) : expandedEpisodes.length ? (
+            <div className="mt-4 grid max-h-72 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3">
+              {expandedEpisodes.map((episode) => {
+                const canDownload = Boolean(episode.video_url?.trim());
+                const checked = selectedEpisodeIds.has(episode.id);
+                return (
+                  <label
+                    key={episode.id}
+                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition ${
+                      !canDownload
+                        ? 'cursor-not-allowed border-slate-200/60 bg-slate-100/60 opacity-55'
+                        : checked
+                        ? 'cursor-pointer border-blue-300 bg-blue-50'
+                        : 'cursor-pointer border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!canDownload || busy}
+                      onChange={() => toggleEpisode(episode)}
+                      className="h-4 w-4 accent-blue-600"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-semibold text-slate-800">
+                        Episode {episode.episode_number}{episode.title ? ` · ${episode.title}` : ''}
+                      </span>
+                      <span className={`mt-1 block text-[10px] ${canDownload ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                        {canDownload ? 'Video link available' : 'No video link'}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-slate-500">No episodes found for this series.</div>
+          )}
+        </div>
+      )}
+      {(progress || result) && (
+        <div
+          role="status"
+          className={`border-t border-slate-200/80 px-4 py-3 text-xs font-medium ${
+            result.includes('failed') || result.includes('could not') || result.includes('Could not')
+              ? 'bg-rose-50 text-rose-700'
+              : 'bg-emerald-50 text-emerald-700'
+          }`}
+        >
+          {progress || result}
+        </div>
+      )}
+      <div className="flex items-center gap-2 border-t border-slate-100 px-4 py-3 text-[11px] text-slate-500">
+        <ShieldCheck size={14} className="text-blue-600" /> Browser folder access is private to this download session.
+      </div>
     </section>
   );
 }

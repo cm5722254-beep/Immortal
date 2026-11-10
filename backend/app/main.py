@@ -24,7 +24,7 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.core.redis import init_redis, close_redis, get_redis_stats, delete_cache_pattern
 from app.dependencies.auth import require_admin
-from app.api import auth, users, anime, episodes, favorites, history, comments, ratings, search, admin, genres, danmaku, schedule, ws, stream, theme, notifications, site_settings, payment, api_keys, external_catalog
+from app.api import auth, users, anime, episodes, favorites, history, comments, ratings, search, admin, genres, danmaku, schedule, ws, stream, theme, notifications, site_settings, payment, api_keys, external_catalog, telegram_channel_sync
 
 
 # Rate limiter
@@ -76,6 +76,34 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(periodic_backup_loop())
     except Exception as e:
         print(f"[WARN] Periodic backup starter notice: {e}")
+
+    # 6. 24/7 Website -> Telegram Channel Auto-Sync Daemon + Cloud Keep-Alive
+    try:
+        import asyncio
+        import urllib.request
+        from app.api.telegram_channel_sync import start_24_7_channel_sync_daemon
+        asyncio.create_task(start_24_7_channel_sync_daemon())
+
+        async def cloud_keep_alive_loop():
+            while True:
+                await asyncio.sleep(240)  # Ping every 4 minutes so Render/Cloud servers never sleep
+                try:
+                    ext_url = (
+                        os.getenv("RENDER_EXTERNAL_URL")
+                        or os.getenv("BACKEND_PUBLIC_URL")
+                        or "https://immortal-s7ui.onrender.com"
+                    )
+                    if ext_url:
+                        ping_url = f"{ext_url.rstrip('/')}/health"
+                        await asyncio.to_thread(
+                            lambda: urllib.request.urlopen(ping_url, timeout=10).read()
+                        )
+                except Exception:
+                    pass
+
+        asyncio.create_task(cloud_keep_alive_loop())
+    except Exception as e:
+        print(f"[WARN] 24/7 Telegram Channel Sync daemon notice: {e}")
 
     yield
 
@@ -150,6 +178,7 @@ app.include_router(notifications.router, prefix=API_PREFIX)
 app.include_router(site_settings.router, prefix=API_PREFIX)
 app.include_router(api_keys.router, prefix=API_PREFIX)
 app.include_router(external_catalog.router, prefix=API_PREFIX)
+app.include_router(telegram_channel_sync.router, prefix=API_PREFIX)
 app.include_router(ws.router)
 
 # ── Serve uploaded images (poster, banner) as static files ──

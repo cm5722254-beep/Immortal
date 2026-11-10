@@ -13,7 +13,7 @@ const FILTERS: { id: CategoryFilterType; label: string }[] = [
   { id: 'ANIME', label: 'Anime ជប៉ុន' },
   { id: 'MOVIE', label: 'ភាពយន្តដុំ' },
   { id: 'DRAMA', label: 'រឿងភាគ' },
-  { id: 'VIP', label: '⭐ VIP' },
+  { id: 'VIP', label: 'VIP' },
 ];
 
 export function QuickCategoryFilter({ activeFilter, onSelect }: QuickCategoryFilterProps) {
@@ -29,10 +29,10 @@ export function QuickCategoryFilter({ activeFilter, onSelect }: QuickCategoryFil
                 triggerHaptic('light');
                 onSelect(f.id);
               }}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-150 select-none cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-150 select-none cursor-pointer ${
                 isActive
-                  ? 'bg-rose-600 text-white font-bold shadow-sm'
-                  : 'bg-white/[0.07] text-gray-300 hover:text-white hover:bg-white/[0.12] border border-white/[0.06]'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/80 shadow-xs'
               }`}
             >
               {f.label}

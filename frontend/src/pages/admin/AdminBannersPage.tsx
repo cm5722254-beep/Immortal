@@ -5,6 +5,11 @@ import { triggerConfirm } from '../../store/confirmStore';
 import api from '../../services/api';
 import type { Banner, Anime } from '../../types';
 
+const INPUT_CLASS =
+  'w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all';
+const LABEL_CLASS =
+  'block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5';
+
 export function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [animeList, setAnimeList] = useState<Anime[]>([]);
@@ -109,60 +114,75 @@ export function AdminBannersPage() {
   return (
     <AdminLayout title="ផ្ទាំងបដាផ្សាយ (Banners)">
       <div className="space-y-4 sm:space-y-6">
-        <div className="card p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xl bg-[#181818] border border-white/10 rounded-2xl">
+        <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
           <div>
-            <h2 className="font-bold text-white text-sm">Homepage Hero Slides</h2>
-            <p className="text-xs text-gray-400">ផ្ទាំងបដារំកិលធំនៅទំព័រដើម Website</p>
+            <h2 className="font-bold text-slate-900 text-sm sm:text-base">Homepage Hero Slides</h2>
+            <p className="text-xs text-slate-500 mt-0.5">ផ្ទាំងបដារំកិលធំនៅទំព័រដើម Website</p>
           </div>
-          <button onClick={openCreate} className="btn-primary text-xs py-2 px-4 flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/25 cursor-pointer">
-            <Plus className="w-4 h-4" /> + បន្ថែមផ្ទាំងបដាថ្មី
+          <button
+            onClick={openCreate}
+            className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> បន្ថែមផ្ទាំងបដាថ្មី
           </button>
         </div>
 
         {/* Banners Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {banners.map((b) => (
-            <div key={b.id} className="card group overflow-hidden border border-dark-border hover:border-brand-500/50 transition-all duration-300 shadow-xl">
+            <div
+              key={b.id}
+              className="group overflow-hidden bg-white border border-slate-200/80 hover:border-blue-300 rounded-2xl transition-all duration-300 shadow-xs flex flex-col"
+            >
               {/* Banner Image Preview */}
-              <div className="relative aspect-video bg-dark-muted overflow-hidden">
+              <div className="relative aspect-video bg-slate-100 overflow-hidden">
                 <img
                   src={b.image_url}
                   alt={b.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
                 <div className="absolute top-3 left-3">
-                  <span className={`badge ${b.is_active ? 'badge-ongoing' : 'badge-hiatus'} text-[10px]`}>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs ${
+                    b.is_active
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-900 text-white'
+                  }`}>
                     {b.is_active ? 'Active on Carousel' : 'Inactive'}
                   </span>
                 </div>
-                <div className="absolute bottom-3 left-3 right-3">
-                  <h3 className="font-display font-bold text-white text-base truncate">{b.title}</h3>
-                  {b.subtitle && <p className="text-xs text-gray-300 truncate">{b.subtitle}</p>}
-                </div>
+              </div>
+
+              {/* Banner Title & Subtitle */}
+              <div className="p-4 flex-1">
+                <h3 className="font-display font-bold text-slate-900 text-base truncate">{b.title}</h3>
+                {b.subtitle ? (
+                  <p className="text-xs text-slate-500 truncate mt-0.5">{b.subtitle}</p>
+                ) : (
+                  <p className="text-xs text-slate-400 mt-0.5">No subtitle</p>
+                )}
               </div>
 
               {/* Card Controls */}
-              <div className="p-3.5 flex items-center justify-between border-t border-dark-border bg-dark-card">
-                <span className="text-[11px] text-gray-500 font-mono">Order: #{b.order_index}</span>
+              <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100 bg-slate-50/60">
+                <span className="text-[11px] text-slate-500 font-mono">Order: #{b.order_index}</span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => toggleActive(b)}
-                    className="btn-icon text-gray-400 hover:text-brand-400"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
                     title={b.is_active ? 'Deactivate' : 'Activate'}
                   >
                     {b.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                   <button
                     onClick={() => openEdit(b)}
-                    className="btn-icon text-gray-400 hover:text-brand-400"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
                     title="Edit Slide"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(b.id)}
-                    className="btn-icon text-gray-400 hover:text-red-400"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                     title="Delete Slide"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -176,21 +196,26 @@ export function AdminBannersPage() {
 
       {/* Banner Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="bg-dark-card border border-dark-border rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-dark-border bg-dark-muted/30">
-              <h2 className="font-display font-bold text-lg text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white border border-slate-200/80 rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200/80 bg-slate-50/70">
+              <h2 className="font-display font-bold text-lg text-slate-900">
                 {editBanner ? 'Edit Banner Slide' : 'Create Banner Slide'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="btn-icon"><X className="w-5 h-5" /></button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="label">Auto-Fill from Series (Optional)</label>
+                <label className={LABEL_CLASS}>Auto-Fill from Series (Optional)</label>
                 <select
                   onChange={(e) => handleAnimeSelect(parseInt(e.target.value))}
-                  className="input text-xs"
+                  className={`${INPUT_CLASS} text-xs`}
                 >
                   <option value="">— Select a series to auto-fill —</option>
                   {animeList.map((a) => (
@@ -200,58 +225,58 @@ export function AdminBannersPage() {
               </div>
 
               <div>
-                <label className="label">Banner Title *</label>
+                <label className={LABEL_CLASS}>Banner Title *</label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  required className="input" placeholder="Renegade Immortal"
+                  required className={INPUT_CLASS} placeholder="Renegade Immortal"
                 />
               </div>
 
               <div>
-                <label className="label">Subtitle</label>
+                <label className={LABEL_CLASS}>Subtitle</label>
                 <input
                   type="text"
                   value={form.subtitle}
                   onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
-                  className="input" placeholder="Defying the Heavens"
+                  className={INPUT_CLASS} placeholder="Defying the Heavens"
                 />
               </div>
 
               <div>
-                <label className="label">Banner Landscape Image URL *</label>
+                <label className={LABEL_CLASS}>Banner Landscape Image URL *</label>
                 <input
                   type="url"
                   value={form.image_url}
                   onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
-                  required className="input" placeholder="https://images.unsplash.com/..."
+                  required className={INPUT_CLASS} placeholder="https://images.unsplash.com/..."
                 />
                 {form.image_url && (
-                  <div className="h-28 w-full rounded-xl overflow-hidden bg-dark-muted border border-dark-border mt-2">
+                  <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mt-2">
                     <img src={form.image_url} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="label">Link URL (When Clicked)</label>
+                <label className={LABEL_CLASS}>Link URL (When Clicked)</label>
                 <input
                   type="text"
                   value={form.link_url}
                   onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
-                  className="input" placeholder="/anime/renegade-immortal"
+                  className={INPUT_CLASS} placeholder="/anime/renegade-immortal"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Display Order</label>
+                  <label className={LABEL_CLASS}>Display Order</label>
                   <input
                     type="number"
                     value={form.order_index}
                     onChange={(e) => setForm((f) => ({ ...f, order_index: parseInt(e.target.value) || 0 }))}
-                    className="input" min="0"
+                    className={INPUT_CLASS} min="0"
                   />
                 </div>
                 <div className="flex items-end pb-2">
@@ -260,20 +285,28 @@ export function AdminBannersPage() {
                       type="checkbox"
                       checked={form.is_active}
                       onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                      className="w-4 h-4 accent-brand-500 rounded"
+                      className="w-4 h-4 accent-blue-600 rounded"
                     />
-                    <span className="text-xs font-semibold text-gray-300">Active Slide</span>
+                    <span className="text-xs font-semibold text-slate-700">Active Slide</span>
                   </label>
                 </div>
               </div>
 
-              {error && <p className="text-red-400 text-xs">{error}</p>}
+              {error && <p className="text-rose-600 text-xs font-medium">{error}</p>}
 
-              <div className="flex gap-3 pt-4 border-t border-dark-border">
-                <button type="submit" disabled={saving} className="btn-primary flex-1 py-3">
+              <div className="flex gap-3 pt-4 border-t border-slate-200/80">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-xs transition cursor-pointer disabled:opacity-50"
+                >
                   {saving ? 'Saving...' : editBanner ? 'Update Slide' : 'Save Banner Slide'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-ghost py-3">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="py-3 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition cursor-pointer"
+                >
                   Cancel
                 </button>
               </div>

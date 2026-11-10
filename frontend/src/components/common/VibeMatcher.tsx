@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, X, RefreshCw, ChevronRight } from 'lucide-react';
+import { Sparkles, X, RefreshCw, ChevronRight, Star, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import type { Anime } from '../../types';
@@ -8,7 +8,6 @@ import type { Anime } from '../../types';
 interface Mood {
   id: string;
   label: string;
-  emoji: string;
   color: string;   // Tailwind bg class
   border: string;  // Tailwind border class
   text: string;    // Tailwind text class
@@ -17,16 +16,16 @@ interface Mood {
 }
 
 const MOODS: Mood[] = [
-  { id: 'mind-bending',  label: 'Mind-Bending',     emoji: '🌀', color: 'bg-purple-500/20',  border: 'border-purple-500/50',  text: 'text-purple-300',  genres: ['psychological', 'sci-fi', 'mystery'] },
-  { id: 'dark',          label: 'Dark & Gritty',     emoji: '🌑', color: 'bg-gray-800/60',    border: 'border-gray-600/50',    text: 'text-gray-300',    genres: ['dark-fantasy', 'horror', 'thriller'] },
-  { id: 'cozy',          label: 'Cozy & Nostalgic',  emoji: '☕', color: 'bg-amber-500/20',   border: 'border-amber-500/50',   text: 'text-amber-300',   genres: ['slice-of-life', 'romance', 'drama'] },
-  { id: 'high-octane',   label: 'High-Octane',       emoji: '⚡', color: 'bg-yellow-500/20',  border: 'border-yellow-500/50',  text: 'text-yellow-300',  genres: ['action', 'martial-arts', 'cultivation'] },
-  { id: 'epic-fantasy',  label: 'Epic Fantasy',      emoji: '🐉', color: 'bg-red-500/20',     border: 'border-red-500/50',     text: 'text-red-300',     genres: ['fantasy', 'cultivation', 'adventure'] },
-  { id: 'heartfelt',     label: 'Heartfelt',         emoji: '💖', color: 'bg-pink-500/20',    border: 'border-pink-500/50',    text: 'text-pink-300',    genres: ['romance', 'slice-of-life', 'drama'] },
-  { id: 'laugh',         label: 'Laugh Out Loud',    emoji: '😂', color: 'bg-green-500/20',   border: 'border-green-500/50',   text: 'text-green-300',   genres: ['comedy', 'school', 'slice-of-life'] },
-  { id: 'cinematic',     label: 'Cinematic',         emoji: '🎬', color: 'bg-blue-500/20',    border: 'border-blue-500/50',    text: 'text-blue-300',    genres: ['movie', 'drama'] },
-  { id: 'tense',         label: 'Edge of My Seat',   emoji: '😰', color: 'bg-orange-500/20',  border: 'border-orange-500/50',  text: 'text-orange-300',  genres: ['thriller', 'action', 'mystery'] },
-  { id: 'otherworldly',  label: 'Otherworldly',      emoji: '🌌', color: 'bg-indigo-500/20',  border: 'border-indigo-500/50',  text: 'text-indigo-300',  genres: ['isekai', 'fantasy', 'supernatural'] },
+  { id: 'mind-bending',  label: 'Mind-Bending',     color: 'bg-purple-500/20',  border: 'border-purple-500/50',  text: 'text-purple-300',  genres: ['psychological', 'sci-fi', 'mystery'] },
+  { id: 'dark',          label: 'Dark & Gritty',     color: 'bg-gray-800/60',    border: 'border-gray-600/50',    text: 'text-gray-300',    genres: ['dark-fantasy', 'horror', 'thriller'] },
+  { id: 'cozy',          label: 'Cozy & Nostalgic',  color: 'bg-amber-500/20',   border: 'border-amber-500/50',   text: 'text-amber-300',   genres: ['slice-of-life', 'romance', 'drama'] },
+  { id: 'high-octane',   label: 'High-Octane',       color: 'bg-yellow-500/20',  border: 'border-yellow-500/50',  text: 'text-yellow-300',  genres: ['action', 'martial-arts', 'cultivation'] },
+  { id: 'epic-fantasy',  label: 'Epic Fantasy',      color: 'bg-red-500/20',     border: 'border-red-500/50',     text: 'text-red-300',     genres: ['fantasy', 'cultivation', 'adventure'] },
+  { id: 'heartfelt',     label: 'Heartfelt',         color: 'bg-pink-500/20',    border: 'border-pink-500/50',    text: 'text-pink-300',    genres: ['romance', 'slice-of-life', 'drama'] },
+  { id: 'laugh',         label: 'Laugh Out Loud',    color: 'bg-green-500/20',   border: 'border-green-500/50',   text: 'text-green-300',   genres: ['comedy', 'school', 'slice-of-life'] },
+  { id: 'cinematic',     label: 'Cinematic',         color: 'bg-blue-500/20',    border: 'border-blue-500/50',    text: 'text-blue-300',    genres: ['movie', 'drama'] },
+  { id: 'tense',         label: 'Edge of My Seat',   color: 'bg-orange-500/20',  border: 'border-orange-500/50',  text: 'text-orange-300',  genres: ['thriller', 'action', 'mystery'] },
+  { id: 'otherworldly',  label: 'Otherworldly',      color: 'bg-indigo-500/20',  border: 'border-indigo-500/50',  text: 'text-indigo-300',  genres: ['isekai', 'fantasy', 'supernatural'] },
 ];
 
 interface ResultCardProps { anime: Anime; }
@@ -42,7 +41,11 @@ function ResultCard({ anime }: ResultCardProps) {
         <p className="font-bold text-sm text-white group-hover:text-orange-400 transition-colors line-clamp-2 leading-snug">{anime.title}</p>
         <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
           {anime.year && <span>{anime.year}</span>}
-          {anime.average_rating > 0 && <span className="text-yellow-400">★ {anime.average_rating.toFixed(1)}</span>}
+          {anime.average_rating > 0 && (
+            <span className="text-yellow-400 inline-flex items-center gap-1">
+              <Star className="w-3 h-3 fill-current" /> {anime.average_rating.toFixed(1)}
+            </span>
+          )}
         </div>
         {anime.genres && anime.genres.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
@@ -120,8 +123,8 @@ export function VibeMatcher() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500/30 to-blue-500/30 border border-purple-500/30 flex items-center justify-center text-lg">
-            🎭
+          <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-purple-400" />
           </div>
           <div>
             <h2 className="font-bold text-white text-base flex items-center gap-1.5">
@@ -157,10 +160,9 @@ export function VibeMatcher() {
                   : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20 hover:text-white'
                 }`}
             >
-              <span className="text-base leading-none">{mood.emoji}</span>
               {mood.label}
               {isActive && (
-                <span className="ml-0.5 text-[10px] opacity-60">✓</span>
+                <Check className="w-3 h-3 text-emerald-400 inline ml-0.5" />
               )}
             </button>
           );
@@ -174,7 +176,7 @@ export function VibeMatcher() {
             const mood = MOODS.find(m => m.id === id);
             return mood ? (
               <span key={id} className={`text-xs px-2.5 py-1 rounded-full font-semibold ${mood.color} ${mood.text} ${mood.border} border`}>
-                {mood.emoji} {mood.label}
+                {mood.label}
               </span>
             ) : null;
           })}
@@ -213,8 +215,8 @@ export function VibeMatcher() {
 
       {!isLoading && hasSearched && results.length > 0 && (
         <div>
-          <p className="text-xs text-gray-400 mb-3 font-medium">
-            ✨ Curated playlist for your vibe ({results.length} picks)
+          <p className="text-xs text-gray-400 mb-3 font-medium flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Curated playlist for your vibe ({results.length} picks)
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {results.map(anime => <ResultCard key={anime.id} anime={anime} />)}
@@ -224,7 +226,7 @@ export function VibeMatcher() {
 
       {!isLoading && hasSearched && results.length === 0 && (
         <div className="text-center py-8 text-gray-500 text-sm">
-          <p className="text-2xl mb-2">😕</p>
+          <Sparkles className="w-8 h-8 text-gray-500 mx-auto mb-2 opacity-40" />
           No matches found for this vibe combination. Try different moods!
         </div>
       )}

@@ -19,20 +19,45 @@ function applyThemeToDOM(theme: SiteTheme) {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
+  const textPrimary = theme.text_primary || (theme.id === 'pure-white' ? '#0F172A' : '#F8FAFC');
+  const textSecondary = theme.text_secondary || (theme.id === 'pure-white' ? '#475569' : '#9CA3AF');
+
   root.style.setProperty('--bg-base', theme.bg_base);
   root.style.setProperty('--bg-card', theme.bg_card);
   root.style.setProperty('--bg-card-subtle', theme.bg_card_subtle);
   root.style.setProperty('--border-subtle', theme.border);
   root.style.setProperty('--accent-primary', theme.accent);
+  root.style.setProperty('--text-primary', textPrimary);
+  root.style.setProperty('--text-secondary', textSecondary);
+
+  // ANIMEKH variables
+  root.style.setProperty('--animekh-bg-base', theme.bg_base);
+  root.style.setProperty('--animekh-bg-card', theme.bg_card);
+  root.style.setProperty('--animekh-bg-card-subtle', theme.bg_card_subtle);
+  root.style.setProperty('--animekh-accent-primary', theme.accent);
+  root.style.setProperty('--animekh-border-subtle', theme.border);
+  root.style.setProperty('--animekh-text-primary', textPrimary);
+  root.style.setProperty('--animekh-text-secondary', textSecondary);
+
+  // MD variables
+  root.style.setProperty('--md-bg', theme.bg_base);
+  root.style.setProperty('--md-bg-raised', theme.bg_card);
+  root.style.setProperty('--md-surface', theme.bg_card_subtle);
+  root.style.setProperty('--md-border', theme.border);
+  root.style.setProperty('--md-text', textPrimary);
+  root.style.setProperty('--md-text-secondary', textSecondary);
+
   root.setAttribute('data-theme', theme.id);
 
   if (document.body) {
     document.body.style.backgroundColor = theme.bg_base;
+    document.body.style.color = textPrimary;
   }
 }
 
+// Default to 'pure-white'
 const initialSavedId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-const initialTheme = SITE_THEMES.find((t) => t.id === initialSavedId) || SITE_THEMES[0];
+const initialTheme = (initialSavedId && initialSavedId === 'pure-white' ? SITE_THEMES.find((t) => t.id === initialSavedId) : null) || SITE_THEMES[0];
 
 // Apply immediately on script load
 if (typeof window !== 'undefined') {
@@ -72,14 +97,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ isLoading: true });
     try {
       const res = await api.get('/site-settings/theme');
-      const backendThemeId = res.data?.active_theme_id;
-      if (backendThemeId && (!localStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY) === 'default')) {
-        get().setTheme(backendThemeId);
-      } else if (backendThemeId && !SITE_THEMES.some((t) => t.id === localStorage.getItem(STORAGE_KEY))) {
-        get().setTheme(backendThemeId);
-      }
+      const backendThemeId = res.data?.active_theme_id || 'pure-white';
+      get().setTheme(backendThemeId);
     } catch {
-      // Offline fallback: keep cached local theme
+      get().setTheme('pure-white');
     } finally {
       set({ isLoading: false });
     }

@@ -7,19 +7,36 @@ export interface SiteTheme {
   bg_card_subtle: string;
   border: string;
   accent: string;
+  text_primary?: string;
+  text_secondary?: string;
   description: string;
 }
 
 export const SITE_THEMES: SiteTheme[] = [
   {
+    id: 'pure-white',
+    name: 'Snow White (ពណ៌សស្អាត)',
+    name_en: 'Snow White (Clean)',
+    bg_base: '#F8FAFC',
+    bg_card: '#FFFFFF',
+    bg_card_subtle: '#F1F5F9',
+    border: '#E2E8F0',
+    accent: '#2563EB',
+    text_primary: '#0F172A',
+    text_secondary: '#475569',
+    description: 'Clean bright white theme with crisp readability and smooth contrast',
+  },
+  {
     id: 'midnight-slate',
-    name: 'Midnight Slate (លំនាំដើម)',
-    name_en: 'Midnight Slate (Default)',
+    name: 'Midnight Slate (រាត្រីស្ងប់ស្ងាត់)',
+    name_en: 'Midnight Slate',
     bg_base: '#0A0E17',
     bg_card: '#111726',
     bg_card_subtle: '#161F33',
     border: '#1E283C',
     accent: '#E8452C',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'The signature dark cinematic look with orange-red glow',
   },
   {
@@ -31,6 +48,8 @@ export const SITE_THEMES: SiteTheme[] = [
     bg_card_subtle: '#181818',
     border: '#262626',
     accent: '#E8452C',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'Deepest OLED pitch black for ultra contrast and battery efficiency',
   },
   {
@@ -42,6 +61,8 @@ export const SITE_THEMES: SiteTheme[] = [
     bg_card_subtle: '#281017',
     border: '#3B1622',
     accent: '#FF3355',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'Fierce imperial burgundy dark background with fiery crimson accents',
   },
   {
@@ -53,6 +74,8 @@ export const SITE_THEMES: SiteTheme[] = [
     bg_card_subtle: '#221344',
     border: '#361F66',
     accent: '#A855F7',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'Electrifying cyberpunk deep violet atmosphere',
   },
   {
@@ -64,6 +87,8 @@ export const SITE_THEMES: SiteTheme[] = [
     bg_card_subtle: '#0E2F21',
     border: '#184734',
     accent: '#10B981',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'Mystical ancient emerald jade with luminous forest glow',
   },
   {
@@ -75,6 +100,8 @@ export const SITE_THEMES: SiteTheme[] = [
     bg_card_subtle: '#0F2445',
     border: '#183866',
     accent: '#38BDF8',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'Calm and rich abyssal ocean sapphire blue',
   },
   {
@@ -86,6 +113,8 @@ export const SITE_THEMES: SiteTheme[] = [
     bg_card_subtle: '#2C1F0E',
     border: '#423016',
     accent: '#F59E0B',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'Prestigious dark bronze and royal golden amber highlights',
   },
   {
@@ -97,40 +126,8 @@ export const SITE_THEMES: SiteTheme[] = [
     bg_card_subtle: '#102B42',
     border: '#1B4263',
     accent: '#06B6D4',
+    text_primary: '#F8FAFC',
+    text_secondary: '#9CA3AF',
     description: 'Futuristic neon cyan with high-tech cobalt midnight background',
-  },
-  {
-    id: 'velvet-rose',
-    name: 'Velvet Rose (ផ្កាកុលាប Velvet)',
-    name_en: 'Velvet Rose & Magenta',
-    bg_base: '#140711',
-    bg_card: '#200C1B',
-    bg_card_subtle: '#2E1227',
-    border: '#451B3B',
-    accent: '#F43F5E',
-    description: 'Seductive velvet dark rose magenta ambiance',
-  },
-  {
-    id: 'titanium-gunmetal',
-    name: 'Titanium Carbon (ប្រផេះដែកថែប)',
-    name_en: 'Titanium Gunmetal Carbon',
-    bg_base: '#0D1016',
-    bg_card: '#141922',
-    bg_card_subtle: '#1C2330',
-    border: '#2C3647',
-    accent: '#94A3B8',
-    description: 'Sleek industrial titanium and stealth carbon steel',
-  },
-  // ANIMEKH V2 PREMIUM THEME - Added as per redesign specification
-  {
-    id: 'animekh-premium',
-    name: 'ANIMEKH Premium (អ៊ីនូម៉ែខហ្វេ)',
-    name_en: 'ANIMEKH Premium',
-    bg_base: '#08090D',           /* Near-black background */
-    bg_card: '#11131B',           /* Elevated surfaces */
-    bg_card_subtle: '#171A24',    /* Card background */
-    border: 'rgba(255, 255, 255, 0.1)', /* Subtle borders */
-    accent: '#8B5CF6',            /* Electric violet */
-    description: 'Premium cinematic dark theme with electric violet accents',
   },
 ];
