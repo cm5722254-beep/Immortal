@@ -813,20 +813,46 @@ def download_episode_video_sync(video_url: str, dest_path: Path) -> Path:
     return dest_path
 
 
-def compress_video_sync(src_path: Path, out_path: Path, preset: str) -> Tuple[Path, int, int, int, Optional[Path]]:
-    thumb_path = out_path.with_suffix(".jpg")
+def _parse_ffmpeg_duration(stderr_text: str) -> int:
+    m_dur = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", stderr_text or "")
+    if m_dur:
+        return int(m_dur.group(1)) * 3600 + int(m_dur.group(2)) * 60 + int(float(m_dur.group(3)))
+    return 1440
+
+
+def _probe_and_thumb_sync(src_path: Path, thumb_path: Path) -> Tuple[int, Optional[Path]]:
+    duration_sec = 1440
     try:
-        subprocess.run(
+        proc = subprocess.run(
             [FFMPEG_EXE, "-y", "-ss", "00:00:05", "-i", str(src_path), "-vframes", "1", "-q:v", "4", str(thumb_path)],
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=30,
         )
+        duration_sec = _parse_ffmpeg_duration(proc.stderr or "")
     except Exception:
         pass
+    return duration_sec, (thumb_path if thumb_path.exists() else None)
 
-    if preset == "copy_raw":
-        return src_path, 1440, 1280, 720, (thumb_path if thumb_path.exists() else None)
+
+def compress_video_sync(src_path: Path, out_path: Path, preset: str) -> Tuple[Path, int, int, int, Optional[Path]]:
+    thumb_path = out_path.with_suffix(".jpg")
+    probed_dur, found_thumb = _probe_and_thumb_sync(src_path, thumb_path)
+
+    # Skip heavy transcoding immediately for short trailers or already-small episodes
+    if probed_dur < 60:
+        return src_path, probed_dur, 1280, 720, found_thumb
+
+    src_mb = src_path.stat().st_size / (1024 * 1024) if src_path.exists() else 0.0
+    try:
+        skip_under_mb = float(os.getenv("SKIP_COMPRESS_UNDER_MB", "120"))
+    except ValueError:
+        skip_under_mb = 120.0
+    if preset == "copy_raw" or (0 < src_mb <= skip_under_mb):
+        return src_path, probed_dur, 1280, 720, found_thumb
 
     if preset == "480p_ultra":
         scale_filter, crf, audio_br, w, h = "scale='min(854,iw)':-2", "28", "80k", 854, 480
@@ -839,27 +865,30 @@ def compress_video_sync(src_path: Path, out_path: Path, preset: str) -> Tuple[Pa
     if not ffmpeg_threads.isdigit() or int(ffmpeg_threads) < 1:
         ffmpeg_threads = "2"
 
+    ffmpeg_preset = os.getenv("FFMPEG_PRESET", "superfast").strip().lower()
+    if ffmpeg_preset not in ("ultrafast", "superfast", "veryfast", "faster"):
+        ffmpeg_preset = "superfast"
+
     cmd = [
         FFMPEG_EXE, "-y", "-i", str(src_path),
         "-threads", ffmpeg_threads,
-        "-vf", scale_filter, "-c:v", "libx264", "-preset", "veryfast", "-crf", crf,
+        "-vf", scale_filter, "-c:v", "libx264", "-preset", ffmpeg_preset, "-crf", crf,
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", audio_br, "-movflags", "+faststart",
         str(out_path),
     ]
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace")
     if proc.returncode != 0 or not out_path.exists() or out_path.stat().st_size < 100 * 1024:
-        return src_path, 1440, w, h, (thumb_path if thumb_path.exists() else None)
+        return src_path, probed_dur, w, h, found_thumb
 
-    duration_sec = 1440
-    m_dur = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", proc.stderr or "")
-    if m_dur:
-        duration_sec = int(m_dur.group(1)) * 3600 + int(m_dur.group(2)) * 60 + int(float(m_dur.group(3)))
+    duration_sec = _parse_ffmpeg_duration(proc.stderr or "")
+    if duration_sec == 1440 and probed_dur != 1440:
+        duration_sec = probed_dur
 
     if out_path.stat().st_size >= src_path.stat().st_size:
         out_path.unlink(missing_ok=True)
-        return src_path, duration_sec, w, h, (thumb_path if thumb_path.exists() else None)
+        return src_path, duration_sec, w, h, found_thumb
 
-    return out_path, duration_sec, w, h, (thumb_path if thumb_path.exists() else None)
+    return out_path, duration_sec, w, h, found_thumb
 
 
 def format_caption(anime: Dict[str, Any], ep_num: int, cfg: Dict[str, Any]) -> str:
@@ -1009,9 +1038,16 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
                 sync_state["step_progress"] = 0.0
                 add_log(f"[ភាគ {ep_num}] ⬆ បង្រួមសល់ {final_mb:.1f} MB ({dur_sec}s) -> កំពុង Upload ចូល [{channel_title}]...", "info")
 
+                last_logged_pct = [-1]
+
                 def _progress_cb(sent_bytes: int, total_bytes: int) -> None:
                     if total_bytes > 0:
-                        sync_state["step_progress"] = round((sent_bytes / total_bytes) * 100.0, 1)
+                        pct = round((sent_bytes / total_bytes) * 100.0, 1)
+                        sync_state["step_progress"] = pct
+                        bucket = int(pct // 25) * 25
+                        if bucket in (25, 50, 75) and bucket > last_logged_pct[0]:
+                            last_logged_pct[0] = bucket
+                            add_log(f"[ភាគ {ep_num}] ⬆ Upload បាន {bucket}% ({sent_bytes / (1024 * 1024):.1f}/{total_bytes / (1024 * 1024):.1f} MB)", "info")
 
                 while True:
                     try:
@@ -1021,6 +1057,7 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
                             caption=caption,
                             thumb=str(thumb_path) if thumb_path and thumb_path.exists() else None,
                             supports_streaming=True,
+                            part_size_kb=512,
                             attributes=[DocumentAttributeVideo(duration=dur_sec, w=w, h=h, supports_streaming=True)],
                             progress_callback=_progress_cb,
                         )
@@ -1047,7 +1084,10 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
                 opt_temp_path.unlink(missing_ok=True)
                 opt_temp_path.with_suffix(".jpg").unlink(missing_ok=True)
 
-            delay_s = max(2, int(cfg.get("delay_seconds") or 10))
+            try:
+                delay_s = max(1, int(os.getenv("UPLOAD_DELAY_SECONDS", str(cfg.get("delay_seconds") or 3))))
+            except ValueError:
+                delay_s = 3
             if not sync_state["should_stop"]:
                 sync_state["pipeline_stage"] = 5
                 sync_state["current_phase"] = f"សម្រាក {delay_s} វិនាទីមុនបន្តភាគបន្ទាប់..."
