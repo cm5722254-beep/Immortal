@@ -29,6 +29,12 @@ if str(BACKEND_DIR) not in sys.path:
 # Cloud worker always opts into 24/7 daemon when TELEGRAM_USER_SESSION is present
 os.environ.setdefault("ENABLE_24_7_SYNC", "1")
 os.environ.setdefault("FORCE_24_7_SYNC", "1")
+# Standalone worker uses seed_export.json + Telegram directly (never touches SQL DB),
+# so provide an in-memory SQLite URL if .env is missing on fresh AWS/Docker hosts.
+if not os.getenv("DATABASE_URL", "").strip():
+    os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+if not os.getenv("JWT_SECRET", "").strip():
+    os.environ["JWT_SECRET"] = "standalone-cloud-worker-unused"
 
 from app.api import telegram_channel_sync as tcs  # noqa: E402
 

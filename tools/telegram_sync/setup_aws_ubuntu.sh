@@ -75,6 +75,7 @@ FORCE_24_7_SYNC=1
 COMPRESSION_PRESET=720p_low_mb
 FFMPEG_THREADS=${DEFAULT_THREADS}
 SYNC_DATA_DIR=${DATA_DIR}
+DATABASE_URL=sqlite+aiosqlite:///:memory:
 PORT=8080
 ENABLE_BOT_COMMANDS=0
 EOF
@@ -110,3 +111,4 @@ echo "✅ MerDonghua 24/7 Worker is now LIVE on AWS Ubuntu!"
 echo "   Check live logs   : sudo journalctl -u ${SERVICE_NAME} -f"
 echo "   Check HTTP health : curl http://127.0.0.1:8080/health"
 echo "   Keep local PC Studio OFF while AWS uses this TELEGRAM_USER_SESSION."
+
