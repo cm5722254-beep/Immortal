@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Play, Bookmark, Share2, MessageSquare, ArrowLeft,
-  Star, Check, Sparkles, Crown, Film,
+  Star, Check, Sparkles, Film,
   Search, ArrowDownUp, Info, Send, ThumbsUp, ListPlus,
   LayoutGrid, List, X
 } from 'lucide-react';
 import { setTelegramMainButton, triggerHaptic } from '../utils/telegram';
 import { SkeletonDetail } from '../components/common/SkeletonLoader';
-import { StreamingAvailabilityHub } from '../components/common/StreamingAvailabilityHub';
 import { TrailerModal } from '../components/common/TrailerModal';
 import { isMoviePurchased } from '../services/paymentService';
 import { useAuthStore } from '../store/authStore';
@@ -24,7 +23,6 @@ export function DetailPage() {
   const appLanguage = useLanguageStore((state) => state.language);
   const { isTelegram, isMobileApp } = usePlatform();
   const { slug } = useParams<{ slug: string }>();
-  const location = useLocation();
   const { user, isAuthenticated, isAdmin, isOwner, setUser } = useAuthStore();
   const navigate = useNavigate();
 
@@ -40,8 +38,6 @@ export function DetailPage() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [movieUnlocked] = useState(false);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
-  const [claimingTrial, setClaimingTrial] = useState(false);
-  const [trialError, setTrialError] = useState('');
 
   // 5-Star Rating State
   const [userRating, setUserRating] = useState<number>(0);
@@ -345,23 +341,8 @@ export function DetailPage() {
     }, 1500);
   };
 
-  const claimFreeTrial = async () => {
-    if (!anime || anime.type === 'MOVIE') return;
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: location.pathname } });
-      return;
-    }
-    setClaimingTrial(true);
-    setTrialError('');
-    try {
-      const response = await api.post('/auth/claim-trial', { anime_id: anime.id });
-      setUser(response.data);
-    } catch (error: any) {
-      setTrialError(error?.response?.data?.detail || 'Could not claim the free trial. Please try again.');
-    } finally {
-      setClaimingTrial(false);
-    }
-  };
+  // Open playback access: trial helpers removed
+  void setUser;
 
   // Filter & sort episodes (must be before early returns to satisfy React rules of hooks)
   const filteredEpisodes = useMemo(() => {
@@ -411,7 +392,6 @@ export function DetailPage() {
   }, [filteredEpisodes, rangeChunks, selectedRange, epSearch]);
 
   const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
-  const hasSeriesTrial = !!user && user.trial_anime_id === anime?.id && !!user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now();
   const userUnlockedMovies = user?.unlocked_movies || [];
   const hasMovieAccess = isAdministrator || movieUnlocked || (anime?.slug ? (isMoviePurchased(anime.slug) || userUnlockedMovies.includes(anime.slug)) : false);
 
@@ -704,24 +684,7 @@ export function DetailPage() {
             </button>
           )}
         </section>
-        {anime.type !== 'MOVIE' && user?.role !== 'ADMIN' && user?.role !== 'OWNER' && user?.role !== 'STAFF' && !user?.is_vip_active && (
-          <section className="flex flex-col gap-3 rounded-3xl border border-blue-200/80 bg-blue-50/60 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="font-bold text-slate-900 text-sm sm:text-base">សាកល្បងមើលដោយឥតគិតថ្លៃ 1 ថ្ងៃសម្រាប់រឿងនេះ</h2>
-              <p className="mt-1 text-xs sm:text-sm text-slate-600">បើកសិទ្ធិមើលគ្រប់ភាគនៃរឿងនេះរយៈពេល 24 ម៉ោង។</p>
-              {trialError && <p role="alert" className="mt-2 text-xs font-semibold text-red-600">{trialError}</p>}
-            </div>
-            {user?.trial_anime_id === anime.id && user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now() ? (
-              <span className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs sm:text-sm font-semibold text-emerald-700">កំពុងបើកសាកល្បងឥតគិតថ្លៃ</span>
-            ) : user?.trial_claimed_at ? (
-              <span className="rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-xs sm:text-sm text-slate-500">បានប្រើសិទ្ធិសាកល្បងរួចហើយ</span>
-            ) : user?.is_vip_active ? null : (
-              <button onClick={claimFreeTrial} disabled={claimingTrial} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60 cursor-pointer shadow-xs">
-                {claimingTrial ? 'កំពុងដំណើរការ…' : 'បើកមើលសាកល្បង 1 ថ្ងៃ'}
-              </button>
-            )}
-          </section>
-        )}
+        {/* Clean open-streaming detail experience: no 24h trial gate required */}
 
         {/* Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto no-scrollbar">
@@ -867,7 +830,6 @@ export function DetailPage() {
               <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-2.5">
                 {displayedEpisodes.map((ep) => {
                   const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime.poster_url && ep.thumbnail_url !== anime.banner_url ? ep.thumbnail_url : undefined;
-                  const isEpVip = !hasSeriesTrial && (ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false));
 
                   return (
                     <Link
@@ -878,12 +840,6 @@ export function DetailPage() {
                     >
                       {episodeThumb && <img src={episodeThumb} alt={`${translate('Episode', appLanguage)} ${ep.episode_number}`} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full rounded-xl object-cover" />}
                       {episodeThumb && <span aria-hidden="true" className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/75 via-black/15 to-black/10" />}
-                      {/* VIP Crown Indicator */}
-                      {isEpVip && (
-                        <div className="absolute top-1 right-1 z-10 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center shadow-xs">
-                          <Crown className="w-2 h-2 text-slate-900 fill-slate-900" />
-                        </div>
-                      )}
 
                       <span className={`relative z-10 font-display font-black text-sm sm:text-base group-hover:text-blue-600 transition-colors ${episodeThumb ? 'rounded-md bg-black/60 px-2 py-1 text-white' : 'text-slate-900'}`}>
                         {ep.episode_number}
@@ -897,7 +853,6 @@ export function DetailPage() {
               <div className="detail-episode-list space-y-2">
                 {displayedEpisodes.map((ep) => {
                   const episodeThumb = ep.thumbnail_url && ep.thumbnail_url !== anime.poster_url && ep.thumbnail_url !== anime.banner_url ? ep.thumbnail_url : undefined;
-                  const isEpVip = !hasSeriesTrial && (ep.is_vip === true || (ep as any).is_vip_only === true || (ep.is_free !== null && ep.is_free !== undefined && ep.is_free === false));
 
                   return (
                     <Link
@@ -921,15 +876,9 @@ export function DetailPage() {
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        {isEpVip ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
-                            <Crown className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> VIP
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                            ឥតគិតថ្លៃ
-                          </span>
-                        )}
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/70">
+                          {appLanguage === 'km' ? 'មើលឥតគិតថ្លៃ' : 'HD Free'}
+                        </span>
                         <div className="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center transition-colors">
                           <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                         </div>
@@ -950,15 +899,10 @@ export function DetailPage() {
                 <h3 className="font-display font-black text-xl text-slate-900 flex items-center gap-2">
                   <Info className="w-5 h-5 text-blue-600" /> សាច់រឿងសង្ខេប
                 </h3>
-                <p className="text-sm md:text-base text-slate-600 leading-relaxed font-sans whitespace-pre-line">
+              <p className="text-sm md:text-base text-slate-600 leading-relaxed font-sans whitespace-pre-line">
                   {anime.description || 'មិនមានការពិពណ៌នាសាច់រឿងលម្អិតឡើយ។'}
                 </p>
               </div>
-
-              <StreamingAvailabilityHub
-                animeTitle={anime.title}
-                merDonghuaUrl={`/watch/${anime.slug}/1`}
-              />
             </div>
 
             <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-4 text-xs">

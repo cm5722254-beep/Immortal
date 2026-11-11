@@ -20,6 +20,7 @@ import type { Anime, WatchHistoryItem } from '../types';
 import { triggerHaptic } from '../utils/telegram';
 import { usePlatform } from '../utils/platform';
 import { ContinueWatchingSection } from '../components/home/ContinueWatchingSection';
+import { SpaceCosmos3DHero, type SpaceHeroSlide } from '../components/home/SpaceCosmos3DHero';
 import { useAuthStore } from '../store/authStore';
 import { useLanguageStore } from '../store/languageStore';
 
@@ -45,9 +46,8 @@ function getLocalContinueHistory(): WatchHistoryItem[] {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// 🌟 Ultra-Premium Hero Carousel
-// ─────────────────────────────────────────────────────────────
+// Legacy HeroCarousel replaced cleanly by SpaceCosmos3DHero
+void HeroCarousel;
 function HeroCarousel({ items }: { items: Anime[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -385,11 +385,6 @@ function CinemaPosterCard({ anime }: { anime: Anime }) {
           </span>
 
           <div className="flex items-center gap-1">
-            {!anime.is_free && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs">
-                VIP
-              </span>
-            )}
             <button
               onClick={toggleBookmark}
               className={`w-6 h-6 rounded-full flex items-center justify-center backdrop-blur-md transition-colors cursor-pointer ${
@@ -635,8 +630,22 @@ export function HomePage() {
     const unique = combined.filter(
       (item, index, all) => all.findIndex((o) => o.id === item.id) === index
     );
-    return unique.slice(0, 6);
+    return unique.slice(0, 8);
   }, [forYouDonghua, popularDonghua, animeList]);
+
+  const spaceHeroSlides = useMemo<SpaceHeroSlide[]>(() => {
+    return heroItems.map((item) => ({
+      id: item.id,
+      title: item.title,
+      slug: item.slug,
+      banner_url: item.banner_url || item.poster_url || '',
+      poster_url: item.poster_url || '',
+      type: item.type,
+      rating: (item as any).rating || (item as any).score || '9.8',
+      episode_count: item.episode_count,
+      description: item.description,
+    }));
+  }, [heroItems]);
 
   // Genre filter chips
   const genreFilters = [
@@ -690,7 +699,11 @@ export function HomePage() {
 
     return (
       <main className="mini-home min-h-screen bg-bg-base text-text-primary pb-10">
-        {heroItems.length > 0 && <HeroCarousel items={heroItems} />}
+        {spaceHeroSlides.length > 0 && (
+          <div className="px-3 pt-3">
+            <SpaceCosmos3DHero slides={spaceHeroSlides} />
+          </div>
+        )}
         <div className="mini-home-sections mt-6">
           <ContinueWatchingSection items={continueItems} />
           {miniSections.map((section) => (
@@ -709,8 +722,12 @@ export function HomePage() {
   // Desktop & Tablet Web Layout
   return (
     <main className="min-h-screen bg-bg-base text-text-primary">
-      {/* Ultra-Premium Hero Carousel */}
-      {heroItems.length > 0 && <HeroCarousel items={heroItems} />}
+      {/* 3D Spaceship & Orbiting Planets Cosmos Hero + 3D Story Banner Slider */}
+      {spaceHeroSlides.length > 0 && (
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+          <SpaceCosmos3DHero slides={spaceHeroSlides} />
+        </div>
+      )}
 
       {/* Main Shelves Content */}
       <div className="relative z-20 pt-6 pb-20">
@@ -792,40 +809,40 @@ export function HomePage() {
           viewAllLink="/donghua"
         />
 
-        {/* VIP Promotion Showcase Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-10">
-          <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-blue-50/80 border border-blue-100/90 shadow-xs">
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-2 text-center md:text-left">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-400 text-slate-950 shadow-xs">
-                  <Crown className="w-3.5 h-3.5 fill-slate-950" />
-                  VIP PREMIUM MEMBER
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-display font-black text-slate-900 tracking-tight">
+        {/* Clean Aerospace Theme Banner — Zero Paywall Clutter */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8">
+          <div className="relative rounded-3xl overflow-hidden p-6 sm:p-8 bg-bg-card border border-border-subtle shadow-xs">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-5">
+              <div className="space-y-1.5 text-center md:text-left">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  MerDonghua Space Edition
+                </span>
+                <h3 className="text-xl sm:text-2xl font-display font-black text-text-primary tracking-tight">
                   {language === 'km'
-                    ? 'ទស្សនារឿងកម្រិត 4K Ultra HD គ្មានការរំខាន'
-                    : 'Stream Unlimited 4K Ultra HD With Zero Ads'}
+                    ? 'រីករាយទស្សនារឿងកម្រិត 4K ភ្លាមៗដោយឥតគិតថ្លៃ'
+                    : 'Watch Unlimited 4K Series & Movies Instantly'}
                 </h3>
-                <p className="text-sm text-slate-600 max-w-xl">
+                <p className="text-xs sm:text-sm text-text-secondary max-w-xl">
                   {language === 'km'
-                    ? 'រីករាយជាមួយភាគថ្មីៗមុនគេ ទាញយកទុកមើលក្រៅបណ្តាញ និងការគាំទ្រពិសេសតាម Telegram។'
-                    : 'Enjoy early episode releases, fast cloud streaming, offline downloads, and dedicated support.'}
+                    ? 'គ្រាន់តែចុចលើរឿងណាមួយ អាចទស្សនាបានភ្លាមៗទាំងលើទូរស័ព្ទ និងកុំព្យូទ័រ ជាមួយផ្ទៃពណ៌ស និងប្រផេះងាយស្រួលភ្នែក។'
+                    : 'Click any series to watch instantly across mobile and desktop in crisp White or Cosmic Grey.'}
                 </p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
                 <Link
-                  to="/vip"
-                  onClick={() => triggerHaptic('medium')}
-                  className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  to="/donghua"
+                  onClick={() => triggerHaptic('light')}
+                  className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95"
                 >
-                  {language === 'km' ? 'ចូលរួមជា VIP ឥឡូវនេះ' : 'Upgrade to VIP'}
+                  {language === 'km' ? 'ទស្សនា Donghua 3D' : 'Browse Donghua'}
                 </Link>
                 <Link
                   to="/explore"
-                  className="px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm border border-slate-200/80 shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-bg-card-subtle hover:bg-slate-200/70 text-text-primary font-bold text-xs sm:text-sm border border-border-subtle transition-all active:scale-95"
                 >
-                  {language === 'km' ? 'ស្វែងយល់បន្ថែម' : 'Explore All'}
+                  {language === 'km' ? 'រុករកទាំងអស់' : 'Explore All'}
                 </Link>
               </div>
             </div>

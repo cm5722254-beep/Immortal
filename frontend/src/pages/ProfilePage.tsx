@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Languages, Headset,
@@ -11,7 +11,8 @@ import { useAuthStore } from '../store/authStore';
 import { triggerHaptic } from '../utils/telegram';
 import { useUiPreferencesStore } from '../store/uiPreferencesStore';
 import { clearLocalCatalogCache } from '../services/catalogService';
-import { translate, useLanguageStore } from '../store/languageStore';
+import { useLanguageStore } from '../store/languageStore';
+import { ThemeToggle } from '../components/layout/ThemeToggle';
 
 export function ProfilePage() {
   const { user, isAuthenticated, logout, isAdmin, isOwner, isStaff } = useAuthStore();
@@ -32,27 +33,6 @@ export function ProfilePage() {
   const [streamQuality, setStreamQuality] = useState(() => {
     try { return localStorage.getItem('nami_playback_quality') || '1080p Full HD'; } catch { return '1080p Full HD'; }
   });
-  const [vipClock, setVipClock] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!user?.vip_expires_at) return;
-    const timer = window.setInterval(() => setVipClock(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
-  }, [user?.vip_expires_at]);
-
-  const vipTimeLeft = (() => {
-    if (!user?.vip_expires_at) return translate(user?.is_vip_active ? 'No expiry date' : 'No active VIP plan', language);
-    const remaining = new Date(user.vip_expires_at).getTime() - vipClock;
-    if (!Number.isFinite(remaining) || remaining <= 0) return translate('Expired', language);
-    const days = Math.floor(remaining / 86_400_000);
-    const hours = Math.floor((remaining % 86_400_000) / 3_600_000);
-    const minutes = Math.floor((remaining % 3_600_000) / 60_000);
-    return language === 'km' ? `នៅសល់ ${days}ថ្ងៃ ${hours}ម៉ោង ${minutes}នាទី` : `${days}d ${hours}h ${minutes}m remaining`;
-  })();
-
-  const vipExpiryDate = user?.vip_expires_at
-    ? new Date(user.vip_expires_at).toLocaleString(language === 'km' ? 'km-KH' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' })
-    : null;
 
   const showToast = (msg: string) => {
     triggerHaptic('light');
@@ -158,27 +138,24 @@ export function ProfilePage() {
           )}
         </div>
 
-        {/* ── 2. VIP Membership Status Banner ── */}
-        <div className="bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 border border-amber-200/80 rounded-3xl p-5 shadow-xs flex items-center justify-between gap-4">
+        {/* ── 2. Quick Theme & Viewing Comfort Card (Removed noisy VIP upsell) ── */}
+        <div className="bg-white/90 border border-slate-200/80 rounded-3xl p-5 shadow-xs flex items-center justify-between gap-4">
           <div className="space-y-1 min-w-0">
-            <div className="inline-flex items-center gap-1 text-[11px] font-black text-amber-700 uppercase tracking-wider">
-              <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
-              <span>{language === 'km' ? 'សមាជិកភាព VIP' : 'VIP Membership'}</span>
-            </div>
+            <span className="text-[11px] font-black text-blue-600 uppercase tracking-wider block">
+              {language === 'km' ? 'សមាជិក MerDonghua' : 'MerDonghua Viewer'}
+            </span>
             <p className="text-sm font-bold text-slate-900">
-              {user?.is_vip_active
-                ? (vipExpiryDate ? `${language === 'km' ? 'ផុតកំណត់ត្រឹម' : 'Expires'} ${vipExpiryDate}` : (language === 'km' ? 'សមាជិកពេញមួយជីវិត' : 'Lifetime Access'))
-                : (language === 'km' ? 'គម្រោងទូទៅ (មិនទាន់មាន VIP)' : 'Standard Free Viewer')}
+              {language === 'km' ? 'បើកមើលរឿងទាំងអស់ដោយឥតគិតថ្លៃ 100%' : 'All Series & Movies Unlocked'}
             </p>
-            <p className="text-xs text-slate-500">{vipTimeLeft}</p>
+            <p className="text-xs text-slate-500">
+              {language === 'km' ? 'ទស្សនាវីដេអូ 4K ភ្លាមៗគ្មានការរំខាន' : 'Instant 4K playback anywhere'}
+            </p>
           </div>
-
           <Link
-            to="/vip"
-            onClick={() => triggerHaptic('medium')}
-            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shadow-xs transition-all shrink-0 hover:scale-105 active:scale-95"
+            to="/explore"
+            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all shrink-0"
           >
-            {user?.is_vip_active ? (language === 'km' ? 'បន្តសុពលភាព' : 'Extend VIP') : (language === 'km' ? 'ទិញ VIP ឥឡូវ' : 'Get VIP')}
+            {language === 'km' ? 'រុករករឿង' : 'Explore'}
           </Link>
         </div>
 
@@ -229,9 +206,22 @@ export function ProfilePage() {
         {/* ── 4. Apple Inset Group: UI & Display Experience ── */}
         <div>
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">
-            {language === 'km' ? 'បទពិសោធន៍ទស្សនា & UI' : 'Display & Visuals'}
+            {language === 'km' ? 'បទពិសោធន៍ទស្សនា & ពណ៌ផ្ទៃ' : 'Display & Visuals'}
           </span>
           <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl overflow-hidden divide-y divide-slate-100 shadow-xs">
+            {/* Theme White <-> Grey Switch */}
+            <div className="p-4 flex items-center justify-between gap-3">
+              <div>
+                <span className="font-display font-bold text-sm text-slate-900 block">
+                  {language === 'km' ? 'ពណ៌ផ្ទៃវេបសាយ (ស ⇄ ប្រផេះស្អាត)' : 'Website Theme (White ⇄ Grey)'}
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {language === 'km' ? 'ប្តូរភ្លាមៗរវាងពណ៌សភ្លឺ និងពណ៌ប្រផេះទាន់សម័យ' : 'Toggle Snow White and Cosmic Grey'}
+                </span>
+              </div>
+              <ThemeToggle compact />
+            </div>
+
             {/* Toggle 1: Clean UI Mode */}
             <div
               onClick={() => {

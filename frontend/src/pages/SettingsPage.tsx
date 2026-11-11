@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '../components/layout/ThemeToggle';
 import {
   ArrowLeft, ChevronRight, Trash2, User, Shield, Play,
   Wifi, Eye, RotateCw, LogOut, CheckCircle2, SlidersHorizontal
@@ -210,12 +211,24 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* ── Section 3: Privacy & Display ── */}
+        {/* ── Section 3: Appearance & Display ── */}
         <div>
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 block">
-            {language === 'km' ? 'ភាពឯកជន & បទបង្ហាញ' : 'Privacy & Display'}
+            {language === 'km' ? 'ពណ៌ផ្ទៃវេបសាយ & បទបង្ហាញ' : 'Appearance & Display'}
           </span>
           <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl overflow-hidden divide-y divide-slate-100 shadow-xs">
+            <div className="p-4 flex items-center justify-between gap-3">
+              <div>
+                <span className="font-display font-bold text-sm text-slate-900 block">
+                  {language === 'km' ? 'ប្តូរពណ៌ផ្ទៃ (ស ⇄ ប្រផេះស្អាត)' : 'Theme Mode (White ⇄ Grey)'}
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {language === 'km' ? 'ប្តូរភ្លាមៗរវាងផ្ទៃពណ៌សភ្លឺ និងផ្ទៃពណ៌ប្រផេះទាន់សម័យ' : 'Instant switch between Snow White and Cosmic Grey'}
+                </span>
+              </div>
+              <ThemeToggle />
+            </div>
+
             <div
               onClick={() => {
                 toggleHidePromos();

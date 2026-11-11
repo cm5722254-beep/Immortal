@@ -18,16 +18,29 @@ THEMES_FILE = os.path.join(os.path.dirname(__file__), "..", "core", "site_theme.
 SUPPORTED_THEMES = [
     {
         "id": "pure-white",
-        "name": "iOS Pure White Glass (ពណ៌ស)",
-        "name_en": "iOS Pure White Glass",
+        "name": "Snow White (ពណ៌សស្អាត)",
+        "name_en": "Snow White (Clean)",
         "bg_base": "#F8FAFC",
         "bg_card": "#FFFFFF",
         "bg_card_subtle": "#F1F5F9",
         "border": "#E2E8F0",
         "accent": "#2563EB",
         "text_primary": "#0F172A",
-        "text_secondary": "#64748B",
-        "description": "Ultra clean modern iOS white frosted glass theme"
+        "text_secondary": "#475569",
+        "description": "Ultra clean modern white frosted glass theme"
+    },
+    {
+        "id": "cosmic-grey",
+        "name": "Cosmic Space Grey (ពណ៌ប្រផេះស្អាត)",
+        "name_en": "Cosmic Space Grey",
+        "bg_base": "#242933",
+        "bg_card": "#2E3440",
+        "bg_card_subtle": "#3B4252",
+        "border": "#4C566A",
+        "accent": "#3B82F6",
+        "text_primary": "#F8FAFC",
+        "text_secondary": "#CBD5E1",
+        "description": "Sleek aerospace titanium grey theme with high legibility"
     },
     {
         "id": "midnight-slate",

@@ -35,12 +35,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <MobileNav />
 
       {!isMiniApp && (
-        <footer className="app-footer border-t border-border-subtle bg-bg-card/40 backdrop-blur-sm mt-auto">
-          <div className="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-text-secondary/70">
-            <p>© {new Date().getFullYear()} MerDonghua. All rights reserved.</p>
-            <nav aria-label="Footer" className="mt-3 flex items-center justify-center gap-6">
+        <footer className="app-footer border-t border-border-subtle bg-bg-card/70 backdrop-blur-sm mt-auto">
+          <div className="max-w-7xl mx-auto px-4 py-7 text-center text-xs text-text-secondary">
+            <p className="font-semibold text-text-primary">© {new Date().getFullYear()} MerDonghua</p>
+            <nav aria-label="Footer" className="mt-2.5 flex items-center justify-center gap-6">
               <a href="/explore" className="hover:text-text-primary transition-colors">Explore</a>
-              <a href="/vip" className="hover:text-text-primary transition-colors">VIP Plans</a>
+              <a href="/favorites" className="hover:text-text-primary transition-colors">Library</a>
+              <a href="/history" className="hover:text-text-primary transition-colors">History</a>
               <a href="/help" className="hover:text-text-primary transition-colors">Help &amp; Support</a>
             </nav>
           </div>

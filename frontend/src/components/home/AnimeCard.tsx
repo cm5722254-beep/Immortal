@@ -85,11 +85,6 @@ export function AnimeCard({
           {tagText}
         </span>
         <div className="flex flex-col gap-1 items-end">
-          {!anime.is_free && (
-            <span className="bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs">
-              VIP
-            </span>
-          )}
           <button
             onClick={toggleBookmark}
             className={`w-6 h-6 rounded-full flex items-center justify-center backdrop-blur-md transition-colors cursor-pointer ${

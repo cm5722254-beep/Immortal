@@ -2,15 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users, Film, Play, Eye, TrendingUp, UserCheck, Zap,
-  ArrowUpRight, Flame, Clock, Lock, Unlock, RotateCcw,
-  Globe, Smartphone, Bot, Tv,
-  ShieldCheck, Layers, ChevronRight, CheckCircle2,
-  Bell, Settings2, Save, UserX, Search, CheckSquare, Square, X, Shield, Check, Crown, Activity
+  ArrowUpRight, Flame, Lock, Unlock, RotateCcw,
+  Globe, Bot,
+  ShieldCheck, Layers, CheckCircle2,
+  Settings2, Save, UserX, Search, CheckSquare, Square, X, Shield, Check, Crown, Activity
 } from 'lucide-react';
 
 import { AdminLayout } from './AdminLayout';
 import { useAuthStore } from '../../store/authStore';
-import { usePromoStore } from '../../store/promoStore';
 import { useSystemUpdateStore } from '../../store/systemUpdateStore';
 import api from '../../services/api';
 import { loadCatalog } from '../../services/catalogService';
@@ -22,11 +21,7 @@ export function AdminDashboardPage() {
   const [topTitles, setTopTitles] = useState<Anime[]>([]);
   const [recentUsers, setRecentUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdatingPromo, setIsUpdatingPromo] = useState(false);
-  const [promoMessage, setPromoMessage] = useState<string | null>(null);
-  const [customDays, setCustomDays] = useState<number>(7);
 
-  const { promoData, fetchPromoCountdown, updatePromoCountdown } = usePromoStore();
   const {
     config: updateConfig,
     fetchStatus: fetchUpdateStatus,
@@ -175,9 +170,6 @@ export function AdminDashboardPage() {
   };
 
   const loadData = () => {
-    if (isAdmin) {
-      fetchPromoCountdown();
-    }
     setIsLoading(true);
     const promises: Promise<any>[] = [
       api.get('/admin/stats').catch(() => ({ data: null })),
@@ -232,33 +224,6 @@ export function AdminDashboardPage() {
   useEffect(() => {
     loadData();
   }, [isAdmin]);
-
-  const handleSetDays = async (days: number) => {
-    if (days <= 0) return;
-    try {
-      setIsUpdatingPromo(true);
-      await updatePromoCountdown({ custom_days: days });
-      setPromoMessage(`បានកំណត់ Promo ${days} ថ្ងៃជោគជ័យ`);
-      setTimeout(() => setPromoMessage(null), 3000);
-    } catch {
-      alert('Failed to set promo days');
-    } finally {
-      setIsUpdatingPromo(false);
-    }
-  };
-
-  const handleToggleForceLock = async (forceLock: boolean) => {
-    try {
-      setIsUpdatingPromo(true);
-      await updatePromoCountdown({ force_vip_lock: forceLock });
-      setPromoMessage(forceLock ? 'បានចាក់សោរ VIP រាល់រឿងទាំងអស់' : 'បានដោះសោរឱ្យមើល Free វិញ');
-      setTimeout(() => setPromoMessage(null), 3000);
-    } catch {
-      alert('Failed to update VIP lock status');
-    } finally {
-      setIsUpdatingPromo(false);
-    }
-  };
 
   return (
     <AdminLayout title="ផ្ទាំងគ្រប់គ្រងទូទៅ (Dashboard)">
@@ -399,160 +364,40 @@ export function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* ── 3. The 3 Systems Hub (Neat & Clean Management Columns) ── */}
+        {/* ── 3. Streamlined Quick Management Grid (Zero Duplicate Clutter) ── */}
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              ប្រព័ន្ធគ្រប់គ្រងទាំង ៣ (Management Ecosystem)
+              ផ្លូវកាត់គ្រប់គ្រងរហ័ស (Quick Access)
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            {/* System 1: Website & Content */}
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all shadow-xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
-                    <Globe className="w-5 h-5" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[
+              { to: '/admin/donghua', label: 'រឿងចិន 3D', sub: 'Donghua', icon: Play },
+              { to: '/admin/anime', label: 'រឿងជប៉ុន', sub: 'Anime', icon: Film },
+              { to: '/admin/episodes', label: 'ភាគរឿង', sub: 'Episodes', icon: Layers },
+              { to: '/admin/users', label: 'សមាជិក', sub: 'Members', icon: Users },
+              { to: '/admin/theme', label: 'ពណ៌ផ្ទៃ', sub: 'ស ⇄ ប្រផេះ', icon: Globe },
+              { to: '/admin/telegram', label: 'TG Auto-Sync', sub: '24/7 Worker', icon: Bot },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/40 border border-slate-200/80 hover:border-blue-300 transition-all shadow-xs flex items-center gap-3 group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <Icon className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                    Web
-                  </span>
-                </div>
-                <h3 className="font-bold text-base text-slate-900">គ្រប់គ្រងវេបសាយ (Website)</h3>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  គ្រប់គ្រងរឿង Donghua, Anime, Drama, Movies និងការបង្ហោះភាគវីដេអូ។
-                </p>
-
-                {/* Quick Action Links */}
-                <div className="grid grid-cols-2 gap-1.5 mt-4 pt-3 border-t border-slate-100">
-                  <Link
-                    to="/admin/donghua"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Play className="w-3 h-3 text-blue-600" /> Donghua
-                  </Link>
-                  <Link
-                    to="/admin/anime"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Film className="w-3 h-3 text-slate-600" /> Anime
-                  </Link>
-                  <Link
-                    to="/admin/drama"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Tv className="w-3 h-3 text-slate-600" /> Drama
-                  </Link>
-                  <Link
-                    to="/admin/episodes"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Layers className="w-3 h-3 text-blue-600" /> Episodes
-                  </Link>
-                  <Link
-                    to="/admin/stream-health"
-                    className="col-span-2 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-50/70 text-slate-700 hover:text-blue-700 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Activity className="w-3 h-3 text-blue-600" /> Stream health · Missing video links
-                  </Link>
-                </div>
-              </div>
-
-              <Link
-                to="/admin/donghua"
-                className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                <span>បើកមើលផ្ទាំងគ្រប់គ្រងរឿង</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* System 2: Mobile App (APK) */}
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all shadow-xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200/70 flex items-center justify-center text-slate-700">
-                    <Smartphone className="w-5 h-5" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">{item.label}</p>
+                    <p className="text-[10px] text-slate-500 truncate">{item.sub}</p>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                    Mobile
-                  </span>
-                </div>
-                <h3 className="font-bold text-base text-slate-900">គ្រប់គ្រង APP ទូរសព្ទ (APK)</h3>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  ពិនិត្យកំណែ Version, Push Notifications និងបង្កើត QR Download។
-                </p>
-
-                {/* Quick Action Links */}
-                <div className="grid grid-cols-2 gap-1.5 mt-4 pt-3 border-t border-slate-100">
-                  <Link
-                    to="/admin/mobile/push"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Bell className="w-3 h-3 text-slate-600" /> Push Notify
-                  </Link>
-                  <Link
-                    to="/admin/mobile/build"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Smartphone className="w-3 h-3 text-slate-600" /> APK Build
-                  </Link>
-                </div>
-              </div>
-
-              <Link
-                to="/admin/mobile"
-                className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                <span>បើកមើលផ្ទាំង Mobile App</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* System 3: Telegram Mini App */}
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all shadow-xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
-                    <Bot className="w-5 h-5" />
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                    Telegram
-                  </span>
-                </div>
-                <h3 className="font-bold text-base text-slate-900">Telegram Mini App</h3>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Bot Status, Broadcast Messages ទៅកាន់ Subscriber និងគ្រប់គ្រង Telegram Users។
-                </p>
-
-                {/* Quick Action Links */}
-                <div className="grid grid-cols-2 gap-1.5 mt-4 pt-3 border-t border-slate-100">
-                  <Link
-                    to="/admin/telegram/broadcast"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Bot className="w-3 h-3 text-blue-600" /> Broadcast
-                  </Link>
-                  <Link
-                    to="/admin/telegram/users"
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200/60"
-                  >
-                    <Users className="w-3 h-3 text-slate-600" /> TG Users
-                  </Link>
-                </div>
-              </div>
-
-              <Link
-                to="/admin/telegram"
-                className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                <span>បើកមើល Telegram Control</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -835,124 +680,6 @@ export function AdminDashboardPage() {
                   </div>
                 </div>
               </form>
-            )}
-          </div>
-        )}
-
-        {/* ── 5. Promo & Auto VIP Lockdown (Clean & Restrained Control Card) ── */}
-        {isAdmin && (
-          <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 shrink-0">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-blue-600" /> Promo Countdown & VIP Lock
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    កំណត់ថ្ងៃទស្សនាឥតគិតថ្លៃ — ពេលផុតកំណត់ រឿងទាំងអស់នឹងជាប់ VIP ដោយស្វ័យប្រវត្តិ។
-                  </p>
-                </div>
-              </div>
-
-              {/* Status Badge & Toggle */}
-              <div className="flex items-center gap-2 shrink-0">
-                {promoData && (
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-xl border flex items-center gap-1.5 ${
-                    promoData.is_vip_locked || promoData.is_expired
-                      ? 'bg-rose-50 text-rose-700 border-rose-200'
-                      : 'bg-emerald-50 text-emerald-700 border-emerald-200 font-mono'
-                  }`}>
-                    {promoData.is_vip_locked || promoData.is_expired ? (
-                      <>
-                        <Lock className="w-3.5 h-3.5" /> VIP LOCKED
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-3.5 h-3.5 text-emerald-600" /> {promoData.days}d {promoData.hours}h {promoData.minutes}m
-                      </>
-                    )}
-                  </span>
-                )}
-
-                {promoData?.force_vip_lock || promoData?.is_expired ? (
-                  <button
-                    onClick={() => handleToggleForceLock(false)}
-                    disabled={isUpdatingPromo}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1 transition-all cursor-pointer"
-                  >
-                    <Unlock className="w-3.5 h-3.5" /> ដោះសោរ Free
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleToggleForceLock(true)}
-                    disabled={isUpdatingPromo}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 flex items-center gap-1 transition-all cursor-pointer"
-                  >
-                    <Lock className="w-3.5 h-3.5" /> ចាក់សោរ VIP
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Presets & Input */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs text-slate-500 mr-1">កំណត់ថ្ងៃរហ័ស៖</span>
-                {[
-                  { label: '3 ថ្ងៃ', days: 3 },
-                  { label: '7 ថ្ងៃ', days: 7 },
-                  { label: '15 ថ្ងៃ', days: 15 },
-                  { label: '30 ថ្ងៃ', days: 30 },
-                  { label: '1 ឆ្នាំ', days: 365 },
-                ].map((p) => (
-                  <button
-                    key={p.days}
-                    onClick={() => handleSetDays(p.days)}
-                    disabled={isUpdatingPromo}
-                    className="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs text-slate-700 font-medium transition-all active:scale-95 cursor-pointer"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Custom input */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSetDays(Number(customDays));
-                }}
-                className="flex items-center gap-2"
-              >
-                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
-                  <span className="text-xs text-slate-500">ថ្ងៃ៖</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="3650"
-                    value={customDays}
-                    onChange={(e) => setCustomDays(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-12 bg-transparent text-slate-900 font-bold text-xs focus:outline-none text-center"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isUpdatingPromo}
-                  className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold transition-all cursor-pointer"
-                >
-                  {isUpdatingPromo ? '...' : 'កំណត់'}
-                </button>
-              </form>
-            </div>
-
-            {promoMessage && (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{promoMessage}</span>
-              </div>
             )}
           </div>
         )}

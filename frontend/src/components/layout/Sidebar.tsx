@@ -13,9 +13,11 @@ import {
   User as UserIcon,
   Shield,
   Crown,
+  Sparkles,
   X,
 } from 'lucide-react';
 import { triggerHaptic } from '../../utils/telegram';
+import { ThemeToggle } from './ThemeToggle';
 
 interface SidebarItem {
   label: string;
@@ -61,16 +63,28 @@ export function Sidebar() {
       visible: true,
     },
     {
+      label: 'Donghua 3D',
+      to: '/donghua',
+      icon: Sparkles,
+      visible: true,
+    },
+    {
+      label: 'Anime 2D',
+      to: '/anime',
+      icon: Film,
+      visible: true,
+    },
+    {
       label: 'My List',
       to: '/favorites',
       icon: Bookmark,
-      visible: isAuthenticated,
+      visible: true,
     },
     {
       label: 'History',
       to: '/history',
       icon: Clock,
-      visible: isAuthenticated,
+      visible: true,
     },
     {
       label: 'Notifications',
@@ -214,8 +228,14 @@ export function Sidebar() {
           </nav>
         </div>
 
-        {/* Sidebar Footer User Info */}
-        <div className="pt-4 border-t border-slate-100">
+        {/* Sidebar Footer Theme & User Info */}
+        <div className="pt-4 border-t border-slate-100 space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-[11px] font-bold text-slate-500">
+              {language === 'km' ? 'ផ្ទៃពណ៌ (ស / ប្រផេះ)' : 'Theme'}
+            </span>
+            <ThemeToggle compact />
+          </div>
           <div className="flex items-center space-x-3 px-2 py-2 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
               {user?.avatar_url ? (

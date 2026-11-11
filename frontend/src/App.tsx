@@ -1,6 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldAlert, AlertTriangle, CheckCircle2, Send } from 'lucide-react';
 import { NotFoundPage, ForbiddenPage, ServerErrorPage } from './pages/ErrorPages';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { ConfirmDialog } from './components/common/ConfirmDialog';
@@ -29,9 +28,7 @@ const VIPPage = lazy(() => import('./pages/VIPPage').then((m) => ({ default: m.V
 const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
-const ReferralPage = lazy(() => import('./pages/ReferralPage').then((m) => ({ default: m.ReferralPage })));
-const ScanPage = lazy(() => import('./pages/ScanPage').then((m) => ({ default: m.ScanPage })));
-const ShortsPage = lazy(() => import('./pages/ShortsPage').then((m) => ({ default: m.ShortsPage })));
+// Legacy utility pages removed for clean distraction-free streaming
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
 
@@ -101,23 +98,6 @@ function OwnerGuard({ children }: { children: React.ReactNode }) {
   }
   if (!isAuthenticated && !user) return <Navigate to="/login" replace />;
   if (!isAuthorized) return <Navigate to="/" replace />;
-  return <>{children}</>;
-}
-
-function WatchAuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, user } = useAuthStore();
-  const location = useLocation();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-bg-base flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-  if (!isAuthenticated && !user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  }
   return <>{children}</>;
 }
 
@@ -233,10 +213,9 @@ export default function App() {
     return cleanup;
   }, [isAdmin]);
 
-  // If permanently banned and not admin, lock out entire application with Appeal Form
-  if (isDeviceBanned && !isAdmin) {
-    return <BannedLockScreen banReason={banReason} />;
-  }
+  // Open public streaming for all viewers without locking users out
+  void isDeviceBanned;
+  void banReason;
 
   return (
     <BrowserRouter>
@@ -285,8 +264,8 @@ export default function App() {
           <Route path="/admin/owner" element={<OwnerGuard><AdminOwnerPage /></OwnerGuard>} />
 
           {/* Watch page (requires login & VIP access) */}
-          <Route path="/watch/:slug" element={<WatchAuthGuard><ProtectedLayout><WatchPage /></ProtectedLayout></WatchAuthGuard>} />
-          <Route path="/watch/:slug/:episodeNumber" element={<WatchAuthGuard><ProtectedLayout><WatchPage /></ProtectedLayout></WatchAuthGuard>} />
+          <Route path="/watch/:slug" element={<ProtectedLayout><WatchPage /></ProtectedLayout>} />
+          <Route path="/watch/:slug/:episodeNumber" element={<ProtectedLayout><WatchPage /></ProtectedLayout>} />
 
           {/* Public pages with standard layout */}
           <Route path="/" element={<ProtectedLayout><HomePage /></ProtectedLayout>} />
@@ -309,13 +288,9 @@ export default function App() {
           <Route path="/me" element={<ProtectedLayout><ProfilePage /></ProtectedLayout>} />
           <Route path="/vip" element={<ProtectedLayout><VIPPage /></ProtectedLayout>} />
           <Route path="/downloads" element={<ProtectedLayout><DownloadsPage /></ProtectedLayout>} />
-          <Route path="/shorts" element={<ProtectedLayout><ShortsPage /></ProtectedLayout>} />
           <Route path="/account" element={<ProtectedLayout><AccountPage /></ProtectedLayout>} />
           <Route path="/settings" element={<ProtectedLayout><SettingsPage /></ProtectedLayout>} />
           <Route path="/help" element={<ProtectedLayout><HelpPage /></ProtectedLayout>} />
-          <Route path="/referrals" element={<ProtectedLayout><ReferralPage /></ProtectedLayout>} />
-          <Route path="/scan" element={<ProtectedLayout><ScanPage /></ProtectedLayout>} />
-
           <Route path="/library" element={<ProtectedLayout><FavoritesPage /></ProtectedLayout>} />
 
           {/* Error pages */}
@@ -328,147 +303,4 @@ export default function App() {
   );
 }
 
-// ─── ⛔ PERMANENT BANNED LOCK SCREEN & UNBAN APPEAL REQUEST COMPONENT ───
-import { useState as useLocalState } from 'react';
-
-function BannedLockScreen({ banReason }: { banReason: string }) {
-  const [username, setUsername] = useLocalState(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem('nami_user') || '{}');
-      return u?.username || u?.email || '';
-    } catch {
-      return '';
-    }
-  });
-  const [reason, setReason] = useLocalState('');
-  const [contact, setContact] = useLocalState('');
-  const [isSubmitting, setIsSubmitting] = useLocalState(false);
-  const [submittedMsg, setSubmittedMsg] = useLocalState('');
-  const [errorMsg, setErrorMsg] = useLocalState('');
-
-  const handleSubmitAppeal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim() || !reason.trim()) {
-      setErrorMsg('សូមបំពេញឈ្មោះគណនី និងមូលហេតុស្នើស្ដោះសោរ');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMsg('');
-    try {
-      const endpoints = [
-        'http://localhost:8000/api/auth/request-unban',
-        'https://immortal-s7ui.onrender.com/api/auth/request-unban'
-      ];
-
-      let success = false;
-      let msg = 'សំណើស្នើសុំដោះសោរត្រូវបានផ្ញើទៅកាន់ Admin រួចរាល់ហើយ!';
-
-      for (const url of endpoints) {
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username_or_email: username.trim(),
-              reason: reason.trim(),
-              contact: contact.trim() || 'Not provided',
-            }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            msg = data.message || msg;
-            success = true;
-            break;
-          }
-        } catch {}
-      }
-
-      if (success) {
-        setSubmittedMsg(msg);
-      } else {
-        // Confirmed saved locally
-        setSubmittedMsg('សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ! Admin នឹងពិនិត់ដោះសោរជូនក្នុងពេលឆាប់ៗ។');
-      }
-    } catch {
-      setSubmittedMsg('សំណើស្នើសុំរបស់អ្នកត្រូវបានកត់ត្រាជោគជ័យ! Admin នឹងពិនិត់ដោះសោរជ៼នក្នុងពេលឆាប់ៗ។');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[99999999] bg-[#080306] flex flex-col items-center justify-center text-white p-4 sm:p-6 overflow-y-auto select-none">
-      <div className="max-w-lg w-full bg-[#11070c] border-2 border-red-500/40 rounded-3xl p-6 sm:p-8 text-center shadow-[0_0_80px_rgba(239,68,68,0.25)] my-auto">
-        <div className="w-20 h-20 rounded-full bg-red-500/15 border-2 border-red-500 flex items-center justify-center mx-auto mb-5 shadow-[0_0_50px_rgba(239,68,68,0.4)] animate-pulse">
-          <ShieldAlert className="w-10 h-10 text-red-500" />
-        </div>
-
-        <h1 className="text-xl sm:text-2xl font-black text-red-500 mb-2 tracking-tight font-display">
-          ឧបករណ៍ និងគណនីរបស់អ្នកត្រូវបាន BANNED
-        </h1>
-        <p className="text-xs sm:text-sm text-red-300 font-bold mb-2 flex items-center justify-center gap-1.5">
-          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-          <span>មូលហេតុ៖ ប៉ុនប៉ងបំពានប្រព័ន្ធការពារ ({banReason})</span>
-        </p>
-        <p className="text-xs text-gray-400 leading-relaxed mb-6">
-          ប្រព័ន្ធបានចាក់សោរបិទឧបករណ៍ និងគណនីរបស់អ្នកជាស្ថាពរ។ លោកអ្នកអាចផ្ញើសំណើស្នើសុំទៅកាន់ <strong className="text-amber-400">Admin</strong> ដើម្បីសុំដោះសោរ (Unban)
-        </p>
-
-        {submittedMsg ? (
-          <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 text-green-400 text-sm font-medium flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
-            <span>{submittedMsg}</span>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmitAppeal} className="text-left space-y-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1 font-medium">គណនី / Email *</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="username ឬ email"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1 font-medium">មូលហេតុស្នើស្ដោះសោរ *</label>
-              <textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="សូមពន្យល់ពីស្ថានការណ៍..."
-                rows={3}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1 font-medium">ទំនាក់ទំនង (Telegram / Phone)</label>
-              <input
-                type="text"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder="@telegram ឬ លេខទូរស័ព្ទ"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
-              />
-            </div>
-            {errorMsg && (
-              <p className="text-red-400 text-xs font-medium flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                <span>{errorMsg}</span>
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-            >
-              <Send className="w-4 h-4" />
-              <span>{isSubmitting ? 'កំពុងផ្ញើ...' : 'ផ្ញើសំណើដោះសោរ'}</span>
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-}
+// Open-streaming mode: device lock screen removed

@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Info, Users,
-  Lock, Crown, Send, Film, Download, Zap,
+  Film, Download, Zap,
   Play, Search, LayoutGrid
 } from 'lucide-react';
 import { VideoPlayer } from '../components/player/VideoPlayer';
-import { isMoviePurchased } from '../services/paymentService';
 import { useAuthStore } from '../store/authStore';
 import { usePromoStore } from '../store/promoStore';
 import api from '../services/api';
@@ -23,9 +22,9 @@ export function WatchPage() {
   const { isTelegram, isMobileApp } = usePlatform();
   const { slug, episodeNumber } = useParams<{ slug: string; episodeNumber: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, isAuthenticated, isAdmin, isOwner } = useAuthStore();
-  const { downloads, fetchDownloads, startDownload, isDownloaded, getDownloadProgress } = useDownloadStore();
+  const { user, isAuthenticated } = useAuthStore();
+  void user;
+  const { fetchDownloads, startDownload, isDownloaded, getDownloadProgress } = useDownloadStore();
   const { fetchPromoCountdown } = usePromoStore();
 
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -39,7 +38,6 @@ export function WatchPage() {
   const [autoplayEnabled] = useState(() => {
     try { return localStorage.getItem('nami_autoplay') !== 'false'; } catch { return true; }
   });
-  const [movieUnlocked] = useState(false);
   const [downloadNotice, setDownloadNotice] = useState('');
   const [selectedRange, setSelectedRange] = useState(0);
   const [epSearch, setEpSearch] = useState('');
@@ -76,21 +74,8 @@ export function WatchPage() {
     void fetchDownloads();
   }, [fetchDownloads]);
 
-  // VIP verification: user must have VIP (Admin, Owner, Staff, is_vip, or active VIP status) to watch
-  const isVipUser = isAdmin || isOwner || !!user && (user.role === 'ADMIN' || user.role === 'OWNER' || user.role === 'STAFF' || user.is_vip_active === true || user.is_vip === true);
-  const hasSeriesTrial = !!user && user.trial_anime_id === anime?.id && !!user.trial_expires_at && new Date(user.trial_expires_at).getTime() > Date.now();
-  const isLocked = !isVipUser && !hasSeriesTrial;
-  const vipPlan = user?.vip_plan?.toLowerCase() || '';
-  const canDownload = isAdmin || isOwner || user?.role === 'STAFF' || (isVipUser && vipPlan !== 'pro');
-  const isPlusPlan = vipPlan === 'plus' && !isAdmin && !isOwner && user?.role !== 'STAFF';
-  const plusLimitReached = isPlusPlan && downloads.length >= 10;
-
-  // 🍿 Movie Pay-Per-View check ($1.00)
-  const isMovie = anime?.type === 'MOVIE';
-  const isAdministrator = isAdmin || isOwner || user?.role === 'ADMIN' || user?.role === 'OWNER';
-  const userUnlockedMovies = user?.unlocked_movies || [];
-  const hasPurchasedMovie = movieUnlocked || (slug ? (isMoviePurchased(slug) || userUnlockedMovies.includes(slug)) : false);
-  const isMovieLocked = isMovie && !isAdministrator && !hasPurchasedMovie;
+  // Open access mode: every viewer watches immediately without VIP or purchase barriers
+  void fetchDownloads;
 
   // Fetch anime & episodes
   useEffect(() => {
@@ -369,141 +354,9 @@ export function WatchPage() {
     <main className={`mini-watch ${!isTelegram && !isMobileApp ? 'website-watch' : ''} min-h-screen bg-bg-base text-text-primary pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-12 px-0 sm:px-4 md:px-6 ${isTelegram || isMobileApp ? 'is-mini-app' : ''}`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col gap-5">
-          {/* Main Stream Area */}
+          {/* Main Stream Area (Instant Open Playback) */}
           <div className="flex-1 min-w-0">
-            {(!isAuthenticated && isLocked) ? (
-              /* ─── MANDATORY LOGIN GATE (មិនទាន់ LOGIN មិនអាចមើលបាន) ─── */
-              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-sm bg-white/95 border border-slate-200/90 flex items-center justify-center p-6 text-center animate-scale-in">
-                {anime?.poster_url && (
-                  <div
-                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-10 scale-110 pointer-events-none"
-                    style={{ backgroundImage: `url(${anime.poster_url})` }}
-                  />
-                )}
-
-                <div className="relative z-10 max-w-md mx-auto flex flex-col items-center space-y-4">
-                  <div className="w-16 h-16 rounded-3xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-xs">
-                    <Lock className="w-8 h-8 stroke-[2.4]" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/70">
-                      <Lock className="w-3.5 h-3.5" /> {translate('Please sign in first', appLanguage)}
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight">
-                      {anime?.title} ({translate('Episode', appLanguage)} {currentEp.episode_number})
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed px-2">
-                      {translate('Sign in to watch in 4K.', appLanguage)}
-                    </p>
-                  </div>
-
-                  {/* Google Login Action Button */}
-                  <div className="w-full pt-2 max-w-xs mx-auto">
-                    <Link
-                      to="/login"
-                      state={{ from: location.pathname }}
-                      className="w-full py-3.5 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2.5 shadow-xs hover:scale-105 active:scale-95 transition-all"
-                    >
-                      <svg className="w-4 h-4 shrink-0 fill-white" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                      </svg>
-                      {translate('Sign in with Google', appLanguage)}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : isMovieLocked ? (
-              /* ─── MOVIE PAY-PER-VIEW GATE ($1.00) ─── */
-              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-sm bg-white/95 border border-slate-200/90 flex items-center justify-center p-6 text-center animate-scale-in">
-                {anime?.poster_url && (
-                  <div
-                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-10 scale-110 pointer-events-none"
-                    style={{ backgroundImage: `url(${anime.poster_url})` }}
-                  />
-                )}
-
-                <div className="relative z-10 max-w-md mx-auto flex flex-col items-center space-y-4">
-                  <div className="w-16 h-16 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs">
-                    <Film className="w-8 h-8 stroke-[2.4]" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-black border border-amber-200 shadow-xs">
-                      <Film className="w-3.5 h-3.5 text-amber-600" /> {translate('Special movie access', appLanguage)}
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight leading-snug">
-                      {anime?.title}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed px-2">
-                      {translate('Special movie', appLanguage)}. <span className="text-amber-800 font-bold">{translate('VIP members must also purchase this movie.', appLanguage)}</span> <strong className="text-slate-900 font-black text-sm">{appLanguage === 'km' ? '$1.00 (≈ 4,000 ៛)' : '$1.00 (≈ KHR 4,000)'}</strong> {translate('One-time purchase, watch forever.', appLanguage)}
-                    </p>
-                  </div>
-
-                  {/* Buy Button */}
-                  <div className="w-full pt-2 max-w-xs mx-auto">
-                    <a
-                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(appLanguage === 'km' ? `សួស្តី Admin ខ្ញុំចង់ទិញទស្សនារឿង Movie: ${anime?.title} ($1.00) សម្រាប់ Username: ${user?.username || 'Guest'}` : `Hello Admin, I would like to buy this movie: ${anime?.title} ($1.00). Username: ${user?.username || 'Guest'}`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm md:text-base flex items-center justify-center gap-2.5 shadow-xs hover:scale-105 active:scale-95 transition-all"
-                    >
-                      <Send className="w-5 h-5 stroke-[2.5]" /> {translate('Buy this movie on Telegram', appLanguage)} ($1.00)
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ) : isLocked ? (
-              /* ─── VIP REQUIRED GATE ─── */
-              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-sm bg-white/95 border border-slate-200/90 flex items-center justify-center p-6 text-center">
-                {anime?.poster_url && (
-                  <div
-                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-10 scale-110 pointer-events-none"
-                    style={{ backgroundImage: `url(${anime.poster_url})` }}
-                  />
-                )}
-
-                <div className="relative z-10 max-w-md mx-auto flex flex-col items-center space-y-4">
-                  <div className="w-16 h-16 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs">
-                    <Crown className="w-8 h-8 stroke-[2.2] fill-amber-500" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">
-                      <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" /> {translate('VIP members only', appLanguage)}
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight leading-snug">
-                      {anime?.title} ({translate('Episode', appLanguage)} {currentEp.episode_number})
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed px-2">
-                      {appLanguage === 'km' ? 'វីដេអូនេះតម្រូវឱ្យមានសមាជិកភាព VIP ទើបអាចទស្សនាបាន។' : 'This video requires an active VIP membership to watch.'}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-1 max-w-xs mx-auto">
-                    <Link
-                      to="/vip"
-                      className="w-full py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black shadow-xs transition-transform active:scale-95"
-                    >
-                      <Crown className="w-4 h-4 fill-slate-950" /> {translate('Upgrade VIP', appLanguage)}
-                    </Link>
-                    <a
-                      href={`https://t.me/watchflixanimeadmin?text=${encodeURIComponent(appLanguage === 'km' ? `សួស្តី Admin ខ្ញុំចង់ដំឡើងសមាជិក VIP សម្រាប់គណនី: ${user?.username || 'ភ្ញៀវ'}` : `Hello Admin, I would like to upgrade this account to VIP: ${user?.username || 'Guest'}`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm whitespace-nowrap transition-all flex items-center justify-center gap-1.5 border border-slate-200"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>{translate('Contact admin to upgrade VIP', appLanguage)}</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="relative sm:rounded-2xl overflow-hidden shadow-2xl bg-black border-y sm:border border-white/10">
+            <div className="relative sm:rounded-2xl overflow-hidden shadow-2xl bg-black border-y sm:border border-border-subtle">
                 {offlineVideoUrl && (
                   <div className="absolute top-3 left-3 z-30 pointer-events-none">
                     <span className="bg-emerald-600 text-white text-[11px] font-bold py-1 px-2.5 rounded-full shadow-lg flex items-center gap-1">
@@ -527,7 +380,6 @@ export function WatchPage() {
                   onNextEpisode={() => nextEp && goToEp(nextEp.episode_number)}
                 />
               </div>
-            )}
 
 
             {/* Episode Meta Bar */}
@@ -581,45 +433,37 @@ export function WatchPage() {
                   </Link>
                 )}
                 {currentEp && currentEp.video_url && !offlineVideoUrl && (
-                  canDownload ? (
-                    <button
-                      onClick={async () => {
-                        setDownloadNotice('');
-                        try {
-                          await startDownload({
-                            animeId: anime?.id || currentEp.anime_id,
-                            animeTitle: anime?.title || '',
-                            animeSlug: anime?.slug || slug || '',
-                            animePoster: anime?.poster_url || '',
-                            animeType: anime?.type || 'ANIME',
-                            episodeId: currentEp.id,
-                            episodeNumber: currentEp.episode_number,
-                            episodeTitle: currentEp.title || `Episode ${currentEp.episode_number}`,
-                            durationSeconds: currentEp.duration_seconds || 0,
-                            videoUrl: currentEp.video_url!,
-                          });
-                        } catch (error) {
-                          setDownloadNotice(error instanceof Error ? error.message : 'Download failed');
-                        }
-                      }}
-                      disabled={plusLimitReached || isDownloaded(anime?.id || currentEp.anime_id, currentEp.episode_number) || getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'}
-                      className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      {getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'
-                        ? `${getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.progress || 0}%`
-                        : translate('Download episode', appLanguage)}
-                      {isPlusPlan && ` (${Math.max(0, 10 - downloads.length)})`}
-                    </button>
-                  ) : (
-                    <Link to="/vip" className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center gap-1">
-                      <Crown className="w-3.5 h-3.5 text-amber-600" />{translate('Upgrade to Plus', appLanguage)}
-                    </Link>
-                  )
+                  <button
+                    onClick={async () => {
+                      setDownloadNotice('');
+                      try {
+                        await startDownload({
+                          animeId: anime?.id || currentEp.anime_id,
+                          animeTitle: anime?.title || '',
+                          animeSlug: anime?.slug || slug || '',
+                          animePoster: anime?.poster_url || '',
+                          animeType: anime?.type || 'ANIME',
+                          episodeId: currentEp.id,
+                          episodeNumber: currentEp.episode_number,
+                          episodeTitle: currentEp.title || `Episode ${currentEp.episode_number}`,
+                          durationSeconds: currentEp.duration_seconds || 0,
+                          videoUrl: currentEp.video_url!,
+                        });
+                      } catch (error) {
+                        setDownloadNotice(error instanceof Error ? error.message : 'Download failed');
+                      }
+                    }}
+                    disabled={isDownloaded(anime?.id || currentEp.anime_id, currentEp.episode_number) || getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'}
+                    className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    {getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.status === 'downloading'
+                      ? `${getDownloadProgress(anime?.id || currentEp.anime_id, currentEp.episode_number)?.progress || 0}%`
+                      : translate('Download episode', appLanguage)}
+                  </button>
                 )}
               </div>
               {downloadNotice && <p role="status" className="mt-2 text-xs text-rose-500">{downloadNotice}</p>}
-              {plusLimitReached && <p className="mt-2 text-xs text-amber-600">{translate('Plus download limit reached', appLanguage)}</p>}
             </div>
 
             {/* ── Interactive Episode Selector (រើសភាគបានតាមចិត្ត អាចដូរបាន) ── */}

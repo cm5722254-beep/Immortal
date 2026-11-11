@@ -218,9 +218,9 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
           <SkeletonCard count={18} />
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-20 bg-[#0a0a0a]/60 rounded-3xl border border-white/5">
-          <p className="text-gray-300 text-base font-bold">{translate('No titles found', appLanguage)}</p>
-          <p className="text-gray-500 text-xs mt-1">{translate('Try changing the category or filters.', appLanguage)}</p>
+        <div className="text-center py-20 bg-bg-card rounded-3xl border border-border-subtle shadow-xs">
+          <p className="text-text-primary text-base font-bold">{translate('No titles found', appLanguage)}</p>
+          <p className="text-text-secondary text-xs mt-1">{translate('Try changing the category or filters.', appLanguage)}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
@@ -239,7 +239,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
               setPage((p) => Math.max(1, p - 1));
             }}
             disabled={page === 1}
-            className="px-3.5 py-2 rounded-xl bg-[#0e1629] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-white/10"
+            className="px-3.5 py-2 rounded-xl bg-bg-card hover:bg-bg-card-subtle text-text-primary text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-border-subtle"
           >
             {appLanguage === 'km' ? '← ថយក្រោយ' : '← Previous'}
           </button>
@@ -252,8 +252,8 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
               }}
               className={`w-9 h-9 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 p === page
-                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/40 ring-1 ring-white/20'
-                  : 'bg-[#0e1629] hover:bg-white/10 text-gray-300 border border-white/10'
+                  ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-500/20'
+                  : 'bg-bg-card hover:bg-bg-card-subtle text-text-secondary border border-border-subtle'
               }`}
             >
               {p}
@@ -265,7 +265,7 @@ export function ExplorePage({ defaultType, isFreeOnly }: ExplorePageProps) {
               setPage((p) => Math.min(pages, p + 1));
             }}
             disabled={page === pages}
-            className="px-3.5 py-2 rounded-xl bg-[#0e1629] hover:bg-white/10 text-white text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-white/10"
+            className="px-3.5 py-2 rounded-xl bg-bg-card hover:bg-bg-card-subtle text-text-primary text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer border border-border-subtle"
           >
             {appLanguage === 'km' ? 'បន្ទាប់ →' : 'Next →'}
           </button>

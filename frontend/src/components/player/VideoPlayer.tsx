@@ -177,7 +177,7 @@ export function VideoPlayer({
   }, [subtitleUrl, subtitleTracks, subtitlesEnabled, selectedSubtitle]);
 
   // ─── ANTI-SCREEN RECORDING & SCREENSHOT SECURITY STATE ───────────
-  const [captureBlocked, setCaptureBlocked] = useState(false);
+  const [captureBlocked] = useState(false);
   const [watermarkPos, setWatermarkPos] = useState({ top: 15, left: 20 });
 
   // Drifting dynamic watermark to prevent external cam/recording
@@ -191,32 +191,10 @@ export function VideoPlayer({
     return () => clearInterval(interval);
   }, []);
 
-  // Keyboard shortcut & PrintScreen deterrent -> Immediate Ejection
+  // Allow normal keyboard navigation & shortcuts without redirecting users away from the video
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === 'PrintScreen' ||
-        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') ||
-        (e.metaKey && e.shiftKey && ['s', '3', '4', '5'].includes(e.key.toLowerCase())) ||
-        (e.shiftKey && e.key.toLowerCase() === 's' && (e.ctrlKey || e.metaKey))
-      ) {
-        e.preventDefault();
-        setCaptureBlocked(true);
-
-        try {
-          if (videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.src = '';
-          }
-          if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText('');
-          }
-        } catch {}
-
-        setTimeout(() => {
-          window.location.replace('https://www.google.com');
-        }, 300);
-      }
+    const handleKeyDown = (_e: KeyboardEvent) => {
+      // No intrusive browser redirects on screenshot keys
     };
 
     window.addEventListener('keydown', handleKeyDown);

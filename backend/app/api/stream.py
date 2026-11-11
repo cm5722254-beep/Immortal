@@ -205,14 +205,7 @@ def build_upstream_headers(request: Request, real_url: str) -> dict:
 
 
 async def verify_stream_vip(request: Request, db: AsyncSession, episode: Optional[Episode] = None) -> Optional[User]:
-    """Verifies that the incoming stream request is authorized (User MUST be logged in).
-    
-    Rules:
-    - All users MUST be logged in to stream.
-    - Admin/Owner/Staff bypass all VIP checks.
-    - Episodes with is_free=True or is_free=None => any logged-in user can watch.
-    - Episodes with is_free=False => VIP, active promo, or matching active series trial required.
-    """
+    """Optional stream user resolver: all viewers can watch immediately without login or VIP blocks."""
     token = None
     auth_header = request.headers.get("authorization")
     if auth_header and auth_header.startswith("Bearer "):
@@ -220,62 +213,18 @@ async def verify_stream_vip(request: Request, db: AsyncSession, episode: Optiona
     elif "token" in request.query_params:
         token = request.query_params["token"].strip()
 
-    # User MUST be logged in!
     if not token:
-        raise HTTPException(
-            status_code=401,
-            detail="សូមចូលគណនីជាមុនសិន ដើម្បីទស្សនាវីដេអូ (Please log in to watch videos)."
-        )
+        return None
 
     try:
         payload = decode_token(token)
         user_id = payload.get("sub")
         if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid auth token")
-
+            return None
         result = await db.execute(select(User).where(User.id == int(user_id)))
-        user = result.scalar_one_or_none()
-        if not user or not user.is_active:
-            raise HTTPException(status_code=403, detail="User account is disabled or not found")
-
-        # ✅ Admin / Owner / Staff always bypass VIP checks
-        if user.role in ("ADMIN", "OWNER", "STAFF"):
-            return user
-
-        # ✅ If episode is free (is_free=True or is_free=None/unset), allow all logged-in users
-        # Only lock if is_free is explicitly set to False (VIP-only episode)
-        episode_is_vip_only = episode is not None and getattr(episode, "is_free", None) is False
-        if not episode_is_vip_only:
-            return user  # Free episode — any logged-in user can watch
-
-        # ⚠️ Episode is VIP-only (is_free=False) — check VIP membership status
-        if not user.is_vip_active:
-            from datetime import datetime, timezone
-            trial_expiry = user.trial_expires_at
-            if trial_expiry and trial_expiry.tzinfo is None:
-                trial_expiry = trial_expiry.replace(tzinfo=timezone.utc)
-            if (
-                episode is not None
-                and user.trial_anime_id == episode.anime_id
-                and trial_expiry is not None
-                and trial_expiry > datetime.now(timezone.utc)
-            ):
-                return user
-
-            from app.api.site_settings import load_promo_config, compute_promo_status
-            config = load_promo_config()
-            promo = compute_promo_status(config)
-            if not promo.get("is_active"):
-                raise HTTPException(
-                    status_code=403,
-                    detail="VIP membership required. Please contact Admin or upgrade your VIP plan."
-                )
-        return user
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.warning(f"Stream auth verification failed: {e}")
-        raise HTTPException(status_code=403, detail="Unauthorized video stream access")
+        return result.scalar_one_or_none()
+    except Exception:
+        return None
 
 
 
