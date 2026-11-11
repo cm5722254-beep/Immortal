@@ -123,13 +123,37 @@ async def _handle_bot_sync_command(cmd: str) -> str:
     return "Supported commands: /sync_status, /sync_audit, /sync_start, /sync_stop"
 
 
+def _get_linux_memory_gb() -> tuple[float, float]:
+    """Return (ram_gb, swap_gb) on Linux via /proc/meminfo, or (0.0, 0.0) elsewhere."""
+    meminfo = Path("/proc/meminfo")
+    if not meminfo.exists():
+        return 0.0, 0.0
+    vals: Dict[str, int] = {}
+    for line in meminfo.read_text(encoding="utf-8", errors="ignore").splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and parts[0].rstrip(":") in ("MemTotal", "SwapTotal"):
+            try:
+                vals[parts[0].rstrip(":")] = int(parts[1])
+            except ValueError:
+                pass
+    return vals.get("MemTotal", 0) / (1024 * 1024), vals.get("SwapTotal", 0) / (1024 * 1024)
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     data_dir = configure_worker_storage()
     has_session = bool(os.getenv("TELEGRAM_USER_SESSION", "").strip())
+    ram_gb, swap_gb = _get_linux_memory_gb()
+    if 0 < ram_gb < 1.8:
+        os.environ.setdefault("FFMPEG_THREADS", "1")
+        if swap_gb < 1.0:
+            tcs.add_log(
+                f"Low RAM detected ({ram_gb:.2f}GB RAM, {swap_gb:.2f}GB Swap). Recommend 4GB swapfile on AWS Free Tier.",
+                "warn",
+            )
     print(f"[CloudWorker] Storage dir : {data_dir}")
     print(f"[CloudWorker] Session ENV : {'CONFIGURED' if has_session else 'MISSING (Standby)'}")
-    print(f"[CloudWorker] Preset      : {os.getenv('COMPRESSION_PRESET', '720p_low_mb')}")
+    print(f"[CloudWorker] Preset      : {os.getenv('COMPRESSION_PRESET', '720p_low_mb')} (threads={os.getenv('FFMPEG_THREADS', '2')})")
 
     daemon_task = asyncio.create_task(tcs.start_24_7_channel_sync_daemon())
     bot_task = asyncio.create_task(_optional_bot_command_loop())

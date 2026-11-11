@@ -800,9 +800,13 @@ def compress_video_sync(src_path: Path, out_path: Path, preset: str) -> Tuple[Pa
     else:
         scale_filter, crf, audio_br, w, h = "scale='min(1280,iw)':-2", "27", "96k", 1280, 720
 
+    ffmpeg_threads = os.getenv("FFMPEG_THREADS", "2").strip()
+    if not ffmpeg_threads.isdigit() or int(ffmpeg_threads) < 1:
+        ffmpeg_threads = "2"
+
     cmd = [
         FFMPEG_EXE, "-y", "-i", str(src_path),
-        "-threads", "2",
+        "-threads", ffmpeg_threads,
         "-vf", scale_filter, "-c:v", "libx264", "-preset", "veryfast", "-crf", crf,
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", audio_br, "-movflags", "+faststart",
         str(out_path),
