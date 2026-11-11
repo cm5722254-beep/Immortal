@@ -871,19 +871,37 @@ def compress_video_sync(src_path: Path, out_path: Path, preset: str) -> Tuple[Pa
 
     cmd = [
         FFMPEG_EXE, "-y", "-i", str(src_path),
+        "-map", "0:v:0", "-map", "0:a:0?",
         "-threads", ffmpeg_threads,
         "-vf", scale_filter, "-c:v", "libx264", "-preset", ffmpeg_preset, "-crf", crf,
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", audio_br, "-movflags", "+faststart",
+        "-nostats", "-loglevel", "error", "-progress", "pipe:1",
         str(out_path),
     ]
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace")
-    if proc.returncode != 0 or not out_path.exists() or out_path.stat().st_size < 100 * 1024:
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+    last_bucket = 0
+    total_us = max(1, probed_dur * 1_000_000)
+    if proc.stdout:
+        for line in proc.stdout:
+            if sync_state["should_stop"]:
+                proc.terminate()
+                break
+            if line.startswith("out_time_us="):
+                try:
+                    out_us = int(line.split("=", 1)[1].strip())
+                    pct = min(99.0, round((out_us / total_us) * 100.0, 1))
+                    sync_state["step_progress"] = pct
+                    bucket = int(pct // 25) * 25
+                    if bucket in (25, 50, 75) and bucket > last_bucket:
+                        last_bucket = bucket
+                        add_log(f"🎞 កំពុងបង្រួមវីដេអូបាន {bucket}%...", "info")
+                except Exception:
+                    pass
+    rc = proc.wait()
+    if rc != 0 or not out_path.exists() or out_path.stat().st_size < 100 * 1024:
         return src_path, probed_dur, w, h, found_thumb
 
-    duration_sec = _parse_ffmpeg_duration(proc.stderr or "")
-    if duration_sec == 1440 and probed_dur != 1440:
-        duration_sec = probed_dur
-
+    duration_sec = probed_dur
     if out_path.stat().st_size >= src_path.stat().st_size:
         out_path.unlink(missing_ok=True)
         return src_path, duration_sec, w, h, found_thumb
