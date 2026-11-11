@@ -1,0 +1,30 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENABLE_24_7_SYNC=1 \
+    FORCE_24_7_SYNC=1 \
+    SYNC_DATA_DIR=/data/telegram_sync \
+    COMPRESSION_PRESET=720p_low_mb \
+    PORT=8080
+
+# Install FFmpeg and minimal runtime libs required for 1.3GB -> Low-MB transcoding
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY backend/requirements.txt ./backend/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r backend/requirements.txt
+
+COPY backend ./backend
+COPY tools/telegram_sync/cloud_sync_worker.py ./tools/telegram_sync/cloud_sync_worker.py
+COPY tools/telegram_sync/generate_cloud_session.py ./tools/telegram_sync/generate_cloud_session.py
+
+RUN mkdir -p /data/telegram_sync/temp_videos_cloud
+
+EXPOSE 8080
+
+CMD ["python", "-u", "tools/telegram_sync/cloud_sync_worker.py"]

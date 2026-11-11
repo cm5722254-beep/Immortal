@@ -58,10 +58,7 @@ DEFAULT_FOLDER_LINK = "https://t.me/addlist/7NvrQmWmBNUwZDNl"
 DEFAULT_PHONE = "+855888162192"
 DEFAULT_API_ID = 2040
 DEFAULT_API_HASH = "b18441a1ff607e10a989891a5462e627"
-DEFAULT_SESSION_STRING = os.getenv(
-    "TELEGRAM_USER_SESSION",
-    "1BVtsOKsBuwSSlAqvCrWgTXUi86-t0cF3vF7h7dIXXk-LOrs9fIgQ-zP4bWOYgUF040JMiWa0oz_1lLLgzpVyq9jp_QwMleCuHI7OWDZibd5fa-1idlJi4DxIYt3YVZs0KNQ0EVRkKXtN4hu18mzci9ZtiZBcP4gXYcjZxAb4G1KMSQxPBXjpbdFD-yVmKHsIpIw9HUIl386qR-fNnbW6RJXmh2daU9pO4FSnq7OKN_vmj9NRc_PtmlgTJMFNgk4LLfxE55ikVY0QmLvjbrnmcLLJ0dPV4gqsiUNsu47RLj1zHy4obcqT2ad2UH6i44YJry2kp_m3c3Q0ANuvEJcbSB1JkBET0xM=",
-)
+DEFAULT_SESSION_STRING = os.getenv("TELEGRAM_USER_SESSION", "")
 
 DEFAULT_CAPTION_TEMPLATE = (
     "👉Episode : {ep_num}\n"
@@ -160,6 +157,13 @@ def load_config() -> Dict[str, Any]:
             default_cfg.update(saved)
         except Exception:
             pass
+    # Exclusive Cloud ENV always takes priority over any config file
+    env_sess = os.getenv("TELEGRAM_USER_SESSION", "").strip()
+    if env_sess:
+        default_cfg["session_string"] = env_sess
+    env_preset = os.getenv("COMPRESSION_PRESET", "").strip()
+    if env_preset:
+        default_cfg["compression_preset"] = env_preset
     return default_cfg
 
 
@@ -798,6 +802,7 @@ def compress_video_sync(src_path: Path, out_path: Path, preset: str) -> Tuple[Pa
 
     cmd = [
         FFMPEG_EXE, "-y", "-i", str(src_path),
+        "-threads", "2",
         "-vf", scale_filter, "-c:v", "libx264", "-preset", "veryfast", "-crf", crf,
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", audio_br, "-movflags", "+faststart",
         str(out_path),
@@ -934,7 +939,21 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
                     compress_video_sync, src_video_path, opt_temp_path, preset
                 )
 
+                # Free huge ~1.3GB raw downloaded video immediately after compression
+                if final_video != src_video_path and "temp" in str(src_video_path.parent).lower():
+                    try:
+                        src_video_path.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+
                 if dur_sec < 60:
+                    if "temp" in str(final_video.parent).lower():
+                        try:
+                            final_video.unlink(missing_ok=True)
+                            if thumb_path:
+                                thumb_path.unlink(missing_ok=True)
+                        except Exception:
+                            pass
                     add_log(f"[ភាគ {ep_num}] វីដេអូមានប្រវែងក្រោម ៦០ វិនាទី ({dur_sec}s ជា Trailer/Sample) -> រំលងមិន Upload ទេ", "warn")
                     continue
 
@@ -1035,18 +1054,35 @@ def trigger_sync_queue_async(anime_ids: List[int], is_resume: bool = False) -> b
 
 async def start_24_7_channel_sync_daemon() -> None:
     """
-    Disabled on Cloud to prevent Telegram AuthKeyDuplicatedError IP conflict.
-    The Auto-Sync Studio runs exclusively on the Local PC with dedicated GUI and FFmpeg.
+    24/7 Cloud Auto-Sync Daemon.
+    Activates ONLY when an exclusive TELEGRAM_USER_SESSION ENV var is set and ENABLE_24_7_SYNC=1
+    (and running on Linux/Cloud, or FORCE_24_7_SYNC=1).
     """
     load_website_catalog()
     rebuild_catalog_state()
     refresh_checkpoint_summary()
-    add_log("Cloud Auto-Sync is in Standby mode. Run the studio locally to avoid Telegram IP conflict.", "info")
-    return
+
+    env_sess = os.getenv("TELEGRAM_USER_SESSION", "").strip()
+    enable_sync = os.getenv("ENABLE_24_7_SYNC", "1").strip().lower() in ("1", "true", "yes")
+    is_cloud_runtime = (os.name != "nt") or (os.getenv("FORCE_24_7_SYNC", "0").strip() == "1")
+
+    if not env_sess:
+        add_log("Cloud Auto-Sync Standby: TELEGRAM_USER_SESSION ENV is not set (zero Telegram connections).", "info")
+        return
+    if not enable_sync:
+        add_log("Cloud Auto-Sync Standby: Disabled via ENABLE_24_7_SYNC=0.", "info")
+        return
+    if not is_cloud_runtime:
+        add_log("Local Windows Runtime detected: Cloud 24/7 daemon kept in Standby (set FORCE_24_7_SYNC=1 to override).", "info")
+        return
+
+    add_log("Cloud 24/7 Auto-Sync ACTIVATED via exclusive TELEGRAM_USER_SESSION ENV!", "ok")
+    first_boot = True
 
     # Continuous 24/7 Watcher Loop
     while True:
-        await asyncio.sleep(300)  # Check every 5 minutes
+        await asyncio.sleep(8 if first_boot else 300)  # Check 8s after boot, then every 5 minutes
+        first_boot = False
         try:
             cfg = load_config()
             if not cfg.get("daemon_24_7_enabled", True) or sync_state["is_running"]:

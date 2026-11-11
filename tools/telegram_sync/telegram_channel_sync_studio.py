@@ -1038,6 +1038,10 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
             if not video_url:
                 continue
 
+            if "EP000.mp4" in video_url or "{id}" in video_url or "%7Bid%7D" in video_url:
+                add_log(f"[ភាគ {ep_num}] វីដេអូជាគំរូ Placeholder (EP000.mp4 មិនទាន់មានភាគពេញ) -> រំលងដើម្បីកុំឲ្យ Upload ខុស", "warn")
+                continue
+
             # Anti-Duplicate Guard: skip if already in channel!
             if ep_num in existing_in_channel:
                 add_log(f"[ភាគ {ep_num}] មាននៅក្នុង Channel [{channel_title}] រួចហើយ — រំលងមិន Upload ស្ទួនទេ!", "info")
@@ -1079,6 +1083,11 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
                 final_video, dur_sec, w, h, thumb_path = await asyncio.to_thread(
                     compress_video_for_telegram, src_video_path, opt_temp_path, preset
                 )
+
+                if dur_sec < 60:
+                    add_log(f"[ភាគ {ep_num}] វីដេអូមានប្រវែងក្រោម ៦០ វិនាទី ({dur_sec}s ជា Trailer/Sample) -> រំលងមិន Upload ទេ!", "warn")
+                    continue
+
                 final_mb = final_video.stat().st_size / (1024 * 1024)
                 add_log(f"[ភាគ {ep_num}] ទំហំវីដេអូត្រៀម Upload: {final_mb:.1f} MB", "ok")
 

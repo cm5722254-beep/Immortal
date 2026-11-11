@@ -1,0 +1,24 @@
+services:
+  merdonghua-tg-worker:
+    build:
+      context: ../..
+      dockerfile: tools/telegram_sync/Dockerfile.cloud
+    container_name: merdonghua_tg_sync_24_7
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      TELEGRAM_USER_SESSION: ${TELEGRAM_USER_SESSION:?Set exclusive TELEGRAM_USER_SESSION in .env before starting}
+      ENABLE_24_7_SYNC: "1"
+      FORCE_24_7_SYNC: "1"
+      COMPRESSION_PRESET: ${COMPRESSION_PRESET:-720p_low_mb}
+      SYNC_DATA_DIR: /data/telegram_sync
+      PORT: "8080"
+      ENABLE_BOT_COMMANDS: ${ENABLE_BOT_COMMANDS:-0}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      WORKER_ADMIN_SECRET: ${WORKER_ADMIN_SECRET:-}
+    volumes:
+      - tg_sync_data:/data/telegram_sync
+
+volumes:
+  tg_sync_data:
