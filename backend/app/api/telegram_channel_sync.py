@@ -1035,67 +1035,14 @@ def trigger_sync_queue_async(anime_ids: List[int], is_resume: bool = False) -> b
 
 async def start_24_7_channel_sync_daemon() -> None:
     """
-    Runs inside FastAPI lifespan 24/7:
-    1. Loads website catalog & pre-verified 45 channel mappings.
-    2. On Cloud/Render (or when enabled), connects to Telegram via StringSession,
-       scans Folder Link, audits all channels, and starts uploading 24/7 automatically.
-    3. Periodically checks for new episodes added to the website every 5 minutes.
+    Disabled on Cloud to prevent Telegram AuthKeyDuplicatedError IP conflict.
+    The Auto-Sync Studio runs exclusively on the Local PC with dedicated GUI and FFmpeg.
     """
-    if not HAS_TELETHON:
-        add_log("Telethon មិនទាន់ត្រូវបានដំឡើងទេ!", "err")
-        return
-    await asyncio.sleep(5.0)
-    add_log("24/7 Daemon: ចាប់ផ្ដើមត្រួតពិនិត្យ Cloud Auto-Sync...", "info")
     load_website_catalog()
     rebuild_catalog_state()
     refresh_checkpoint_summary()
-
-    is_cloud_env = (
-        os.name != "nt"  # Linux / Docker on Render Cloud
-        or bool(
-            os.getenv("RENDER")
-            or os.getenv("RENDER_EXTERNAL_URL")
-            or os.getenv("RENDER_SERVICE_ID")
-            or os.getenv("RAILWAY_ENVIRONMENT")
-            or os.getenv("PORT") == "10000"
-            or os.getenv("ENVIRONMENT", "").lower() == "production"
-            or os.getenv("ENABLE_24_7_SYNC") == "1"
-        )
-    )
-    if not is_cloud_env:
-        sync_state["current_phase"] = "Standby លើ Local (Render Cloud កំពុងដំណើរការ 24/7 ឬចុច Start ដើម្បីរត់លើម៉ាស៊ីននេះ)"
-        add_log("Local Standby Mode: ការពារកុំឲ្យជាន់ IP ជាមួយម៉ាស៊ីនមេ Render 24/7 (អាចចុច Start/Scan ផ្ទាល់បានគ្រប់ពេល)", "info")
-        return
-
-    try:
-        add_log("24/7 Cloud: កំពុងភ្ជាប់គណនី Telegram តាមរយៈ Session...", "info")
-        st = await check_tg_auth_status()
-        add_log(f"Telegram Auth Result: authorized={st.get('authorized')}", "ok" if st.get("authorized") else "err")
-        if st.get("authorized"):
-            add_log(f"គណនី Telegram ភ្ជាប់ជោគជ័យ! (+{st.get('user', {}).get('phone') or '855888162192'}) កំពុងស្កេន Folder...", "ok")
-            await scan_folder_channels(DEFAULT_FOLDER_LINK, auto_join=True)
-            await audit_all_matched_channels()
-
-            cfg = load_config()
-            cp = load_checkpoint()
-            rem = [
-                int(aid) for aid in (cp.get("active_queue_anime_ids") or [])
-                if int(aid) not in (cp.get("completed_anime_ids") or [])
-            ]
-            incomplete_ids = [
-                int(a["id"]) for a in sync_state["catalog_anime"]
-                if a.get("matched_channel_id") and a.get("episodes_count", 0) > 0
-                and a.get("channel_audit", {}).get("status") != "complete"
-            ]
-            # Merge checkpoint priority queue with all incomplete channels
-            auto_queue = list(dict.fromkeys(rem + incomplete_ids))
-            if cfg.get("daemon_24_7_enabled", True) and auto_queue:
-                add_log(f"24/7 Cloud Auto-Start: ចាប់ផ្ដើមដំណើរការ Upload ស្វ័យប្រវត្តិសម្រាប់ {len(auto_queue)} រឿង...", "ok")
-                trigger_sync_queue_async(auto_queue, is_resume=bool(rem))
-            else:
-                add_log("គ្រប់រឿងទាំងអស់ក្នុង Channel គឺគ្រប់ភាគ ១០០% រួចរាល់ហើយ!", "ok")
-    except Exception as e:
-        add_log(f"24/7 Daemon startup note: {e}", "warn")
+    add_log("Cloud Auto-Sync is in Standby mode. Run the studio locally to avoid Telegram IP conflict.", "info")
+    return
 
     # Continuous 24/7 Watcher Loop
     while True:
