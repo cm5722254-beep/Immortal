@@ -580,6 +580,7 @@ async def scan_folder_channels(folder_link: str = DEFAULT_FOLDER_LINK, auto_join
         slug = m.group(1)
 
     discovered: Dict[int, Dict[str, Any]] = {}
+    verified_cids = set(VERIFIED_ANIME_CHANNEL_MAP.values())
     if slug:
         try:
             res = await client(functions.chatlists.CheckChatlistInviteRequest(slug=slug))
@@ -602,6 +603,24 @@ async def scan_folder_channels(folder_link: str = DEFAULT_FOLDER_LINK, auto_join
                     }
         except Exception as e:
             add_log(f"Folder scan note: {e}", "warn")
+
+    # Fallback: include verified anime channels already joined in dialogs if chatlist missed any
+    if len(discovered) < len(verified_cids):
+        try:
+            async for dlg in client.iter_dialogs(limit=300):
+                ent = dlg.entity
+                if isinstance(ent, (types.Channel, types.Chat)) and not getattr(ent, "megagroup", False):
+                    cid = int(utils.get_peer_id(ent))
+                    if cid not in discovered and cid in verified_cids:
+                        discovered[cid] = {
+                            "id": cid,
+                            "raw_id": ent.id,
+                            "title": getattr(ent, "title", "") or dlg.name or f"Channel {ent.id}",
+                            "username": getattr(ent, "username", "") or "",
+                            "from_folder": True,
+                        }
+        except Exception as e:
+            add_log(f"Dialog scan fallback note: {e}", "warn")
 
     channel_list = sorted(discovered.values(), key=lambda x: x.get("title", "").lower())
     sync_state["folder_channels"] = channel_list
@@ -745,14 +764,26 @@ async def audit_single_channel(anime_id: int, channel_id: int, expected_ep_numbe
 
 
 async def audit_all_matched_channels() -> Dict[str, Any]:
+    if not sync_state["folder_channels"]:
+        cfg = load_config()
+        await scan_folder_channels(cfg.get("folder_link", DEFAULT_FOLDER_LINK), auto_join=True)
     audit_map = {}
     rows = list(sync_state["catalog_anime"])
     for r in rows:
         cid = r.get("matched_channel_id")
         if cid and r.get("episodes_count", 0) > 0:
-            audit_map[int(r["id"])] = await audit_single_channel(int(r["id"]), int(cid), r.get("ep_numbers") or [])
+            try:
+                audit_map[int(r["id"])] = await audit_single_channel(int(r["id"]), int(cid), r.get("ep_numbers") or [])
+            except errors.FloodWaitError as fwe:
+                wait_s = int(fwe.seconds) + 2
+                add_log(f"Audit FloodWait: រង់ចាំ {wait_s}s...", "warn")
+                await asyncio.sleep(wait_s)
+                audit_map[int(r["id"])] = await audit_single_channel(int(r["id"]), int(cid), r.get("ep_numbers") or [])
+            except Exception as exc:
+                add_log(f"Audit skip [{r.get('title')}]: {exc}", "warn")
+            await asyncio.sleep(0.15)
     rebuild_catalog_state(audit_map)
-    add_log("ស្កេនឆែកមើលភាគក្នុង Channel ទាំងអស់រួចរាល់ ១០០%!", "ok")
+    add_log(f"ស្កេនឆែកមើលភាគក្នុង {len(audit_map)} Channels រួចរាល់ ១០០%!", "ok" if audit_map else "warn")
     return {"ok": True, "audited_count": len(audit_map)}
 
 
@@ -934,15 +965,18 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
             try:
                 sync_state["pipeline_stage"] = 2
                 sync_state["current_phase"] = f"កំពុង Download ភាគ {ep_num} ពី Website..."
+                add_log(f"[{anime.get('title')} | ភាគ {ep_num}] ⬇ កំពុង Download ពី Website...", "info")
                 src_video_path = await asyncio.to_thread(download_episode_video_sync, video_url, raw_temp_path)
 
                 if sync_state["should_stop"]:
                     break
 
+                raw_mb = src_video_path.stat().st_size / (1024 * 1024) if src_video_path.exists() else 0.0
                 preset = cfg.get("compression_preset", "720p_low_mb")
                 sync_state["pipeline_stage"] = 3
                 sync_state["current_phase"] = f"កំពុងបង្រួមទំហំ (MB) ភាគ {ep_num}..."
                 sync_state["step_progress"] = 50.0
+                add_log(f"[ភាគ {ep_num}] 🎞 ទាញយកបាន {raw_mb:.1f} MB -> កំពុងបង្រួម ({preset})...", "info")
                 final_video, dur_sec, w, h, thumb_path = await asyncio.to_thread(
                     compress_video_sync, src_video_path, opt_temp_path, preset
                 )
@@ -968,10 +1002,12 @@ async def process_anime_sync_queue(anime_ids: List[int]) -> None:
                 if sync_state["should_stop"]:
                     break
 
+                final_mb = final_video.stat().st_size / (1024 * 1024) if final_video.exists() else 0.0
                 caption = format_caption(anime, ep_num, cfg)
                 sync_state["pipeline_stage"] = 4
                 sync_state["current_phase"] = f"កំពុង Upload ភាគ {ep_num} ចូល Channel [{channel_title}]..."
                 sync_state["step_progress"] = 0.0
+                add_log(f"[ភាគ {ep_num}] ⬆ បង្រួមសល់ {final_mb:.1f} MB ({dur_sec}s) -> កំពុង Upload ចូល [{channel_title}]...", "info")
 
                 def _progress_cb(sent_bytes: int, total_bytes: int) -> None:
                     if total_bytes > 0:
@@ -1105,6 +1141,9 @@ async def start_24_7_channel_sync_daemon() -> None:
             if incomplete_ids:
                 add_log(f"24/7 Auto-Watcher: រកឃើញ {len(incomplete_ids)} រឿងមានភាគថ្មី/មិនទាន់គ្រប់ -> ចាប់ផ្ដើម Upload ស្វ័យប្រវត្តិ...", "ok")
                 trigger_sync_queue_async(incomplete_ids, is_resume=False)
+            else:
+                matched_total = sum(1 for a in sync_state["catalog_anime"] if a.get("matched_channel_id") and a.get("episodes_count", 0) > 0)
+                add_log(f"24/7 Auto-Watcher: រឿងដែលផ្គូផ្គង ({matched_total}) ពេញភាគទាំងអស់ហើយ — រង់ចាំ ៥ នាទីឆែកម្ដងទៀត។", "info")
         except Exception as exc:
             add_log(f"24/7 Auto-Watcher error: {exc}", "warn")
 
