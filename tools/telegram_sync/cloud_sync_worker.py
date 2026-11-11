@@ -95,13 +95,14 @@ async def _optional_bot_command_loop() -> None:
 async def _handle_bot_sync_command(cmd: str) -> str:
     if cmd == "/sync_status":
         st = tcs.sync_state
+        cp_sum = st.get("checkpoint_summary", {})
         return (
             f"MerDonghua Cloud Worker\n"
             f"- Running: {st.get('is_running')}\n"
-            f"- Current Anime: {st.get('current_anime_title') or '-'}\n"
-            f"- Episode: {st.get('current_episode') or '-'} ({st.get('current_step') or '-'})\n"
-            f"- Progress: {st.get('progress_percent', 0)}%\n"
-            f"- Uploaded This Run: {st.get('uploaded_count', 0)}"
+            f"- Current Anime: {st.get('current_anime') or '-'}\n"
+            f"- Episode: {st.get('current_ep') or '-'} ({st.get('current_phase') or '-'})\n"
+            f"- Step Progress: {st.get('step_progress', 0)}% ({st.get('completed_jobs', 0)}/{st.get('total_jobs', 0)})\n"
+            f"- Total Uploaded: {cp_sum.get('total_uploaded_all_time', 0)}"
         )
     if cmd == "/sync_audit":
         summary = await tcs.audit_all_matched_channels()
@@ -171,19 +172,21 @@ app = FastAPI(title="MerDonghua 24/7 Telegram Cloud Sync Worker", lifespan=lifes
 async def health() -> JSONResponse:
     env_sess = bool(os.getenv("TELEGRAM_USER_SESSION", "").strip())
     st = tcs.sync_state
+    cp_sum = st.get("checkpoint_summary", {})
     return JSONResponse(
         {
             "status": "ok",
             "mode": "cloud_24_7_worker",
             "session_configured": env_sess,
             "is_running": st.get("is_running", False),
-            "current_anime_id": st.get("current_anime_id"),
-            "current_anime_title": st.get("current_anime_title"),
-            "current_episode": st.get("current_episode"),
-            "current_step": st.get("current_step"),
-            "progress_percent": st.get("progress_percent", 0),
-            "uploaded_count": st.get("uploaded_count", 0),
-            "checkpoint": st.get("checkpoint", {}),
+            "current_anime": st.get("current_anime", ""),
+            "current_ep": st.get("current_ep", 0),
+            "current_phase": st.get("current_phase", ""),
+            "step_progress": st.get("step_progress", 0.0),
+            "completed_jobs": st.get("completed_jobs", 0),
+            "total_jobs": st.get("total_jobs", 0),
+            "total_uploaded_all_time": cp_sum.get("total_uploaded_all_time", 0),
+            "checkpoint": cp_sum,
             "logs_tail": list(st.get("logs", []))[-25:],
         }
     )
@@ -192,6 +195,7 @@ async def health() -> JSONResponse:
 @app.get("/", response_class=HTMLResponse)
 async def status_page() -> str:
     st = tcs.sync_state
+    cp_sum = st.get("checkpoint_summary", {})
     env_sess = bool(os.getenv("TELEGRAM_USER_SESSION", "").strip())
     logs_lines = []
     for item in list(st.get("logs", []))[-30:]:
@@ -215,9 +219,9 @@ async def status_page() -> str:
   <div class="card">
     <h2>MerDonghua Telegram 24/7 Cloud Sync Worker</h2>
     <p><strong>Session Status:</strong> {badge}</p>
-    <p><strong>Running:</strong> {st.get("is_running")} | <strong>Progress:</strong> {st.get("progress_percent", 0)}%</p>
-    <p><strong>Current Anime:</strong> {html.escape(str(st.get("current_anime_title") or "-"))} | <strong>Ep:</strong> {html.escape(str(st.get("current_episode") or "-"))}</p>
-    <p><strong>Step:</strong> {html.escape(str(st.get("current_step") or "-"))} | <strong>Uploaded:</strong> {st.get("uploaded_count", 0)}</p>
+    <p><strong>Running:</strong> {st.get("is_running")} | <strong>Step Progress:</strong> {st.get("step_progress", 0)}% ({st.get("completed_jobs", 0)}/{st.get("total_jobs", 0)} jobs)</p>
+    <p><strong>Current Anime:</strong> {html.escape(str(st.get("current_anime") or "-"))} | <strong>Ep:</strong> {html.escape(str(st.get("current_ep") or "-"))}</p>
+    <p><strong>Phase:</strong> {html.escape(str(st.get("current_phase") or "-"))} | <strong>Uploaded All-Time:</strong> {cp_sum.get("total_uploaded_all_time", 0)}</p>
   </div>
   <div class="card">
     <h3>Recent Worker Logs (auto-refresh 8s)</h3>

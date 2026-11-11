@@ -260,6 +260,10 @@ def add_log(msg: str, level: str = "info") -> None:
     sync_state["logs"].append({"time": ts, "msg": msg, "level": level})
     if len(sync_state["logs"]) > 250:
         sync_state["logs"].pop(0)
+    try:
+        print(f"[{ts}] [{level.upper()}] {msg}", flush=True)
+    except Exception:
+        pass
 
 
 def refresh_checkpoint_summary() -> None:
@@ -1101,8 +1105,8 @@ async def start_24_7_channel_sync_daemon() -> None:
             if incomplete_ids:
                 add_log(f"24/7 Auto-Watcher: រកឃើញ {len(incomplete_ids)} រឿងមានភាគថ្មី/មិនទាន់គ្រប់ -> ចាប់ផ្ដើម Upload ស្វ័យប្រវត្តិ...", "ok")
                 trigger_sync_queue_async(incomplete_ids, is_resume=False)
-        except Exception:
-            pass
+        except Exception as exc:
+            add_log(f"24/7 Auto-Watcher error: {exc}", "warn")
 
 
 # ── FastAPI Admin Endpoints ──────────────────────────────────────────────────
